@@ -1,0 +1,57 @@
+
+        * { user-select: none; -webkit-user-select: none; box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #0b0e14;
+            font-family: 'Chakra Petch', sans-serif;
+            color: #f1f5f9;
+        }
+        #game-canvas {
+            width: 100vw; height: 100vh; display: block;
+        }
+        /* Efeito PS1 Scanlines sutis opcionais */
+        .ps1-scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.22) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+        }
+        /* Estilo clássico das barras de Damage e Felony do Driver 2 */
+        .driver-bar-bg {
+            background: rgba(10, 12, 18, 0.85);
+            border: 2px solid #94a3b8;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7), inset 0 0 8px rgba(0,0,0,0.9);
+        }
+        .felony-flash {
+            animation: felonyPulse 0.35s infinite alternate;
+        }
+        @keyframes felonyPulse {
+            from { background-color: #ef4444; box-shadow: 0 0 10px #ef4444; }
+            to { background-color: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+        }
+        /* Radar circular clássico */
+        #radar-container {
+            width: 150px; height: 150px;
+            border-radius: 50%;
+            border: 4px solid #cbd5e1;
+            box-shadow: 0 0 20px rgba(0,0,0,0.85), inset 0 0 15px rgba(0,0,0,0.9);
+            overflow: hidden;
+            background: #111827;
+            position: relative;
+        }
+        @media (max-width: 640px) {
+            #radar-container { width: 115px; height: 115px; }
+        }
+        /* Scrollbar customizada para o visualizador de arquivos */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    

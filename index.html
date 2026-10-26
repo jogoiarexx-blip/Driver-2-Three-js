@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DRIVER 2: Back on the Streets - Three.js Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Press+Start+2P&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body class="relative">
+
+    <!-- CANVAS 3D THREE.JS -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- OVERLAY SCANLINES PS1 -->
+    <div id="scanline-overlay" class="ps1-scanlines fixed inset-0 z-10"></div>
+
+    <!-- HUD PRINCIPAL DO DRIVER 2 -->
+    <div id="hud-layer" class="fixed inset-0 z-20 pointer-events-none flex flex-col justify-between p-3 sm:p-5">
+        
+        <!-- TOP ROW: Barras Damage/Felony (Esq) | Missão/Timer (Centro) | Controles/Arquitetura (Dir) -->
+        <div class="flex justify-between items-start gap-2 w-full">
+            
+            <!-- TOP-LEFT: Barras Clássicas Driver 2 + Seletor Rápido das 4 Cidades -->
+            <div class="flex flex-col gap-2 w-52 sm:w-68 bg-slate-950/85 p-3 rounded-lg border border-slate-700/80 backdrop-blur-sm pointer-events-auto">
+                <div class="flex items-center justify-between text-xs sm:text-sm font-bold tracking-wider text-amber-400">
+                    <span>DANO (DAMAGE)</span>
+                    <span id="damage-pct">0%</span>
+                </div>
+                <div class="w-full h-3.5 driver-bar-bg rounded overflow-hidden p-0.5">
+                    <div id="damage-bar" class="h-full bg-gradient-to-r from-emerald-500 via-amber-500 to-red-600 transition-all duration-150 rounded-sm" style="width: 0%;"></div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs sm:text-sm font-bold tracking-wider text-sky-400 mt-0.5">
+                    <span id="felony-label">DELITO (FELONY)</span>
+                    <span id="felony-pct">0%</span>
+                </div>
+                <div class="w-full h-3.5 driver-bar-bg rounded overflow-hidden p-0.5">
+                    <div id="felony-bar" class="h-full bg-gradient-to-r from-sky-500 to-red-600 transition-all duration-150 rounded-sm" style="width: 0%;"></div>
+                </div>
+
+                <!-- Indicador de Estado Tanner (A Pé vs Volante) -->
+                <div class="mt-1 pt-1.5 border-t border-slate-800 flex items-center justify-between text-xs">
+                    <span class="text-slate-400">ESTADO:</span>
+                    <span id="player-state-badge" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                        NO VOLANTE (V8)
+                    </span>
+                </div>
+
+                <!-- Seletor Instantâneo das 4 Cidades Clássicas do Driver 2 -->
+                <div class="mt-1 pt-1.5 border-t border-slate-800">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold mb-1">CIDADE ATUAL (DRIVER 2):</div>
+                    <div class="grid grid-cols-2 gap-1">
+                        <button onclick="window.DriverGame.changeCity('chicago')" id="city-btn-chicago" class="city-pill text-[10px] font-extrabold py-1 px-1.5 rounded bg-amber-500 text-slate-950 border border-amber-300 transition">🏙️ CHICAGO</button>
+                        <button onclick="window.DriverGame.changeCity('havana')" id="city-btn-havana" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">🌴 HAVANA</button>
+                        <button onclick="window.DriverGame.changeCity('vegas')" id="city-btn-vegas" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">🎰 LAS VEGAS</button>
+                        <button onclick="window.DriverGame.changeCity('rio')" id="city-btn-rio" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">⛰️ RIO DE JANEIRO</button>
+                    </div>
+                </div>
+
+                <!-- Seletor de Clima e Horário (Driver 2 Weather & Time of Day) -->
+                <div class="mt-1 pt-1.5 border-t border-slate-800">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400 uppercase font-bold mb-1">
+                        <span>CLIMA / HORA (TECLA N):</span>
+                        <span id="weather-badge" class="text-sky-400">PADRÃO</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1">
+                        <button onclick="window.DriverGame.setWeather('day')" class="text-[9px] font-bold py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600">☀️ DIA</button>
+                        <button onclick="window.DriverGame.setWeather('dusk')" class="text-[9px] font-bold py-1 rounded bg-slate-800 hover:bg-slate-700 text-orange-300 border border-slate-600">🌅 TARDE</button>
+                        <button onclick="window.DriverGame.setWeather('night')" class="text-[9px] font-bold py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-600">🌙 NOITE</button>
+                        <button onclick="window.DriverGame.setWeather('rain')" class="text-[9px] font-bold py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-600">🌧️ CHUVA</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOP-CENTER: Timer de Missão, Checkpoints e Avisos -->
+            <div class="flex flex-col items-center">
+                <div id="mission-header" class="bg-slate-950/90 border-2 border-amber-500/70 px-4 py-1.5 rounded-lg shadow-lg text-center">
+                    <div id="mission-title" class="text-[11px] sm:text-xs uppercase tracking-widest text-amber-400 font-bold">TAKE A RIDE: CHICAGO</div>
+                    <div id="mission-timer" class="text-xl sm:text-3xl font-extrabold text-white tracking-wider font-mono hidden">01:30.00</div>
+                    <div id="mission-subcounter" class="text-xs font-extrabold text-emerald-400 hidden">CONES / PORTÕES: 0 / 10</div>
+                </div>
+                <div id="objective-banner" class="mt-2 bg-black/80 text-slate-200 text-xs sm:text-sm px-3 py-1 rounded border border-slate-700 max-w-md text-center">
+                    Explore as 4 cidades, pressione <kbd class="px-1 bg-slate-800 text-amber-400 rounded">SHIFT</kbd> para Burnout, <kbd class="px-1 bg-slate-800 text-amber-400 rounded">E</kbd> para sair a pé ou abra a Garagem Secreta (Estrela no Radar)!
+                </div>
+                <!-- Banner Modo Replay Film Director -->
+                <div id="director-banner" class="mt-2 hidden bg-red-600/95 text-white font-extrabold text-xs sm:text-sm px-4 py-1.5 rounded-lg shadow-lg border-2 border-white flex items-center gap-3 pointer-events-auto">
+                    <span class="animate-pulse">🎬 FILM DIRECTOR REPLAY</span>
+                    <span id="director-cam-label" class="bg-black/60 px-2 py-0.5 rounded text-amber-300 text-xs">CÂMERA DE RUA (TRIPÉ)</span>
+                    <button onclick="window.DriverGame.cycleDirectorCamera()" class="bg-slate-900 hover:bg-slate-800 px-2 py-0.5 rounded text-xs border border-slate-500">Trocar Ângulo</button>
+                    <button onclick="window.DriverGame.toggleReplayDirector()" class="bg-amber-400 text-black px-2 py-0.5 rounded text-xs font-black">Voltar ao Jogo (R)</button>
+                </div>
+                <!-- Alerta de Ação Interativa (Entrar/Sair do carro ou Interruptor Secreto) -->
+                <div id="interaction-prompt" class="mt-2 hidden animate-bounce bg-amber-500 text-slate-950 font-extrabold text-xs sm:text-sm px-4 py-1.5 rounded-full shadow-lg border-2 border-white">
+                    Pressione [E] ou [ENTER] para interagir
+                </div>
+            </div>
+
+            <!-- TOP-RIGHT: Botões de Missão, Film Director, Áudio, Câmera e Arquitetura Multi-Arquivos -->
+            <div class="flex flex-col items-end gap-2 pointer-events-auto">
+                <div class="flex flex-wrap justify-end gap-1.5">
+                    <button id="btn-architecture" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded-lg border border-indigo-400 shadow-lg flex items-center gap-1.5 transition">
+                        <span>📁</span> <span class="hidden sm:inline">Arquitetura & Assets</span><span class="sm:hidden">Código</span>
+                    </button>
+                    <button id="btn-missions" class="bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs sm:text-sm font-extrabold px-3 py-2 rounded-lg border border-amber-200 shadow-lg flex items-center gap-1.5 transition">
+                        <span>🏁</span> <span>Modos & Missões</span>
+                    </button>
+                    <button id="btn-director" class="bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs sm:text-sm font-extrabold px-3 py-2 rounded-lg border border-rose-400 shadow-lg flex items-center gap-1.5 transition" title="Diretor de Replay (Tecla R)">
+                        <span>🎬</span> <span class="hidden md:inline">Replay (R)</span>
+                    </button>
+                    <button id="btn-audio" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold px-2.5 py-2 rounded-lg border border-slate-600 shadow transition" title="Ativar/Desativar Som">
+                        🔊
+                    </button>
+                    <button id="btn-camera" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold px-2.5 py-2 rounded-lg border border-slate-600 shadow transition" title="Trocar Câmera (V)">
+                        🎥
+                    </button>
+                </div>
+                <div class="bg-slate-950/85 px-2.5 py-1 rounded border border-slate-800 text-[11px] text-slate-400 flex items-center gap-3">
+                    <span>FPS: <strong id="fps-counter" class="text-emerald-400">60</strong></span>
+                    <span>CALOTAS: <strong id="hubcaps-counter" class="text-amber-400">4/4</strong></span>
+                    <span>SEGREDO: <strong id="secret-status" class="text-purple-400">BLOQUEADO</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MENSAGEM CENTRAL DE EVENTO (WASTED / BUSTED / MISSION PASSED) -->
+        <div id="center-announcement" class="hidden self-center my-auto bg-black/90 border-4 border-amber-500 px-8 py-6 rounded-xl text-center shadow-2xl pointer-events-auto max-w-md">
+            <h2 id="announcement-title" class="text-3xl sm:text-4xl font-extrabold tracking-widest text-amber-400 uppercase mb-2">MISSÃO CONCLUÍDA!</h2>
+            <p id="announcement-desc" class="text-sm sm:text-base text-slate-300 mb-5">Você escapou da polícia com estilo.</p>
+            <div class="flex justify-center gap-3">
+                <button id="btn-restart-mode" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-5 py-2.5 rounded-lg transition">
+                    JOGAR NOVAMENTE
+                </button>
+                <button id="btn-free-roam" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2.5 rounded-lg border border-slate-600 transition">
+                    PASSEIO LIVRE
+                </button>
+            </div>
+        </div>
+
+        <!-- BOTTOM ROW: Radar Circular (Esq) | Controles Mobile (Centro) | Velocímetro Analógico/Digital (Dir) -->
+        <div class="flex justify-between items-end w-full">
+            
+            <!-- BOTTOM-LEFT: Minimapa / Radar Rotativo Driver 2 -->
+            <div class="flex items-end gap-3">
+                <div id="radar-container">
+                    <canvas id="radar-canvas" width="150" height="150" class="w-full h-full block"></canvas>
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-extrabold bg-black/80 px-1 rounded text-amber-400 border border-slate-700">N</div>
+                </div>
+                <!-- Legenda rápida PC -->
+                <div class="hidden lg:flex flex-col gap-1 bg-slate-950/85 p-2.5 rounded-lg border border-slate-800 text-[11px] text-slate-300">
+                    <div><kbd class="text-amber-400 font-bold">W,A,S,D / Setas</kbd> : Dirigir / Andar | <kbd class="text-amber-400 font-bold">ESPAÇO</kbd> : Freio de Mão (Drift)</div>
+                    <div><kbd class="text-amber-400 font-bold">SHIFT / C</kbd> : Botão Burnout (Destracionar / Giro 180° J-Turn) | <kbd class="text-amber-400 font-bold">Q</kbd> : Olhar p/ Trás</div>
+                    <div><kbd class="text-amber-400 font-bold">E / ENTER</kbd> : Sair/Roubar Carro, Sentar no Banco ou Plantar C4 | <kbd class="text-amber-400 font-bold">N</kbd> : Clima/Chuva</div>
+                    <div><kbd class="text-amber-400 font-bold">H</kbd> : Buzina / Sirene | <kbd class="text-amber-400 font-bold">R</kbd> : Film Director | <kbd class="text-amber-400 font-bold">B</kbd> : Ponte Levadiça</div>
+                </div>
+            </div>
+
+            <!-- CONTROLES TOUCH MOBILE (Visíveis em telas touch/pequenas) -->
+            <div id="touch-controls" class="flex lg:hidden items-center justify-between w-full px-2 gap-2 pointer-events-auto">
+                <div class="flex gap-2">
+                    <button id="touch-left" class="w-12 h-12 rounded-xl bg-slate-900/90 border-2 border-slate-600 active:bg-amber-500 active:text-black text-xl font-bold flex items-center justify-center">◀</button>
+                    <button id="touch-right" class="w-12 h-12 rounded-xl bg-slate-900/90 border-2 border-slate-600 active:bg-amber-500 active:text-black text-xl font-bold flex items-center justify-center">▶</button>
+                </div>
+                <div class="flex gap-1.5">
+                    <button id="touch-action" class="px-2.5 h-12 rounded-xl bg-indigo-600/90 border-2 border-indigo-400 active:bg-indigo-400 text-[11px] font-extrabold flex items-center justify-center">AÇÃO (E)</button>
+                    <button id="touch-burnout" class="px-2.5 h-12 rounded-xl bg-orange-600/90 border-2 border-orange-300 active:bg-orange-400 text-[11px] font-extrabold flex items-center justify-center">BURNOUT</button>
+                    <button id="touch-drift" class="w-12 h-12 rounded-xl bg-red-700/90 border-2 border-red-400 active:bg-red-500 text-xs font-extrabold flex items-center justify-center">DRIFT</button>
+                    <button id="touch-brake" class="w-12 h-12 rounded-xl bg-slate-800/90 border-2 border-slate-500 active:bg-slate-600 text-xs font-bold flex items-center justify-center">RÉ</button>
+                    <button id="touch-gas" class="w-14 h-14 rounded-xl bg-amber-500/90 border-2 border-amber-200 text-slate-950 active:bg-amber-300 text-xs font-extrabold flex items-center justify-center">ACEL</button>
+                </div>
+            </div>
+
+            <!-- BOTTOM-RIGHT: Velocímetro, Burnout e Marcha -->
+            <div class="hidden sm:flex flex-col items-end bg-slate-950/85 p-3 rounded-xl border border-slate-700/80 backdrop-blur-sm min-w-[175px]">
+                <div class="flex justify-between w-full items-center">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest">VELOCIDADE</span>
+                    <span id="siren-badge" class="text-[10px] px-1.5 py-0.2 rounded bg-blue-600/30 text-blue-300 font-bold hidden">🚨 SIRENE ATIVA</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="speed-value" class="text-3xl sm:text-4xl font-extrabold text-amber-400 font-mono">000</span>
+                    <span class="text-xs text-slate-400 font-bold">KM/H</span>
+                </div>
+                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-1">
+                    <div id="rpm-bar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500 transition-all duration-75" style="width: 15%;"></div>
+                </div>
+                <div class="flex justify-between w-full text-[10px] text-slate-400 mt-1.5 gap-2">
+                    <span>CARRO: <strong id="car-name-label" class="text-white">BUICK 70 V8</strong></span>
+                    <span id="drift-badge" class="text-amber-400 font-extrabold opacity-0">BURNOUT/DRIFT!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: SELETOR DE CIDADES, MISSÕES UNDERCOVER & DRIVING GAMES (DRIVER 2) -->
+    <div id="missions-modal" class="fixed inset-0 z-40 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+        <div class="bg-slate-900 border-2 border-amber-500/80 rounded-2xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-amber-400 tracking-wide">DRIVER 2: BACK ON THE STREETS — CENTRAL DE MODOS</h2>
+                    <p class="text-xs text-slate-400">Escolha a cidade (Chicago, Havana, Vegas, Rio) e selecione entre Passeio Livre, Missões Undercover ou Driving Games</p>
+                </div>
+                <button id="close-missions-modal" class="text-slate-400 hover:text-white text-2xl font-bold px-2">✕</button>
+            </div>
+
+            <!-- Seletor de Cidade dentro do Modal -->
+            <div class="mb-5">
+                <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">1. Escolha a Cidade Clássica:</div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <button onclick="window.DriverGame.changeCity('chicago')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
+                        <div class="font-extrabold text-amber-400 text-xs">🏙️ CHICAGO (EUA)</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">Ponte Levadiça no Rio, céu nublado, Muscle V8 e Chicago PD.</div>
+                    </button>
+                    <button onclick="window.DriverGame.changeCity('havana')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
+                        <div class="font-extrabold text-pink-400 text-xs">🌴 HAVANA (CUBA)</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">Prédios coloniais pastel, palmeiras, entardecer caribenho e clássicos 50s.</div>
+                    </button>
+                    <button onclick="window.DriverGame.changeCity('vegas')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
+                        <div class="font-extrabold text-purple-400 text-xs">🎰 LAS VEGAS (NOITE)</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">Cassinos com fachadas Neon brilhantes, noite no deserto e limusines V8.</div>
+                    </button>
+                    <button onclick="window.DriverGame.changeCity('rio')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
+                        <div class="font-extrabold text-emerald-400 text-xs">⛰️ RIO DE JANEIRO</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">Praia costeira, morro com Cristo Redentor iluminado e pôr do sol tropical.</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">2. Escolha o Modo de Jogo / Missão:</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-5">
+                <!-- Modo 1: Take a Ride -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-emerald-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('freeroam')">
+                    <div>
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded font-bold">TAKE A RIDE</span>
+                        <h3 class="text-base font-bold text-white mt-2">Passeio Livre & Segredos</h3>
+                        <p class="text-xs text-slate-400 mt-1">Explore sem relógio! Encontre a Estrela Roxa no radar, desça a pé com Tanner (<kbd>E</kbd>), aperte o interruptor na parede e libere o <strong>Carro Secreto Supercharged</strong>!</p>
+                    </div>
+                    <button class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs">JOGAR TAKE A RIDE</button>
+                </div>
+
+                <!-- Modo 2: Missão 1 -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-amber-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('chase')">
+                    <div>
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-bold">UNDERCOVER • MISSÃO 1</span>
+                        <h3 class="text-base font-bold text-white mt-2">Perseguir a Testemunha</h3>
+                        <p class="text-xs text-slate-400 mt-1">O informante de Vasquez e Caine está fugindo num V8 Vermelho! Abalroe o carro dele até destruir o motor antes que o tempo zere.</p>
+                    </div>
+                    <button class="mt-3 w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-2 rounded-lg text-xs">INICIAR MISSÃO 1</button>
+                </div>
+
+                <!-- Modo 3: Missão 2 Checkpoints -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-sky-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('checkpoints')">
+                    <div>
+                        <span class="text-[10px] bg-sky-500/20 text-sky-300 border border-sky-500/40 px-2 py-0.5 rounded font-bold">UNDERCOVER • MISSÃO 2</span>
+                        <h3 class="text-base font-bold text-white mt-2">Rota de Fuga (Checkpoints)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Atravesse os 4 Checkpoints amarelos espalhados pela cidade sob perseguição policial e entre a pé no Esconderijo Verde!</p>
+                    </div>
+                    <button class="mt-3 w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-2 rounded-lg text-xs">INICIAR MISSÃO 2</button>
+                </div>
+
+                <!-- Modo 4: Missão 3 Entrega sob Fogo -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-orange-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('getaway')">
+                    <div>
+                        <span class="text-[10px] bg-orange-500/20 text-orange-300 border border-orange-500/40 px-2 py-0.5 rounded font-bold">UNDERCOVER • MISSÃO 3</span>
+                        <h3 class="text-base font-bold text-white mt-2">Entrega sob Fogo</h3>
+                        <p class="text-xs text-slate-400 mt-1">Seu carro já começa com 50% de dano e Felony no máximo! Despiste ou troque de carro e chegue a pé ao Esconderijo.</p>
+                    </div>
+                    <button class="mt-3 w-full bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold py-2 rounded-lg text-xs">INICIAR MISSÃO 3</button>
+                </div>
+
+                <!-- Modo 5: Survival Clássico -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-red-500 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('survival')">
+                    <div>
+                        <span class="text-[10px] bg-red-600/30 text-red-300 border border-red-500/50 px-2 py-0.5 rounded font-bold">DRIVING GAME • CLÁSSICO</span>
+                        <h3 class="text-base font-bold text-white mt-2">Modo Survival (Caos Policial)</h3>
+                        <p class="text-xs text-slate-400 mt-1">O modo mais insano do Driver! 4 viaturas kamikazes com motor turbinado caçam você sem piedade desde o segundo zero. Quanto tempo você dura?</p>
+                    </div>
+                    <button class="mt-3 w-full bg-red-600 hover:bg-red-500 text-white font-extrabold py-2 rounded-lg text-xs">JOGAR SURVIVAL</button>
+                </div>
+
+                <!-- Modo 6: Trailblazer / Gate Racing -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-purple-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('trailblazer')">
+                    <div>
+                        <span class="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded font-bold">DRIVING GAME • CONES</span>
+                        <h3 class="text-base font-bold text-white mt-2">Trailblazer (10 Marcadores)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Derrube a trilha de 10 totens luminosos pela cidade! Cada marcador atingido adiciona <strong>+4 segundos</strong> ao cronômetro.</p>
+                    </div>
+                    <button class="mt-3 w-full bg-purple-600 hover:bg-purple-500 text-white font-extrabold py-2 rounded-lg text-xs">JOGAR TRAILBLAZER</button>
+                </div>
+
+                <!-- Modo 7: Missão 4 - Seguir Vasquez (Tail / Stealth) -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-cyan-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('tail')">
+                    <div>
+                        <span class="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded font-bold">UNDERCOVER • MISSÃO 4</span>
+                        <h3 class="text-base font-bold text-white mt-2">Seguir Vasquez (Stealth)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Siga a Limusine Preta de Vasquez discretamente! Mantenha distância entre <strong>18m e 70m</strong>: se chegar perto demais ele descobre; se ficar longe você o perde!</p>
+                    </div>
+                    <button class="mt-3 w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold py-2 rounded-lg text-xs">INICIAR MISSÃO 4</button>
+                </div>
+
+                <!-- Modo 8: Checkpoint Time Trial / Mountain Pass -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-rose-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('mountainpass')">
+                    <div>
+                        <span class="text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded font-bold">SEGREDO • TIME TRIAL</span>
+                        <h3 class="text-base font-bold text-white mt-2">Circuito de Velocidade (2 Voltas)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Inspirado na pista secreta Mountain Pass do Driver 2! Você já larga no <strong>Carro Secreto Supercharged</strong> para bater o recorde do circuito fechado!</p>
+                    </div>
+                    <button class="mt-3 w-full bg-rose-500 hover:bg-rose-400 text-white font-extrabold py-2 rounded-lg text-xs">CORRER CIRCUITO SECRETO</button>
+                </div>
+
+                <!-- Modo 9: Cops & Robbers / Roadblock Gauntlet -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-yellow-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('gauntlet')">
+                    <div>
+                        <span class="text-[10px] bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 px-2 py-0.5 rounded font-bold">DRIVING GAME • BARRICADAS</span>
+                        <h3 class="text-base font-bold text-white mt-2">Fura-Bloqueios (Roadblocks)</h3>
+                        <p class="text-xs text-slate-400 mt-1">A polícia fechou as avenidas com barricadas e viaturas cruzadas! Fure 5 bloqueios policiais usando a rampa da ponte ou J-Turns!</p>
+                    </div>
+                    <button class="mt-3 w-full bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-extrabold py-2 rounded-lg text-xs">JOGAR FURA-BLOQUEIOS</button>
+                </div>
+
+                <!-- Modo 10: Missão 5 - Sabotagem C4 -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-red-500 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('bomb')">
+                    <div>
+                        <span class="text-[10px] bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded font-bold">UNDERCOVER • MISSÃO 5</span>
+                        <h3 class="text-base font-bold text-white mt-2">Sabotagem Explosiva (C4)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Dirija até o ponto vermelho, saia do carro com Tanner (<kbd>E</kbd>), plante o explosivo C4 no alvo e afaste-se a mais de <strong>65m em 15 segundos</strong> antes da grande explosão!</p>
+                    </div>
+                    <button class="mt-3 w-full bg-red-600 hover:bg-red-500 text-white font-extrabold py-2 rounded-lg text-xs">INICIAR MISSÃO 5</button>
+                </div>
+
+                <!-- Modo 11: Missão 6 - Roubo de Caminhão -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-lime-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('heist')">
+                    <div>
+                        <span class="text-[10px] bg-lime-500/20 text-lime-300 border border-lime-500/40 px-2 py-0.5 rounded font-bold">UNDERCOVER • MISSÃO 6</span>
+                        <h3 class="text-base font-bold text-white mt-2">Sequestro da Carga Pesada</h3>
+                        <p class="text-xs text-slate-400 mt-1">Intercepte o Caminhão Baú do cartel nas ruas, desça com Tanner (<kbd>E</kbd>) para assumir o volante do caminhão e estacione-o no Esconderijo Verde!</p>
+                    </div>
+                    <button class="mt-3 w-full bg-lime-500 hover:bg-lime-400 text-slate-950 font-extrabold py-2 rounded-lg text-xs">INICIAR MISSÃO 6</button>
+                </div>
+
+                <!-- Modo 12: Quick Chase -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-indigo-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('quickchase')">
+                    <div>
+                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded font-bold">DRIVING GAME • RÁPIDO</span>
+                        <h3 class="text-base font-bold text-white mt-2">Quick Chase (Caçada Sprint)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Apenas 45 segundos no relógio sob chuva torrencial! Destrua a Limusine Blindada fugitiva antes que ela cruze a ponte!</p>
+                    </div>
+                    <button class="mt-3 w-full bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold py-2 rounded-lg text-xs">JOGAR QUICK CHASE</button>
+                </div>
+            </div>
+
+            <div class="bg-slate-950/90 p-3 rounded-lg border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+                <div>💡 <strong>Segredo Driver 2:</strong> Vá até a <strong>Estrela Roxa</strong> no radar, saia do carro (<kbd class="text-amber-400">E</kbd>) perto do interruptor piscante para abrir o portão da Garagem Secreta!</div>
+                <button id="btn-toggle-bridge" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/40 px-3 py-1.5 rounded font-bold">
+                    🌉 Levantar/Baixar Ponte (B)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ARQUITETURA DO DRIVER 2, VFS MULTI-ARQUIVOS E CARREGADOR DE ASSETS DA INTERNET -->
+    <div id="architecture-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-slate-900 border-2 border-indigo-500 rounded-2xl max-w-5xl w-full h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+            
+            <!-- Header Modal -->
+            <div class="flex justify-between items-center px-6 py-4 bg-slate-950 border-b border-slate-800">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-indigo-400 flex items-center gap-2">
+                        <span>🛠️</span> ANÁLISE TÉCNICA DO DRIVER 2 & PROJETO MULTI-ARQUIVOS (7 MÓDULOS)
+                    </h2>
+                    <p class="text-xs text-slate-400">Inspecione os módulos completos da engine, baixe os arquivos ou carregue modelos 3D (.GLB/.GLTF) da web</p>
+                </div>
+                <button id="close-arch-modal" class="text-slate-400 hover:text-white text-2xl font-bold px-2">✕</button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex flex-wrap border-b border-slate-800 bg-slate-950/60 px-6 gap-2 pt-2">
+                <button data-tab="tab-analysis" class="arch-tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-t-lg bg-indigo-600 text-white">1. Análise da Engine Driver 2</button>
+                <button data-tab="tab-files" class="arch-tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-t-lg bg-slate-800 text-slate-300 hover:bg-slate-700">2. Código Modular (10 Arquivos)</button>
+                <button data-tab="tab-assets" class="arch-tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-t-lg bg-slate-800 text-slate-300 hover:bg-slate-700">3. Assets da Internet & Importador GLTF</button>
+                <button data-tab="tab-github" class="arch-tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-t-lg bg-emerald-700/80 text-emerald-200 hover:bg-emerald-600 border border-emerald-500/40">🚀 4. Publicar no GitHub Pages</button>
+            </div>
+
+            <!-- Conteúdo das Abas -->
+            <div class="flex-1 overflow-y-auto p-6 text-slate-200 text-sm">
+                
+                <!-- ABA 1: ANÁLISE COMPLETA DO DRIVER 2 (PS1 -> THREE.JS) -->
+                <div id="tab-analysis" class="arch-tab-content space-y-4">
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <h3 class="text-lg font-bold text-amber-400 mb-2">Arquitetura Completa de Driver 2: Back on the Streets (Reflections Interactive, 2000)</h3>
+                        <p class="text-slate-300 leading-relaxed text-xs sm:text-sm">
+                            Em <strong>Driver 2</strong>, a Reflections expandiu a engine original do PS1 em 4 pilares que recriamos fielmente nesta versão Three.js: <strong>1) As 4 Cidades Distintas</strong> (Chicago, Havana, Las Vegas e Rio de Janeiro com o Cristo Redentor no morro e orla costeira), <strong>2) Física de Burnout Dedicado & Deformação Visual de Capô/Porta-Malas</strong>, <strong>3) Garagens Secretas acionadas por Interruptor a Pé</strong> e <strong>4) O Modo Film Director (Replay Buffer Circular)</strong>.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <h4 class="font-bold text-indigo-400 mb-1">1. Seletor das 4 Cidades (`world/CityPresets.js`)</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Cada cidade altera a iluminação, neblina (<em>Distance Fog</em>), arquitetura, viaturas e monumentos: <strong>Chicago</strong> traz a ponte basculante sobre o rio; <strong>Havana</strong> traz prédios coloniais em tons pastel e o clássico rosa anos 50; <strong>Las Vegas</strong> traz cassinos noturnos em neon; e o <strong>Rio de Janeiro</strong> traz o oceano Atlântico, morro e a estátua do Cristo Redentor no topo.
+                            </p>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <h4 class="font-bold text-indigo-400 mb-1">2. Botão Burnout (`SHIFT`/`C`), Deformação e Sirene (`H`)</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Segurar <strong>SHIFT</strong> ou <strong>C</strong> aciona o botão <em>Burnout</em> clássico do Driver: destraciona os pneus traseiros permitindo giros 180° (<em>J-Turn</em>) imediatos. Além das 4 calotas que voam nas curvas, acima de 50% de dano o capô e porta-malas se soltam/amassam. Se você roubar uma viatura e apertar <strong>H</strong>, liga a sirene e o tráfego civil abre caminho!
+                            </p>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <h4 class="font-bold text-indigo-400 mb-1">3. Garagem Secreta com Interruptor a Pé</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Assim como o estádio de Chicago e o forte de Havana no PS1, há um complexo murado (marcado com uma <strong>Estrela Roxa</strong> no radar). Desça do carro com Tanner (<strong>E</strong>), caminhe até o interruptor na parede externa para abrir o portão metálico e pegue o <strong>Veículo Secreto Supercharged</strong>!
+                            </p>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <h4 class="font-bold text-indigo-400 mb-1">4. Film Director Mode (`director/FilmDirector.js`)</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Um buffer circular grava continuamente os últimos 15 segundos de posições, inclinação de chassi e viaturas. Pressionar <strong>R</strong> congela a ação e reproduz o replay com câmeras cinematográficas de rua (<em>Trackside Tripod</em>), <em>Wheel Cam</em> rente ao asfalto e <em>Helicopter Cam</em>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 2: VISUALIZADOR E EXPORTADOR DOS MÚLTIPLOS ARQUIVOS -->
+                <div id="tab-files" class="arch-tab-content hidden h-full">
+                    <div class="flex flex-col md:flex-row gap-4 h-[58vh]">
+                        <!-- Lista de arquivos da estrutura -->
+                        <div class="w-full md:w-64 bg-slate-950 rounded-xl border border-slate-800 p-3 flex flex-col justify-between">
+                            <div class="space-y-1 overflow-y-auto max-h-[45vh]">
+                                <div class="text-xs font-bold text-slate-400 uppercase px-2 mb-2">Estrutura do Repositório GitHub</div>
+                                <button onclick="window.DriverGame.selectVFSFile('README.md')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono bg-emerald-600/20 text-emerald-300 border border-emerald-500/40">📘 README.md (GitHub)</button>
+                                <button onclick="window.DriverGame.selectVFSFile('.github/workflows/deploy.yml')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-amber-300">⚙️ .github/workflows/deploy.yml</button>
+                                <button onclick="window.DriverGame.selectVFSFile('package.json')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-slate-300">📦 package.json</button>
+                                <button onclick="window.DriverGame.selectVFSFile('assets/AssetManifest.json')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-indigo-300">📄 assets/AssetManifest.json</button>
+                                <button onclick="window.DriverGame.selectVFSFile('world/CityPresets.js')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-slate-300">🌎 world/CityPresets.js</button>
+                                <button onclick="window.DriverGame.selectVFSFile('missions/DrivingGames.js')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-slate-300">🏁 missions/DrivingGames.js</button>
+                                <button onclick="window.DriverGame.selectVFSFile('engine/VehiclePhysics.js')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-slate-300">⚙️ engine/VehiclePhysics.js</button>
+                                <button onclick="window.DriverGame.selectVFSFile('entities/TannerController.js')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-slate-300">🚶 entities/TannerController.js</button>
+                                <button onclick="window.DriverGame.selectVFSFile('entities/PedestrianSystem.js')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-slate-300">🏃 entities/PedestrianSystem.js</button>
+                                <button onclick="window.DriverGame.selectVFSFile('director/FilmDirector.js')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-slate-300">🎬 director/FilmDirector.js</button>
+                                <button onclick="window.DriverGame.selectVFSFile('audio/SoundEngine.js')" class="vfs-file-btn w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-slate-800 text-slate-300">🔊 audio/SoundEngine.js</button>
+                            </div>
+                            <button onclick="window.DriverGame.downloadCurrentVFSFile()" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1">
+                                ⬇️ Baixar Este Arquivo
+                            </button>
+                        </div>
+                        <!-- Código Fonte do Arquivo Selecionado -->
+                        <div class="flex-1 bg-slate-950 rounded-xl border border-slate-800 flex flex-col overflow-hidden">
+                            <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 flex justify-between items-center">
+                                <span id="vfs-filename-title" class="font-mono text-xs text-amber-400 font-bold">assets/AssetManifest.json</span>
+                                <button onclick="window.DriverGame.copyVFSCode()" class="text-xs bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded border border-slate-700 text-slate-200">📋 Copiar Código</button>
+                            </div>
+                            <pre id="vfs-code-viewer" class="p-4 text-xs font-mono text-emerald-300 overflow-auto flex-1 leading-relaxed"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 3: CATÁLOGO DE ASSETS DA INTERNET E LOADER .GLB/.GLTF EM TEMPO REAL -->
+                <div id="tab-assets" class="arch-tab-content hidden space-y-4">
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <h3 class="font-bold text-amber-400 text-base mb-1">Repositórios & Assets Públicos para Driver 2 (OpenDriver2 / Khronos / Poly Pizza / Kenney)</h3>
+                        <p class="text-xs text-slate-300 mb-3">
+                            O jogo já conta com geradores procedurais low-poly retrô de altíssima performance (zero tempo de espera e 60 FPS garantidos) e também integra o <code>THREE.GLTFLoader</code> oficial conectado a CDNs públicas para carregar modelos 3D externos ou arquivos <code>.glb</code> do seu computador para substituir o carro do jogador!
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 flex flex-col justify-between">
+                                <div>
+                                    <div class="text-xs font-bold text-indigo-400">1. Khronos Sample GLB (CDN)</div>
+                                    <p class="text-[11px] text-slate-400 mt-1">Carrega um modelo 3D externo via <code>GLTFLoader</code> diretamente do repositório oficial Khronos GitHub CDN e acopla ao chassi físico.</p>
+                                </div>
+                                <button onclick="window.DriverGame.loadExternalGLB('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb', 'Caminhão Khronos GLB')" class="mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-1.5 rounded text-xs">
+                                    🌐 Carregar Caminhão .GLB (Web)
+                                </button>
+                            </div>
+
+                            <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 flex flex-col justify-between">
+                                <div>
+                                    <div class="text-xs font-bold text-amber-400">2. Upload de Arquivo .GLB/.GLTF Local</div>
+                                    <p class="text-[11px] text-slate-400 mt-1">Baixou um carro low-poly do <em>Kenney Car Kit</em>, <em>Sketchfab</em> ou <em>Poly.pizza</em>? Carregue seu arquivo <code>.glb</code> aqui para dirigi-lo na cidade!</p>
+                                </div>
+                                <label class="mt-3 w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-1.5 rounded text-xs text-center cursor-pointer block">
+                                    📂 Importar .GLB do PC
+                                    <input type="file" id="glb-file-input" accept=".glb,.gltf" class="hidden" onchange="window.DriverGame.loadLocalGLB(event)">
+                                </label>
+                            </div>
+
+                            <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 flex flex-col justify-between">
+                                <div>
+                                    <div class="text-xs font-bold text-emerald-400">3. Restaurar Muscle Car PS1 Original</div>
+                                    <p class="text-[11px] text-slate-400 mt-1">Restaura a malha low-poly original do Buick Skylark 1970 / Dodge Charger de Tanner com portas, faróis e calotas destacáveis.</p>
+                                </div>
+                                <button onclick="window.DriverGame.restoreDefaultCarMesh()" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 rounded text-xs">
+                                    🔄 Usar Muscle Car Padrão
+                                </button>
+                            </div>
+                        </div>
+                        <div id="asset-loader-status" class="mt-3 text-xs font-mono text-emerald-400 bg-black/60 p-2 rounded border border-slate-800">
+                            Status do Asset Loader: Pronto. Malha PS1 Low-Poly ativa (60 FPS garantidos).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 4: PUBLICAR NO GITHUB & GITHUB PAGES (DEPLOY EM 1 MINUTO) -->
+                <div id="tab-github" class="arch-tab-content hidden space-y-4">
+                    <div class="bg-slate-950 p-4 rounded-xl border border-emerald-500/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="text-base sm:text-lg font-extrabold text-emerald-400">🚀 Publicar seu Jogo no GitHub & GitHub Pages (Grátis)</h3>
+                            <p class="text-xs text-slate-300 mt-1">
+                                Baixe os arquivos prontos do repositório abaixo e publique seu jogo online com link compartilhável (ex: <code>https://seu-usuario.github.io/driver2-threejs/</code>).
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 shrink-0">
+                            <button onclick="window.DriverGame.downloadCompleteIndexHTML()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3.5 py-2 rounded-lg text-xs shadow">
+                                ⬇️ 1. Baixar index.html
+                            </button>
+                            <button onclick="window.DriverGame.downloadAllGitHubFiles()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-3.5 py-2 rounded-lg text-xs shadow">
+                                📦 2. Baixar Kit GitHub (README + Action)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Opção A: Pelo Navegador (Sem instalar nada) -->
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2.5">
+                            <div class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Opção A — Pelo Site do GitHub (Mais Rápido, Sem Terminal)</div>
+                            <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+                                <li>Clique nos botões acima para baixar o <strong><code>index.html</code></strong> e o <strong><code>README.md</code></strong>.</li>
+                                <li>Acesse <a href="https://github.com/new" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline font-bold">github.com/new</a> e crie um repositório público chamado <code>driver2-threejs</code>.</li>
+                                <li>Clique em <strong>"uploading an existing file"</strong>, arraste o <code>index.html</code> e o <code>README.md</code> e clique em <strong>Commit changes</strong>.</li>
+                                <li>No seu repositório, vá em <strong>Settings ➔ Pages</strong>, em <em>Branch</em> selecione <strong><code>main</code></strong> / <code>/(root)</code> e clique em <strong>Save</strong>.</li>
+                                <li>Pronto! Em 1 minuto seu jogo estará rodando online no link do GitHub Pages!</li>
+                            </ol>
+                        </div>
+
+                        <!-- Opção B: Via Terminal Git CLI -->
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-400">Opção B — Comandos Git (Terminal / VS Code)</span>
+                                    <button onclick="window.DriverGame.copyGitCommands()" id="btn-copy-git" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700">📋 Copiar Comandos</button>
+                                </div>
+                                <pre id="git-cli-commands" class="bg-black/80 p-3 rounded-lg border border-slate-800 text-[11px] font-mono text-emerald-300 overflow-x-auto leading-relaxed">git init
+git add index.html README.md
+git commit -m "feat: Driver 2 Three.js Open World Edition"
+git branch -M main
+git remote add origin https://github.com/SEU_USUARIO/driver2-threejs.git
+git push -u origin main</pre>
+                            </div>
+                            <div class="text-[11px] text-slate-400 mt-2">
+                                💡 <strong>Dica:</strong> Como todas as dependências (Three.js r128, GLTFLoader e Tailwind) usam CDN HTTPS e as texturas/sons são gerados proceduralmente, o GitHub Pages roda o jogo imediatamente sem precisar de <code>npm build</code>!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================================================== -->
+    <!-- ARQUITETURA MODULAR EM JAVASCRIPT (MÓDULOS ACOPLADOS NO MESMO RUNTIME + VFS EXPORT) -->
+    <!-- ==================================================================================== -->
+        <script src="./js/data/vfs-manifest.js"></script>
+    <script src="./js/data/city-presets.js"></script>
+    <script src="./js/audio/retro-synth-audio.js"></script>
+    <script src="./js/render/ps1-texture-factory.js"></script>
+    <script src="./js/render/effects-manager.js"></script>
+    <script src="./js/entities/tanner-controller.js"></script>
+    <script src="./js/entities/pedestrians-roadblocks.js"></script>
+    <script src="./js/vehicles/driver-vehicle.js"></script>
+    <script src="./js/world/city-builder.js"></script>
+    <script src="./js/engine/driver2-game-engine.js"></script>
+</body>
+</html>
