@@ -18,6 +18,8 @@
                 this.signalClock = 0;
                 this.lastSignalPhase = -1;
                 this.signalBulbs = [];
+                this.streetAssetCache = new Map();
+                this.buildSequence = 0;
                 this.safeHouseZone = { x: -120, z: -120, radius: 9 };
 
                 // Garagem Secreta com Portão e Interruptor a Pé (Nordeste X=120, Z=120)
@@ -32,12 +34,15 @@
 
             loadCityPreset(presetKey) {
                 this.preset = CITY_PRESETS[presetKey] || CITY_PRESETS.chicago;
+                this.buildSequence++;
 
                 // Libera recursos WebGL da cidade anterior: sem vazar memória ao alternar cidades.
                 const geometries = new Set();
                 const materials = new Set();
                 const textures = new Set();
                 this.cityGroup.traverse(obj => {
+                    // Não destrua geometrias compartilhadas com o cache de modelos CC0.
+                    if (obj.userData && obj.userData.cc0SharedAsset) return;
                     if (obj.geometry) geometries.add(obj.geometry);
                     if (obj.material) {
                         const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -77,6 +82,7 @@
                 // Faixas centrais instanciadas: baixa contagem de draw calls, sem texturas extras.
                 this.buildRoadMarkings();
                 this.buildTrafficLights();
+                this.decorateStreetsWithCC0();
 
                 // 2. Canal Central (Rio Chicago / Baía de Havana / Canal da Orla do Rio)
                 const riverGeo = new THREE.PlaneGeometry(520, 32);
@@ -213,6 +219,45 @@
             }
 
             // 50 semáforos em 25 cruzamentos; apenas 5 lotes instanciados.
+            // Dez placas CC0 da Kenney City Kit (Roads); sem dependência para a física.
+            decorateStreetsWithCC0() {
+                if (!THREE.GLTFLoader) return;
+                const name = 'road-sign-stop.glb';
+                if (!this.streetAssetCache.has(name)) {
+                    const uri = 'https://cdn.jsdelivr.net/gh/Hidencod/tge-assets@7be9b573bc74f32ed766b44b3f46550d02ca83b5/packs/city-kit-roads/' + name;
+                    this.streetAssetCache.set(name, new Promise(resolve => {
+                        new THREE.GLTFLoader().load(uri,
+                            gltf => resolve(gltf.scene), undefined,
+                            () => resolve(null));
+                    }));
+                }
+                const generation = this.buildSequence;
+                this.streetAssetCache.get(name).then(original => {
+                    if (!original || generation !== this.buildSequence) return;
+                    for (let x = -160; x <= 160; x += 80) {
+                        for (const z of [-80, 80]) {
+                            const clone = original.clone(true);
+                            const box = new THREE.Box3().setFromObject(clone);
+                            const size = box.getSize(new THREE.Vector3());
+                            const scale = 3 / Math.max(0.01, size.x, size.y, size.z);
+                            clone.scale.setScalar(scale);
+                            clone.position.set(
+                                x + 12 - (box.min.x + box.max.x) * 0.5 * scale,
+                                0.12 - box.min.y * scale,
+                                z + 12 - (box.min.z + box.max.z) * 0.5 * scale
+                            );
+                            clone.traverse(obj => {
+                                if (obj.isMesh) {
+                                    obj.userData.cc0SharedAsset = true;
+                                    obj.castShadow = false;
+                                }
+                            });
+                            this.cityGroup.add(clone);
+                        }
+                    }
+                });
+            }
+
             buildTrafficLights() {
                 const locations = [];
                 for (let x = -160; x <= 160; x += 80) {
