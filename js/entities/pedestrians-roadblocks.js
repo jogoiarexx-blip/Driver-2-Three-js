@@ -59,9 +59,11 @@
                 }
             }
 
-            spawnPoliceRoadblocks(preset) {
-                // Cria 3 barricadas policiais nas avenidas principais
-                const barrierLocations = [
+            spawnPoliceRoadblocks(preset, options = {}) {
+                // Missão Fura-Bloqueios mantém as posições fixas.
+                // Em perseguições comuns, o diretor fornece posições dinâmicas.
+                const dynamic = !!options.dynamic;
+                const barrierLocations = options.locations || [
                     { x: 0, z: -60 },
                     { x: -80, z: 10 },
                     { x: 80, z: -30 }
@@ -71,7 +73,8 @@
                 const stripeMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
 
                 barrierLocations.forEach(loc => {
-                    for (let offset = -6; offset <= 6; offset += 4) {
+                    const offsets = dynamic ? [-4, 0, 4] : [-6, -2, 2, 6];
+                    for (const offset of offsets) {
                         const barrier = new THREE.Group();
                         const beam = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.35, 0.35), sawhorseMat);
                         beam.position.y = 0.85;
@@ -83,18 +86,34 @@
                         leg2.position.x = 1.1;
                         barrier.add(beam, topStripe, leg1, leg2);
 
-                        barrier.position.set(loc.x + offset, 0, loc.z);
+                        barrier.position.set(
+                            loc.x + (loc.axis === 'x' ? 0 : offset),
+                            0,
+                            loc.z + (loc.axis === 'x' ? offset : 0)
+                        );
+                        if (loc.axis === 'x') barrier.rotation.y = Math.PI * 0.5;
                         this.group.add(barrier);
 
                         this.roadblocks.push({
                             mesh: barrier,
-                            x: loc.x + offset,
-                            z: loc.z,
+                            x: barrier.position.x,
+                            z: barrier.position.z,
+                            dynamic,
                             vy: 0, vx: 0, vz: 0,
                             smashed: false
                         });
                     }
                 });
+            }
+
+            clearDynamicRoadblocks() {
+                const keep = [];
+                for (const block of this.roadblocks) {
+                    if (!block.dynamic) { keep.push(block); continue; }
+                    GPUResourceUtils.disposeSubtree(block.mesh);
+                    block.mesh.parent?.remove(block.mesh);
+                }
+                this.roadblocks = keep;
             }
 
             update(dt, vehicles, audio) {

@@ -30,6 +30,7 @@
                 this.trafficAI = new DriverTrafficAI(this.city);
                 this.tanner = new TannerController(this.scene);
                 this.pedManager = new PedestrianAndRoadblockManager(this.scene);
+                this.roadblockDirector = new PoliceRoadblockDirector();
                 this.pedManager.spawnCityPedestrians();
 
                 this.mode = 'driving';
@@ -260,6 +261,7 @@
                 this.clearMissionMarkers();
                 this.spawnAllVehicles();
                 this.pedManager.spawnCityPedestrians();
+                this.roadblockDirector.reset();
                 this.roadblocksSpawned = false;
                 this.tailOutOfRangeTimer = 0;
                 this.mode = 'driving';
@@ -741,11 +743,8 @@
                         this.felony = Math.max(0, this.felony - 3.5 * dt);
                     }
 
-                    // Se Felony passar de 75%, a polícia monta bloqueios nas avenidas!
-                    if (this.felony > 75 && !this.roadblocksSpawned) {
-                        this.roadblocksSpawned = true;
-                        this.pedManager.spawnPoliceRoadblocks(CITY_PRESETS[this.currentCityKey]);
-                    }
+                    // Bloqueios gerados na rota, com limite de vida e reaparecimento.
+                    this.roadblockDirector.update(dt, this);
 
                     if (this.playerCar.damage >= 100) {
                         if (this.missionType === 'survival') {
