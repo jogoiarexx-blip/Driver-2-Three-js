@@ -51,3 +51,14 @@ Veja [ASSETS-CREDITS.md](ASSETS-CREDITS.md) para fonte, versão e licença de ca
 - Placas 3D CC0 opcionais da Kenney e fallback para renderização procedural.
 - Controles móveis com Pointer Events, cancelamento e liberação após perda de foco.
 - `js/engine/gpu-resources.js`: descarte dos recursos gráficos de veículos e pedestres recriados, preservando os GLBs compartilhados em cache.
+
+## Revisão de bairros e bloqueios (outubro/2026)
+
+- `js/world/urban-districts.js`: alturas estáveis por cidade, variação de placas/fachadas/terraços e três lotes instanciados para os edifícios.
+- Quatro paletas arquitetônicas distintas para Chicago, Havana, Las Vegas e Rio; o mapa de ruas existente foi preservado.
+- Reutilização de texturas por paleta ao reconstruir as cidades, evitando a geração de uma textura nova para cada prédio.
+- `js/police/roadblock-director.js`: durante perseguições com delito alto, barreiras são posicionadas adiante na malha de vias, com cooldown, distância mínima e remoção quando o perigo acaba.
+- `js/entities/pedestrians-roadblocks.js`: barricadas dinâmicas têm metadados próprios e são removidas sem afetar o modo Fura-Bloqueios.
+- Testes locais: `node --test tests/evolution.test.cjs`. O workflow `qa.yml` executa os mesmos testes nas alterações do repositório.
+
+Observação: os testes de lógica não substituem uma sessão real de navegador para confirmar a aparência de materiais, partículas e performance em aparelhos diferentes.
