@@ -1,0 +1,209 @@
+/**
+ * Navegação urbana em uma malha de avenidas espaçadas em 80 unidades.
+ * Carros civis respeitam limites e semáforos; viaturas procuram Tanner
+ * pelas ruas, mas entram em perseguição direta onde não há prédios.
+ * Não depende de módulos/bundlers, compatível com GitHub Pages.
+ */
+class DriverTrafficAI {
+    constructor(city) {
+        this.city = city;
+        this.routes = new WeakMap();
+        this.roadLimit = 160;
+        this.blockSize = 80;
+        this.laneOffset = 4;
+    }
+
+    reset() {
+        this.routes = new WeakMap();
+    }
+
+    nearestGrid(value) {
+        return THREE.MathUtils.clamp(
+            Math.round(value / this.blockSize) * this.blockSize,
+            -this.roadLimit, this.roadLimit
+        );
+    }
+
+    positionInLane(axis, sign, road, along) {
+        if (axis === 'z') {
+            return { x: road + (sign > 0 ? this.laneOffset : -this.laneOffset), z: along };
+        }
+        return { x: along, z: road + (sign > 0 ? -this.laneOffset : this.laneOffset) };
+    }
+
+    getRoute(car) {
+        let route = this.routes.get(car);
+        if (route) return route;
+        const headingX = Math.sin(car.heading);
+        const headingZ = Math.cos(car.heading);
+        const axis = Math.abs(headingX) > Math.abs(headingZ) ? 'x' : 'z';
+        const sign = (axis === 'z' ? headingZ : headingX) >= 0 ? 1 : -1;
+        const road = this.nearestGrid(axis === 'z' ? car.x : car.z);
+        const along = axis === 'z' ? car.z : car.x;
+        let next = sign > 0 ?
+            (Math.floor(along / this.blockSize) + 1) * this.blockSize :
+            (Math.ceil(along / this.blockSize) - 1) * this.blockSize;
+        next = THREE.MathUtils.clamp(next, -this.roadLimit, this.roadLimit);
+        if (next === along || Math.abs(next - along) < 4) {
+            next = THREE.MathUtils.clamp(next + sign * this.blockSize,
+                -this.roadLimit, this.roadLimit);
+        }
+        route = {
+            axis, sign, road,
+            target: this.positionInLane(axis, sign, road, next),
+            reverseTimer: 0, stuckSeconds: 0,
+            previousX: car.x, previousZ: car.z
+        };
+        this.routes.set(car, route);
+        return route;
+    }
+
+    chooseNext(car, route, playerPos, wanted) {
+        const crossX = this.nearestGrid(route.target.x);
+        const crossZ = this.nearestGrid(route.target.z);
+        const possible = [];
+        for (const axis of ['x', 'z']) {
+            for (const sign of [-1, 1]) {
+                const nextX = crossX + (axis === 'x' ? sign * this.blockSize : 0);
+                const nextZ = crossZ + (axis === 'z' ? sign * this.blockSize : 0);
+                if (Math.abs(nextX) > this.roadLimit || Math.abs(nextZ) > this.roadLimit) continue;
+                if (this.city.isPointBlocked(nextX, nextZ, 2)) continue;
+                const backwards = axis === route.axis && sign === -route.sign;
+                const straight = axis === route.axis && sign === route.sign;
+                const lane = this.positionInLane(axis, sign,
+                    axis === 'z' ? crossX : crossZ, axis === 'z' ? nextZ : nextX);
+                possible.push({ axis, sign, lane, straight, backwards });
+            }
+        }
+        if (!possible.length) {
+            route.sign *= -1;
+            route.target = this.positionInLane(route.axis, route.sign, route.road,
+                (route.axis === 'z' ? crossZ : crossX) + route.sign * this.blockSize);
+            return;
+        }
+
+        let selected;
+        if (playerPos && (wanted || car.isTarget)) {
+            const ranked = possible.map(item => {
+                const d = Math.abs(item.lane.x - playerPos.x) + Math.abs(item.lane.z - playerPos.z);
+                return { item, score: car.isTarget ? -d : d };
+            }).sort((a, b) => a.score - b.score);
+            selected = ranked[0].item;
+        } else {
+            const candidates = possible.filter(p => !p.backwards);
+            const pool = candidates.length ? candidates : possible;
+            const straight = pool.find(p => p.straight);
+            selected = straight && Math.random() < 0.68 ?
+                straight : pool[Math.floor(Math.random() * pool.length)];
+        }
+        route.axis = selected.axis;
+        route.sign = selected.sign;
+        route.road = selected.axis === 'z' ? crossX : crossZ;
+        route.target = selected.lane;
+    }
+
+    unobstructed(car, target) {
+        // Predição curta ao invés de atravessar prédios em perseguição direta.
+        const dx = target.x - car.x;
+        const dz = target.z - car.z;
+        const distance = Math.hypot(dx, dz);
+        if (distance > 75 || distance < 0.01) return false;
+        for (let p = 0.2; p < 1; p += 0.2) {
+            if (this.city.isPointBlocked(car.x + dx * p, car.z + dz * p, 2)) return false;
+        }
+        return true;
+    }
+
+    vehicleAhead(car, vehicles) {
+        const dirX = Math.sin(car.heading), dirZ = Math.cos(car.heading);
+        for (const other of vehicles) {
+            if (other === car) continue;
+            const dx = other.x - car.x, dz = other.z - car.z;
+            const forward = dx * dirX + dz * dirZ;
+            const side = Math.abs(dx * dirZ - dz * dirX);
+            const gap = car.bodyStyle === 'bus' || car.bodyStyle === 'truck' ? 9 : 7;
+            if (forward > 0 && forward < 18 + Math.abs(car.speed) * 0.3 && side < gap * 0.5) {
+                return forward;
+            }
+        }
+        return Infinity;
+    }
+
+    getInput(car, dt, vehicles, playerPos, felony) {
+        const route = this.getRoute(car);
+        const wanted = car.isPolice && felony > 25;
+        const previousTarget = route.target;
+        if (Math.hypot(car.x - previousTarget.x, car.z - previousTarget.z) < 10) {
+            this.chooseNext(car, route, wanted || car.isTarget ? playerPos : null, wanted);
+        }
+
+        let target = route.target;
+        const distanceToPlayer = playerPos ?
+            Math.hypot(car.x - playerPos.x, car.z - playerPos.z) : Infinity;
+        if (wanted && playerPos && this.unobstructed(car, playerPos)) {
+            const lead = Math.min(1.0, distanceToPlayer / 55);
+            target = {
+                x: playerPos.x + Math.sin(playerPos.heading || 0) * (playerPos.speed || 0) * lead,
+                z: playerPos.z + Math.cos(playerPos.heading || 0) * (playerPos.speed || 0) * lead
+            };
+        }
+
+        const desiredHeading = Math.atan2(target.x - car.x, target.z - car.z);
+        const angle = Math.atan2(
+            Math.sin(desiredHeading - car.heading),
+            Math.cos(desiredHeading - car.heading)
+        );
+        const turn = Math.abs(angle);
+        const input = {
+            up: false, down: false, left: angle < -0.10,
+            right: angle > 0.10, handbrake: false, sprint: false
+        };
+
+        let maxSpeed = wanted ? 40 : car.isTarget ? 34 :
+            (car.bodyStyle === 'bus' || car.bodyStyle === 'truck' ? 17 : 23);
+        if (turn > 0.85) maxSpeed = Math.min(maxSpeed, 11);
+        else if (turn > 0.38) maxSpeed = Math.min(maxSpeed, 18);
+
+        const distanceToIntersection = Math.hypot(
+            car.x - route.target.x, car.z - route.target.z
+        );
+        const stopForRed = !wanted && !car.isTarget &&
+            distanceToIntersection < 28 && distanceToIntersection > 5 &&
+            !this.city.isTrafficGreen(route.axis);
+        const distanceAhead = this.vehicleAhead(car, vehicles);
+        const stopForCar = distanceAhead < 8 + Math.max(0, car.speed) * 0.33;
+        const slowForCar = distanceAhead < 14 + Math.max(0, car.speed) * 0.45;
+        if (slowForCar) maxSpeed = Math.min(maxSpeed, 7);
+        if (stopForRed || stopForCar) maxSpeed = 0;
+
+        // Saída de encalhe após colisão, sem teleportes pela cidade.
+        const moved = Math.hypot(car.x - route.previousX, car.z - route.previousZ);
+        route.previousX = car.x;
+        route.previousZ = car.z;
+        if (maxSpeed > 0 && moved < 0.04 && Math.abs(car.speed) < 1.6) {
+            route.stuckSeconds += dt;
+        } else {
+            route.stuckSeconds = 0;
+        }
+        if (route.stuckSeconds > 2.2) {
+            route.reverseTimer = 0.85;
+            route.stuckSeconds = 0;
+        }
+        if (route.reverseTimer > 0) {
+            route.reverseTimer -= dt;
+            input.up = false;
+            input.down = true;
+            input.handbrake = false;
+            input.left = route.sign > 0;
+            input.right = !input.left;
+        } else if (car.speed > maxSpeed + 1.5) {
+            input.down = true;
+        } else if (maxSpeed > 0 && car.speed < maxSpeed) {
+            input.up = true;
+        } else if (maxSpeed === 0 && car.speed > 0.5) {
+            input.down = true;
+        }
+        car.sirenActive = wanted;
+        return input;
+    }
+}
