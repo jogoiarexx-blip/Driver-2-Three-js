@@ -106,7 +106,10 @@
             }
 
             spawnAllVehicles() {
-                this.vehicles.forEach(v => this.scene.remove(v.root));
+                this.vehicles.forEach(v => {
+                    GPUResourceUtils.disposeSubtree(v.root);
+                    this.scene.remove(v.root);
+                });
                 this.vehicles = [];
                 if (this.trafficAI) this.trafficAI.reset();
                 this.targetCar = null;
@@ -1272,7 +1275,9 @@
             applyCustomModelToPlayerCar(modelScene, name) {
                 if (!this.playerCar) return;
                 while (this.playerCar.chassisTilt.children.length > 0) {
-                    this.playerCar.chassisTilt.remove(this.playerCar.chassisTilt.children[0]);
+                    const old = this.playerCar.chassisTilt.children[0];
+                    GPUResourceUtils.disposeSubtree(old);
+                    this.playerCar.chassisTilt.remove(old);
                 }
                 // Normaliza escala automática do modelo GLTF para caber no chassi
                 const box = new THREE.Box3().setFromObject(modelScene);

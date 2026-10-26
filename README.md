@@ -43,3 +43,11 @@ O arquivo HTML antigo redireciona para `index.html`. A refatoração preserva a 
 - A funcionalidade de importação manual de GLB é preservada e tem prioridade sobre o pack automático.
 
 Veja [ASSETS-CREDITS.md](ASSETS-CREDITS.md) para fonte, versão e licença de cada família de recursos. Sem internet, o jogo continua funcionando com malhas procedurais se o navegador já tiver carregado Three.js/Tailwind. O próprio Three.js ainda depende de CDN.
+
+## Atualização — trânsito, cenários e celular
+- IA por cruzamentos em `js/traffic/traffic-ai.js`: faixas, conversões, limite de velocidade, freada por obstáculos e perseguição policial sem atravessar prédios.
+- Semáforos animados com ciclos de 24 segundos, respeitados pelos carros civis.
+- O carro secreto fica estacionado; as viaturas e o tráfego civil partem de vias válidas.
+- Placas 3D CC0 opcionais da Kenney e fallback para renderização procedural.
+- Controles móveis com Pointer Events, cancelamento e liberação após perda de foco.
+- `js/engine/gpu-resources.js`: descarte dos recursos gráficos de veículos e pedestres recriados, preservando os GLBs compartilhados em cache.

@@ -21,3 +21,8 @@
 - Poly Haven: https://polyhaven.com/ — texturas/HDRIs CC0; selecionar mapas leves para WebGL.
 
 As marcas, personagens, carros e mapas do jogo original Driver 2 não fazem parte dos packs CC0.
+
+## Nova sinalização urbana integrada
+- [Kenney City Kit (Roads)](https://kenney.nl/assets/city-kit-roads), **CC0 1.0**.
+- [Mirror de modelos GLB](https://github.com/Hidencod/tge-assets/tree/main/packs/city-kit-roads): `road-sign-stop.glb`; CDN com SHA `7be9b573bc74f32ed766b44b3f46550d02ca83b5`.
+- A geometria dos semáforos e sua lógica de trânsito são procedurais; as placas externas são opcionais.

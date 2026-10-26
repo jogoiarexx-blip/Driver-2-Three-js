@@ -14,7 +14,8 @@
             }
 
             spawnCityPedestrians() {
-                // Limpa anteriores
+                // Libera geometrias e materiais dos pedestres e bloqueios anteriores.
+                GPUResourceUtils.disposeSubtree(this.group);
                 while (this.group.children.length > 0) {
                     this.group.remove(this.group.children[0]);
                 }

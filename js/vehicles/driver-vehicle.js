@@ -59,9 +59,14 @@
                 this.targetMarker = null;
                 this.headlightBeams = null;
                 while (this.chassisTilt.children.length > 0) {
-                    this.chassisTilt.remove(this.chassisTilt.children[0]);
+                    const old = this.chassisTilt.children[0];
+                    GPUResourceUtils.disposeSubtree(old);
+                    this.chassisTilt.remove(old);
                 }
-                this.wheels.forEach(w => this.root.remove(w));
+                this.wheels.forEach(w => {
+                    GPUResourceUtils.disposeSubtree(w);
+                    this.root.remove(w);
+                });
                 this.wheels = [];
 
                 const bodyMat = new THREE.MeshLambertMaterial({ color: this.color });
@@ -228,10 +233,16 @@
                 const scale = Math.min(width / size.x, length / size.z, height / size.y);
                 const preserved = [this.sirenRed, this.sirenBlue, this.targetMarker, this.headlightBeams];
                 this.chassisTilt.children.slice().forEach(child => {
-                    if (!preserved.includes(child)) this.chassisTilt.remove(child);
+                    if (!preserved.includes(child)) {
+                        GPUResourceUtils.disposeSubtree(child);
+                        this.chassisTilt.remove(child);
+                    }
                 });
-                // O modelo Kenney já possui rodas; as quatro rodas primitivas ficam ocultas.
-                this.wheels.forEach(w => { w.visible = false; });
+                this.wheels.forEach(w => {
+                    GPUResourceUtils.disposeSubtree(w);
+                    this.root.remove(w);
+                });
+                this.wheels = [];
                 this.chassisTilt.scale.set(1, 1, 1);
                 modelScene.scale.setScalar(scale);
                 modelScene.position.set(
@@ -243,6 +254,7 @@
                     if (obj.isMesh) {
                         obj.frustumCulled = true;
                         obj.castShadow = false;
+                        obj.userData.cc0SharedAsset = true;
                     }
                 });
                 this.chassisTilt.add(modelScene);
