@@ -229,9 +229,13 @@
             }
 
             clearMissionMarkers() {
-                this.missionMarkers.forEach(m => this.scene.remove(m.mesh));
+                this.missionMarkers.forEach(m => {
+                    GPUResourceUtils.disposeSubtree(m.mesh);
+                    this.scene.remove(m.mesh);
+                });
                 this.missionMarkers = [];
                 if (this.c4TargetMesh) {
+                    GPUResourceUtils.disposeSubtree(this.c4TargetMesh);
                     this.scene.remove(this.c4TargetMesh);
                     this.c4TargetMesh = null;
                 }
@@ -462,6 +466,8 @@
                     });
                     this.vehicles.push(this.targetCar);
                 }
+                DriverCheckpointRoute.refresh(this.missionType, this.missionMarkers);
+                if (this.freeVehicleAssets) this.freeVehicleAssets.decorateFleet();
             }
 
             triggerHornOrSiren() {
@@ -755,28 +761,29 @@
                     }
                 }
 
-                // Coleta de Checkpoints / Cones Trailblazer
+                // Somente o próximo portão da rota pode ser coletado.
                 if (this.missionMarkers.length > 0) {
                     const pos = this.getPlayerPosition();
+                    const marker = DriverCheckpointRoute.findReached(
+                        this.missionType, this.missionMarkers, pos.x, pos.z
+                    );
                     for (const m of this.missionMarkers) {
-                        if (!m.collected) {
-                            m.mesh.rotation.y += dt * 2.5;
-                            const d = Math.hypot(pos.x - m.x, pos.z - m.z);
-                            if (d < 5.5) {
-                                m.collected = true;
-                                m.mesh.visible = false;
-                                this.markersCollected++;
-                                this.audio.playHubcapPing();
-                                if (this.missionType === 'trailblazer') {
-                                    this.missionTimeLeft += 4.0;
-                                    document.getElementById('mission-subcounter').textContent =
-                                        `MARCADORES: ${this.markersCollected} / ${this.totalMarkers} (+4s!)`;
-                                } else {
-                                    document.getElementById('mission-subcounter').textContent =
-                                        `CHECKPOINTS: ${this.markersCollected} / ${this.totalMarkers}`;
-                                }
-                            }
+                        if (!m.collected && m.mesh.visible) m.mesh.rotation.y += dt * 2.5;
+                    }
+                    if (marker) {
+                        marker.collected = true;
+                        marker.mesh.visible = false;
+                        this.markersCollected++;
+                        this.audio.playHubcapPing();
+                        if (this.missionType === 'trailblazer') {
+                            this.missionTimeLeft += 4.0;
+                            document.getElementById('mission-subcounter').textContent =
+                                `MARCADORES: ${this.markersCollected} / ${this.totalMarkers} (+4s!)`;
+                        } else {
+                            document.getElementById('mission-subcounter').textContent =
+                                `CHECKPOINTS: ${this.markersCollected} / ${this.totalMarkers}`;
                         }
+                        DriverCheckpointRoute.refresh(this.missionType, this.missionMarkers);
                     }
                 }
 
@@ -1068,7 +1075,7 @@
 
                 // Checkpoints / Marcadores de Trailblazer no radar
                 for (const m of this.missionMarkers) {
-                    if (m.collected) continue;
+                    if (!DriverCheckpointRoute.isActive(this.missionType, this.missionMarkers, m)) continue;
                     const mx = (m.x - pos.x) * scale;
                     const mz = -(m.z - pos.z) * scale;
                     ctx.fillStyle = '#facc15';
