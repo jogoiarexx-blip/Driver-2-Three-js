@@ -30,10 +30,26 @@
             loadCityPreset(presetKey) {
                 this.preset = CITY_PRESETS[presetKey] || CITY_PRESETS.chicago;
 
-                // Limpa geometria anterior da cidade
-                while (this.cityGroup.children.length > 0) {
-                    this.cityGroup.remove(this.cityGroup.children[0]);
-                }
+                // Libera recursos WebGL da cidade anterior: sem vazar memória ao alternar cidades.
+                const geometries = new Set();
+                const materials = new Set();
+                const textures = new Set();
+                this.cityGroup.traverse(obj => {
+                    if (obj.geometry) geometries.add(obj.geometry);
+                    if (obj.material) {
+                        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                        mats.forEach(mat => materials.add(mat));
+                    }
+                });
+                materials.forEach(mat => {
+                    Object.values(mat).forEach(value => {
+                        if (value && value.isTexture) textures.add(value);
+                    });
+                });
+                textures.forEach(texture => texture.dispose());
+                materials.forEach(material => material.dispose());
+                geometries.forEach(geometry => geometry.dispose());
+                this.cityGroup.clear();
                 this.buildingBoxes = [];
                 this.destructibleProps = [];
                 this.benches = [];
@@ -52,6 +68,9 @@
                 const groundMat = new THREE.MeshLambertMaterial({ map: asphTex });
                 const ground = new THREE.Mesh(groundGeo, groundMat);
                 this.cityGroup.add(ground);
+
+                // Faixas centrais instanciadas: baixa contagem de draw calls, sem texturas extras.
+                this.buildRoadMarkings();
 
                 // 2. Canal Central (Rio Chicago / Baía de Havana / Canal da Orla do Rio)
                 const riverGeo = new THREE.PlaneGeometry(520, 32);
@@ -150,6 +169,41 @@
                         this.spawnDestructibleProp(blockX + 23, blockZ - 23, 'trash');
                     });
                 });
+            }
+
+            buildRoadMarkings() {
+                const positions = [];
+                // Os centros das avenidas seguem o espaçamento entre os quarteirões.
+                // Interrompe as marcas no canal para evitar faixas pintadas sobre água.
+                for (let road = -160; road <= 160; road += 80) {
+                    for (let along = -248; along <= 248; along += 12) {
+                        if (along < 34 || along > 66) {
+                            positions.push([road, along, 0]);
+                        }
+                        positions.push([along, road, Math.PI * 0.5]);
+                    }
+                }
+
+                const geometry = new THREE.PlaneGeometry(0.14, 3.6);
+                geometry.rotateX(-Math.PI * 0.5);
+                const material = new THREE.MeshBasicMaterial({
+                    color: this.preset.id === 'vegas' ? 0xd4c08b : 0xc5af70,
+                    side: THREE.DoubleSide,
+                    depthWrite: false,
+                    polygonOffset: true,
+                    polygonOffsetFactor: -1
+                });
+                const stripes = new THREE.InstancedMesh(geometry, material, positions.length);
+                const dummy = new THREE.Object3D();
+                positions.forEach(([x, z, angle], i) => {
+                    dummy.position.set(x, 0.075, z);
+                    dummy.rotation.set(0, angle, 0);
+                    dummy.updateMatrix();
+                    stripes.setMatrixAt(i, dummy.matrix);
+                });
+                stripes.instanceMatrix.needsUpdate = true;
+                stripes.frustumCulled = false;
+                this.cityGroup.add(stripes);
             }
 
             buildRioLandmarks() {
