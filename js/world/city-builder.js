@@ -59,6 +59,7 @@
                 geometries.forEach(geometry => geometry.dispose());
                 this.cityGroup.clear();
                 this.buildingBoxes = [];
+                this.districtBuildings = [];
                 this.destructibleProps = [];
                 this.benches = [];
                 this.secretGateOpen = false;
@@ -140,6 +141,7 @@
 
                 // 5. Quarteirões, Calçadas, Esconderijo e Garagem Secreta
                 const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x52525b });
+                const buildingTextures = new Map();
                 const coords = [-160, -80, 0, 80, 160];
 
                 coords.forEach(bx => {
@@ -162,14 +164,18 @@
                         } else if ((blockX + blockZ) % 160 === 0) {
                             this.buildParkBlock(blockX, blockZ);
                         } else {
-                            const pal = this.preset.palettes[Math.floor(Math.random() * this.preset.palettes.length)];
-                            const bTex = PS1TextureFactory.createBuildingTexture(pal.wall, pal.win);
-                            const isHavana = this.preset.id === 'havana';
-                            const h = isHavana ? (14 + Math.random() * 18) : (24 + Math.random() * 44);
+                            const palIndex = Math.floor(UrbanDistricts.random(blockX, blockZ, 9) * this.preset.palettes.length);
+                            const pal = this.preset.palettes[palIndex];
+                            if (!buildingTextures.has(palIndex)) {
+                                buildingTextures.set(palIndex, PS1TextureFactory.createBuildingTexture(pal.wall, pal.win));
+                            }
+                            const bTex = buildingTextures.get(palIndex);
+                            const h = UrbanDistricts.height(this.preset.id, blockX, blockZ);
                             const bMat = new THREE.MeshLambertMaterial({ map: bTex });
                             const bMesh = new THREE.Mesh(new THREE.BoxGeometry(38, h, 38), bMat);
                             bMesh.position.set(blockX, h / 2 + 0.35, blockZ);
                             this.cityGroup.add(bMesh);
+                            this.districtBuildings.push({ x: blockX, z: blockZ, height: h });
 
                             this.buildingBoxes.push({
                                 minX: blockX - 19.2, maxX: blockX + 19.2,
@@ -181,6 +187,7 @@
                         this.spawnDestructibleProp(blockX + 23, blockZ - 23, 'trash');
                     });
                 });
+                UrbanDistricts.decorate(this);
             }
 
             buildRoadMarkings() {
