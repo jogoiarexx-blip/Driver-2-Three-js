@@ -14,6 +14,7 @@
                 this.scene.fog = new THREE.FogExp2(0x1e293b, 0.0040);
 
                 this.camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 360);
+                this.cameraRig = new DriverCameraRig();
                 this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -699,11 +700,7 @@
 
                             // Velocidade relativa projetada no eixo da batida.
                             // Detecta colisões frontais que possuem o mesmo módulo de velocidade.
-                            const avx = Math.sin(a.heading) * a.speed + Math.cos(a.heading) * a.lateralVelocity;
-                            const avz = Math.cos(a.heading) * a.speed - Math.sin(a.heading) * a.lateralVelocity;
-                            const bvx = Math.sin(b.heading) * b.speed + Math.cos(b.heading) * b.lateralVelocity;
-                            const bvz = Math.cos(b.heading) * b.speed - Math.sin(b.heading) * b.lateralVelocity;
-                            const closingSpeed = Math.max(0, (avx - bvx) * nx + (avz - bvz) * nz);
+                            const closingSpeed = DriverArcadePhysics.resolveImpact(a, b, nx, nz);
                             const now = performance.now();
                             if (closingSpeed > 6 && now - (a.lastImpactAt || 0) > 450 &&
                                 now - (b.lastImpactAt || 0) > 450) {
@@ -720,10 +717,8 @@
                                     }
                                 }
                             }
-                            if (closingSpeed > 1) {
-                                a.speed *= 0.55;
-                                b.speed *= 0.55;
-                            }
+                            // Resolução do impulso por massa já atualizou velocidades
+                            // longitudinal e lateral de ambos os carros.
                             a.updateTransform();
                             b.updateTransform();
                         }
@@ -920,42 +915,11 @@
             }
 
             updateCamera(dt) {
-                const pos = this.getPlayerPosition();
-
-                if (this.mode === 'driving' && this.playerCar) {
-                    if (this.lookBackActive) {
-                        // Câmera Look Back (Tecla Q) olhando para os perseguidores atrás do carro
-                        const frontX = pos.x + Math.sin(pos.heading) * 9.5;
-                        const frontZ = pos.z + Math.cos(pos.heading) * 9.5;
-                        this.camera.position.set(frontX, pos.y + 3.6, frontZ);
-                        this.camera.lookAt(pos.x - Math.sin(pos.heading) * 15, pos.y + 1.2, pos.z - Math.cos(pos.heading) * 15);
-                    } else if (this.cameraMode === 0) {
-                        // Câmera de perseguição clássica do Driver 2 com atraso elástico
-                        const dist = 10.5;
-                        const height = 4.1;
-                        const targetX = pos.x - Math.sin(pos.heading) * dist;
-                        const targetZ = pos.z - Math.cos(pos.heading) * dist;
-                        this.camera.position.lerp(new THREE.Vector3(targetX, pos.y + height, targetZ), dt * 7.5);
-                        this.camera.lookAt(pos.x + Math.sin(pos.heading) * 4, pos.y + 1.3, pos.z + Math.cos(pos.heading) * 4);
-                    } else if (this.cameraMode === 1) {
-                        // Câmera no capô (Hood Cam)
-                        const hoodX = pos.x + Math.sin(pos.heading) * 0.8;
-                        const hoodZ = pos.z + Math.cos(pos.heading) * 0.8;
-                        this.camera.position.set(hoodX, pos.y + 1.65, hoodZ);
-                        this.camera.lookAt(pos.x + Math.sin(pos.heading) * 20, pos.y + 1.4, pos.z + Math.cos(pos.heading) * 20);
-                    } else {
-                        // Câmera Cinematográfica / Helicóptero
-                        this.camera.position.lerp(new THREE.Vector3(pos.x + 18, pos.y + 16, pos.z + 18), dt * 3);
-                        this.camera.lookAt(pos.x, pos.y + 1, pos.z);
-                    }
-                } else {
-                    // Câmera 3ª pessoa seguindo Tanner a pé
-                    const dist = 6.5;
-                    const targetX = pos.x - Math.sin(pos.heading) * dist;
-                    const targetZ = pos.z - Math.cos(pos.heading) * dist;
-                    this.camera.position.lerp(new THREE.Vector3(targetX, pos.y + 3.2, targetZ), dt * 9);
-                    this.camera.lookAt(pos.x, pos.y + 1.6, pos.z);
-                }
+                this.cameraRig.update(
+                    this.camera, this.getPlayerPosition(), this.playerCar,
+                    this.mode, this.cameraMode, this.lookBackActive,
+                    this.city, dt
+                );
             }
 
             updateHUD() {

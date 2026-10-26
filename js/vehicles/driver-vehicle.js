@@ -271,57 +271,11 @@
                 const burnoutKey = !!input.sprint; // Botão dedicado de Burnout (SHIFT / C)
 
                 const armorFactor = this.isSecret ? 0.35 : 1.0;
-                const healthFactor = Math.max(0.38, 1 - (this.damage / 140));
-                const effectiveMaxSpeed = this.maxSpeed * (burnoutKey ? 1.18 : 1.0) * healthFactor;
-
-                // 1. Aceleração e Botão Burnout Clássico
-                if (forwardThrottle > 0) {
-                    const burst = burnoutKey ? 1.38 : 1.0;
-                    this.speed += this.accel * burst * dt;
-                } else if (forwardThrottle < 0) {
-                    if (this.speed > 2) {
-                        this.speed -= this.accel * 1.9 * dt;
-                    } else {
-                        this.speed -= this.accel * 0.75 * dt;
-                    }
-                } else {
-                    this.speed *= Math.pow(0.4, dt);
-                }
-
-                if (handbrake) {
-                    this.speed *= Math.pow(0.22, dt);
-                }
-
-                this.speed = Math.max(-effectiveMaxSpeed * 0.42, Math.min(effectiveMaxSpeed, this.speed));
-
-                // 2. Direção, Botão Burnout (J-Turn / Sobesterço) e Drift
-                const speedRatio = Math.min(1, Math.abs(this.speed) / 10);
-                const directionSign = this.speed >= -0.1 ? 1 : -1;
-                const turnMultiplier = burnoutKey ? 3.55 : (handbrake ? 3.2 : 2.35);
-                const turnRate = turnMultiplier * Math.max(burnoutKey ? 0.65 : 0, speedRatio) * directionSign;
-
-                this.steerAngle = THREE.MathUtils.lerp(this.steerAngle, steerInput * 0.45, Math.min(1, dt * 12));
-                this.heading += steerInput * turnRate * dt / (1 + Math.abs(this.speed) / this.maxSpeed * 0.36);
-                this.wheelSpin += this.speed / 0.44 * dt;
-
-                const centrifugal = steerInput * (this.speed / this.maxSpeed);
-                if ((handbrake || burnoutKey) && Math.abs(this.speed) > 8) {
-                    this.lateralVelocity = THREE.MathUtils.lerp(this.lateralVelocity, -centrifugal * 15.5, dt * 6.5);
-                } else {
-                    this.lateralVelocity = THREE.MathUtils.lerp(this.lateralVelocity, -centrifugal * 4.5, dt * 8);
-                }
-
-                this.isBurnout = burnoutKey && (forwardThrottle > 0 || Math.abs(steerInput) > 0);
-                this.isDrifting = this.isBurnout || (handbrake && Math.abs(this.speed) > 10) || (Math.abs(centrifugal) > 0.55 && Math.abs(this.speed) > 22);
-
-                // 3. Suspensão Macia dos Anos 90 (Body Roll & Pitch)
-                const targetPitch = (forwardThrottle > 0 ? (burnoutKey ? -0.085 : -0.055) : (forwardThrottle < 0 || handbrake ? 0.075 : 0));
-                const targetRoll = -centrifugal * (handbrake || burnoutKey ? 0.19 : 0.13);
-                this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, targetPitch, dt * 9);
-                this.rollAngle = THREE.MathUtils.lerp(this.rollAngle, targetRoll, dt * 8);
-
-                this.chassisTilt.rotation.x = this.pitchAngle;
-                this.chassisTilt.rotation.z = this.rollAngle;
+                // A física agora está separada do desenho do carro, permitindo
+                // ajuste/testes por subsistema sem comprometer o WebGL.
+                const centrifugal = DriverArcadePhysics.update(
+                    this, dt, forwardThrottle, steerInput, handbrake, burnoutKey
+                );
 
                 // Deformação Visual de Lataria (Capô e Porta-Malas abrindo/amassando com o Dano)
                 if (this.hoodPivot && this.trunkPivot) {
@@ -377,15 +331,28 @@
                     this.x = nextX;
                     this.z = nextZ;
                 } else {
-                    if (Math.abs(this.speed) > 8) {
-                        this.damage = Math.min(100, this.damage + Math.abs(this.speed) * 0.32 * armorFactor);
-                        if (audio && isPlayer) audio.playCrash(Math.abs(this.speed) / 30);
-                        if (this.hubcaps > 0 && Math.abs(this.speed) > 24) {
+                    // Deslizamento junto a paredes: permite avançar no eixo livre
+                    // em vez de parar completamente numa quina.
+                    const freeX = !cityBuilder.isPointBlocked(nextX, this.z, 1.55, this.y);
+                    const freeZ = !cityBuilder.isPointBlocked(this.x, nextZ, 1.55, this.y);
+                    if (freeX) this.x = nextX;
+                    if (freeZ) this.z = nextZ;
+                    const impactNow = performance.now();
+                    const impactSpeed = Math.abs(this.speed) *
+                        (freeX || freeZ ? 0.48 : 1);
+                    if (impactSpeed > 8 && impactNow - (this.lastWallImpactAt || 0) > 450) {
+                        this.lastWallImpactAt = impactNow;
+                        this.damage = Math.min(100, this.damage + impactSpeed * 0.30 * armorFactor);
+                        if (audio && isPlayer) audio.playCrash(Math.min(1, impactSpeed / 35));
+                        if (this.hubcaps > 0 && impactSpeed > 24) {
                             this.hubcaps--;
-                            effects.ejectHubcap(this.x, this.y, this.z, -vx * 0.4, -vz * 0.4, isPlayer ? audio : null);
+                            effects.ejectHubcap(this.x, this.y, this.z, -vx * 0.3, -vz * 0.3, isPlayer ? audio : null);
                         }
                     }
-                    this.speed = -this.speed * 0.42;
+                    // Dissipa a energia contra a superfície, sem quicar para trás
+                    // repetidamente a cada frame.
+                    this.speed *= freeX || freeZ ? 0.84 : -0.20;
+                    this.lateralVelocity *= 0.42;
                 }
 
                 // 6. Marcas de Pneu no Asfalto e Fumaça de Burnout/Drift
