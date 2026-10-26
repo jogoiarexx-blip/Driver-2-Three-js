@@ -42,12 +42,22 @@
                 this.hoodPivot = null;
                 this.trunkPivot = null;
                 this.wheels = [];
+                this.wheelSpin = 0;
+                this._cc0ModelApplied = false;
+                this._userCustomModel = false;
                 this.buildCarMesh();
                 this.updateTransform();
                 this.scene.add(this.root);
             }
 
             buildCarMesh() {
+                this._cc0ModelApplied = false;
+                this.hoodPivot = null;
+                this.trunkPivot = null;
+                this.sirenRed = null;
+                this.sirenBlue = null;
+                this.targetMarker = null;
+                this.headlightBeams = null;
                 while (this.chassisTilt.children.length > 0) {
                     this.chassisTilt.remove(this.chassisTilt.children[0]);
                 }
@@ -203,9 +213,48 @@
                 });
             }
 
+
+            applyCC0Model(modelScene) {
+                if (!modelScene || this._userCustomModel) return;
+                const box = new THREE.Box3().setFromObject(modelScene);
+                const size = box.getSize(new THREE.Vector3());
+                if (!Number.isFinite(size.x + size.y + size.z) ||
+                    Math.min(size.x, size.y, size.z) < 0.01) return;
+
+                // Ajuste ao chassi físico, sem criar um segundo carro sobre o original.
+                const width = 2.45;
+                const length = this.bodyStyle === 'truck' ? 6.6 : 5.15;
+                const height = this.bodyStyle === 'truck' ? 3.3 : 2.05;
+                const scale = Math.min(width / size.x, length / size.z, height / size.y);
+                const preserved = [this.sirenRed, this.sirenBlue, this.targetMarker, this.headlightBeams];
+                this.chassisTilt.children.slice().forEach(child => {
+                    if (!preserved.includes(child)) this.chassisTilt.remove(child);
+                });
+                // O modelo Kenney já possui rodas; as quatro rodas primitivas ficam ocultas.
+                this.wheels.forEach(w => { w.visible = false; });
+                this.chassisTilt.scale.set(1, 1, 1);
+                modelScene.scale.setScalar(scale);
+                modelScene.position.set(
+                    -(box.min.x + box.max.x) * 0.5 * scale,
+                    0.34 - box.min.y * scale,
+                    -(box.min.z + box.max.z) * 0.5 * scale
+                );
+                modelScene.traverse(obj => {
+                    if (obj.isMesh) {
+                        obj.frustumCulled = true;
+                        obj.castShadow = false;
+                    }
+                });
+                this.chassisTilt.add(modelScene);
+                this.hoodPivot = null;
+                this.trunkPivot = null;
+                this._cc0ModelApplied = true;
+            }
+
             updatePhysics(dt, input, cityBuilder, effects, audio, isPlayer = false) {
                 const forwardThrottle = input.up ? 1 : (input.down ? -1 : 0);
-                const steerInput = (input.left ? 1 : 0) - (input.right ? 1 : 0);
+                // Heading positivo aponta para +X: esquerda deve reduzir heading.
+                const steerInput = (input.right ? 1 : 0) - (input.left ? 1 : 0);
                 const handbrake = !!input.handbrake;
                 const burnoutKey = !!input.sprint; // Botão dedicado de Burnout (SHIFT / C)
 
@@ -239,8 +288,9 @@
                 const turnMultiplier = burnoutKey ? 3.55 : (handbrake ? 3.2 : 2.35);
                 const turnRate = turnMultiplier * Math.max(burnoutKey ? 0.65 : 0, speedRatio) * directionSign;
 
-                this.steerAngle = steerInput * 0.45;
-                this.heading += steerInput * turnRate * dt;
+                this.steerAngle = THREE.MathUtils.lerp(this.steerAngle, steerInput * 0.45, Math.min(1, dt * 12));
+                this.heading += steerInput * turnRate * dt / (1 + Math.abs(this.speed) / this.maxSpeed * 0.36);
+                this.wheelSpin += this.speed / 0.44 * dt;
 
                 const centrifugal = steerInput * (this.speed / this.maxSpeed);
                 if ((handbrake || burnoutKey) && Math.abs(this.speed) > 8) {
@@ -376,6 +426,7 @@
                 this.root.position.set(this.x, this.y, this.z);
                 this.root.rotation.y = this.heading;
                 if (this.wheels.length >= 2) {
+                    this.wheels.forEach(w => { w.rotation.x = this.wheelSpin; });
                     this.wheels[0].rotation.y = this.steerAngle;
                     this.wheels[1].rotation.y = this.steerAngle;
                 }

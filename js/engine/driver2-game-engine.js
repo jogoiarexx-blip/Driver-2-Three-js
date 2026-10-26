@@ -62,6 +62,8 @@
                 this.targetCar = null;
                 this.secretCar = null;
                 this.spawnAllVehicles();
+                this.freeVehicleAssets = new FreeVehicleAssets(this);
+                this.freeVehicleAssets.decorateFleet();
 
                 this.input = { up: false, down: false, left: false, right: false, handbrake: false, sprint: false };
                 this.bindEvents();
@@ -176,6 +178,7 @@
                 });
 
                 this.tanner.setVisible(false);
+                if (this.freeVehicleAssets) this.freeVehicleAssets.decorateFleet();
             }
 
             setWeather(mode) {
@@ -676,8 +679,8 @@
                             while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
 
                             aiInput.up = true;
-                            if (angleDiff > 0.12) aiInput.left = true;
-                            else if (angleDiff < -0.12) aiInput.right = true;
+                            if (angleDiff > 0.12) aiInput.right = true;
+                            else if (angleDiff < -0.12) aiInput.left = true;
                             if (Math.abs(angleDiff) > 1.2 && v.speed > 20) aiInput.handbrake = true;
                         } else {
                             v.sirenActive = false;
@@ -729,24 +732,33 @@
                         const dz = b.z - a.z;
                         const dist = Math.hypot(dx, dz);
 
-                        if (dist < 3.6 && dist > 0.001) {
-                            const overlap = (3.6 - dist) * 0.5;
+                        const collisionDistance = (a.bodyStyle === 'bus' || b.bodyStyle === 'bus' ||
+                            a.bodyStyle === 'truck' || b.bodyStyle === 'truck') ? 4.5 : 3.6;
+                        if (dist < collisionDistance && dist > 0.001) {
+                            const overlap = (collisionDistance - dist) * 0.5;
                             const nx = dx / dist;
                             const nz = dz / dist;
-
                             a.x -= nx * overlap;
                             a.z -= nz * overlap;
                             b.x += nx * overlap;
                             b.z += nz * overlap;
 
-                            const relSpeed = Math.abs(a.speed - b.speed);
-                            if (relSpeed > 6) {
-                                a.damage = Math.min(100, a.damage + relSpeed * 0.28);
-                                b.damage = Math.min(100, b.damage + relSpeed * 0.28);
-
-                                // Se o jogador bateu em alguém
+                            // Velocidade relativa projetada no eixo da batida.
+                            // Detecta colisões frontais que possuem o mesmo módulo de velocidade.
+                            const avx = Math.sin(a.heading) * a.speed + Math.cos(a.heading) * a.lateralVelocity;
+                            const avz = Math.cos(a.heading) * a.speed - Math.sin(a.heading) * a.lateralVelocity;
+                            const bvx = Math.sin(b.heading) * b.speed + Math.cos(b.heading) * b.lateralVelocity;
+                            const bvz = Math.cos(b.heading) * b.speed - Math.sin(b.heading) * b.lateralVelocity;
+                            const closingSpeed = Math.max(0, (avx - bvx) * nx + (avz - bvz) * nz);
+                            const now = performance.now();
+                            if (closingSpeed > 6 && now - (a.lastImpactAt || 0) > 450 &&
+                                now - (b.lastImpactAt || 0) > 450) {
+                                a.lastImpactAt = now;
+                                b.lastImpactAt = now;
+                                a.damage = Math.min(100, a.damage + closingSpeed * 0.28);
+                                b.damage = Math.min(100, b.damage + closingSpeed * 0.28);
                                 if (a === this.playerCar || b === this.playerCar) {
-                                    this.audio.playCrash(relSpeed / 25);
+                                    this.audio.playCrash(Math.min(1.0, closingSpeed / 35));
                                     if (a.isPolice || b.isPolice) {
                                         this.felony = Math.min(100, this.felony + 22);
                                     } else if (this.isPoliceNearPlayer(65)) {
@@ -754,12 +766,13 @@
                                     }
                                 }
                             }
-
-                            const avgSpeed = (a.speed + b.speed) * 0.45;
-                            a.speed = avgSpeed;
-                            b.speed = avgSpeed;
-                        }
-                    }
+                            if (closingSpeed > 1) {
+                                a.speed *= 0.55;
+                                b.speed *= 0.55;
+                            }
+                            a.updateTransform();
+                            b.updateTransform();
+                        }                    }
                 }
             }
 
@@ -1321,13 +1334,17 @@
                 modelScene.position.y = 0.25;
 
                 this.playerCar.chassisTilt.add(modelScene);
+                this.playerCar._userCustomModel = true;
+                this.playerCar._cc0ModelApplied = false;
                 this.playerCar.name = name.slice(0, 14);
             }
 
             restoreDefaultCarMesh() {
                 if (!this.playerCar) return;
+                this.playerCar._userCustomModel = false;
                 this.playerCar.buildCarMesh();
-                this.playerCar.name = 'BUICK 70 V8';
+                this.playerCar.name = CITY_PRESETS[this.currentCityKey].playerCarName;
+                if (this.freeVehicleAssets && this.freeVehicleAssets.enabled) this.freeVehicleAssets.decorateFleet();
                 document.getElementById('asset-loader-status').textContent =
                     'Malha Low-Poly PS1 original restaurada com sucesso!';
             }
@@ -1353,6 +1370,7 @@
                     if (code === 'KeyV') this.cameraMode = (this.cameraMode + 1) % 3;
                     if (code === 'KeyQ') this.lookBackActive = true;
                     if (code === 'KeyN') this.cycleWeather();
+                    if (code === 'KeyM' && !e.repeat) this.freeVehicleAssets.toggle();
                     if (code === 'KeyL' && this.playerCar && this.playerCar.headlightBeams) {
                         this.playerCar.headlightBeams.visible = !this.playerCar.headlightBeams.visible;
                     }
@@ -1392,6 +1410,9 @@
                     this.audio.init();
                     const active = this.audio.toggleMute();
                     e.currentTarget.textContent = active ? '🔊' : '🔇';
+                });
+                document.getElementById('btn-free-assets').addEventListener('click', () => {
+                    this.freeVehicleAssets.toggle();
                 });
                 document.getElementById('btn-camera').addEventListener('click', () => {
                     if (this.inReplayMode) this.cycleDirectorCamera();
