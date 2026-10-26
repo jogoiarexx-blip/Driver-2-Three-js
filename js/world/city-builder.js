@@ -15,6 +15,9 @@
                 this.benches = [];
                 this.bridgeRaised = false;
                 this.bridgeAngle = 0.14;
+                this.signalClock = 0;
+                this.lastSignalPhase = -1;
+                this.signalBulbs = [];
                 this.safeHouseZone = { x: -120, z: -120, radius: 9 };
 
                 // Garagem Secreta com Portão e Interruptor a Pé (Nordeste X=120, Z=120)
@@ -54,6 +57,8 @@
                 this.destructibleProps = [];
                 this.benches = [];
                 this.secretGateOpen = false;
+                this.signalClock = 0;
+                this.lastSignalPhase = -1;
 
                 this.buildEnvironment();
             }
@@ -71,6 +76,7 @@
 
                 // Faixas centrais instanciadas: baixa contagem de draw calls, sem texturas extras.
                 this.buildRoadMarkings();
+                this.buildTrafficLights();
 
                 // 2. Canal Central (Rio Chicago / Baía de Havana / Canal da Orla do Rio)
                 const riverGeo = new THREE.PlaneGeometry(520, 32);
@@ -204,6 +210,74 @@
                 stripes.instanceMatrix.needsUpdate = true;
                 stripes.frustumCulled = false;
                 this.cityGroup.add(stripes);
+            }
+
+            // 50 semáforos em 25 cruzamentos; apenas 5 lotes instanciados.
+            buildTrafficLights() {
+                const locations = [];
+                for (let x = -160; x <= 160; x += 80) {
+                    for (let z = -160; z <= 160; z += 80) {
+                        locations.push({ x: x + 11, z: z + 11, axis: 'z' });
+                        locations.push({ x: x - 11, z: z - 11, axis: 'x' });
+                    }
+                }
+                const count = locations.length;
+                const poles = new THREE.InstancedMesh(
+                    new THREE.CylinderGeometry(0.12, 0.16, 4.2, 6),
+                    new THREE.MeshLambertMaterial({ color: 0x475569 }), count
+                );
+                const housings = new THREE.InstancedMesh(
+                    new THREE.BoxGeometry(0.62, 1.28, 0.48),
+                    new THREE.MeshLambertMaterial({ color: 0x161b25 }), count
+                );
+                const bulbColors = [0xef4444, 0xf59e0b, 0x22c55e];
+                const bulbs = bulbColors.map(() => new THREE.InstancedMesh(
+                    new THREE.SphereGeometry(0.20, 7, 5),
+                    new THREE.MeshBasicMaterial({ color: 0xffffff }), count
+                ));
+                const mat = new THREE.Matrix4();
+                locations.forEach((loc, i) => {
+                    poles.setMatrixAt(i, mat.makeTranslation(loc.x, 2.1, loc.z));
+                    housings.setMatrixAt(i, mat.makeTranslation(loc.x, 3.65, loc.z));
+                    bulbs.forEach((bulb, k) => {
+                        bulb.setMatrixAt(i, mat.makeTranslation(loc.x, 4.05 - k * 0.4, loc.z + 0.30));
+                    });
+                });
+                poles.instanceMatrix.needsUpdate = true;
+                housings.instanceMatrix.needsUpdate = true;
+                bulbs.forEach(b => { b.instanceMatrix.needsUpdate = true; });
+                this.signalBulbs = bulbs;
+                this.signalPositions = locations;
+                this.cityGroup.add(poles, housings, ...bulbs);
+                this.refreshTrafficLights(true);
+            }
+
+            getTrafficPhase() {
+                return this.signalClock % 24;
+            }
+
+            isTrafficGreen(axis) {
+                const phase = this.getTrafficPhase();
+                return axis === 'z' ? phase < 10 : (phase >= 12 && phase < 22);
+            }
+
+            refreshTrafficLights(force = false) {
+                const phase = this.getTrafficPhase();
+                const step = phase < 10 ? 0 : phase < 12 ? 1 : phase < 22 ? 2 : 3;
+                if (step === this.lastSignalPhase && !force) return;
+                this.lastSignalPhase = step;
+                const bright = [new THREE.Color(0xff3333), new THREE.Color(0xffbd43), new THREE.Color(0x3bfa78)];
+                const dim = new THREE.Color(0x292d33);
+                this.signalPositions.forEach((loc, i) => {
+                    const activeColor = loc.axis === 'z' ? (step === 0 ? 2 : step === 1 ? 1 : 0) :
+                        (step === 2 ? 2 : step === 3 ? 1 : 0);
+                    this.signalBulbs.forEach((bulb, index) => {
+                        bulb.setColorAt(i, index === activeColor ? bright[index] : dim);
+                    });
+                });
+                this.signalBulbs.forEach(bulb => {
+                    if (bulb.instanceColor) bulb.instanceColor.needsUpdate = true;
+                });
             }
 
             buildRioLandmarks() {
@@ -390,6 +464,8 @@
             }
 
             update(dt, vehicles, onPropHitCallback) {
+                this.signalClock += dt;
+                this.refreshTrafficLights();
                 const targetAngle = this.bridgeRaised ? 0.32 : 0.08;
                 this.bridgeAngle = THREE.MathUtils.lerp(this.bridgeAngle, targetAngle, dt * 2.5);
                 if (this.bridgeSouthLeaf && this.bridgeNorthLeaf) {

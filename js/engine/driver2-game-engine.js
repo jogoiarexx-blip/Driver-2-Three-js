@@ -27,6 +27,7 @@
                 this.audio = new RetroSynthAudio();
                 this.effects = new EffectsManager(this.scene);
                 this.city = new CityBuilder(this.scene, this.currentCityKey);
+                this.trafficAI = new DriverTrafficAI(this.city);
                 this.tanner = new TannerController(this.scene);
                 this.pedManager = new PedestrianAndRoadblockManager(this.scene);
                 this.pedManager.spawnCityPedestrians();
@@ -107,6 +108,7 @@
             spawnAllVehicles() {
                 this.vehicles.forEach(v => this.scene.remove(v.root));
                 this.vehicles = [];
+                if (this.trafficAI) this.trafficAI.reset();
                 this.targetCar = null;
 
                 const preset = CITY_PRESETS[this.currentCityKey] || CITY_PRESETS.chicago;
@@ -138,10 +140,10 @@
 
                 // 3. Frota de Viaturas Policiais da Cidade Atual
                 const copCoords = [
-                    { x: -45, z: 45, heading: Math.PI / 2 },
-                    { x: 45, z: -45, heading: -Math.PI / 2 },
-                    { x: -80, z: -90, heading: 0 },
-                    { x: 80, z: 90, heading: Math.PI }
+                    { x: -4, z: -112, heading: 0 },
+                    { x: 76, z: 132, heading: Math.PI },
+                    { x: -116, z: -84, heading: Math.PI / 2 },
+                    { x: 124, z: 84, heading: -Math.PI / 2 }
                 ];
                 copCoords.forEach(c => {
                     const cop = new DriverVehicle(this.scene, {
@@ -158,11 +160,11 @@
 
                 // 4. Carros Civis + Veículos Pesados Exclusivos do Driver 2 (Ônibus, Caminhão Baú e Limusine)
                 const civilSpecs = [
-                    { name: 'ÔNIBUS URBANO V8', color: 0xf59e0b, bodyStyle: 'bus', x: -22, z: -60, heading: 0, maxSpeed: 42, accel: 20 },
-                    { name: 'CAMINHÃO CARGA', color: 0x0284c7, bodyStyle: 'truck', x: 55, z: -80, heading: -Math.PI / 2, maxSpeed: 45, accel: 22 },
-                    { name: 'STRETCH LIMO V8', color: 0x18181b, bodyStyle: 'limo', x: 80, z: 95, heading: 0, maxSpeed: 52, accel: 27 },
-                    { name: 'CADILLAC VERDE', color: 0x15803d, bodyStyle: 'muscle', x: -80, z: 30, heading: 0, maxSpeed: 46, accel: 24 },
-                    { name: 'COUPE TURQUESA', color: 0x0d9488, bodyStyle: 'muscle', x: 80, z: -120, heading: Math.PI, maxSpeed: 48, accel: 25 }
+                    { name: 'ÔNIBUS URBANO V8', color: 0xf59e0b, bodyStyle: 'bus', x: -84, z: -138, heading: Math.PI, maxSpeed: 42, accel: 20 },
+                    { name: 'CAMINHÃO CARGA', color: 0x0284c7, bodyStyle: 'truck', x: 102, z: -84, heading: Math.PI / 2, maxSpeed: 45, accel: 22 },
+                    { name: 'STRETCH LIMO V8', color: 0x18181b, bodyStyle: 'limo', x: 84, z: 122, heading: 0, maxSpeed: 52, accel: 27 },
+                    { name: 'CADILLAC VERDE', color: 0x15803d, bodyStyle: 'muscle', x: -76, z: 27, heading: 0, maxSpeed: 46, accel: 24 },
+                    { name: 'COUPE TURQUESA', color: 0x0d9488, bodyStyle: 'muscle', x: 116, z: -4, heading: Math.PI / 2, maxSpeed: 48, accel: 25 }
                 ];
                 civilSpecs.forEach(c => {
                     const civ = new DriverVehicle(this.scene, {
@@ -647,7 +649,7 @@
 
             getPlayerPosition() {
                 if (this.mode === 'driving' && this.playerCar) {
-                    return { x: this.playerCar.x, y: this.playerCar.y, z: this.playerCar.z, heading: this.playerCar.heading };
+                    return { x: this.playerCar.x, y: this.playerCar.y, z: this.playerCar.z, heading: this.playerCar.heading, speed: this.playerCar.speed };
                 }
                 return {
                     x: this.tanner.group.position.x,
@@ -660,67 +662,14 @@
             updateAIAndCollisions(dt) {
                 const playerPos = this.getPlayerPosition();
 
-                // 1. Atualiza IA das viaturas policiais e carros civis
-                for (let i = 0; i < this.vehicles.length; i++) {
-                    const v = this.vehicles[i];
-                    if (v === this.playerCar) continue;
-
-                    const aiInput = { up: false, down: false, left: false, right: false, handbrake: false };
-
-                    if (v.isPolice) {
-                        // Se Felony > 25, viaturas ligam a sirene e perseguem Tanner
-                        if (this.felony > 25) {
-                            v.sirenActive = true;
-                            const dx = playerPos.x - v.x;
-                            const dz = playerPos.z - v.z;
-                            const targetHeading = Math.atan2(dx, dz);
-                            let angleDiff = targetHeading - v.heading;
-                            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-                            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-
-                            aiInput.up = true;
-                            if (angleDiff > 0.12) aiInput.right = true;
-                            else if (angleDiff < -0.12) aiInput.left = true;
-                            if (Math.abs(angleDiff) > 1.2 && v.speed > 20) aiInput.handbrake = true;
-                        } else {
-                            v.sirenActive = false;
-                            // Patrulha pacífica pelas avenidas
-                            aiInput.up = true;
-                            v.speed = Math.min(v.speed, 22);
-                            if (this.city.isPointBlocked(v.x + Math.sin(v.heading) * 14, v.z + Math.cos(v.heading) * 14, 2)) {
-                                aiInput.left = true;
-                            }
-                        }
-                    } else if (v.isTarget) {
-                        // IA do Carro-Alvo fugindo na Missão 1
-                        aiInput.up = true;
-                        const lookAheadX = v.x + Math.sin(v.heading) * 18;
-                        const lookAheadZ = v.z + Math.cos(v.heading) * 18;
-                        if (this.city.isPointBlocked(lookAheadX, lookAheadZ, 2.5)) {
-                            aiInput.left = true;
-                            aiInput.handbrake = true;
-                        } else if (Math.random() < 0.02) {
-                            aiInput.right = true;
-                        }
-                    } else {
-                        // Tráfego civil passeando pelas vias (abre caminho se o jogador ligar a sirene policial!)
-                        aiInput.up = true;
-                        v.speed = Math.min(v.speed, 19);
-                        if (this.playerCar && this.playerCar.isPolice && this.playerCar.sirenActive) {
-                            const dToCop = Math.hypot(v.x - playerPos.x, v.z - playerPos.z);
-                            if (dToCop < 28) {
-                                aiInput.right = true;
-                                v.speed *= 0.85;
-                            }
-                        }
-                        const lookX = v.x + Math.sin(v.heading) * 12;
-                        const lookZ = v.z + Math.cos(v.heading) * 12;
-                        if (this.city.isPointBlocked(lookX, lookZ, 2.0)) {
-                            aiInput.right = true;
-                        }
-                    }
-
-                    v.updatePhysics(dt, aiInput, this.city, this.effects, this.audio, false);
+                // IA: tráfego dirigido por cruzamentos e sinalização.
+                // O carro secreto só deixa a garagem quando o jogador assume o volante.
+                for (const vehicle of this.vehicles) {
+                    if (vehicle === this.playerCar || vehicle.isSecret) continue;
+                    const controls = this.trafficAI.getInput(
+                        vehicle, dt, this.vehicles, playerPos, this.felony
+                    );
+                    vehicle.updatePhysics(dt, controls, this.city, this.effects, this.audio, false);
                 }
 
                 // 2. Colisões Carro-com-Carro (Física de Impacto + Dano + Felony)
@@ -772,7 +721,8 @@
                             }
                             a.updateTransform();
                             b.updateTransform();
-                        }                    }
+                        }
+                    }
                 }
             }
 
