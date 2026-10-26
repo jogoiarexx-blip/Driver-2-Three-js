@@ -1329,6 +1329,15 @@
                     if (code === 'KeyB') this.city.toggleBridge();
                 });
 
+                const clearInputs = () => {
+                    Object.keys(this.input).forEach(key => { this.input[key] = false; });
+                    this.lookBackActive = false;
+                };
+                window.addEventListener('blur', clearInputs);
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) clearInputs();
+                });
+
                 window.addEventListener('keyup', (e) => {
                     const code = e.code;
                     if (code === 'KeyW' || code === 'ArrowUp') this.input.up = false;
@@ -1395,8 +1404,20 @@
                 const bindTouch = (id, key) => {
                     const el = document.getElementById(id);
                     if (!el) return;
-                    el.addEventListener('touchstart', (e) => { e.preventDefault(); this.audio.init(); this.input[key] = true; });
-                    el.addEventListener('touchend', (e) => { e.preventDefault(); this.input[key] = false; });
+                    el.style.touchAction = 'none';
+                    el.addEventListener('pointerdown', e => {
+                        e.preventDefault();
+                        this.audio.init();
+                        this.input[key] = true;
+                        if (el.setPointerCapture) el.setPointerCapture(e.pointerId);
+                    });
+                    const release = e => {
+                        if (e && e.cancelable) e.preventDefault();
+                        this.input[key] = false;
+                    };
+                    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(eventName => {
+                        el.addEventListener(eventName, release);
+                    });
                 };
                 bindTouch('touch-left', 'left');
                 bindTouch('touch-right', 'right');
@@ -1406,9 +1427,16 @@
                 bindTouch('touch-burnout', 'sprint');
                 const touchAction = document.getElementById('touch-action');
                 if (touchAction) {
-                    touchAction.addEventListener('touchstart', (e) => {
+                    touchAction.addEventListener('pointerdown', e => {
                         e.preventDefault();
+                        if (touchAction.dataset.pressed) return;
+                        touchAction.dataset.pressed = '1';
                         this.toggleVehicleEnterExit();
+                    });
+                    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(eventName => {
+                        touchAction.addEventListener(eventName, () => {
+                            delete touchAction.dataset.pressed;
+                        });
                     });
                 }
             }
