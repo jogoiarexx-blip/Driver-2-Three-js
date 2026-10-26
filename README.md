@@ -62,3 +62,13 @@ Veja [ASSETS-CREDITS.md](ASSETS-CREDITS.md) para fonte, versão e licença de ca
 - Testes locais: `node --test tests/evolution.test.cjs`. O workflow `qa.yml` executa os mesmos testes nas alterações do repositório.
 
 Observação: os testes de lógica não substituem uma sessão real de navegador para confirmar a aparência de materiais, partículas e performance em aparelhos diferentes.
+
+## Revisão de física, câmera e checkpoints
+
+- `js/physics/arcade-dynamics.js`: direção e transferência de peso recalibradas, resistência progressiva, freio/ré e colisões com impulso proporcional à massa de sedãs, ônibus, caminhões e limusines.
+- `js/vehicles/driver-vehicle.js`: deslizamento junto às paredes quando houver um eixo livre; dano de parede com cooldown para evitar contagem a cada frame.
+- `js/render/driver-camera-rig.js`: câmera de perseguição amortecida, campo de visão ajustado à velocidade, vista pelo capô e checagem simples de obstáculos atrás do veículo.
+- `js/gameplay/checkpoint-route.js`: missões **Rota de Fuga**, **Trailblazer** e **GP Secreto** exigem passar pelos portões em sequência; apenas o próximo aparece no cenário e radar.
+- `tests/driving-camera.test.cjs`: 12 testes de regressão, executados junto à suíte anterior por GitHub Actions.
+
+**Compatibilidade:** GitHub Pages estático, scripts clássicos e assets CC0 opcionais mantidos. A verificação automática testa lógica; a qualidade visual e a física final ainda requerem partidas manuais reais em desktop/celular.
