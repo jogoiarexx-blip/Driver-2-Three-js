@@ -10,7 +10,12 @@ class UrbanDistricts {
     }
     static height(city, x, z) {
         const r = this.random(x,z,3);
-        return city === 'chicago' ? 25 + r * 54 :
+        // Centro de Chicago reconhecível: torres altas no Loop,
+        // fábricas mais baixas na periferia; a navegação 2D não muda.
+        // Curva contínua evita saltos bruscos entre quarteirões.
+        const loop=Math.max(0,1-Math.hypot(x-35,z+100)/245);
+        return city === 'chicago' ?
+            18+r*29 + loop*(28+63*r) :
             city === 'havana' ? 12 + r * 18 :
             city === 'vegas' ? 22 + r * 42 : 16 + r * 32;
     }
