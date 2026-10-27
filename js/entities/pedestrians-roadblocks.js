@@ -9,6 +9,8 @@
                 this.scene = scene;
                 this.pedestrians = [];
                 this.roadblocks = [];
+                this.roadblockOfficers = [];
+                this.officerTime = 0;
                 this.group = new THREE.Group();
                 this.scene.add(this.group);
             }
@@ -21,6 +23,8 @@
                 }
                 this.pedestrians = [];
                 this.roadblocks = [];
+                this.roadblockOfficers = [];
+                this.officerTime = 0;
 
                 const shirtColors = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b, 0xa855f7, 0xec4899, 0xf8fafc];
                 const skinMat = new THREE.MeshLambertMaterial({ color: 0xfdba74 });
@@ -114,6 +118,80 @@
                         });
                     }
                 });
+                // Dois agentes nas calçadas laterais, fora da faixa de rolagem.
+                if (dynamic) barrierLocations.forEach(loc => this.spawnRoadblockOfficers(loc));
+            }
+
+            spawnRoadblockOfficers(loc) {
+                const uniform = new THREE.MeshLambertMaterial({ color: 0x1e3a8a });
+                const cap = new THREE.MeshLambertMaterial({ color: 0x0f172a });
+                const skin = new THREE.MeshLambertMaterial({ color: 0xe5ad84 });
+                const reflector = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+                for (const sign of [-1, 1]) {
+                    const group = new THREE.Group();
+                    const body = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.87, 0.38), uniform);
+                    body.position.y = 1.12;
+                    const head = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.38, 0.33), skin);
+                    head.position.y = 1.76;
+                    const hat = new THREE.Mesh(new THREE.BoxGeometry(0.43, 0.16, 0.4), cap);
+                    hat.position.y = 2.03;
+                    const vest = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.13, 0.41), reflector);
+                    vest.position.y = 1.15;
+                    group.add(body, head, hat, vest);
+                    const legs = [];
+                    for (const side of [-1, 1]) {
+                        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.72, 0.25), cap);
+                        leg.position.set(side * 0.17, 0.37, 0);
+                        group.add(leg);
+                        legs.push(leg);
+                    }
+                    const arms = [];
+                    for (const side of [-1, 1]) {
+                        const arm = new THREE.Group();
+                        arm.position.set(side * 0.39, 1.42, 0);
+                        const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.65, 0.20), uniform);
+                        mesh.position.y = -0.29;
+                        arm.add(mesh);
+                        group.add(arm);
+                        arms.push(arm);
+                    }
+                    // Lados da avenida, sem bloquear a pista de rolamento.
+                    const along = loc.axis === 'x' ?
+                        { x: loc.x, z: loc.z + sign * 12.6 } :
+                        { x: loc.x + sign * 12.6, z: loc.z };
+                    group.position.set(along.x, 0, along.z);
+                    group.rotation.y = loc.axis === 'x' ? sign * Math.PI / 2 :
+                        sign > 0 ? -Math.PI / 2 : Math.PI / 2;
+                    this.group.add(group);
+                    this.roadblockOfficers.push({
+                        mesh: group, arms, legs, x: along.x, z: along.z,
+                        axis: loc.axis, side: sign, t: sign * 0.7,
+                        retreat: 0, dynamic: true
+                    });
+                }
+            }
+
+            updateRoadblockOfficers(dt, playerCar) {
+                this.officerTime += Math.max(0, dt);
+                for (const officer of this.roadblockOfficers) {
+                    const dx = (playerCar?.x ?? Infinity) - officer.x;
+                    const dz = (playerCar?.z ?? Infinity) - officer.z;
+                    const near = Math.hypot(dx, dz) < 20;
+                    officer.retreat += ((near ? 1 : 0) - officer.retreat) *
+                        Math.min(1, dt * 5);
+                    const away = officer.side * officer.retreat * 2.0;
+                    officer.mesh.position.x = officer.x +
+                        (officer.axis === 'z' ? away : 0);
+                    officer.mesh.position.z = officer.z +
+                        (officer.axis === 'x' ? away : 0);
+                    officer.t += dt * 3;
+                    const wave = Math.sin(officer.t * 2.7);
+                    // Um braço sinaliza parar; o outro oscila ligeiramente.
+                    officer.arms[0].rotation.z = -0.95 + wave * 0.22;
+                    officer.arms[1].rotation.z = 0.18 + wave * 0.12;
+                    officer.legs[0].rotation.x = officer.retreat * 0.17;
+                    officer.legs[1].rotation.x = -officer.retreat * 0.17;
+                }
             }
 
             clearDynamicRoadblocks() {
@@ -124,9 +202,16 @@
                     block.mesh.parent?.remove(block.mesh);
                 }
                 this.roadblocks = keep;
+                this.roadblockOfficers = this.roadblockOfficers.filter(officer => {
+                    if (!officer.dynamic) return true;
+                    GPUResourceUtils.disposeSubtree(officer.mesh);
+                    officer.mesh.parent?.remove(officer.mesh);
+                    return false;
+                });
             }
 
             update(dt, vehicles, audio, playerCar = vehicles[0], onBarrierImpact = null) {
+                this.updateRoadblockOfficers(dt, playerCar);
                 // 1. Atualiza Pedestres e Salto de Esquiva (Dive/Dodge clássico do Driver 2)
                 for (let i = 0; i < this.pedestrians.length; i++) {
                     const p = this.pedestrians[i];
