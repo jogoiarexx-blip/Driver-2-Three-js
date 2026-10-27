@@ -63,6 +63,12 @@
             }
 
             buildCarMesh() {
+                // Ao voltar ao visual PS1, não deixar uma dobradiça GLB
+                // antiga ligada aos controles de entrada/saída.
+                if(this.policeDoorRig &&
+                    typeof DriverPoliceDoorRig!=='undefined')
+                    DriverPoliceDoorRig.cancel(this);
+                this.policeDoorRig=null;
                 this._cc0ModelApplied = false;
                 this._userCustomModel = false;
                 this.hoodPivot = null;

@@ -16,11 +16,32 @@ class DriverBootFlow {
         this.loading=document.getElementById('driver-loading');
         this.hud=document.getElementById('hud-layer');
         this.settings=this.readSettings();
+        this.moveInGameControlsToMenu();
         this.setupEvents();
         this.refreshSave();
         this.applySettings();
     }
 
+    moveInGameControlsToMenu(){
+        // Todos os controles extras ficam no menu de pausa. Os elementos
+        // são movidos, não copiados: listeners e IDs continuam únicos.
+        const holder=document.getElementById('d2-game-controls');
+        if(!holder)return;
+        const menuIds=[
+            'btn-missions','btn-architecture','btn-director',
+            'btn-audio','btn-free-assets','btn-headlights','btn-camera',
+            'btn-radar-zoom','btn-route-home'
+        ];
+        for(const id of menuIds){
+            const element=document.getElementById(id);
+            if(element)holder.appendChild(element);
+        }
+        for(const control of document.querySelectorAll('[data-weather]')){
+            control.addEventListener('click',()=>{
+                if(this.game)this.game.setWeather(control.dataset.weather);
+            });
+        }
+    }
     readSettings() {
         const defaults={models:true,scanlines:true,
             reducedMotion:false,playerColor:'#d53934'};
@@ -374,7 +395,12 @@ class DriverBootFlow {
             run:()=>{
                 // Uma única criação de frota no início da missão,
                 // evitando recriar todos os veículos duas vezes.
-                game.missionType=mode==='story'?'story_tipoff':'freeroam';
+                // UNDERCOVER começa explorando Chicago: o marcador
+                // da missão é acionado somente por J, não no loader.
+                game.storyCampaign=mode==='story' ||
+                    (mode==='continue'&&!!save?.completed?.some(
+                        type=>type.startsWith('story_')));
+                game.missionType='freeroam';
                 if(needsCity)game.activateCityPreset(city);
                 if(mode==='continue'){
                     if(!game.homeSave.restore(game,save))
@@ -401,6 +427,10 @@ class DriverBootFlow {
         this.resume();
         if(mode==='driving')
             document.getElementById('missions-modal').classList.remove('hidden');
+        if(mode==='story'){
+            game.missionToastText='UNDERCOVER • Dirija ao marcador verde e pressione J para começar.';
+            game.missionToastRemaining=6;
+        }
         return true;
     }
 

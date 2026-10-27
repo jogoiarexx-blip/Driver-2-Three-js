@@ -839,3 +839,61 @@ o cabeçalho, os nós de ambas as dobradiças, as malhas independentes e
 a presença de imagens e texturas incorporadas. Ainda é preciso testar
 visualmente a abertura das portas dentro do navegador; isso não se
 conclui a partir do teste de arquivos.
+
+
+## REV — Entrar no carro GLB de Tanner + campanha fluida + HUD minimalista (27/10/2026)
+
+### Diagnóstico e correções aplicadas
+- **Antes:** `carro_driver2_otimizado.glb` recebia carroceria/pintura,
+  mas não gerava dobradiças. A entrada/saída pela tecla E era
+  instantânea. **Agora:** o mesmo `DriverPoliceDoorRig` serve ao
+  GLB de Tanner e à viatura. A malha única do carro de Tanner é
+  separada em dois painéis por índices de triângulos na faixa
+  `X=-0,50..0,16`; a textura e vértices originais são
+  reaproveitados. Os dois lados possuem pivôs; a porta do
+  motorista abre, Tanner se aproxima, entra e a porta fecha.
+  A saída repete a transição inversa. Nenhum carro duplicado é
+  desenhado. Fallback para entrada instantânea caso não exista
+  região de porta detectável. O comando E não interfere em freio,
+  volante nem colisões.
+- **Antes:** escolher UNDERCOVER no menu já inicializava
+  `story_tipoff`. **Agora:** o modo entra no passeio livre de
+  Chicago, mostrando o objetivo apenas como aviso transitório.
+  As missões passam a ser iniciadas deliberadamente pelo
+  marcador verde do mapa (tecla **J**). A ordem de oito missões
+  de Chicago fica controlada por `DriverCampaignFlow.next`.
+  A seleção por menu de missões ainda funciona.
+- **Antes:** toda vitória ou derrota bloqueava a simulação com a
+  tela central `JOGAR NOVAMENTE / PASSEIO LIVRE`. **Agora:**
+  `triggerEndScreen` registra o resultado, recompensa avanços
+  verdadeiros da campanha e retorna ao passeio livre **sem
+  recriar a frota ou teleportar Tanner**. O resultado aparece
+  como notificação discreta temporária. O marcador disponibiliza
+  a próxima missão; derrotas não são registradas como concluídas.
+  O desbloqueio persistente de Havana permanece igual.
+- **HUD:** durante o jogo, só o botão **☰ MENU** permanece
+  na barra superior. Damage/felony, controles de cidade/clima,
+  barra de telemetria do topo e cabeçalho de missão deixam de
+  ficar permanentemente sobre a cena. Radar/velocímetro e
+  ações contextuais necessários à jogabilidade permanecem.
+  Modos, Assets, Replay, áudio, câmera, faróis, zoom e rota
+  foram movidos (mesmos IDs/listeners) para **MENU → OPTIONS**.
+  O menu também oferece clima. Missões ativas exibem uma linha
+  curta de contexto e cronômetro, não um painel grande.
+- **Compatibilidade:** mantidos `DriverChapterProgress`,
+  `DriverHomeSave`, áudio, gamepads, sirene e colisões.
+  Ao alternar 3D/PS1, cancela pivôs GLB pendentes e remove
+  referências às antigas dobradiças.
+
+### Verificações e limitações
+- Novo teste `tests/driver-natural-campaign-hud.test.cjs` cobre
+  progressão em ordem, não conclusão após derrota, leitura da
+  geometria GLB original, integração das dobradiças, carregamento
+  de scripts, menu e ausência do bloqueio por tela de vitória.
+- **Ainda necessário:** teste visual em navegador real para
+  checar qualidade do recorte da porta na carroceria original.
+  A extração automática por triângulos cria uma porta funcional,
+  mas não substitui rig manual com batentes e interior detalhado.
+  As missões preservam seus roteiros simplificados próprios;
+  esta revisão não pretende certificá-las como réplicas fiéis
+  da história completa do Driver 2 original nem medir FPS.

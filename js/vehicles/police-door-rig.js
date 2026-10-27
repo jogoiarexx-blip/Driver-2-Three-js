@@ -1,5 +1,5 @@
 /**
- * Animação de portas do car police.glb. O arquivo rigado contém dois
+ * Animação de portas GLB de polícia e do carro Driver 2 personalizado.
  * pivôs reais; o GLB original de malha única é separado em runtime
  * quando o usuário ainda não publicou a versão com rig.
  * Nunca altera o chassi físico, controles, cor ou sirene da viatura.
@@ -33,7 +33,7 @@ class DriverPoliceDoorRig {
             const y=(position.getY(ia)+position.getY(ib)+position.getY(ic))/3;
             const z=(position.getZ(ia)+position.getZ(ib)+position.getZ(ic))/3;
             const side=z<-.245?0:z>.245?1:-1;
-            if(side>=0 && x>=-.46 && x<=.14 && y>-.185 && y<.175)
+            if(side>=0 && x>=-.50 && x<=.16 && y>-.185 && y<.175)
                 doors[side].push(ia,ib,ic);
             else body.push(ia,ib,ic);
         }
@@ -64,7 +64,8 @@ class DriverPoliceDoorRig {
         return mesh;
     }
     static mount(vehicle,wrapped) {
-        if(!vehicle?.isPolice||!wrapped)return false;
+        if(!vehicle || !(vehicle.isPolice||vehicle._userCustomModel) ||
+            !wrapped)return false;
         let left=this.find(wrapped,'police_left_door_hinge');
         let right=this.find(wrapped,'police_right_door_hinge');
         if(!left){

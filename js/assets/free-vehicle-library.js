@@ -256,6 +256,8 @@ class FreeVehicleAssets {
         const applied=vehicle.applyCC0Model(wrapped,true);
         if(applied===false)return false;
         vehicle._userCustomModel=true;
+        if(typeof DriverPoliceDoorRig!=='undefined')
+            DriverPoliceDoorRig.mount(vehicle,wrapped);
         if(typeof DriverVehicleWheelRig!=='undefined')
             vehicle.wheelRig=DriverVehicleWheelRig.mount(vehicle,wrapped);
         this.importedCount++;

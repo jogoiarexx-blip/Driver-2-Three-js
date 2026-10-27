@@ -64,6 +64,9 @@
                 this.debugVehiclePhysics=false;
                 this.policeDoorTransition=null;
                 this.completedMissions=new Set();
+                this.storyCampaign=false;
+                this.missionToastRemaining=0;
+                this.missionToastText='';
                 this.chapterProgress=new DriverChapterProgress(this.homeSave.storage);
                 // Saves antigos de Chicago 08 também liberam a nova etapa.
                 const legacySave=this.homeSave.read();
@@ -379,6 +382,8 @@
             }
 
             startMission(type) {
+                if(type.startsWith('story_'))this.storyCampaign=true;
+                this.missionToastRemaining=0;
                 if(type==='story_havana_lead' && this.currentCityKey!=='havana'){
                     this.startHavanaLead();
                     return;
@@ -1086,7 +1091,8 @@
                         else if(vehicle.isPolice)
                             this.felony=Math.min(100,this.felony+35);
                         if(badge){
-                            badge.textContent='NO VOLANTE • POLÍCIA';
+                            badge.textContent=vehicle.isPolice?
+                                'NO VOLANTE • POLÍCIA':'NO VOLANTE (V8)';
                             badge.className='px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold';
                         }
                     }else{
@@ -1112,6 +1118,37 @@
                 return true;
             }
 
+            updateVehicleDoorApproach(){
+                const state=this.policeDoorTransition;
+                const vehicle=state?.vehicle,rig=vehicle?.policeDoorRig;
+                if(!rig)return;
+                const elapsed=rig.clock;
+                const sideX=Math.cos(vehicle.heading);
+                const sideZ=-Math.sin(vehicle.heading);
+                const xNear=vehicle.x-sideX*1.08;
+                const zNear=vehicle.z-sideZ*1.08;
+                const xFar=vehicle.x-sideX*2.4;
+                const zFar=vehicle.z-sideZ*2.4;
+                if(state.kind==='enter'){
+                    if(elapsed>=.82){
+                        this.tanner.setVisible(false);
+                    }else if(elapsed>=.25){
+                        const t=Math.min(1,(elapsed-.25)/.57);
+                        this.tanner.setPosition(
+                            xFar+(xNear-xFar)*t,vehicle.y,
+                            zFar+(zNear-zFar)*t,vehicle.heading);
+                    }
+                }else{
+                    if(elapsed>.33){
+                        this.tanner.setVisible(true);
+                        const t=Math.min(1,(elapsed-.33)/.60);
+                        this.tanner.setPosition(
+                            xNear+(xFar-xNear)*t,vehicle.y,
+                            zNear+(zFar-zNear)*t,vehicle.heading);
+                    }
+                }
+            }
+
             toggleVehicleEnterExit() {
                 if (this.gameEnded || this.inReplayMode ||
                     this.policeDoorTransition) return;
@@ -1119,7 +1156,7 @@
 
                 if (this.mode === 'driving' && this.playerCar) {
                     if (Math.abs(this.playerCar.speed) > 13) return;
-                    if(this.playerCar.isPolice&&this.playerCar.policeDoorRig){
+                    if(this.playerCar.policeDoorRig){
                         if(this.startPoliceDoorTransition(this.playerCar,'exit'))
                             return;
                     }
@@ -1201,7 +1238,7 @@
                     }
 
                     if (closestCar) {
-                        if(closestCar.isPolice&&closestCar.policeDoorRig){
+                        if(closestCar.policeDoorRig){
                             if(this.startPoliceDoorTransition(closestCar,'enter'))
                                 return;
                         }
@@ -1878,9 +1915,14 @@
             }
 
             triggerEndScreen(title, desc) {
-                this.gameEnded = true;
-                if(!/FALH|ESGOTAD|DESTRUÍDO|ESCAPOU|ATINGIDO|FIM DO SURVIVAL/i.test(title))
-                    this.completedMissions.add(this.missionType);
+                const finishedType=this.missionType;
+                const failed=DriverCampaignFlow.isFailure(title);
+                // Ao concluir, mantenha o carro e Tanner no local; não
+                // congele a física para mostrar uma janela central.
+                this.gameEnded=false;
+                this.missionActive=false;
+                this.missionTimeLeft=0;
+                if(!failed)this.completedMissions.add(finishedType);
                 // O checkpoint de capítulo só nasce após vitória real do diretor.
                 if(this.missionType==='story_leaving' &&
                     this.leavingDirector.completed && /CONCLUÍDA/.test(title)){
@@ -1903,9 +1945,25 @@
                 if(havana)havana.classList.toggle('hidden',
                     !(this.missionType==='story_leaving' &&
                         this.leavingDirector.completed && /CONCLUÍDA/.test(title)));
-                document.getElementById('announcement-title').textContent = title;
-                document.getElementById('announcement-desc').textContent = desc;
-                document.getElementById('center-announcement').classList.remove('hidden');
+                this.missionType='freeroam';
+                this.clearMissionMarkers();
+                const upcoming=this.nextStoryMission();
+                const notice=DriverCampaignFlow.summarize(
+                    title,desc,failed,upcoming);
+                this.missionToastText=notice.message+' • '+notice.next;
+                this.missionToastRemaining=6;
+                const toast=document.getElementById('driver-mission-toast');
+                if(toast){
+                    toast.textContent=this.missionToastText;
+                    toast.classList.remove('hidden');
+                }
+                document.getElementById('center-announcement')?.
+                    classList.add('hidden');
+                const timer=document.getElementById('mission-timer');
+                if(timer)timer.classList.add('hidden');
+                const info=document.getElementById('objective-banner');
+                if(info)info.textContent=notice.next;
+                this.updateChapterMenu();
             }
 
             updateCamera(dt) {
@@ -2209,13 +2267,21 @@
                 }
             }
 
+            nextStoryMission(){
+                if(!this.storyCampaign)return null;
+                return DriverCampaignFlow.next(this.currentCityKey,
+                    this.completedMissions);
+            }
             getNearbyMissionStart(){
                 const start=this.city?.missionStart;
-                if(!start || this.currentCityKey==='havana' &&
+                if(!start || this.missionActive ||
+                    this.currentCityKey==='havana' &&
                     !this.chapterProgress.canTravelToHavana())return null;
+                const next=this.nextStoryMission();
+                const marker=next?{...start,type:next}:start;
                 const p=this.getPlayerPosition();
                 return Math.hypot(p.x-start.x,p.z-start.z)<9?
-                    start:null;
+                    marker:null;
             }
             activateNearbyMission(){
                 const start=this.getNearbyMissionStart();
@@ -2228,12 +2294,13 @@
             updateCityNavigation(){
                 const start=this.city?.missionStart;
                 if(!start)return;
-                const completed=start.type==='story_havana_lead'?
+                const missionType=this.nextStoryMission()||start.type;
+                const completed=missionType==='story_havana_lead'?
                     this.chapterProgress.hasCompletedHavanaLead():
-                    this.completedMissions?.has(start.type);
-                const locked=start.type==='story_havana_lead'&&
+                    this.completedMissions?.has(missionType);
+                const locked=missionType==='story_havana_lead'&&
                     !this.chapterProgress.canTravelToHavana();
-                const active=this.missionType===start.type &&
+                const active=this.missionType===missionType &&
                     this.missionActive;
                 const color=locked?0x475569:completed?0x94a3b8:
                     active?0xfacc15:0x22c55e;
@@ -2243,7 +2310,7 @@
                 const nav=document.getElementById('driver-mission-start-status');
                 if(nav){
                     const near=this.getNearbyMissionStart();
-                    nav.textContent=near?'MISSÃO DISPONÍVEL • J PARA INICIAR':'';
+                    nav.textContent=near?'PRÓXIMA MISSÃO • J PARA INICIAR':'';
                     nav.classList.toggle('hidden',!near);
                 }
             }
@@ -2982,9 +3049,12 @@
                 }
 
                 if(this.policeDoorTransition&&
-                    typeof DriverPoliceDoorRig!=='undefined')
+                    typeof DriverPoliceDoorRig!=='undefined'){
                     DriverPoliceDoorRig.update(
                         this.policeDoorTransition.vehicle,dt);
+                    if(this.policeDoorTransition)
+                        this.updateVehicleDoorApproach();
+                }
                 if (!this.gameEnded) {
                     if(this.trainLine&&this.missionType==='story_train'&&
                         this.missionActive)this.trainLine.update(dt);
@@ -3049,7 +3119,27 @@
                 const sirenOn = (this.felony > 25) || (this.mode === 'driving' && this.playerCar && this.playerCar.isPolice && this.playerCar.sirenActive);
                 this.audio.update(dt, this.mode === 'driving', speedKmh, skidding, burnout, sirenOn);
 
+                const toast=document.getElementById('driver-mission-toast');
+                if(this.missionToastRemaining>0){
+                    this.missionToastRemaining=Math.max(0,
+                        this.missionToastRemaining-Math.max(0,dt));
+                    if(toast){
+                        toast.textContent=this.missionToastText;
+                        toast.classList.toggle('hidden',
+                            this.missionToastRemaining<=0);
+                    }
+                }else if(toast)toast.classList.add('hidden');
                 this.updateHUD();
+                const context=document.getElementById('driver-mission-context');
+                if(context){
+                    const title=document.getElementById('mission-title')?.
+                        textContent||'';
+                    const timer=document.getElementById('mission-timer')?.
+                        textContent||'';
+                    context.textContent=this.missionActive?
+                        title+(timer?' • '+timer:''):'';
+                    context.classList.toggle('hidden',!this.missionActive);
+                }
                 this.updateInteriorHUD();
                 this.renderer.render(this.scene, this.camera);
             }

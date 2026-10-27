@@ -63,6 +63,14 @@
                     <small id="d2-car-status">Importe o GLB uma vez. O navegador tenta mantê-lo no armazenamento local.</small>
                 </div>
                 <div id="d2-options" class="d2-options hidden">
+                    <p class="d2-menu-heading">AJUSTES DURANTE O JOGO</p>
+                    <div id="d2-game-controls" class="flex flex-wrap gap-2 mb-3"></div>
+                    <div id="d2-weather-actions" class="flex flex-wrap gap-1.5 my-2">
+                        <button type="button" data-weather="day" class="d2-resume">Dia</button>
+                        <button type="button" data-weather="dusk" class="d2-resume">Tarde</button>
+                        <button type="button" data-weather="night" class="d2-resume">Noite</button>
+                        <button type="button" data-weather="rain" class="d2-resume">Chuva</button>
+                    </div>
                     <label><input id="d2-opt-models" type="checkbox" checked> Modelos 3D gratuitos (CC0)</label>
                     <label><input id="d2-opt-scanlines" type="checkbox" checked> Efeito de linhas PS1</label>
                     <label><input id="d2-opt-reduced-motion" type="checkbox"> Reduzir animações de interface</label>
@@ -116,7 +124,10 @@
                 <button id="btn-garage-open" type="button" class="bg-slate-700 hover:bg-slate-600 rounded px-2 py-1.5 text-xs">FECHAR</button>
             </div>
         </div>
-        <!-- TOP ROW: Barras Damage/Felony (Esq) | Missão/Timer (Centro) | Controles/Arquitetura (Dir) -->
+        <!-- Mensagens transitórias; o cenário não é bloqueado por telas de vitória. -->
+        <div id="driver-mission-toast" class="hidden pointer-events-none" aria-live="polite"></div>
+        <div id="driver-mission-context" class="hidden pointer-events-none" aria-live="off"></div>
+        <!-- TOP ROW: Barra minimalista com somente MENU visível. -->
         <div id="hud-top-row" class="flex justify-between items-start gap-2 w-full">
             
             <!-- TOP-LEFT: Barras Clássicas Driver 2 + Seletor Rápido das 4 Cidades -->
@@ -260,7 +271,7 @@
                     <button id="btn-architecture" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded-lg border border-indigo-400 shadow-lg flex items-center gap-1.5 transition">
                         <span>📁</span> <span class="hidden sm:inline">Arquitetura & Assets</span><span class="sm:hidden">Código</span>
                     </button>
-                    <button id="btn-main-menu" class="bg-slate-800 hover:bg-slate-700 text-xs font-bold px-3 py-2 rounded-lg border border-slate-600" title="Menu (Esc)">☰ MENU</button>
+                    <button id="btn-main-menu" aria-label="Abrir menu principal" class="bg-slate-800 hover:bg-slate-700 text-xs font-bold px-3 py-2 rounded-lg border border-slate-600" title="Menu (Esc)">☰ MENU</button>
                     <button id="btn-missions" class="bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs sm:text-sm font-extrabold px-3 py-2 rounded-lg border border-amber-200 shadow-lg flex items-center gap-1.5 transition">
                         <span>🏁</span> <span>Modos & Missões</span>
                     </button>
@@ -327,7 +338,7 @@
                     MAPA GERAL
                 </button>
                 <!-- Legenda rápida PC -->
-                <div class="hidden lg:flex flex-col gap-1 bg-slate-950/85 p-2.5 rounded-lg border border-slate-800 text-[11px] text-slate-300">
+                <div class="driver-controls-guide hidden lg:flex flex-col gap-1 bg-slate-950/85 p-2.5 rounded-lg border border-slate-800 text-[11px] text-slate-300">
                     <div><kbd class="text-amber-400 font-bold">W,A,S,D / Setas</kbd> : Dirigir / Andar | <kbd class="text-amber-400 font-bold">ESPAÇO</kbd> : Freio de Mão (Drift)</div>
                     <div><kbd class="text-amber-400 font-bold">SHIFT / C</kbd> : Botão Burnout (Destracionar / Giro 180° J-Turn) | <kbd class="text-amber-400 font-bold">Q</kbd> : Olhar p/ Trás</div>
                     <div><kbd class="text-amber-400 font-bold">E / ENTER</kbd> : Sair/Roubar Carro, Sentar no Banco ou Plantar C4 | <kbd class="text-amber-400 font-bold">N</kbd> : Clima/Chuva</div>
@@ -866,6 +877,7 @@ git push -u origin main</pre>
     <script src="./js/gameplay/leaving-chicago.js"></script>
     <script src="./js/gameplay/havana-lead.js"></script>
     <script src="./js/gameplay/chapter-progress.js"></script>
+    <script src="./js/gameplay/campaign-flow.js"></script>
     <script src="./js/traffic/traffic-ai.js"></script>
     <script src="./js/police/roadblock-director.js"></script>
     <script src="./js/gameplay/checkpoint-route.js"></script>

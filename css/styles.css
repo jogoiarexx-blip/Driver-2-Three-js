@@ -290,3 +290,98 @@
 #driver-car-file {display:none!important}
 [data-driver-paint] {border:0;width:42px;height:30px;cursor:pointer;background:transparent}
 @media(max-width:767px) {.d2-car-import-panel{padding:11px}.d2-car-import-panel .d2-resume{padding:11px}}
+
+
+/* REV HUD minimalista: só MENU no topo durante a condução.
+   Acessibilidade/ações seguem disponíveis pelo menu de pausa. */
+#hud-player-panel,
+#hud-top-row > :last-child > div:nth-child(2),
+#hud-layer .driver-controls-guide,
+#hud-layer #btn-hud-more {
+    display:none!important;
+}
+#hud-top-row {
+    display:flex!important;
+    justify-content:flex-end!important;
+    align-items:flex-start!important;
+}
+#hud-top-row > :last-child {
+    display:flex!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    max-width:none!important;
+}
+#hud-top-row > :last-child > div:first-child {
+    display:flex!important;
+    justify-content:flex-end!important;
+    width:auto!important;
+}
+#hud-top-row > :last-child > div:first-child > :not(#btn-main-menu) {
+    display:none!important;
+}
+#btn-main-menu {
+    display:inline-flex!important;
+    align-items:center;
+    min-height:38px;
+    padding:8px 16px!important;
+    font-weight:800;
+    font-size:12px!important;
+    background:rgba(10,15,28,.88);
+    border:1px solid #f59e0b;
+}
+#mission-center {
+    position:fixed!important;
+    top:auto!important;
+    bottom:118px!important;
+    left:50%!important;
+    right:auto!important;
+    transform:translateX(-50%);
+    width:min(94vw,410px)!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    pointer-events:none;
+    z-index:22;
+}
+#mission-center > :not(#interaction-prompt):not(#interior-banner):not(#director-banner):not(#roadblock-warning) {
+    display:none!important;
+}
+#center-announcement {display:none!important;}
+#driver-mission-toast,#driver-mission-context {
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    max-width:min(92vw,520px);
+    width:max-content;
+    text-align:center;
+    background:rgba(6,12,23,.83);
+    border:1px solid rgba(245,158,11,.50);
+    border-radius:8px;
+    padding:8px 12px;
+    color:#fde68a;
+    font-size:12px;
+    font-weight:700;
+    line-height:1.5;
+    text-shadow:0 1px 2px #000;
+    pointer-events:none;
+    z-index:30;
+}
+#driver-mission-toast {bottom:180px;}
+#driver-mission-context {
+    bottom:92px;
+    font-size:11px;
+    color:#e2e8f0;
+    border-color:rgba(148,163,184,.4);
+}
+#driver-mission-toast.hidden,#driver-mission-context.hidden {display:none!important;}
+#d2-game-controls button {
+    min-height:34px;
+    padding:7px 10px;
+    font-size:12px;
+}
+#d2-weather-actions button {font-size:11px;padding:7px 10px;}
+@media(max-width:640px){
+    #mission-center{bottom:125px!important;}
+    #driver-mission-toast{bottom:164px;font-size:10px;}
+    #driver-mission-context{bottom:105px;font-size:10px;}
+    #btn-main-menu{min-height:34px;}
+}
