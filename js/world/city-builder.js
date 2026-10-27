@@ -21,6 +21,8 @@
                 this.streetAssetCache = new Map();
                 this.buildSequence = 0;
                 this.safeHouseZone = { x: -120, z: -120, radius: 9 };
+                this.roadExtent=320; this.worldLimit=410;
+                this.interiors=[]; this.interiorById={};
 
                 // Garagem Secreta com Portão e Interruptor a Pé (Nordeste X=120, Z=120)
                 this.secretSwitchPos = { x: 102, z: 103 };
@@ -62,6 +64,7 @@
                 this.districtBuildings = [];
                 this.destructibleProps = [];
                 this.benches = [];
+                this.interiors=[]; this.interiorById={};
                 this.secretGateOpen = false;
                 this.signalClock = 0;
                 this.lastSignalPhase = -1;
@@ -71,10 +74,10 @@
 
             buildEnvironment() {
                 const asphTex = PS1TextureFactory.createAsphaltTexture();
-                asphTex.repeat.set(36, 36);
+                asphTex.repeat.set(64, 64);
 
                 // 1. Base de Asfalto da Cidade
-                const groundGeo = new THREE.PlaneGeometry(520, 520);
+                const groundGeo = new THREE.PlaneGeometry(840, 840);
                 groundGeo.rotateX(-Math.PI / 2);
                 const groundMat = new THREE.MeshLambertMaterial({ map: asphTex });
                 const ground = new THREE.Mesh(groundGeo, groundMat);
@@ -87,7 +90,7 @@
                 this.decorateStreetsWithCC0();
 
                 // 2. Canal Central (Rio Chicago / Baía de Havana / Canal da Orla do Rio)
-                const riverGeo = new THREE.PlaneGeometry(520, 32);
+                const riverGeo = new THREE.PlaneGeometry(840, 32);
                 riverGeo.rotateX(-Math.PI / 2);
                 const riverMat = new THREE.MeshBasicMaterial({ color: this.preset.waterColor });
                 const river = new THREE.Mesh(riverGeo, riverMat);
@@ -96,12 +99,12 @@
 
                 // Muretas nas margens do canal
                 const wallMat = new THREE.MeshLambertMaterial({ color: 0x64748b });
-                const leftWall1 = new THREE.Mesh(new THREE.BoxGeometry(230, 1.5, 1.5), wallMat);
-                leftWall1.position.set(-130, 0.75, 34);
+                const leftWall1 = new THREE.Mesh(new THREE.BoxGeometry(415, 1.5, 1.5), wallMat);
+                leftWall1.position.set(-219, 0.75, 34);
                 const leftWall2 = leftWall1.clone();
                 leftWall2.position.z = 66;
-                const rightWall1 = new THREE.Mesh(new THREE.BoxGeometry(230, 1.5, 1.5), wallMat);
-                rightWall1.position.set(130, 0.75, 34);
+                const rightWall1 = new THREE.Mesh(new THREE.BoxGeometry(415, 1.5, 1.5), wallMat);
+                rightWall1.position.set(219, 0.75, 34);
                 const rightWall2 = rightWall1.clone();
                 rightWall2.position.z = 66;
                 this.cityGroup.add(leftWall1, leftWall2, rightWall1, rightWall2);
@@ -143,7 +146,8 @@
                 // 5. Quarteirões, Calçadas, Esconderijo e Garagem Secreta
                 const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x52525b });
                 const buildingTextures = new Map();
-                const coords = [-160, -80, 0, 80, 160];
+                const coords = [];
+                for(let p=-320;p<=320;p+=80) coords.push(p);
 
                 coords.forEach(bx => {
                     coords.forEach(bz => {
@@ -162,6 +166,8 @@
                             this.buildSafeHouseBlock(blockX, blockZ);
                         } else if (blockX === 120 && blockZ === 120) {
                             this.buildSecretGarageCompound(blockX, blockZ);
+                        } else if (blockX===200 && blockZ===-200) {
+                            this.buildEnterableWarehouse(blockX,blockZ);
                         } else if ((blockX + blockZ) % 160 === 0) {
                             this.buildParkBlock(blockX, blockZ);
                         } else {
@@ -189,14 +195,15 @@
                     });
                 });
                 UrbanDistricts.decorate(this);
+                this.buildInteriorRooms();
             }
 
             buildRoadMarkings() {
                 const positions = [];
                 // Os centros das avenidas seguem o espaçamento entre os quarteirões.
                 // Interrompe as marcas no canal para evitar faixas pintadas sobre água.
-                for (let road = -160; road <= 160; road += 80) {
-                    for (let along = -248; along <= 248; along += 12) {
+                for (let road = -320; road <= 320; road += 80) {
+                    for (let along = -392; along <= 392; along += 12) {
                         if (along < 34 || along > 66) {
                             positions.push([road, along, 0]);
                         }
@@ -242,7 +249,7 @@
                 const generation = this.buildSequence;
                 this.streetAssetCache.get(name).then(original => {
                     if (!original || generation !== this.buildSequence) return;
-                    for (let x = -160; x <= 160; x += 80) {
+                    for (let x = -320; x <= 320; x += 80) {
                         for (const z of [-80, 80]) {
                             const clone = original.clone(true);
                             const box = new THREE.Box3().setFromObject(clone);
@@ -268,8 +275,8 @@
 
             buildTrafficLights() {
                 const locations = [];
-                for (let x = -160; x <= 160; x += 80) {
-                    for (let z = -160; z <= 160; z += 80) {
+                for (let x = -320; x <= 320; x += 80) {
+                    for (let z = -320; z <= 320; z += 80) {
                         locations.push({ x: x + 11, z: z + 11, axis: 'z' });
                         locations.push({ x: x - 11, z: z - 11, axis: 'x' });
                     }
@@ -337,25 +344,25 @@
                 // Morro do Corcovado ao fundo norte (Z = -210) com a estátua do Cristo Redentor
                 const hillMat = new THREE.MeshLambertMaterial({ color: 0x14532d });
                 const hill = new THREE.Mesh(new THREE.ConeGeometry(55, 78, 8), hillMat);
-                hill.position.set(0, 39, -215);
+                hill.position.set(0, 39, -395);
                 this.cityGroup.add(hill);
 
                 // Pedestal e Cristo Redentor de braços abertos olhando para a cidade
                 const statueMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
                 const pedestal = new THREE.Mesh(new THREE.BoxGeometry(6, 8, 6), new THREE.MeshLambertMaterial({ color: 0x64748b }));
-                pedestal.position.set(0, 79, -215);
+                pedestal.position.set(0, 79, -395);
                 const body = new THREE.Mesh(new THREE.BoxGeometry(4.2, 18, 3.2), statueMat);
-                body.position.set(0, 91, -215);
+                body.position.set(0, 91, -395);
                 const arms = new THREE.Mesh(new THREE.BoxGeometry(19, 3.0, 2.6), statueMat);
-                arms.position.set(0, 95, -215);
+                arms.position.set(0, 95, -395);
                 const head = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.8, 3.2), statueMat);
-                head.position.set(0, 101.5, -215);
+                head.position.set(0, 101.5, -395);
                 this.cityGroup.add(pedestal, body, arms, head);
 
                 // Faixa de Areia de Copacabana na lateral Leste (X = 230)
-                const sand = new THREE.Mesh(new THREE.PlaneGeometry(36, 480), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+                const sand = new THREE.Mesh(new THREE.PlaneGeometry(36, 800), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
                 sand.rotateX(-Math.PI / 2);
-                sand.position.set(230, 0.08, 0);
+                sand.position.set(399, 0.08, 0);
                 this.cityGroup.add(sand);
             }
 
@@ -488,6 +495,75 @@
                 this.safeHouseBeacon.position.set(cx, 0.4, cz + 19);
                 this.cityGroup.add(this.safeHouseBeacon);
                 this.safeHouseZone = { x: cx, z: cz + 19, radius: 5.5 };
+                const door=new THREE.Mesh(new THREE.BoxGeometry(3.3,4.1,0.4),
+                    new THREE.MeshLambertMaterial({color:0x16a34a}));
+                door.position.set(cx,2.2,cz+15.2);
+                this.cityGroup.add(door);
+                this.interiors.push({
+                    id:'home',name:'Casa de Tanner',kind:'home',
+                    door:{x:cx,z:cz+19},inside:{x:1000,z:0}
+                });
+            }
+
+
+            buildEnterableWarehouse(cx,cz) {
+                const shell=new THREE.Mesh(new THREE.BoxGeometry(34,15,33),
+                    new THREE.MeshLambertMaterial({color:0x64748b}));
+                shell.position.set(cx,7.7,cz);this.cityGroup.add(shell);
+                this.buildingBoxes.push({
+                    minX:cx-17,maxX:cx+17,minZ:cz-16.5,maxZ:cz+16.5
+                });
+                const entrance=new THREE.Mesh(new THREE.BoxGeometry(4.4,5,0.5),
+                    new THREE.MeshBasicMaterial({color:0x0ea5e9}));
+                entrance.position.set(cx,2.6,cz+16.9);
+                this.cityGroup.add(entrance);
+                this.interiors.push({
+                    id:'warehouse',name:'Depósito abandonado',kind:'warehouse',
+                    door:{x:cx,z:cz+21},inside:{x:1050,z:0}
+                });
+            }
+
+            buildInteriorRooms() {
+                const make=(x,y,z,w,h,d,color)=>{
+                    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
+                        new THREE.MeshLambertMaterial({color}));
+                    mesh.position.set(x,y,z);this.cityGroup.add(mesh);
+                };
+                for (const place of this.interiors) {
+                    const x=place.inside.x,z=place.inside.z;
+                    const home=place.id==='home';
+                    make(x,-0.14,z,24,0.28,22,home?0x665243:0x334155);
+                    make(x,3.3,z+10.8,24,6.6,0.6,home?0xd6c5a5:0x64748b);
+                    make(x-11.8,3.3,z,0.6,6.6,22,home?0xb5a48d:0x475569);
+                    make(x+11.8,3.3,z,0.6,6.6,22,home?0xb5a48d:0x475569);
+                    make(x-6.7,3.3,z-10.8,10,6.6,0.6,home?0xd6c5a5:0x64748b);
+                    make(x+6.7,3.3,z-10.8,10,6.6,0.6,home?0xd6c5a5:0x64748b);
+                    make(x,6.4,z,24,0.35,22,home?0x9a8667:0x1e293b);
+                    if (home) {
+                        make(x-6.8,0.8,z+2,6,1.6,3.2,0x854d0e);
+                        make(x+6,1,z+5.4,6,2,2,0x334155);
+                        make(x,0.8,z+4,4,1.6,2.2,0x92400e);
+                        make(x,1.65,z+4,2.2,0.25,1.0,0x166534);
+                        place.savePoint={x,z:z+4};
+                    } else {
+                        for(const dx of [-6,0,6])
+                            make(x+dx,1,z+3,3.3,2,3.3,0x78350f);
+                    }
+                    place.exit={x,z:z-8.8};
+                }
+            }
+
+            interiorAt(x,z) {
+                return this.interiors.find(p=>
+                    Math.hypot(x-p.door.x,z-p.door.z)<6)||null;
+            }
+
+            interiorArea(x,z,radius=0.55) {
+                const place=this.interiors.find(p=>
+                    Math.abs(x-p.inside.x)<12.5&&Math.abs(z-p.inside.z)<11.5);
+                if(!place)return false;
+                return Math.abs(x-place.inside.x)+radius<11.4 &&
+                    Math.abs(z-place.inside.z)+radius<10.4;
             }
 
             spawnDestructibleProp(x, z, type) {
@@ -574,7 +650,8 @@
             }
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
-                if (Math.abs(x) > 245 || Math.abs(z) > 245) return true;
+                if (this.interiorArea(x,z,radius))return false;
+                if (Math.abs(x)>this.worldLimit || Math.abs(z)>this.worldLimit)return true;
                 if (z > 33.5 && z < 66.5 && Math.abs(x) >= 11.0 && y < 1.8) return true;
 
                 for (let i = 0; i < this.buildingBoxes.length; i++) {

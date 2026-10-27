@@ -7,8 +7,8 @@ class DriverStreetFurniture {
         const positions = [];
         const crosswalks = [];
         // Cruzamentos da malha base, sem colocar marcas no canal.
-        for (let x=-160; x<=160; x+=80) {
-            for (let z=-160; z<=160; z+=80) {
+        for (let x=-320; x<=320; x+=80) {
+            for (let z=-320; z<=320; z+=80) {
                 for (const sign of [-1, 1]) {
                     for (let line=0;line<5;line++) {
                         const offset = (line - 2) * 1.6;

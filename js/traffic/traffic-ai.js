@@ -8,7 +8,7 @@ class DriverTrafficAI {
     constructor(city) {
         this.city = city;
         this.routes = new WeakMap();
-        this.roadLimit = 160;
+        this.roadLimit = city.roadExtent || 320;
         this.blockSize = 80;
         this.laneOffset = 4;
         this.policeRoadblocks = [];

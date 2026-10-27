@@ -18,11 +18,12 @@ class PoliceRoadblockDirector {
         const component = axis === 'x' ? sx : sz;
         const sign = component >= 0 ? 1 : -1;
         const road = THREE.MathUtils.clamp(
-            Math.round((axis === 'x' ? car.z : car.x) / 80) * 80,-160,160);
+            Math.round((axis === 'x' ? car.z : car.x) / 80) * 80,
+            -(city.roadExtent||320),city.roadExtent||320);
         for (const dist of [90,125,165]) {
             const advance = axis === 'x' ? car.x : car.z;
             let ahead = Math.round((advance + sign * dist) / 40) * 40;
-            if (Math.abs(ahead) > 195) continue;
+            if (Math.abs(ahead) > (city.roadExtent||320)+34) continue;
             const point = axis === 'x' ?
                 { x:ahead, z:road, axis } :
                 { x:road, z:ahead, axis };
