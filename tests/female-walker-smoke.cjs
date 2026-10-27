@@ -17,7 +17,8 @@ class Mixer {
     update(dt){this.elapsed+=dt;}
 }
 const createScene=()=>({parent:null,position:{set(){}},rotation:{y:0},
-    scale:{multiplyScalar(){}},updateMatrixWorld(){},traverse(fn){fn({isMesh:true})}});
+    scale:{value:1,multiplyScalar(s){this.value*=s}},
+    updateMatrixWorld(){},traverse(fn){fn({isMesh:true})}});
 const fakeGLTF={scene:createScene(),animations:[
     {name:'Walking_Woman',tracks:[{name:'mixamorig:Hips.position'}]}
 ]};
@@ -43,6 +44,12 @@ const ped=()=>({mesh:new Group(),walkSpeed:2.5});
     assert.equal(woman.status().state,'ready');
     assert.equal(woman.status().active,true);
     assert.equal(a.glbFemale,true);
+    assert(Math.abs(fakeGLTF.scene.scale.value-(2.05/1.72))<.00001,
+        'Tamanho errado');
+    assert.equal(fakeGLTF.scene.rotation.y,0,
+        'Andando de costas: frente do GLB deve ser +Z');
+    assert.equal(woman.container.position.y,0,
+        'Pés atravessam a calçada');
     assert.equal(a.mesh.children[0].visible,false);
     a.mesh.visible=true;
     woman.update(a,1/60,true,false);
@@ -54,6 +61,10 @@ const ped=()=>({mesh:new Group(),walkSpeed:2.5});
     const b=ped();manager.pedestrians=[b];
     assert(woman.attachToFirst(),'Falha ao reinstalar no mapa');
     assert.equal(b.glbFemale,true);
+    assert.equal(woman.lastMoving,false,'Animação herdada indevidamente');
+    b.mesh.visible=true;
+    woman.update(b,1/60,true,false);
+    assert.equal(woman.action.paused,false,'Caminhada travada após troca de cidade');
     assert.equal(woman.manager.pedestrians.length,1);
     const file=path.join(__dirname,'../assets/pedestrians/mulher_walk.glb');
     let asset='not-yet-uploaded';
