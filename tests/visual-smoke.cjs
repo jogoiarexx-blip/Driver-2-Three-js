@@ -145,6 +145,70 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           position:c.secretGateMesh.position.y};
       });
       assert(gate.unlocked&&gate.after===9999,'Portão não desbloqueou em '+city);
+      // QA visual extra de Copacabana e do Corcovado: cenas realmente
+      // exploradas no navegador, não apenas geometria estática em Node.
+      let rioVisual=null;
+      if(city==='rio'){
+        const detail=await page.evaluate(()=>{
+          const g=window.DriverGame;
+          const objs=g.city.cityGroup.children;
+          const names=objs.map(o=>o.name||'');
+          const stat=g.city.rioOverhaulStats;
+          return {present:!!stat,version:stat?.version||0,
+            water:names.includes('rio-ocean-backdrop'),
+            corcovado:names.some(n=>n.startsWith('rio-corcovado')),
+            beach:names.some(n=>n.startsWith('rio-copacabana')),
+            mountains:names.filter(n=>n.startsWith('rio-mountains')).length,
+            parkCount:stat?.parkCount||0,
+            collisions:stat?.addedColliders};
+        });
+        assert(detail.present&&detail.version===2&&detail.water&&
+          detail.corcovado&&detail.beach&&detail.mountains>=2&&
+          detail.collisions===0,'Rio 2.0 sem todos os detalhes');
+        // Vista dirigindo junto ao calçadão. O código não teleporta o
+        // mundo, somente reposiciona o veículo do teste.
+        await page.evaluate(()=>{
+          const g=window.DriverGame,p=g.playerCar;
+          g.mode='driving';g.tanner.setVisible(false);
+          p.x=387;p.y=0;p.z=-180;p.heading=0;p.speed=0;
+          p.prevX=p.x;p.prevZ=p.z;p.root.position.set(p.x,p.y,p.z);
+          p.root.rotation.y=p.heading;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+        });
+        await sleep(950);
+        await page.screenshot({path:path.join(DIR,'rio-copacabana-driving.png')});
+        // Caminhada sobre a orla; não pode sair do limite do mundo.
+        const starting=await page.evaluate(()=>{
+          const g=window.DriverGame;
+          g.mode='on_foot';
+          g.tanner.setPosition(389,0,-179,0);
+          g.tanner.setVisible(true);g.input.up=true;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+          return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
+        });
+        await sleep(380);
+        const walking=await page.evaluate(()=>{
+          const g=window.DriverGame;
+          g.input.up=false;
+          return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
+        });
+        assert(Math.hypot(walking.x-starting.x,walking.z-starting.z)>.05,
+          'Tanner não caminhou na orla do Rio');
+        await page.screenshot({path:path.join(DIR,'rio-copacabana-on-foot.png')});
+        // Mirante do Corcovado visto a partir do eixo sul/norte.
+        await page.evaluate(()=>{
+          const g=window.DriverGame,p=g.playerCar;
+          g.mode='driving';g.tanner.setVisible(false);
+          p.x=0;p.y=0;p.z=-305;p.heading=Math.PI;p.speed=0;
+          p.prevX=p.x;p.prevZ=p.z;p.root.position.set(p.x,p.y,p.z);
+          p.root.rotation.y=p.heading;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+        });
+        await sleep(950);
+        await page.screenshot({path:path.join(DIR,'rio-corcovado-driving.png')});
+        rioVisual={...detail,beachWalkingDistance:Number(
+          Math.hypot(walking.x-starting.x,walking.z-starting.z).toFixed(3))};
+      }
       // Amostra de frames do navegador headless: não representa FPS do usuário.
       const perf=await page.evaluate(async()=>{
         const frames=[];
@@ -165,7 +229,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       report.maps.push({...initial,driving,walking:{
         from:beforeWalk,to:afterWalk,distance:Math.hypot(
           afterWalk.x-beforeWalk.x,afterWalk.z-beforeWalk.z)},
-        interior:inner,gate,perf});
+        interior:inner,gate,perf,rioVisual});
       fs.writeFileSync(path.join(DIR,'report.json'),JSON.stringify(report,null,2));
     }
     assert.equal(report.runtimeErrors.length,0,'Exceções no navegador');
