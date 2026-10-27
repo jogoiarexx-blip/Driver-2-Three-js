@@ -265,13 +265,15 @@ class DriverBootFlow {
         tasks.push({
             label:'Criando veículos, pedestres e objetivos',weight:16,
             run:()=>{
-                game.missionType='freeroam';
+                // Uma única criação de frota no início da missão,
+                // evitando recriar todos os veículos duas vezes.
+                game.missionType=mode==='story'?'story_tipoff':'freeroam';
                 if(needsCity)game.activateCityPreset(city);
                 if(mode==='continue'){
                     if(!game.homeSave.restore(game,save))
                         throw new Error('Save incompatível. Nada foi apagado.');
-                }else{
-                    game.startMission(mode==='story'?'story_tipoff':'freeroam');
+                }else if(!needsCity){
+                    game.startMission(game.missionType);
                 }
                 this.applySettings();
             }
