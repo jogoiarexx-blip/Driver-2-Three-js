@@ -187,6 +187,16 @@ class DriverTrafficAI {
     getInput(car, dt, vehicles, playerPos, felony) {
         const route = this.getRoute(car);
         const scripted = car.scriptedDrive || null;
+        // Aberturas cinematográficas: o suspeito aguarda Tanner entrar
+        // no carro, mas não altera o relógio das rotas preexistentes.
+        if(scripted && scripted.waitSeconds>0){
+            scripted.waitSeconds=Math.max(0,scripted.waitSeconds-
+                Math.min(0.05,Math.max(0,dt)));
+            return {
+                up:false,down:car.speed>1,left:false,right:false,
+                handbrake:false,sprint:false
+            };
+        }
         const waypoint = scripted ?
             DriverTailingDropMission.advanceRoute(car) : null;
         const wanted = car.isPolice && felony > 25;
