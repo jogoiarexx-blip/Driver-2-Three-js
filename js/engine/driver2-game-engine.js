@@ -2538,6 +2538,16 @@
                     }
                 }
 
+                // Transição de detalhes em orçamento limitado por quadro.
+                // Não altera as caixas de colisão nem regras das missões.
+                const lod=this.city.updateDistrictLOD(dt,this.getPlayerPosition());
+                if(lod){
+                    const value='Bairros LOD: '+lod.near+'/'+lod.total+
+                        ' em detalhe • '+lod.far+' distantes • '+lod.built+
+                        ' preparados'+(lod.failed?' • '+lod.failed+' falhas':'');
+                    const meter=document.getElementById('district-lod-status');
+                    if(meter && meter.textContent!==value)meter.textContent=value;
+                }
                 this.updateAIAndCollisions(dt);
                 this.city.update(dt, this.vehicles, () => {
                     if (this.isPoliceNearPlayer(65)) {

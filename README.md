@@ -294,3 +294,38 @@ lotes concluídos. Não prepara antecipadamente **as quatro cidades completas**,
 pois isso repetiria consumo de CPU e GPU sem necessidade; constrói a cidade
 selecionada e reutiliza o cache de modelos compartilháveis. Falta validar
 visualmente o menu/tempo de carregamento nos diferentes navegadores.
+
+
+## Streaming de detalhe por bairros e LOD (outubro/2026)
+
+- Chicago, Havana, Las Vegas e Rio passam a dividir os edifícios residenciais
+  em **células de 160 × 160 unidades**. A versão distante conserva a silhueta,
+  em lotes `THREE.InstancedMesh` com cores sólidas por fachada.
+- Ao se aproximar, o jogo cria *sob demanda* os prédios texturizados (agrupados
+  por paleta) e as três camadas de detalhes de arquitetura. Os detalhes são
+  mantidos em cache no bairro durante a partida e apenas alternam visibilidade
+  depois disso, eliminando reconstruções repetidas.
+- A mudança entre versões leve e detalhada tem **histerese**, com limites
+  independentes para entrar/sair, e orçamento padrão de **2 bairros por ciclo
+  de atualização** (aproximadamente a cada 140 ms). Isso reduz os estouros
+  de trabalho por quadro e evita oscilações visuais nas transições.
+- Calçadas agora são um único lote instanciado, em vez de várias malhas
+  individuais. Os prédios próximos também são instanciados por material.
+- **Colisão e missões não mudam**: caixas de bloqueio ficam no construtor da
+  cidade, não nos componentes gráficos LOD. Estruturas especiais (ponte,
+  estação de Chicago, interiores/casa, garagem, depósitos e monumentos)
+  continuam visíveis e operantes.
+- O carregamento inicial prepara os bairros próximos **antes** da compilação
+  dos shaders e da primeira imagem jogável. Um indicador de bairros
+  carregados aparece na aba de arquitetura/assets, sem acrescentar ruído ao HUD.
+- Novo módulo isolado `js/world/district-lod.js`. Verificações de
+  carregamento, orçamento por frame, histerese, falha de GPU e geometria
+  instanciada em `tests/district-streaming.test.cjs`.
+
+**Limites e próximos passos:** esta revisão faz streaming de *detalhe de
+renderização*, não download incremental de quatro mapas nem descarte total dos
+dados de um bairro visitado. As colisões e metadados são construídos uma vez
+por cidade para assegurar jogabilidade consistente. Texturas reutilizadas
+continuam em cache até trocar de cidade. O ganho efetivo de FPS/draw calls
+precisa de medição em navegador/placa de vídeo real; as provas automatizadas
+validam a lógica de LOD, não um benchmark WebGL completo.

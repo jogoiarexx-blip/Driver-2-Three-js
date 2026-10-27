@@ -228,6 +228,9 @@ class DriverBootFlow {
     }
 
     static shaderTask(game,report) {
+        // Os bairros ao redor do jogador já entram com detalhes prontos,
+        // antes da primeira pintura visível, sem pops iniciais.
+        game.city.updateDistrictLOD(0,game.getPlayerPosition(),true);
         game.renderer.compile(game.scene,game.camera);
         // Força a alocação inicial dos recursos WebGL necessários à cena.
         game.renderer.render(game.scene,game.camera);

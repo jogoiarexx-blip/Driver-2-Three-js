@@ -36,6 +36,12 @@
 
                 this.preset=CITY_PRESETS[presetKey] || CITY_PRESETS.chicago;
                 this.ready=false;
+                this.districtLOD=null;
+                this.districtChunks=new Map();
+                this.districtTextureCache=new Map();
+                this.districtMaterialCache=new Map();
+                this.lodStats=null;
+                this.lodSeconds=0;
                 if(buildNow)this.loadCityPreset(presetKey);
             }
 
@@ -87,6 +93,12 @@
                 this.cityGroup.clear();
                 this.buildingBoxes = [];
                 this.districtBuildings = [];
+                this.districtLOD=null;
+                this.districtChunks=new Map();
+                this.districtTextureCache=new Map();
+                this.districtMaterialCache=new Map();
+                this.lodStats=null;
+                this.lodSeconds=0;
                 this.destructibleProps = [];
                 this.benches = [];
                 this.interiors=[]; this.interiorById={};
@@ -178,7 +190,7 @@
 
                 // 5. Quarteirões, Calçadas, Esconderijo e Garagem Secreta
                 const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x52525b });
-                const buildingTextures = new Map();
+                const sidewalkPositions=[];
                 const coords = [];
                 for(let p=-320;p<=320;p+=80) coords.push(p);
 
@@ -191,9 +203,8 @@
                         const blockZ = bz - 40;
                         if (Math.abs(blockZ - 50) < 28) return;
 
-                        const sw = new THREE.Mesh(new THREE.BoxGeometry(50, 0.35, 50), sidewalkMat);
-                        sw.position.set(blockX, 0.175, blockZ);
-                        this.cityGroup.add(sw);
+                        // Calçadas agrupadas em uma única draw call instanciada.
+                        sidewalkPositions.push({x:blockX,z:blockZ});
 
                         if (this.preset.id==='chicago' && blockX===-40 && blockZ===-280) {
                             this.buildChicagoStationBlock(blockX,blockZ);
@@ -215,17 +226,19 @@
                             this.buildParkBlock(blockX, blockZ);
                         } else {
                             const palIndex = Math.floor(UrbanDistricts.random(blockX, blockZ, 9) * this.preset.palettes.length);
-                            const pal = this.preset.palettes[palIndex];
-                            if (!buildingTextures.has(palIndex)) {
-                                buildingTextures.set(palIndex, PS1TextureFactory.createBuildingTexture(pal.wall, pal.win));
-                            }
-                            const bTex = buildingTextures.get(palIndex);
                             const h = UrbanDistricts.height(this.preset.id, blockX, blockZ);
-                            const bMat = new THREE.MeshLambertMaterial({ map: bTex });
-                            const bMesh = new THREE.Mesh(new THREE.BoxGeometry(38, h, 38), bMat);
-                            bMesh.position.set(blockX, h / 2 + 0.35, blockZ);
-                            this.cityGroup.add(bMesh);
-                            this.districtBuildings.push({ x: blockX, z: blockZ, height: h });
+                            const building={x:blockX,z:blockZ,height:h,palette:palIndex};
+                            this.districtBuildings.push(building);
+                            // Células de dois quarteirões (160 unidades).
+                            const ix=Math.floor((blockX+320)/160);
+                            const iz=Math.floor((blockZ+360)/160);
+                            const key=ix+':'+iz;
+                            if(!this.districtChunks.has(key))
+                                this.districtChunks.set(key,{
+                                    id:key,x:-240+ix*160,z:-320+iz*160,
+                                    buildings:[]
+                                });
+                            this.districtChunks.get(key).buildings.push(building);
 
                             this.buildingBoxes.push({
                                 minX: blockX - 19.2, maxX: blockX + 19.2,
@@ -238,11 +251,110 @@
                     });
                     yield 'Quarteirões e edifícios '+(rowIndex+1)+'/'+coords.length;
                 }
-                UrbanDistricts.decorate(this);
+                this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 DriverChicagoTrain.buildInfrastructure(this);
                 if(this.preset.id==='chicago')this.buildCaineCompoundDetails();
                 yield 'Interiores, monumentos e objetos do cenário';
+            }
+
+            buildDistrictRepresentations(sidewalkPositions,sidewalkMat) {
+                if(sidewalkPositions.length){
+                    const sidewalks=new THREE.InstancedMesh(
+                        new THREE.BoxGeometry(50,.35,50),
+                        sidewalkMat,sidewalkPositions.length);
+                    const dummy=new THREE.Object3D();
+                    sidewalkPositions.forEach((p,i)=>{
+                        dummy.position.set(p.x,.175,p.z);
+                        dummy.updateMatrix();
+                        sidewalks.setMatrixAt(i,dummy.matrix);
+                    });
+                    sidewalks.instanceMatrix.needsUpdate=true;
+                    sidewalks.frustumCulled=false;
+                    this.cityGroup.add(sidewalks);
+                }
+
+                this.districtLOD=new DriverDistrictLOD({
+                    nearRadius:165,farRadius:230,maxSwitches:2
+                });
+                this.districtBoxGeometry=new THREE.BoxGeometry(38,1,38);
+                this.districtFarMaterial=new THREE.MeshLambertMaterial({
+                    color:0xffffff
+                });
+                const dummy=new THREE.Object3D();
+                for(const chunk of this.districtChunks.values()){
+                    const far=new THREE.InstancedMesh(this.districtBoxGeometry,
+                        this.districtFarMaterial,chunk.buildings.length);
+                    for(const [i,b] of chunk.buildings.entries()){
+                        dummy.position.set(b.x,b.height/2+.35,b.z);
+                        dummy.scale.set(1,b.height,1);
+                        dummy.rotation.set(0,0,0);
+                        dummy.updateMatrix();
+                        far.setMatrixAt(i,dummy.matrix);
+                        far.setColorAt(i,
+                            new THREE.Color(this.preset.palettes[b.palette].wall));
+                    }
+                    far.instanceMatrix.needsUpdate=true;
+                    if(far.instanceColor)far.instanceColor.needsUpdate=true;
+                    far.frustumCulled=false;
+                    far.name='district-far-'+chunk.id;
+                    this.cityGroup.add(far);
+                    this.districtLOD.register({
+                        id:chunk.id,x:chunk.x,z:chunk.z,far,
+                        buildNear:()=>this.buildNearDistrict(chunk)
+                    });
+                }
+                this.lodStats=this.districtLOD.stats();
+            }
+
+            buildNearDistrict(chunk){
+                const group=new THREE.Group();
+                group.name='district-detail-'+chunk.id;
+                // Uma malha instanciada por paleta em vez de uma por prédio.
+                const byPalette=new Map();
+                for(const building of chunk.buildings){
+                    if(!byPalette.has(building.palette))
+                        byPalette.set(building.palette,[]);
+                    byPalette.get(building.palette).push(building);
+                }
+                const dummy=new THREE.Object3D();
+                for(const [palette,buildings] of byPalette){
+                    if(!this.districtMaterialCache.has(palette)){
+                        const pal=this.preset.palettes[palette];
+                        const texture=PS1TextureFactory.createBuildingTexture(
+                            pal.wall,pal.win);
+                        this.districtTextureCache.set(palette,texture);
+                        this.districtMaterialCache.set(palette,
+                            new THREE.MeshLambertMaterial({map:texture}));
+                    }
+                    const mesh=new THREE.InstancedMesh(
+                        this.districtBoxGeometry,
+                        this.districtMaterialCache.get(palette),
+                        buildings.length);
+                    buildings.forEach((b,i)=>{
+                        dummy.position.set(b.x,b.height/2+.35,b.z);
+                        dummy.scale.set(1,b.height,1);
+                        dummy.rotation.set(0,0,0);
+                        dummy.updateMatrix();
+                        mesh.setMatrixAt(i,dummy.matrix);
+                    });
+                    mesh.instanceMatrix.needsUpdate=true;
+                    mesh.frustumCulled=false;
+                    group.add(mesh);
+                }
+                UrbanDistricts.decorate(this,chunk.buildings,group);
+                group.visible=false;
+                this.cityGroup.add(group);
+                return group;
+            }
+
+            updateDistrictLOD(dt,focus,force=false) {
+                if(!this.districtLOD)return null;
+                this.lodSeconds+=Math.max(0,Math.min(Number(dt)||0,.05));
+                if(!force && this.lodSeconds<.14)return this.lodStats;
+                this.lodSeconds=0;
+                this.lodStats=this.districtLOD.update(focus,{force});
+                return this.lodStats;
             }
 
             buildRoadMarkings() {

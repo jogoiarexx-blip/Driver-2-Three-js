@@ -14,8 +14,8 @@ class UrbanDistricts {
             city === 'havana' ? 12 + r * 18 :
             city === 'vegas' ? 22 + r * 42 : 16 + r * 32;
     }
-    static decorate(builder) {
-        const buildings = builder.districtBuildings;
+    static decorate(builder, buildings=builder.districtBuildings,
+        parent=builder.cityGroup) {
         if (!buildings.length) return;
         const id = builder.preset.id;
         const palettes = {
@@ -57,7 +57,7 @@ class UrbanDistricts {
             mesh.instanceMatrix.needsUpdate=true;
             if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
             mesh.frustumCulled=false;
-            builder.cityGroup.add(mesh);
+            parent.add(mesh);
         });
     }
 }
