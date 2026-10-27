@@ -140,5 +140,159 @@ class UrbanDistricts {
             parent.add(mesh);
         });
         this.addRegionalFacades(builder,buildings,parent);
+        this.addArchitecture(builder,buildings,parent);
+    }
+
+    // Detalhes volumétricos por cidade; instâncias agrupadas em apenas duas malhas por chunk.
+    // Não altera vias, volumes de colisão, interiores nem posições das missões.
+    static addArchitecture(builder,buildings,parent) {
+        if(!buildings.length)return;
+        const city=builder.preset.id,solid=[],glowing=[];
+        const theme={
+            chicago:[0x64748b,0x334155,0x96a5b5,0x8ca6b8,0xffdda1],
+            havana:[0xffe1bc,0x8c5e48,0xeebc8c,0x63929d,0xffe6ae],
+            vegas:[0xa1a1aa,0x27213c,0xeeeeff,0x395877,0x22d3ee],
+            rio:[0xe2e8f0,0x557885,0xadc1bb,0x6caec0,0xffe8a1]
+        }[city]||[0x64748b,0x334155,0xa1a1aa,0x94a3b8,0xffdda1];
+        const [trim,dark,edge,glass,light]=theme;
+        const push=(glow,x,y,z,w,h,d,color)=>{
+            if([x,y,z,w,h,d].every(Number.isFinite)&&w>0&&h>0&&d>0)
+                (glow?glowing:solid).push({x,y,z,w,h,d,color});
+        };
+        for(const b of buildings){
+            const h=Math.max(10,b.height),roof=h+.35;
+            const rand=(n)=>this.random(b.x,b.z,n);
+            const stories=Math.min(14,Math.max(2,Math.floor((h-2)/4.25)));
+            const floorGap=(h-3.8)/stories;
+            const front=19.18;
+            // Embasamento e cornijas em quatro faces, não invadindo as vias.
+            for(const s of [-1,1]){
+                push(false,b.x,.9,b.z+s*19.12,38.1,.85,.42,dark);
+                push(false,b.x,roof+.15,b.z+s*19.12,38.7,.53,.7,trim);
+                push(false,b.x+s*19.12,.9,b.z,.42,.85,38.1,dark);
+                push(false,b.x+s*19.12,roof+.15,b.z,.7,.53,38.7,trim);
+            }
+            for(let floor=0;floor<stories;floor++){
+                const y=3.05+floor*floorGap;
+                if(y+1.3>roof-.5)continue;
+                for(let side=0;side<4;side++){
+                    const frontBack=side<2,sign=side%2===0?1:-1;
+                    for(let col=0;col<4;col++){
+                        const offset=(col-1.5)*8.15;
+                        const x=frontBack?b.x+offset:b.x+sign*front;
+                        const z=frontBack?b.z+sign*front:b.z+offset;
+                        const lit=rand(60+floor*17+col*3+side)>.81;
+                        push(true,x,y,z,frontBack?3.1:.14,1.85,
+                            frontBack?.14:3.1,lit?light:glass);
+                        push(false,x,y+1.04,z,frontBack?3.55:.27,.18,
+                            frontBack?.27:3.55,edge);
+                        push(false,x,y-1.02,z,frontBack?3.65:.34,.16,
+                            frontBack?.34:3.65,dark);
+                        if(city==='havana'){
+                            push(false,x+(frontBack?1.65:0),y,
+                                z+(!frontBack?1.65:0),
+                                frontBack?.16:.25,2.05,
+                                frontBack?.25:.16,trim);
+                        }
+                    }
+                }
+                if(floor>0&&floor%3===0){
+                    push(false,b.x,y-1.6,b.z+19.16,38.4,.22,.7,trim);
+                    push(false,b.x,y-1.6,b.z-19.16,38.4,.22,.7,trim);
+                }
+            }
+            // Porta, vitrine e marquise são decorativas: entradas jogáveis
+            // usam edifícios especializados construídos pelo CityBuilder.
+            const doorX=b.x+(rand(19)>.5?9:-9);
+            push(false,doorX,2,b.z+19.23,3.4,3.8,.35,dark);
+            push(true,doorX,2.1,b.z+19.48,2.4,2.5,.1,glass);
+            push(false,b.x,4.75,b.z+19.5,24,.45,1.25,trim);
+            if(city==='chicago'){
+                // Estrutura de aço, escape de incêndio e equipamento de cobertura.
+                for(const x of [-15,-7,7,15])
+                    push(false,b.x+x,h/2+.35,b.z+19.25,.38,h,.52,dark);
+                for(let y=8;y<roof-3;y+=8.5){
+                    push(false,b.x+12.5,y,b.z+20,7,.25,1.5,trim);
+                    push(false,b.x+12.5,y+.7,b.z+20.8,7,1.25,.14,dark);
+                    for(const dx of [-3.1,3.1])
+                        push(false,b.x+12.5+dx,y+1.1,b.z+20.5,.14,2.3,.14,edge);
+                }
+                push(false,b.x-10,roof+1.0,b.z-9,7,1.7,6,dark);
+            } else if(city==='havana'){
+                // Sacadas e platibandas coloniais com venezianas.
+                for(let y=7;y<roof-1.6;y+=8.5){
+                    push(false,b.x,y,b.z+19.93,23,.3,1.95,trim);
+                    push(false,b.x,y+.82,b.z+20.92,23,1.2,.15,dark);
+                    for(let x=-10;x<=10;x+=2.5)
+                        push(false,b.x+x,y+.8,b.z+20.91,.12,1.3,.16,edge);
+                }
+                for(let x=-16;x<=16;x+=8)
+                    push(false,b.x+x,h/2+.35,b.z+19.24,.48,h,.56,edge);
+                for(let x=-16;x<=16;x+=5.33)
+                    push(false,b.x+x,roof+1.12,b.z+17.6,1.2,1.5,2.5,trim);
+            } else if(city==='vegas'){
+                // Cassinos: frisos e marquise de neon, sem luzes dinâmicas.
+                const neon=[0x22d3ee,0xf472b6,0xfacc15,0x4ade80]
+                    [Math.floor(rand(27)*4)];
+                for(const x of [-17.1,17.1])
+                    push(true,b.x+x,h/2+.35,b.z+19.36,.4,h-1.6,.48,neon);
+                push(false,b.x,6.1,b.z+20.07,27,2.8,2.1,dark);
+                push(true,b.x,7.5,b.z+21.22,27.6,.3,.21,neon);
+                push(true,b.x,4.75,b.z+21.22,27.6,.3,.21,neon);
+                for(let x=-12;x<=12;x+=4)
+                    push(true,b.x+x,6.2,b.z+21.23,.3,1.45,.19,neon);
+                push(true,b.x,roof+1.15,b.z+19.4,23,.65,.55,neon);
+                push(false,b.x-10,roof+1,b.z-9,9,1.6,7,dark);
+            } else {
+                // Rio: varandas, brises verticais e caixas d'água no terraço.
+                for(let y=7.4;y<roof-1.6;y+=8.5){
+                    push(false,b.x,y,b.z+19.9,25,.3,1.65,trim);
+                    push(false,b.x,y+.75,b.z+20.74,25,1.2,.15,dark);
+                    for(let x=-12;x<=12;x+=3)
+                        push(false,b.x+x,y+.72,b.z+20.73,.13,1.25,.19,edge);
+                }
+                for(let x=-15;x<=15;x+=6)
+                    push(false,b.x+x,h/2+.35,b.z+19.34,.3,h-2,.75,edge);
+                push(false,b.x-9,roof+1.22,b.z-9,5,2,4.5,dark);
+                push(false,b.x-9,roof+2.4,b.z-9,5.5,.28,5,trim);
+            }
+            // Platibanda da cobertura em quatro lados.
+            for(const s of [-1,1]){
+                push(false,b.x,roof+.47,b.z+s*18.7,37.6,.75,.44,trim);
+                push(false,b.x+s*18.7,roof+.47,b.z,.44,.75,37.6,trim);
+            }
+        }
+        // Uma draw call para os elementos sólidos e outra para vidro/neon.
+        const geometry=new THREE.BoxGeometry(1,1,1);
+        const cache=new Map(),colorOf=hex=>{
+            if(!cache.has(hex))cache.set(hex,new THREE.Color(hex));
+            return cache.get(hex);
+        };
+        const mount=(parts,glow)=>{
+            if(!parts.length)return;
+            const material=glow?
+                new THREE.MeshBasicMaterial({color:0xffffff}):
+                new THREE.MeshLambertMaterial({color:0xffffff});
+            const mesh=new THREE.InstancedMesh(geometry,material,parts.length);
+            const dummy=new THREE.Object3D();
+            for(let i=0;i<parts.length;i++){
+                const p=parts[i];
+                dummy.position.set(p.x,p.y,p.z);
+                dummy.rotation.set(0,0,0);
+                dummy.scale.set(p.w,p.h,p.d);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(i,dummy.matrix);
+                mesh.setColorAt(i,colorOf(p.color));
+            }
+            mesh.instanceMatrix.needsUpdate=true;
+            if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+            mesh.frustumCulled=false;
+            mesh.castShadow=false;
+            mesh.receiveShadow=false;
+            mesh.name='regional-architecture-'+city+(glow?'-windows':'-solid');
+            mesh.userData.architecture=true;
+            parent.add(mesh);
+        };
+        mount(solid,false);mount(glowing,true);
     }
 }
