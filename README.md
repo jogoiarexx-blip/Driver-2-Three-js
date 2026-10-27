@@ -215,3 +215,27 @@ reinicia os obstáculos exclusivos desta campanha.
 do mapa do PS1**. Testes em `tests/chicago-caine.test.cjs` verificam fases,
 contagem, travessia e colisões. Uma partida manual completa no navegador ainda
 deve ser validada.
+
+
+## Chicago 08 — Leaving Chicago (encerramento do capítulo)
+
+- Missão baseada no objetivo original **Get to the train**, duração de **3:30**,
+com chuva noturna e carros da máfia brasileira atacando Tanner durante a viagem.
+O jogador sai de Wicker Park (ponto -240,160) e segue até a estação Randolph
+(próxima a x=0,z=-240), onde encontra Jones e encerra o capítulo.
+- IA de máfia persegue sem sirene e não depende de nível de delito. São três
+carros específicos, criados apenas nessa missão. Um ator low-poly representa
+Tobias Jones na calçada e um marcador verde sinaliza o local do encontro.
+- É preciso chegar dirigindo e **parar** no marcador da estação para concluir.
+Ao vencer, o botão **SEGUIR PARA HAVANA** troca para a cidade de Havana em
+passeio livre. A missão Havana 09 ainda será construída.
+- Progressão, estado do encontro e capítulo concluído são reconhecidos pelo
+save da casa. O save continua no mesmo navegador/origem e requer interação
+com a mesa verde; não é feito automaticamente.
+- Testes específicos em `tests/chicago-leaving.test.cjs` cobrem cronômetro,
+reunião, derrota, progressão para Havana, trânsito da máfia e uma simulação
+do trajeto com física e colisões até a estação.
+
+**Limites:** mapa e percurso são originais/adaptados e não cópia do traçado
+PS1. A IA e a física são testadas de forma automatizada, mas a partida completa
+em WebGL e o desempenho em aparelhos móveis exigem validação no navegador.
