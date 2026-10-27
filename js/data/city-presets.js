@@ -29,15 +29,17 @@
             havana: {
                 id: 'havana',
                 name: 'HAVANA',
-                skyColor: 0x9a3412,
-                sunColor: 0xfdba74,
-                waterColor: 0x0284c7,
-                parkColor: 0x15803d,
+                // Fachadas desbotadas pela maresia, pedra colonial,
+                // cores pastéis e pôr do sol dourado menos saturado.
+                skyColor: 0xd38c70,
+                sunColor: 0xffd6a0,
+                waterColor: 0x1388a0,
+                parkColor: 0x237449,
                 palettes: [
-                    { wall: '#d97706', win: '#fef3c7' },
-                    { wall: '#be185d', win: '#fce7f3' },
-                    { wall: '#0d9488', win: '#ccfbf1' },
-                    { wall: '#ca8a04', win: '#fef08a' }
+                    { wall: '#d8b18c', win: '#a4c5c6' },
+                    { wall: '#c88d84', win: '#f5e0c4' },
+                    { wall: '#8cb6a6', win: '#f7e6c7' },
+                    { wall: '#e0c6a2', win: '#6f9caa' }
                 ],
                 playerCarName: 'HAVANA CRUISER 57',
                 playerCarColor: 0x0284c7,
