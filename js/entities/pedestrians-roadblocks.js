@@ -8,6 +8,7 @@
             constructor(scene) {
                 this.scene = scene;
                 this.pedestrians = [];
+                this.femalePedestrian = new DriverFemalePedestrian(this);
                 this.roadblocks = [];
                 this.roadblockOfficers = [];
                 this.officerTime = 0;
@@ -18,6 +19,8 @@
             spawnCityPedestrians(city=null,focus={x:0,z:-20}) {
                 // Uma única frota de 28 personagens e sem animações
                 // exigindo esqueleto/CPU em personagens distantes.
+                // Preserva o rig GLB antes da limpeza dos objetos da cidade anterior.
+                this.femalePedestrian.release();
                 GPUResourceUtils.disposeSubtree(this.group);
                 while(this.group.children.length>0)
                     this.group.remove(this.group.children[0]);
@@ -94,6 +97,10 @@
                         sleepTick:0,visibleTime:0
                     });
                 }
+                // Uma mulher animada entre os 28 pedestres normais.
+                // Mesma rota, semáforos, colisões, reciclagem e esquiva.
+                this.femalePedestrian.attachToFirst();
+                this.femalePedestrian.load();
             }
 
             recycleDistantPedestrians(focus,dt){
@@ -317,7 +324,7 @@
                     p.visualClock=(p.visualClock||0)+dt;
                     const swing=Math.sin(p.walkPhase)*
                         (crossing?.66:moving?.47:.07);
-                    for(let i=0;i<2;i++){
+                    if(!p.glbFemale)for(let i=0;i<2;i++){
                         if(p.legs[i])p.legs[i].rotation.x=(i?1:-1)*swing;
                         if(p.arms[i])p.arms[i].rotation.x=
                             (i?-1:1)*(swing*.82+
@@ -325,6 +332,8 @@
                     }
                     if((state.dx||state.dz)&&moving)
                         p.mesh.rotation.y=Math.atan2(state.dx,state.dz);
+                    if(p.glbFemale)
+                        this.femalePedestrian.update(p,dt,moving,crossing);
                     // Antecipação na passada, leve inclinação ao correr.
                     // A esquiva não altera a posição ou a colisão.
                     p.mesh.rotation.z=state.state==='dodge'?
