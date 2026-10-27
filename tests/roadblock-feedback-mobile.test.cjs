@@ -201,7 +201,7 @@ test('tráfego civil freia diante de bloqueio intacto',()=>{
 test('viatura retoma perseguição após barricada destruída',()=>{
     const city={isPointBlocked:()=>false,isTrafficGreen:()=>true};
     const ai=new Traffic(city);
-    const police={x:4,z:-95,heading:0,speed:20,bodyStyle:'muscle',
+    const police={x:4,z:-95,heading:0,speed:16,bodyStyle:'muscle',
         isPolice:true,isTarget:false};
     const barrier={x:4,z:-72,arming:0,smashed:false,dynamic:true};
     ai.policeRoadblocks=[barrier];
