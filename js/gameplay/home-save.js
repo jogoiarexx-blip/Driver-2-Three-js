@@ -91,7 +91,11 @@ class DriverHomeSave {
     }
     restore(game,data) {
         if(!this.valid(data))return false;
-        if (game.currentCityKey!==data.city)game.changeCity(data.city);
+        if (game.currentCityKey!==data.city) {
+            // Evita que a missão atual force Chicago durante a troca de cidade.
+            game.missionType='freeroam';
+            game.changeCity(data.city);
+        }
         game.startMission(data.mission.type);
         for(let i=0;i<Math.min(data.vehicles.length,game.vehicles.length);i++){
             const car=game.vehicles[i],raw=data.vehicles[i];
