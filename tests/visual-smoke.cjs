@@ -209,6 +209,64 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         rioVisual={...detail,beachWalkingDistance:Number(
           Math.hypot(walking.x-starting.x,walking.z-starting.z).toFixed(3))};
       }
+      let havanaVisual=null;
+      if(city==='havana'){
+        const detail=await page.evaluate(()=>{
+          const g=window.DriverGame,c=g.city;
+          const names=c.cityGroup.children.map(o=>o.name||'');
+          const s=c.havanaOverhaulStats;
+          return {present:!!s,version:s?.version||0,
+            malecon:names.some(n=>n.startsWith('havana-malecon')),
+            harbor:names.some(n=>n.startsWith('havana-harbor')),
+            sea:names.includes('havana-sea-backdrop'),
+            parks:names.some(n=>n.startsWith('havana-park')),
+            capitolio:names.some(n=>n.startsWith('havana-capitolio')),
+            revolucion:names.some(n=>n.startsWith('havana-revolucion')),
+            addedColliders:s?.addedColliders};
+        });
+        assert(detail.present&&detail.version===2&&detail.malecon&&
+          detail.harbor&&detail.sea&&detail.parks&&
+          detail.capitolio&&detail.revolucion&&
+          detail.addedColliders===0,
+          'Havana 2.0 sem todos os detalhes');
+        // Dirigindo na margem do canal, que representa a orla no jogo.
+        await page.evaluate(()=>{
+          const g=window.DriverGame,p=g.playerCar;
+          g.mode='driving';g.tanner.setVisible(false);
+          p.x=-200;p.y=0;p.z=16;p.heading=0;p.speed=0;
+          p.prevX=p.x;p.prevZ=p.z;p.root.position.set(p.x,p.y,p.z);
+          p.root.rotation.y=p.heading;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+        });
+        await sleep(850);
+        await page.screenshot({path:path.join(DIR,'havana-malecon-driving.png')});
+        const first=await page.evaluate(()=>{
+          const g=window.DriverGame;
+          g.mode='on_foot';g.tanner.setPosition(-200,0,17,0);
+          g.tanner.setVisible(true);g.input.up=true;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+          return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
+        });
+        await sleep(370);
+        const next=await page.evaluate(()=>{
+          const g=window.DriverGame;g.input.up=false;
+          return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
+        });
+        const distance=Math.hypot(next.x-first.x,next.z-first.z);
+        assert(distance>.05,'Tanner não caminhou no Malecón de Havana');
+        await page.screenshot({path:path.join(DIR,'havana-malecon-on-foot.png')});
+        await page.evaluate(()=>{
+          const g=window.DriverGame,p=g.playerCar;
+          g.mode='driving';g.tanner.setVisible(false);
+          p.x=-280;p.y=0;p.z=-247;p.heading=Math.PI;p.speed=0;
+          p.prevX=p.x;p.prevZ=p.z;p.root.position.set(p.x,p.y,p.z);
+          p.root.rotation.y=p.heading;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+        });
+        await sleep(850);
+        await page.screenshot({path:path.join(DIR,'havana-capitolio-driving.png')});
+        havanaVisual={...detail,walked:Number(distance.toFixed(3))};
+      }
       // Amostra de frames do navegador headless: não representa FPS do usuário.
       const perf=await page.evaluate(async()=>{
         const frames=[];
@@ -229,7 +287,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       report.maps.push({...initial,driving,walking:{
         from:beforeWalk,to:afterWalk,distance:Math.hypot(
           afterWalk.x-beforeWalk.x,afterWalk.z-beforeWalk.z)},
-        interior:inner,gate,perf,rioVisual});
+        interior:inner,gate,perf,rioVisual,havanaVisual});
       fs.writeFileSync(path.join(DIR,'report.json'),JSON.stringify(report,null,2));
     }
     assert.equal(report.runtimeErrors.length,0,'Exceções no navegador');
