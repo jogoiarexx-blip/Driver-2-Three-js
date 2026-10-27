@@ -752,6 +752,9 @@
                 const playerPos = this.getPlayerPosition();
 
                 // IA: tráfego dirigido por cruzamentos e sinalização.
+                // Os bloqueios intactos entram como obstáculos para os motoristas
+                // não os atravessarem nem os destruírem por engano.
+                this.trafficAI.policeRoadblocks = this.pedManager.roadblocks;
                 // O carro secreto só deixa a garagem quando o jogador assume o volante.
                 for (const vehicle of this.vehicles) {
                     if (vehicle === this.playerCar || vehicle.isSecret) continue;

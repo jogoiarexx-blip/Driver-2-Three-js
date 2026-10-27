@@ -11,6 +11,7 @@ class DriverTrafficAI {
         this.roadLimit = 160;
         this.blockSize = 80;
         this.laneOffset = 4;
+        this.policeRoadblocks = [];
     }
 
     reset() {
@@ -118,6 +119,21 @@ class DriverTrafficAI {
         return true;
     }
 
+    barrierAhead(car) {
+        const fx=Math.sin(car.heading), fz=Math.cos(car.heading);
+        let nearest=Infinity;
+        for (const barrier of this.policeRoadblocks || []) {
+            if (!barrier || barrier.smashed || (barrier.arming || 0)>0) continue;
+            const dx=barrier.x-car.x,dz=barrier.z-car.z;
+            const forward=dx*fx+dz*fz;
+            const side=Math.abs(dx*fz-dz*fx);
+            if (forward>0 && forward<44 && side<4.1) {
+                nearest=Math.min(nearest,forward);
+            }
+        }
+        return nearest;
+    }
+
     vehicleAhead(car, vehicles) {
         const dirX = Math.sin(car.heading), dirZ = Math.cos(car.heading);
         for (const other of vehicles) {
@@ -188,6 +204,12 @@ class DriverTrafficAI {
         const stopForCar = distanceAhead < 8 + Math.max(0, car.speed) * 0.33;
         const slowForCar = distanceAhead < 14 + Math.max(0, car.speed) * 0.45;
         if (slowForCar) maxSpeed = Math.min(maxSpeed, 7);
+        // Civis e polícia reduzem e param antes de cavaletes intactos.
+        // Não atravessam o bloqueio invisivelmente enquanto Tanner o enfrenta.
+        const barrierDistance = this.barrierAhead(car);
+        if (barrierDistance < 38) {
+            maxSpeed = Math.min(maxSpeed, barrierDistance < 17 ? 0 : 10);
+        }
         if (stopForRed || stopForCar) maxSpeed = 0;
 
         // Saída de encalhe após colisão, sem teleportes pela cidade.
