@@ -183,7 +183,8 @@ test('o novo modo permite continuar para Havana apenas após vitória',()=>{
  const js=read('js/engine/driver2-game-engine.js');
  const html=read('index.html');
  assert.match(js,/completedMissions\.has\('story_leaving'\)/);
- assert.match(js,/this\.changeCity\('havana'\)/);
+ assert.match(js,/this\.requestCityChange\('havana'\)/);
+ assert.match(js,/this\.startMission\('story_havana_lead'\)/);
  assert.match(html,/id="btn-continue-havana"/);
 });
 test('o save da casa reconhece a oitava missão',()=>{
