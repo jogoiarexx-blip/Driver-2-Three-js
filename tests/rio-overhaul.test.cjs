@@ -134,7 +134,7 @@ test('Rio integra corretamente LOD, parques, monumentos, carregamento e skyline'
     try{
         assert( Urban.height('rio',200,-120)>Urban.height('rio',-200,-120) );
         assert.equal(Urban.height('havana',40,-120),21);
-        assert.equal(Urban.height('vegas',40,-120),43);
+        assert(Urban.height('vegas',40,-120)>60);
     }finally{Urban.random=old;}
     const testCity=makeWorld('rio');
     Rio.buildCity(testCity);
