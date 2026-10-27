@@ -41,7 +41,7 @@ class DriverSafeHouseEscape {
             this.hiddenSeconds=Math.max(0,this.hiddenSeconds-step*0.5);
         }
         this.safeToArrive=clear &&
-            this.hiddenSeconds>=DriverSafeHouseEscape.LOST_SIGHT_SECONDS;
+            this.hiddenSeconds>=DriverSafeHouseEscape.LOST_SIGHT_SECONDS-1e-6;
         const previous=this.phase;
         this.phase=this.safeToArrive?'reach_home':'escape';
         this.lastDistance=distance;
