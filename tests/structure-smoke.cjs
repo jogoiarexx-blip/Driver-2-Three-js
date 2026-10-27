@@ -27,11 +27,13 @@ class Object3D extends Group {
 class Material {constructor(args={}){this.color={
   value:args.color,setHex(v){this.value=v;}};}}
 class Geometry {rotateX(){}}
+class Vector3 {constructor(x,y,z){this.x=x;this.y=y;this.z=z;}}
+class Sphere {constructor(center,radius){this.center=center;this.radius=radius;}}
 const THREE={Group,Mesh,InstancedMesh,Object3D,
   BoxGeometry:Geometry,PlaneGeometry:Geometry,CylinderGeometry:Geometry,
   ConeGeometry:Geometry,MeshLambertMaterial:Material,
   MeshBasicMaterial:Material,DoubleSide:2,
-  Color:class {constructor(hex){this.hex=hex}}};
+  Color:class {constructor(hex){this.hex=hex}},Vector3,Sphere};
 const ctx={THREE,DriverChicagoTrain:{PLATFORM:{height:11.3,x:-14,z:-250,
   minX:-20,maxX:-8,minZ:-260,maxZ:-230}},CITY_PRESETS:{}};
 vm.createContext(ctx);
@@ -69,6 +71,8 @@ for(const id of ['chicago','havana','vegas','rio']){
   for(const mesh of city.cityGroup.children){
     if(!(mesh instanceof InstancedMesh))continue;
     drawCalls++;
+    assert.equal(mesh.frustumCulled,true,'Culling desabilitado em '+mesh.name);
+    assert(mesh.geometry.boundingSphere&&mesh.geometry.boundingSphere.radius>0);
     assert.equal(mesh.matrices.length,mesh.count);
     assert.equal(mesh.colors.length,mesh.count);
     for(const m of mesh.matrices){
