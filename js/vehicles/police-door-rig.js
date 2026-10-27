@@ -76,9 +76,26 @@ class DriverPoliceDoorRig {
         if(!left)return false;
         left.rotation.y=0;
         if(right)right.rotation.y=0;
-        vehicle.policeDoorRig={left,right,phase:'closed',
+        // O carro Driver2 GLB tem a orientação lateral inversa da
+        // viatura: o painel usado antes era o da porta do passageiro.
+        const side=vehicle._userCustomModel&&!vehicle._policeCustomModel?
+            'right':'left';
+        vehicle.policeDoorRig={left,right,side,phase:'closed',
             duration:1.35,clock:0,onFinished:null};
         return true;
+    }
+    static standPoint(vehicle,distance=2.4) {
+        // Ângulo da direção é medido em torno de +Y; o carro avança +Z.
+        // Rigs distintos (Tanner / polícia) selecionam o mesmo lado
+        // para dobradiça, aproximação e posição após sair.
+        const side=vehicle?.policeDoorRig?.side==='right'?1:-1;
+        const h=Number(vehicle?.heading)||0;
+        return {
+            x:vehicle.x+Math.cos(h)*distance*side,
+            y:vehicle.y||0,
+            z:vehicle.z-Math.sin(h)*distance*side,
+            heading:h
+        };
     }
     static start(vehicle,mode,callback) {
         const rig=vehicle?.policeDoorRig;
@@ -101,10 +118,12 @@ class DriverPoliceDoorRig {
         const angle=this.progress(rig.clock);
         // Porta esquerda: no GLB nativo, X positivo aponta para trás
         // e Z negativo aponta para fora (motor usa Ry(+90°)).
-        rig.left.rotation.y=angle*1.13;
-        if(rig.right)rig.right.rotation.y=0;
+        rig.left.rotation.y=rig.side==='left'?angle*1.13:0;
+        if(rig.right)rig.right.rotation.y=
+            rig.side==='right'?-angle*1.13:0;
         if(rig.clock>=rig.duration){
             rig.left.rotation.y=0;
+            if(rig.right)rig.right.rotation.y=0;
             rig.phase='closed';rig.clock=0;
             const done=rig.onFinished;rig.onFinished=null;
             if(done)done();

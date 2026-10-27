@@ -1097,9 +1097,9 @@
                         }
                     }else{
                         this.mode='on_foot';
-                        const hx=vehicle.x-Math.cos(vehicle.heading)*2.4;
-                        const hz=vehicle.z+Math.sin(vehicle.heading)*2.4;
-                        this.tanner.setPosition(hx,vehicle.y,hz,vehicle.heading);
+                        const exit=DriverPoliceDoorRig.standPoint(vehicle,2.4);
+                        this.tanner.setPosition(
+                            exit.x,exit.y,exit.z,exit.heading);
                         this.tanner.setVisible(true);
                         if(badge){
                             badge.textContent='TANNER (A PÉ)';
@@ -1111,9 +1111,9 @@
                     return false;
                 this.policeDoorTransition={vehicle,kind};
                 if(kind==='enter'){
-                    const x=vehicle.x-Math.cos(vehicle.heading)*2.25;
-                    const z=vehicle.z+Math.sin(vehicle.heading)*2.25;
-                    this.tanner.setPosition(x,vehicle.y,z,vehicle.heading);
+                    const entry=DriverPoliceDoorRig.standPoint(vehicle,2.25);
+                    this.tanner.setPosition(
+                        entry.x,entry.y,entry.z,entry.heading);
                 }
                 return true;
             }
@@ -1123,12 +1123,10 @@
                 const vehicle=state?.vehicle,rig=vehicle?.policeDoorRig;
                 if(!rig)return;
                 const elapsed=rig.clock;
-                const sideX=Math.cos(vehicle.heading);
-                const sideZ=-Math.sin(vehicle.heading);
-                const xNear=vehicle.x-sideX*1.08;
-                const zNear=vehicle.z-sideZ*1.08;
-                const xFar=vehicle.x-sideX*2.4;
-                const zFar=vehicle.z-sideZ*2.4;
+                const near=DriverPoliceDoorRig.standPoint(vehicle,1.08);
+                const far=DriverPoliceDoorRig.standPoint(vehicle,2.4);
+                const xNear=near.x,zNear=near.z;
+                const xFar=far.x,zFar=far.z;
                 if(state.kind==='enter'){
                     if(elapsed>=.82){
                         this.tanner.setVisible(false);
@@ -1994,8 +1992,21 @@
                 const kmh = (this.mode === 'driving' && this.playerCar)
                     ? Math.round(Math.abs(this.playerCar.speed) * 3.4)
                     : 0;
-                document.getElementById('speed-value').textContent = String(kmh).padStart(3, '0');
-                document.getElementById('rpm-bar').style.width = `${Math.min(100, 12 + (kmh / 185) * 88)}%`;
+                document.getElementById('speed-value').textContent =
+                    String(kmh).padStart(3,'0');
+                document.getElementById('rpm-bar').style.width =
+                    `${Math.min(100,12+(kmh/185)*88)}%`;
+                // Mostrador analógico inspirado nos carros dos anos 90,
+                // 0..220 km/h, com ponteiro e câmbio físico (P/D/R).
+                const needle=document.getElementById('speed-needle');
+                if(needle){
+                    const angle=-130+Math.min(220,kmh)/220*260;
+                    needle.setAttribute('transform',
+                        'rotate('+angle.toFixed(1)+' 120 101)');
+                }
+                const gear=document.getElementById('speed-gear');
+                if(gear)gear.textContent=this.mode!=='driving'?'P':
+                    (this.playerCar?.speed||0)<-.6?'R':'D';
 
                 if (this.playerCar) {
                     document.getElementById('car-name-label').textContent = this.playerCar.name;

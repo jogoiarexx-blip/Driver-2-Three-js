@@ -385,3 +385,209 @@
     #driver-mission-context{bottom:105px;font-size:10px;}
     #btn-main-menu{min-height:34px;}
 }
+
+
+/* REV 1990s dashboard: restore only requested driving essentials.
+   Damage, felony and weather remain visible; city selection stays in MENU. */
+#hud-player-panel {
+    display:flex!important;
+    width:208px!important;
+    max-width:35vw;
+    gap:6px!important;
+    padding:10px!important;
+    background:rgba(9,15,23,.87);
+    border:1px solid rgba(130,143,147,.68);
+    border-radius:8px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 5px 18px #0008;
+}
+#hud-top-row {
+    justify-content:space-between!important;
+    align-items:flex-start!important;
+    width:100%;
+}
+#driver-hud-city-controls {display:none!important;}
+#driver-hud-weather-controls {
+    display:block!important;
+    margin-top:2px!important;
+    border-top:1px solid #374151;
+    padding-top:7px;
+}
+#driver-hud-weather-controls button {
+    min-width:0;
+    padding:5px 0!important;
+    font-size:9px!important;
+    border-radius:3px;
+    background:#18202b;
+}
+#driver-hud-weather-controls #weather-badge {color:#cbd5e1;}
+#hud-player-panel #btn-hud-more {display:none!important;}
+#hud-player-panel .driver-bar-bg {background:#090d13;}
+#hud-player-panel .driver-bar-bg > div {transition:width .12s linear;}
+/* Nostalgic molded plastic, creamy numerals, rust-orange needle. */
+.speedometer-90s {
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    width:218px;
+    flex:0 0 218px;
+    padding:8px 9px 6px;
+    border-radius:13px 13px 9px 9px;
+    background:linear-gradient(135deg,#31322e,#161b1b 45%,#2d2e29 92%);
+    color:#e2d4b6;
+    border:3px solid #58564a;
+    box-shadow:0 0 0 1px #080c0a,inset 0 2px 0 #6c685c,
+        inset 0 -3px 0 #111815,0 7px 25px #0009;
+    font-family:Tahoma,Arial,sans-serif;
+    pointer-events:none;
+    user-select:none;
+}
+.speedometer-90s-top {
+    display:flex;
+    justify-content:space-between;
+    gap:4px;
+    align-items:center;
+    min-height:18px;
+}
+.speedometer-90s-label {
+    font-size:9px;
+    font-weight:bold;
+    letter-spacing:.14em;
+    color:#d9c8a5;
+}
+.speedometer-90s-label small {
+    font-size:8px;
+    letter-spacing:.07em;
+    color:#ad9681;
+}
+.speedometer-siren {
+    font:bold 9px Tahoma,Arial,sans-serif;
+    color:#a1c9ee;
+    background:#213445;
+    border:1px solid #647c94;
+    padding:2px 4px;
+    border-radius:2px;
+    animation:retro-siren 1s ease-in-out infinite alternate;
+}
+@keyframes retro-siren {
+    from {box-shadow:0 0 2px #244465;}
+    to {box-shadow:0 0 8px #ef4545;}
+}
+.speedometer-90s-dial {
+    width:100%;
+    max-height:162px;
+    overflow:hidden;
+    background:radial-gradient(ellipse at 45% 30%,#232925 0%,#0b1010 88%);
+    border-radius:50% 50% 10% 10%;
+}
+.speedometer-90s-dial svg {
+    width:100%;
+    height:auto;
+    display:block;
+}
+.retro-speed-legend {
+    fill:#b4a890;
+    font:bold 6.7px Tahoma,Arial,sans-serif;
+    letter-spacing:.9px;
+}
+.retro-speed-brand {
+    fill:#818a80;
+    font:bold 5.4px Tahoma,Arial,sans-serif;
+    letter-spacing:1.7px;
+}
+.speedometer-90s-footer {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:2px;
+    border-top:1px solid #5a554a;
+    padding:6px 3px 3px;
+    font-size:9px;
+}
+.retro-transmission {
+    white-space:nowrap;
+    color:#c5b69c;
+}
+.retro-transmission strong {
+    display:inline-block;
+    min-width:16px;
+    padding:1px 3px;
+    margin-left:3px;
+    text-align:center;
+    background:#151815;
+    border:1px solid #8f774b;
+    color:#ffc56c;
+    border-radius:2px;
+}
+.retro-tach {
+    display:flex;
+    flex:1;
+    gap:5px;
+    align-items:center;
+    font-size:9px;
+}
+.retro-tach-track {
+    background:#080c0b;
+    border:1px solid #787464;
+    height:7px;
+    flex:1;
+    overflow:hidden;
+}
+#rpm-bar {
+    height:100%;
+    background:linear-gradient(to right,#b2bb83 0%,#d9b36a 65%,#ae5a4a 100%);
+    transition:width .13s linear;
+}
+.speedometer-90s-car {
+    display:flex;
+    justify-content:space-between;
+    gap:4px;
+    margin-top:4px;
+    padding:2px 3px 0;
+    font-size:9px;
+    letter-spacing:.04em;
+    color:#baa992;
+    white-space:nowrap;
+    overflow:hidden;
+}
+#car-name-label {
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:152px;
+}
+.retro-speed-drift {
+    color:#f1ae63;
+    font-size:9px;
+    font-weight:bold;
+    white-space:nowrap;
+}
+@media(max-width:767px) {
+    #hud-player-panel {
+        width:min(53vw,190px)!important;
+        max-width:190px!important;
+        padding:7px!important;
+        gap:3px!important;
+        font-size:10px;
+    }
+    #hud-player-panel .driver-bar-bg {height:10px;}
+    #driver-hud-weather-controls {padding-top:3px;}
+    #driver-hud-weather-controls button {font-size:8px!important;padding:3px 0!important;}
+    .speedometer-90s {
+        width:106px;
+        flex:0 0 106px;
+        padding:4px;
+        border-width:2px;
+        border-radius:9px;
+    }
+    .speedometer-90s-label {font-size:6px;letter-spacing:0;}
+    .speedometer-90s-label small {font-size:6px;}
+    .speedometer-90s-dial {max-height:83px;}
+    .speedometer-90s-footer {padding:2px;gap:2px;font-size:7px;}
+    .retro-tach {font-size:6px;gap:1px;}
+    .retro-speed-drift {font-size:6px;}
+    .speedometer-90s-car {font-size:6px;margin-top:1px;}
+    .speedometer-siren {font-size:7px;padding:1px;}
+}
+@media(prefers-reduced-motion:reduce){
+    .speedometer-siren{animation:none;}
+    #rpm-bar{transition:none;}
+}

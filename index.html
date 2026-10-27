@@ -160,8 +160,8 @@
                 </div>
 
                 <button id="btn-hud-more" type="button" aria-expanded="false">⚙ Cidades / clima</button>
-                <!-- Seletor Instantâneo das 4 Cidades Clássicas do Driver 2 -->
-                <div class="hud-extra-controls mt-1 pt-1.5 border-t border-slate-800">
+                <!-- Troca de cidade permanece no menu; não ocupa a condução. -->
+                <div id="driver-hud-city-controls" class="hud-extra-controls mt-1 pt-1.5 border-t border-slate-800">
                     <div class="text-[10px] text-slate-400 uppercase font-bold mb-1">CIDADE ATUAL (DRIVER 2):</div>
                     <div class="grid grid-cols-2 gap-1">
                         <button onclick="window.DriverGame.requestCityChange('chicago')" id="city-btn-chicago" class="city-pill text-[10px] font-extrabold py-1 px-1.5 rounded bg-amber-500 text-slate-950 border border-amber-300 transition">🏙️ CHICAGO</button>
@@ -171,8 +171,8 @@
                     </div>
                 </div>
 
-                <!-- Seletor de Clima e Horário (Driver 2 Weather & Time of Day) -->
-                <div class="hud-extra-controls mt-1 pt-1.5 border-t border-slate-800">
+                <!-- Clima deve permanecer visível, mesmo com a barra superior limpa. -->
+                <div id="driver-hud-weather-controls" class="hud-extra-controls mt-1 pt-1.5 border-t border-slate-800">
                     <div class="flex justify-between items-center text-[10px] text-slate-400 uppercase font-bold mb-1">
                         <span>CLIMA / HORA (TECLA N):</span>
                         <span id="weather-badge" class="text-sky-400">PADRÃO</span>
@@ -361,24 +361,97 @@
                 </div>
             </div>
 
-            <!-- BOTTOM-RIGHT: Velocímetro, Burnout e Marcha -->
-            <div class="hidden sm:flex flex-col items-end bg-slate-950/85 p-3 rounded-xl border border-slate-700/80 backdrop-blur-sm min-w-[175px]">
-                <div class="flex justify-between w-full items-center">
-                    <span class="text-[10px] text-slate-400 uppercase tracking-widest">VELOCIDADE</span>
-                    <span id="siren-badge" class="text-[10px] px-1.5 py-0.2 rounded bg-blue-600/30 text-blue-300 font-bold hidden">🚨 SIRENE ATIVA</span>
+            <!-- Velocímetro analógico inspirando-se nos painéis de 1990.
+                 IDs de velocidade, sirene, drift e rotação mantidos. -->
+            <section class="speedometer-90s pointer-events-none" aria-label="Velocímetro analógico estilo anos 1990">
+                <div class="speedometer-90s-top">
+                    <span class="speedometer-90s-label">INSTRUMENTOS <small>1990</small></span>
+                    <span id="siren-badge" class="hidden speedometer-siren">SIRENE</span>
                 </div>
-                <div class="flex items-baseline gap-1">
-                    <span id="speed-value" class="text-3xl sm:text-4xl font-extrabold text-amber-400 font-mono">000</span>
-                    <span class="text-xs text-slate-400 font-bold">KM/H</span>
+                <div class="speedometer-90s-dial">
+                    <svg viewBox="0 0 240 188" role="img" aria-label="Mostrador analógico de zero a 220 quilômetros por hora">
+                        <circle cx="120" cy="101" r="87" fill="#101514" stroke="#655b4a" stroke-width="4"/>
+                        <circle cx="120" cy="101" r="79" fill="#1a201d" stroke="#9b8970" stroke-width="1.3"/>
+                        <circle cx="120" cy="101" r="72" fill="none" stroke="#303731" stroke-width="1"/>
+                        <line x1="62.55" y1="149.21" x2="70.97" y2="142.14" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="57.89" y1="143.04" x2="62.86" y2="139.68" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="53.89" y1="136.42" x2="59.18" y2="133.59" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="50.60" y1="129.43" x2="56.15" y2="127.15" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="48.04" y1="122.13" x2="58.59" y2="119.03" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="46.25" y1="114.61" x2="52.15" y2="113.52" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="45.24" y1="106.94" x2="51.22" y2="106.47" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="45.02" y1="99.22" x2="51.02" y2="99.36" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="45.60" y1="91.51" x2="56.51" y2="92.90" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="46.98" y1="83.90" x2="52.82" y2="85.27" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="49.12" y1="76.47" x2="54.79" y2="78.43" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="52.03" y1="69.30" x2="57.46" y2="71.84" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="55.65" y1="62.47" x2="65.09" y2="68.12" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="59.96" y1="56.05" x2="64.76" y2="59.65" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="64.91" y1="50.11" x2="69.31" y2="54.18" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="70.44" y1="44.71" x2="74.40" y2="49.21" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="76.50" y1="39.91" x2="82.88" y2="48.87" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="83.02" y1="35.75" x2="85.98" y2="40.97" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="89.93" y1="32.29" x2="92.34" y2="37.79" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="97.16" y1="29.56" x2="98.99" y2="35.28" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="104.64" y1="27.59" x2="106.89" y2="38.36" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="112.28" y1="26.40" x2="112.90" y2="32.37" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="120.00" y1="26.00" x2="120.00" y2="32.00" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="127.72" y1="26.40" x2="127.10" y2="32.37" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="135.36" y1="27.59" x2="133.11" y2="38.36" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="142.84" y1="29.56" x2="141.01" y2="35.28" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="150.07" y1="32.29" x2="147.66" y2="37.79" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="156.98" y1="35.75" x2="154.02" y2="40.97" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="163.50" y1="39.91" x2="157.12" y2="48.87" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="169.56" y1="44.71" x2="165.60" y2="49.21" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="175.09" y1="50.11" x2="170.69" y2="54.18" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="180.04" y1="56.05" x2="175.24" y2="59.65" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="184.35" y1="62.47" x2="174.91" y2="68.12" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="187.97" y1="69.30" x2="182.54" y2="71.84" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="190.88" y1="76.47" x2="185.21" y2="78.43" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="193.02" y1="83.90" x2="187.18" y2="85.27" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="194.40" y1="91.51" x2="183.49" y2="92.90" stroke="#dfd3b7" stroke-width="2.1"/>
+                            <line x1="194.98" y1="99.22" x2="188.98" y2="99.36" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="194.76" y1="106.94" x2="188.78" y2="106.47" stroke="#756e62" stroke-width=".85"/>
+                            <line x1="193.75" y1="114.61" x2="187.85" y2="113.52" stroke="#b35e48" stroke-width=".85"/>
+                            <line x1="191.96" y1="122.13" x2="181.41" y2="119.03" stroke="#b35e48" stroke-width="2.1"/>
+                            <line x1="189.40" y1="129.43" x2="183.85" y2="127.15" stroke="#b35e48" stroke-width=".85"/>
+                            <line x1="186.11" y1="136.42" x2="180.82" y2="133.59" stroke="#b35e48" stroke-width=".85"/>
+                            <line x1="182.11" y1="143.04" x2="177.14" y2="139.68" stroke="#b35e48" stroke-width=".85"/>
+                            <line x1="177.45" y1="149.21" x2="169.03" y2="142.14" stroke="#b35e48" stroke-width="2.1"/>
+                        <text x="78.6" y="138.3" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">0</text>
+                            <text x="68.2" y="118.8" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">20</text>
+                            <text x="66.4" y="96.8" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">40</text>
+                            <text x="73.7" y="75.9" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">60</text>
+                            <text x="88.7" y="59.6" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">80</text>
+                            <text x="108.9" y="50.7" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">100</text>
+                            <text x="131.1" y="50.7" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">120</text>
+                            <text x="151.3" y="59.6" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">140</text>
+                            <text x="166.3" y="75.9" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">160</text>
+                            <text x="173.6" y="96.8" text-anchor="middle" fill="#e6dcc9" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">180</text>
+                            <text x="171.8" y="118.8" text-anchor="middle" fill="#d57962" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">200</text>
+                            <text x="161.4" y="138.3" text-anchor="middle" fill="#d57962" font-size="9.3" font-family="Tahoma,Arial,sans-serif" font-weight="bold">220</text>
+                        <text x="120" y="82" text-anchor="middle" class="retro-speed-legend">km/h</text>
+                        <text x="120" y="92" text-anchor="middle" class="retro-speed-brand">DRIVER • 2</text>
+                        <g id="speed-needle" transform="rotate(-130 120 101)">
+                            <path d="M117,110 L118,44 Q120,38 122,44 L123,110 Z" fill="#e37b4b" stroke="#f5ad68" stroke-width=".65"/>
+                            <line x1="120" y1="101" x2="120" y2="131" stroke="#8a3b24" stroke-width="3" stroke-linecap="round"/>
+                        </g>
+                        <circle cx="120" cy="101" r="8" fill="#454a43" stroke="#bba98d" stroke-width="2.2"/>
+                        <circle cx="120" cy="101" r="3" fill="#a29a88"/>
+                        <rect x="92" y="129" width="56" height="23" rx="2.5" fill="#060e0b" stroke="#756f54" stroke-width="1"/>
+                        <text id="speed-value" x="120" y="146" text-anchor="middle" fill="#e3d9ac" font-size="19" letter-spacing="2.1" font-family="Consolas,monospace" font-weight="bold">000</text>
+                        <text x="120" y="160" text-anchor="middle" class="retro-speed-legend">km/h • DIGITAL</text>
+                    </svg>
                 </div>
-                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-1">
-                    <div id="rpm-bar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500 transition-all duration-75" style="width: 15%;"></div>
+                <div class="speedometer-90s-footer">
+                    <div class="retro-transmission">CÂMBIO <strong id="speed-gear">P</strong></div>
+                    <div class="retro-tach"><span>GIRO</span><div class="retro-tach-track"><div id="rpm-bar" style="width:15%"></div></div></div>
                 </div>
-                <div class="flex justify-between w-full text-[10px] text-slate-400 mt-1.5 gap-2">
-                    <span>CARRO: <strong id="car-name-label" class="text-white">BUICK 70 V8</strong></span>
-                    <span id="drift-badge" class="text-amber-400 font-extrabold opacity-0">BURNOUT/DRIFT!</span>
+                <div class="speedometer-90s-car">
+                    <strong id="car-name-label">BUICK 70 V8</strong>
+                    <span id="drift-badge" class="retro-speed-drift" style="opacity:0">DRIFT!</span>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 

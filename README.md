@@ -897,3 +897,43 @@ conclui a partir do teste de arquivos.
   As missões preservam seus roteiros simplificados próprios;
   esta revisão não pretende certificá-las como réplicas fiéis
   da história completa do Driver 2 original nem medir FPS.
+
+
+## REV HUD essencial + porta do motorista + velocímetro 1990 (27/10/2026)
+
+### Correções solicitadas após a revisão minimalista
+- O **HUD voltou a mostrar DANO, DELITO e CLIMA** durante a
+  condução, no bloco esquerdo compacto. Os quatro botões
+  DIA/TARDE/NOITE/CHUVA e o indicador `weather-badge` mantêm
+  os eventos e funções anteriores. A troca de cidade e as
+  ferramentas auxiliares continuam no MENU, deixando apenas
+  o botão MENU na parte superior direita.
+- A entrada de Tanner no `carro_driver2_otimizado.glb` foi
+  invertida para o painel com dobradiça **direita na orientação
+  local do GLB**. Essa é a porta de motorista observada pelo
+  usuário: a anterior selecionava a de passageiro.
+  A viatura `car police.glb` mantém sua dobradiça própria.
+  `DriverPoliceDoorRig.standPoint()` concentra o cálculo da
+  posição lateral de entrada, aproximação e saída, com respeito
+  a `vehicle.heading`. Ambos os lados fecham ao terminar ou
+  cancelar a animação, inclusive após alternar PS1/3D.
+- **Velocímetro estilo anos 90** substitui o antigo painel
+  retangular de dígitos: instrumento analógico de 0 a 220 km/h,
+  com mostrador escuro, numerais creme, ponteiro cor de
+  cobre, odômetro digital, indicador de marcha P/D/R,
+  giro aproximado e estado da sirene/derrapagem.
+  Mantém os IDs do HUD e a leitura física de velocidade
+  `Math.abs(playerCar.speed)*3.4`. O ponteiro gira entre
+  -130° e +130° e limita o extremo da escala a 220 km/h;
+  velocímetro é instrumento visual, não altera a física.
+  Compacta o painel em telefones.
+- Novo `tests/retro-speedometer-driver-door.test.cjs`
+  valida o lado do motorista em quatro orientações,
+  rotação de ambas as dobradiças, callbacks, HUD restaurado,
+  marcações, movimento do ponteiro e a posição lateral
+  compartilhada com a animação.
+
+**Limitações:** os testes são de lógica, carregamento e
+integração DOM; ainda é necessário jogar no navegador para
+avaliar visualmente o acabamento das portas no GLB e o layout
+do painel em resoluções menores. Nenhum FPS foi medido.
