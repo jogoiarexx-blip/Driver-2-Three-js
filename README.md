@@ -116,3 +116,5 @@ Execute localmente: `node --test tests/*.test.cjs`. Os testes de lógica não su
 - \`tests/roadblock-feedback-mobile.test.cjs\`: 15 testes reproduzíveis para bloqueios, simulação de armar/destruir, feedback, pool de faíscas e estrutura da interface.
 
 Os testes Node exercitam lógica e não substituem testes de partida/colisões em um navegador real.
+
+- Carros civis e viaturas agora freiam antes de barricadas intactas; quando as barreiras são destruídas, a perseguição pode continuar. Dois testes adicionais cobrem essa navegação.

@@ -51,6 +51,9 @@ const Director=vm.runInNewContext(
     read('js/police/roadblock-director.js')+'\nPoliceRoadblockDirector',context);
 const Ped=vm.runInNewContext(
     read('js/entities/pedestrians-roadblocks.js')+'\nPedestrianAndRoadblockManager',context);
+const Traffic=vm.runInNewContext(
+    read('js/police/pursuit-tactics.js')+'\n'+
+    read('js/traffic/traffic-ai.js')+'\nDriverTrafficAI',context);
 const Feedback=vm.runInNewContext(
     read('js/render/impact-feedback.js')+'\nDriverImpactFeedback',context);
 const Effects=vm.runInNewContext(
@@ -186,4 +189,24 @@ test('HTML e CSS expõem os controles móveis e alertas',()=>{
     assert.match(css,/#hud-top-row/);
     assert.match(engine,/roadblockDirector\.warning\(/);
     assert.match(engine,/impactFeedback\.trigger\(/);
+});
+
+test('tráfego civil freia diante de bloqueio intacto',()=>{
+    const city={isPointBlocked:()=>false,isTrafficGreen:()=>true};
+    const ai=new Traffic(city);
+    const vehicle={x:4,z:-95,heading:0,speed:16,bodyStyle:'muscle',isPolice:false,isTarget:false};
+    ai.policeRoadblocks=[{x:4,z:-72,arming:0,smashed:false,dynamic:true}];
+    assert.equal(ai.getInput(vehicle,1/60,[vehicle],null,0).down,true);
+});
+test('viatura retoma perseguição após barricada destruída',()=>{
+    const city={isPointBlocked:()=>false,isTrafficGreen:()=>true};
+    const ai=new Traffic(city);
+    const police={x:4,z:-95,heading:0,speed:20,bodyStyle:'muscle',
+        isPolice:true,isTarget:false};
+    const barrier={x:4,z:-72,arming:0,smashed:false,dynamic:true};
+    ai.policeRoadblocks=[barrier];
+    const player={x:4,z:0,heading:0,speed:0};
+    assert.equal(ai.getInput(police,1/60,[police],player,90).down,true);
+    barrier.smashed=true;
+    assert.equal(ai.getInput(police,1/60,[police],player,90).up,true);
 });
