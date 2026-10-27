@@ -151,3 +151,59 @@ test('nova missão e colisões têm referências carregadas corretamente',()=>{
     assert.match(engine,/this\.collisionSystem\.step/);
     assert.match(html,/startMission\('pursuit'\)/);
 });
+
+
+test('vetor de contato detecta frente e traseira mesmo após virar',()=>{
+    const v=car(0,0,0,20);
+    assert.equal(physics.DriverVehicleCollisions.impactZone(v,0,1),'front');
+    assert.equal(physics.DriverVehicleCollisions.impactZone(v,0,-1),'rear');
+    v.heading=Math.PI;
+    assert.equal(physics.DriverVehicleCollisions.impactZone(v,0,1),'rear');
+    assert.equal(physics.DriverVehicleCollisions.impactZone(v,0,-1),'front');
+});
+test('vetor de contato distingue laterais esquerda e direita',()=>{
+    const v=car(0,0,0,20);
+    assert.equal(physics.DriverVehicleCollisions.impactZone(v,1,0),'right');
+    assert.equal(physics.DriverVehicleCollisions.impactZone(v,-1,0),'left');
+    v.heading=Math.PI/2;
+    assert.equal(physics.DriverVehicleCollisions.impactZone(v,0,-1),'right');
+});
+test('registro acumula danos em cada lado sem exceder 100',()=>{
+    const v=car();
+    const cls=physics.DriverVehicleCollisions;
+    cls.recordZone(v,1,0,15);
+    assert.ok(v.damageZones.right>0);
+    assert.equal(v.damageZones.left,0);
+    cls.recordZone(v,-1,0,200);
+    cls.recordZone(v,-1,0,200);
+    cls.recordZone(v,-1,0,200);
+    assert.equal(v.damageZones.left,100);
+    assert.equal(v.lastImpactZone,'left');
+});
+test('choque frontal registra o local para cada carro e no callback',()=>{
+    const a=car(0,0,0,20),b=car(0,2,Math.PI,20);
+    let hit=null;
+    new physics.DriverVehicleCollisions().step([a,b],a,street,150,e=>hit=e);
+    assert.equal(a.damageZones.front>0,true);
+    assert.equal(b.damageZones.front>0,true);
+    assert.equal(hit.impactZone,'front');
+});
+test('choque traseiro é classificado corretamente com ré',()=>{
+    const a=car(0,0,0,-20),b=car(0,-2,0,0);
+    let hit=null;
+    new physics.DriverVehicleCollisions().step([a,b],a,street,200,e=>hit=e);
+    assert.equal(hit.impactZone,'rear');
+    assert.ok(a.damageZones.rear>0);
+});
+test('colisão lateral não atribui dano dianteiro automaticamente',()=>{
+    const a=car(0,0,0,0),b=car(-2,0,0,0);
+    a.lateralVelocity=-19;
+    new physics.DriverVehicleCollisions().step([a,b],a,street,100,()=>{});
+    assert.ok(a.damageZones.left>0);
+    assert.equal(a.damageZones.front,0);
+});
+test('paredes da cidade ligam registro de danos por direção',()=>{
+    const source=read('js/vehicles/driver-vehicle.js');
+    assert.match(source,/DriverVehicleCollisions\.recordZone\(this,/);
+    assert.match(source,/this\.damageZones = \{ front: 0, rear: 0, left: 0, right: 0 \}/);
+});

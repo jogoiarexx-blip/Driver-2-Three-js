@@ -128,3 +128,10 @@ Os testes Node exercitam lógica e não substituem testes de partida/colisões e
 - Testes adicionais verificam posicionamento/recuo dos policiais, limpeza de atores, memória policial, expiração de rádio e efeitos de danos críticos. Permanecem preservadas as missões e opções de carro PS1 ou GLB.
 
 O GitHub Actions avalia testes lógicos de Node; a validação visual completa em navegador real continua sendo uma etapa separada.
+
+## Revisão — batidas direcionais e manobras policiais em perseguições
+
+- Danos em quatro zonas independentes (frontal, traseira, esquerda e direita) calculados pela direção do contato no referencial do veículo, acumulados até 100 por zona. Batidas em paredes também são classificadas.
+- Nova geometria low-poly de porta e para-choque danificados é ligada apenas na área afetada; os efeitos funcionam igualmente no modelo procedural e no GLB porque permanecem no grupo visual do veículo.
+- Manobras de flanqueamento e interceptação estão habilitadas somente para viaturas com visão direta, felony alto, velocidade suficiente e trajetória sem prédios. Não há teletransporte; a IA escolhe pontos adiante e freia antecipadamente durante um corte de caminho.
+- Adicionados 18 testes de regressão para lados do contato, veículos rotacionados, ré, acúmulo de danos, visibilidade e táticas. A validação automatizada não é equivalente a uma partida completa no navegador.

@@ -297,3 +297,15 @@ test('procurar jogador em fuga não reaproveita memória depois do reset',()=>{
     ai.reset();
     assert.equal(ai.policeMemory.has(cop),false);
 });
+
+
+test('viatura em manobra ativa não vira quando perdeu a visão',()=>{
+    const ai=new Traffic({isPointBlocked:()=>false,isTrafficGreen:()=>true});
+    const cop={x:0,z:-22,heading:0,speed:23,pursuitRole:1,isPolice:true,bodyStyle:'muscle'};
+    const visible={x:0,z:0,heading:0,speed:24};
+    ai.getInput(cop,1/60,[cop],visible,90);
+    assert.equal(cop.policeManeuver,'flank');
+    ai.city.isPointBlocked=()=>true;
+    ai.getInput(cop,1/60,[cop],{x:100,z:0,heading:0,speed:26},90);
+    assert.equal(cop.policeManeuver,null);
+});

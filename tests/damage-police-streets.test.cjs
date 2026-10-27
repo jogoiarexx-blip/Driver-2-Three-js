@@ -142,3 +142,79 @@ test('renderização de dano funciona mesmo com modelo GLB e não adiciona Point
     assert.equal(car.damageParts.engineGlow.visible,true);
     assert.ok(car.damageGroup.children.every(x=>x instanceof Element));
 });
+
+
+test('amassados laterais começam invisíveis em carro não batido',()=>{
+    const car={chassisTilt:new Element(),damage:0,damageZones:{front:0,rear:0,left:0,right:0}};
+    Damage.attach(car);
+    assert.equal(car.damageParts.leftDamage.visible,false);
+    assert.equal(car.damageParts.rightDamage.visible,false);
+    assert.equal(car.damageParts.rearDamage.visible,false);
+    assert.equal(car.damageParts.bumper.visible,false);
+});
+test('colisão só na lateral esquerda revela chapa esquerda',()=>{
+    const car={chassisTilt:new Element(),damage:15,damageZones:{front:0,rear:0,left:24,right:0}};
+    Damage.attach(car);
+    assert.equal(car.damageParts.leftDamage.visible,true);
+    assert.equal(car.damageParts.rightDamage.visible,false);
+    assert.equal(car.damageParts.rearDamage.visible,false);
+});
+test('colisão traseira cria para-choque traseiro empenado sem amassar frente',()=>{
+    const car={chassisTilt:new Element(),damage:16,damageZones:{front:0,rear:34,left:0,right:0}};
+    Damage.attach(car);
+    assert.equal(car.damageParts.rearDamage.visible,true);
+    assert.equal(car.damageParts.bumper.visible,false);
+});
+test('colisão frontal pode mostrar para-choque antes de 72% de dano global',()=>{
+    const car={chassisTilt:new Element(),damage:14,damageZones:{front:24,rear:0,left:0,right:0}};
+    Damage.attach(car);
+    assert.equal(car.damageParts.bumper.visible,true);
+    assert.equal(car.damageParts.rearDamage.visible,false);
+});
+test('dano independente nos dois lados da lataria',()=>{
+    const car={chassisTilt:new Element(),damage:25,damageZones:{front:0,rear:0,left:0,right:20}};
+    Damage.attach(car);
+    assert.equal(car.damageParts.rightDamage.visible,true);
+    assert.equal(car.damageParts.leftDamage.visible,false);
+    car.damageZones.left=19;
+    Damage.update(car);
+    assert.equal(car.damageParts.leftDamage.visible,true);
+});
+test('manobra policial exige campo de visão e nível de delito elevado',()=>{
+    const cop={x:0,z:-22,speed:24,pursuitRole:1};
+    const player={x:0,z:0,heading:0,speed:24};
+    const city={isPointBlocked:()=>false};
+    assert.equal(Tactics.maneuverFor(cop,player,90,city,false),null);
+    assert.equal(Tactics.maneuverFor(cop,player,61,city,true),null);
+    assert.ok(Tactics.maneuverFor(cop,player,90,city,true));
+});
+test('flanqueadores fazem aproximação por lados opostos',()=>{
+    const player={x:0,z:0,heading:0,speed:24};
+    const city={isPointBlocked:()=>false};
+    const one=Tactics.maneuverFor({x:0,z:-22,speed:24,pursuitRole:1},player,90,city,true);
+    const two=Tactics.maneuverFor({x:0,z:-22,speed:24,pursuitRole:2},player,90,city,true);
+    assert.ok(one.x>0);
+    assert.ok(two.x<0);
+    assert.equal(one.mode,'flank');
+    assert.equal(two.mode,'flank');
+});
+test('interceptor tenta fechar trajeto à frente, com frenagem controlada',()=>{
+    const city={isPointBlocked:()=>false};
+    const p={x:0,z:0,heading:0,speed:24};
+    const cop={x:0,z:-19,speed:20,pursuitRole:3};
+    const intercept=Tactics.maneuverFor(cop,p,95,city,true);
+    assert.equal(intercept.mode,'intercept');
+    assert.ok(intercept.z>12);
+    assert.ok(intercept.speedLimit<=21);
+});
+test('manobras especiais são canceladas perto de prédios',()=>{
+    const car={x:0,z:-25,speed:25,pursuitRole:3};
+    const player={x:0,z:0,heading:0,speed:24};
+    assert.equal(Tactics.maneuverFor(car,player,90,{isPointBlocked:()=>true},true),null);
+});
+test('interceptor não tenta cortar parado nem perseguir longe demais',()=>{
+    const city={isPointBlocked:()=>false};
+    const cop={x:0,z:-30,speed:20,pursuitRole:3};
+    assert.equal(Tactics.maneuverFor(cop,{x:0,z:0,heading:0,speed:3},95,city,true),null);
+    assert.equal(Tactics.maneuverFor({...cop,z:-100},{x:0,z:0,heading:0,speed:30},95,city,true),null);
+});
