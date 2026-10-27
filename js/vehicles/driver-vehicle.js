@@ -393,7 +393,10 @@
                 }
 
                 // Fumaça preta espessa no capô quando o carro tem mais de 65% de dano
-                if (this.damage > 65 && Math.random() < 0.45) {
+                // Probabilidade dependente de dt: preserva densidade de fumaça
+                // semelhante em 30/60 FPS, sem dezenas de partículas por frame.
+                if (this.damage > 65 &&
+                    Math.random() < Math.min(0.75, dt * (4 + this.damage * 0.09))) {
                     effects.spawnTireSmoke(
                         this.x + Math.sin(this.heading) * 1.9,
                         this.y + 0.9,

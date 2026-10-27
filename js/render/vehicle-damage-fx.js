@@ -59,10 +59,34 @@ class VehicleDamageFX {
         hood.rotation.x = 0.13;
         heavy.add(hood);
 
-        group.add(scratches, dents, cracks, heavy);
+        // Para-choque pendurado + grade amassada após impacto forte.
+        // Não desloca o collider físico e acompanha carros GLB.
+        const bumper = new THREE.Group();
+        const bent = new THREE.Mesh(new THREE.BoxGeometry(2.30, 0.17, 0.22), metal);
+        bent.position.set(0.15, 0.41, 2.66);
+        bent.rotation.z = -0.12;
+        const grille = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.26, 0.08), rusty);
+        grille.position.set(-0.08, 0.78, 2.69);
+        grille.rotation.y = 0.08;
+        bumper.add(bent, grille);
+
+        // Superaquecimento crítico representado por luz de material, não
+        // por PointLight; por isso não multiplica o custo de iluminação.
+        const engineGlow = new THREE.Group();
+        const glowMat = new THREE.MeshBasicMaterial({
+            color: 0xfb923c, transparent: true, opacity: 0.85,
+            depthWrite: false
+        });
+        const engineStrip = new THREE.Mesh(
+            new THREE.BoxGeometry(0.70, 0.10, 0.30), glowMat
+        );
+        engineStrip.position.set(0, 1.20, 1.82);
+        engineGlow.add(engineStrip);
+
+        group.add(scratches, dents, cracks, heavy, bumper, engineGlow);
         car.chassisTilt.add(group);
         car.damageGroup = group;
-        car.damageParts = { scratches, dents, cracks, heavy };
+        car.damageParts = { scratches, dents, cracks, heavy, bumper, engineGlow };
         this.update(car);
     }
 
@@ -73,5 +97,13 @@ class VehicleDamageFX {
         car.damageParts.dents.visible = stage.dents;
         car.damageParts.cracks.visible = stage.glass;
         car.damageParts.heavy.visible = stage.critical;
+        if (car.damageParts.bumper) {
+            car.damageParts.bumper.visible = stage.intensity >= 0.72;
+        }
+        if (car.damageParts.engineGlow) {
+            car.damageParts.engineGlow.visible = stage.critical;
+            const pulse = 0.78 + Math.abs(Math.sin((car.motionClock || 0) * 9)) * 0.22;
+            car.damageParts.engineGlow.scale.set(pulse, pulse, pulse);
+        }
     }
 }

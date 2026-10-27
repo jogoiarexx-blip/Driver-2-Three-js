@@ -779,6 +779,15 @@
                             strength
                         );
                         this.impactFeedback.trigger(impact.closingSpeed);
+                        if (impact.closingSpeed >= 29) {
+                            // Colisões fortes soltam vapor do capô sem luzes caras.
+                            this.effects.spawnTireSmoke(
+                                this.playerCar.x + Math.sin(this.playerCar.heading) * 1.5,
+                                this.playerCar.y || 0,
+                                this.playerCar.z + Math.cos(this.playerCar.heading) * 1.5,
+                                true
+                            );
+                        }
                         // A polícia não pode aumentar o delito de Tanner
                         // simplesmente batendo no carro dele.
                         if (impact.playerApproach > 8) {
