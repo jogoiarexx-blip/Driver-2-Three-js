@@ -200,14 +200,18 @@ class DriverTrafficAI {
         const waypoint = scripted ?
             DriverTailingDropMission.advanceRoute(car) : null;
         const wanted = car.isPolice && felony > 25;
+        const hostile = !!car.isMafia;
+        // Mafiosos seguem Tanner sem sirene nem depender de felony.
+        const pursuing = wanted || hostile;
         const pursuitTarget = wanted ?
-            this.pursuitInformation(car,dt,playerPos,felony) : null;
+            this.pursuitInformation(car,dt,playerPos,felony) :
+            (hostile && playerPos ? playerPos : null);
         const previousTarget = route.target;
         if (!scripted &&
             Math.hypot(car.x - previousTarget.x, car.z - previousTarget.z) < 10) {
             this.chooseNext(car, route,
-                wanted ? pursuitTarget : (car.isTarget ? playerPos : null),
-                wanted && !!pursuitTarget);
+                pursuing ? pursuitTarget : (car.isTarget ? playerPos : null),
+                pursuing && !!pursuitTarget);
         }
 
         let target = scripted ?
@@ -218,6 +222,10 @@ class DriverTrafficAI {
         const distanceToPlayer = playerPos ?
             Math.hypot(car.x - playerPos.x, car.z - playerPos.z) : Infinity;
         let maneuver=null;
+        if(hostile && pursuitTarget && this.unobstructed(car,pursuitTarget)){
+            // A máfia tenta aproximar-se do carro, mas usa a rua nas esquinas.
+            target=pursuitTarget;
+        }
         if (wanted && pursuitTarget) {
             // Somente policiais que enxergam Tanner tentam fechar a trajetória.
             // Caso haja edifício ou obstáculo no trajeto, permanecem nas ruas.
@@ -251,7 +259,7 @@ class DriverTrafficAI {
             right: angle > 0.10, handbrake: false, sprint: false
         };
 
-        let maxSpeed = wanted ? 40 : car.isTarget ? 34 :
+        let maxSpeed = hostile ? 38 : wanted ? 40 : car.isTarget ? 34 :
             (car.bodyStyle === 'bus' || car.bodyStyle === 'truck' ? 17 : 23);
         if (maneuver) maxSpeed=Math.min(maxSpeed,maneuver.speedLimit);
         if (scripted) maxSpeed=scripted.done?0:
@@ -275,7 +283,7 @@ class DriverTrafficAI {
         const junctionAxis=scripted && waypoint ?
             (Math.abs(waypoint.x-car.x)>Math.abs(waypoint.z-car.z)?'x':'z') :
             route.axis;
-        const stopForRed=!wanted && (!car.isTarget || !!scripted) &&
+        const stopForRed=!pursuing && (!car.isTarget || !!scripted) &&
             (!scripted || !scripted.done) &&
             distanceToIntersection<28 && distanceToIntersection>7 &&
             !this.city.isTrafficGreen(junctionAxis);
@@ -318,7 +326,7 @@ class DriverTrafficAI {
         } else if (maxSpeed === 0 && car.speed > 0.5) {
             input.down = true;
         }
-        car.sirenActive = wanted;
+        car.sirenActive = wanted && !hostile;
         car.policeLineOfSight = wanted &&
             !!this.policeMemory.get(car)?.visible;
         return input;
