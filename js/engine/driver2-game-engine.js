@@ -38,6 +38,8 @@
                 this.dropDirector=new DriverTailingDropMission();
                 this.intruderDirector=new DriverIntruderPursuit();
                 this.caineDirector=new DriverCaineCompound();
+                this.leavingDirector=new DriverLeavingChicago();
+                this.leavingStatus=null;this.leavingMafia=[];this.stationJones=null;
                 this.caineStatus=null;
                 this.caineVans=[];
                 this.intruderStatus=null;
@@ -296,7 +298,7 @@
             }
 
             startMission(type) {
-                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop'||type==='story_safehouse'||type==='story_intruder'||type==='story_caine') &&
+                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop'||type==='story_safehouse'||type==='story_intruder'||type==='story_caine'||type==='story_leaving') &&
                     this.currentCityKey!=='chicago')this.changeCity('chicago');
                 document.getElementById('missions-modal').classList.add('hidden');
                 document.getElementById('center-announcement').classList.add('hidden');
@@ -306,6 +308,10 @@
 
                 this.missionType = type;
                 this.gameEnded = false;
+                if(this.stationJones){
+                    GPUResourceUtils.disposeSubtree(this.stationJones);
+                    this.scene.remove(this.stationJones);this.stationJones=null;
+                }
                 this.clearMissionMarkers();
                 this.spawnAllVehicles();
                 if(this.trainLine)this.trainLine.reset(type==='story_train');
@@ -319,8 +325,9 @@
                 this.intruderDirector.reset();
                 this.intruderStatus=null;
                 this.caineDirector.reset();
-                this.caineStatus=null;
-                this.caineVans=[];
+                this.caineStatus=null;this.caineVans=[];
+                this.leavingDirector.reset();
+                this.leavingStatus=null;this.leavingMafia=[];
                 this.city.caineBridgeClosed=false;
                 this.city.bridgeRaised=false;
                 this.intruderBlocker=null;
@@ -354,6 +361,9 @@
                 const cainePanel=document.getElementById('caine-escape-progress');
                 if(cainePanel)cainePanel.classList.toggle('hidden',
                     type!=='story_caine');
+                const leavingPanel=document.getElementById('leaving-chicago-progress');
+                if(leavingPanel)leavingPanel.classList.toggle('hidden',
+                    type!=='story_leaving');
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
                 const titleEl = document.getElementById('mission-title');
@@ -384,6 +394,30 @@
                         maxSpeed:52,accel:30
                     });
                     this.vehicles.push(this.targetCar);
+                } else if(type==='story_leaving'){
+                    this.missionActive=true;
+                    this.missionTimeLeft=DriverLeavingChicago.LIMIT;
+                    this.setWeather('rain');this.felony=38;
+                    const start=DriverLeavingChicago.START;
+                    Object.assign(this.playerCar,{
+                        x:start.x,y:0,z:start.z,heading:start.heading,
+                        speed:0,damage:0
+                    });
+                    this.playerCar.updateTransform();
+                    this.mode='driving';this.tanner.setVisible(false);
+                    this.spawnChicagoMafia();
+                    this.spawnLeavingJones();
+                    this.spawnMarkerRing(
+                        DriverLeavingChicago.STATION.x,
+                        DriverLeavingChicago.STATION.z,0x22c55e
+                    );
+                    titleEl.textContent='CHICAGO 08: LEAVING CHICAGO';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='ALCANCE A ESTAÇÃO • ENCONTRE JONES';
+                    objEl.textContent='À noite e sob chuva, vá à estação Randolph '+
+                        'antes de 3:30. Evite a máfia e pare no marcador verde '+
+                        'para reencontrar Tobias Jones.';
                 } else if(type === 'story_caine'){
                     this.missionActive=true;
                     this.missionTimeLeft=170;
@@ -834,6 +868,46 @@
                 return ok;
             }
 
+            spawnChicagoMafia(){
+                if(this.leavingMafia.length)return this.leavingMafia;
+                const spots=[
+                    {x:-240,z:224,heading:Math.PI},
+                    {x:-320,z:160,heading:Math.PI/2},
+                    {x:-160,z:160,heading:-Math.PI/2}
+                ];
+                for(const [i,pos] of spots.entries()){
+                    const mafia=new DriverVehicle(this.scene,{
+                        name:'MAFIA BRASILEIRA '+(i+1),
+                        color:i%2?0x27272a:0x7f1d1d,
+                        bodyStyle:'muscle',
+                        x:pos.x,z:pos.z,heading:pos.heading,
+                        maxSpeed:43,accel:29
+                    });
+                    mafia.isMafia=true;mafia.isPolice=false;
+                    this.vehicles.push(mafia);this.leavingMafia.push(mafia);
+                }
+                return this.leavingMafia;
+            }
+            spawnLeavingJones(){
+                if(this.stationJones)return this.stationJones;
+                const group=new THREE.Group();
+                const coat=new THREE.MeshLambertMaterial({color:0x334155});
+                const skin=new THREE.MeshLambertMaterial({color:0xb77954});
+                const green=new THREE.MeshBasicMaterial({color:0x4ade80});
+                const body=new THREE.Mesh(new THREE.BoxGeometry(.9,1.55,.5),coat);
+                body.position.y=1.68;
+                const head=new THREE.Mesh(new THREE.BoxGeometry(.52,.62,.5),skin);
+                head.position.y=2.76;group.add(body,head);
+                for(const sign of [-1,1]){
+                    const leg=new THREE.Mesh(new THREE.BoxGeometry(.32,.82,.42),coat);
+                    leg.position.set(sign*.28,.55,0);group.add(leg);
+                }
+                const arrow=new THREE.Mesh(new THREE.ConeGeometry(.68,1.25,4),green);
+                arrow.position.y=4.05;arrow.rotation.z=Math.PI;
+                group.add(arrow);group.position.set(-8,0,-240);
+                this.scene.add(group);this.stationJones=group;
+                return group;
+            }
             activateCaineVans() {
                 if(this.caineVans.length)return this.caineVans;
                 const locations=[
@@ -1221,6 +1295,28 @@
                             return;
                         }
                     }
+                    if(this.missionType==='story_leaving'){
+                        const result=this.leavingDirector.update(dt,{
+                            position:this.getPlayerPosition(),mode:this.mode,
+                            speed:this.mode==='driving'?this.playerCar?.speed||0:0,
+                            damage:this.playerCar?.damage||0,
+                            timeLeft:this.missionTimeLeft
+                        });
+                        this.leavingStatus=result;
+                        document.getElementById('mission-subcounter').textContent=result.message;
+                        if(result.failed){
+                            this.triggerEndScreen(result.failed==='destroyed'?
+                                'CARRO DESTRUÍDO!':'TREM PARTIU!',
+                                'Jones não conseguiu esperar pela chegada de Tanner.');
+                            return;
+                        }
+                        if(result.completed){
+                            this.triggerEndScreen('LEAVING CHICAGO CONCLUÍDA!',
+                                'Tanner reencontrou Tobias Jones. '+
+                                'Chicago ficou para trás. Próximo destino: HAVANA!');
+                            return;
+                        }
+                    }
                     if(this.missionType==='story_caine'){
                         const outcome=this.caineDirector.update(dt,{
                             position:this.getPlayerPosition(),
@@ -1567,6 +1663,9 @@
                 const continueHome=document.getElementById('btn-continue-safehouse');
                 if(continueHome)continueHome.classList.toggle('hidden',
                     !(this.missionType==='story_safehouse' && /CONCLUÍDA/.test(title)));
+                const havana=document.getElementById('btn-continue-havana');
+                if(havana)havana.classList.toggle('hidden',
+                    !(this.missionType==='story_leaving' && /CONCLUÍDA/.test(title)));
                 document.getElementById('announcement-title').textContent = title;
                 document.getElementById('announcement-desc').textContent = desc;
                 document.getElementById('center-announcement').classList.remove('hidden');
@@ -1626,6 +1725,21 @@
                 }
 
                 const cainePanel=document.getElementById('caine-escape-progress');
+                if(this.missionType==='story_leaving'&&this.leavingStatus){
+                    const panel=document.getElementById('leaving-chicago-progress');
+                    const title=document.getElementById('leaving-chicago-title');
+                    const fill=document.getElementById('leaving-chicago-fill');
+                    const detail=document.getElementById('leaving-chicago-distance');
+                    if(panel){
+                        const v=this.leavingStatus;
+                        if(title)title.textContent=v.phase==='reunion'?
+                            'JONES À VISTA • AGUARDE NA ESTAÇÃO':
+                            'ÚLTIMA MISSÃO DE CHICAGO • CHUVA';
+                        if(fill)fill.style.width=Math.round(v.progress*100)+'%';
+                        if(detail)detail.textContent='ESTAÇÃO: '+
+                            Math.round(v.distance)+'m • MÁFIA NO ENCALÇO';
+                    }
+                }
                 if(cainePanel && this.missionType==='story_caine' && this.caineStatus){
                     const phase=document.getElementById('caine-escape-phase');
                     const fill=document.getElementById('caine-bridge-fill');
@@ -1715,7 +1829,9 @@
                 const progress = document.getElementById('mission-compact-progress');
                 if (progress) {
                     let label = this.missionActive ? 'MISSÃO EM ANDAMENTO' : 'PASSEIO LIVRE';
-                    if (this.missionType === 'story_caine') {
+                    if (this.missionType === 'story_leaving') {
+                        label='CHICAGO 08 • ALCANCE O TREM';
+                    } else if (this.missionType === 'story_caine') {
                         label='CHICAGO 07 • COMPLEXO DE CAINE';
                     } else if (this.missionType === 'story_intruder') {
                         label='CHICAGO 06 • PERSIGA O INVASOR';
@@ -1889,6 +2005,12 @@
                 ctx.fillStyle = '#c084fc';
                 ctx.fillRect(gx - 4, gz - 4, 8, 8);
 
+                if(this.missionType==='story_leaving'){
+                    const station=DriverLeavingChicago.STATION;
+                    ctx.fillStyle='#4ade80';
+                    ctx.fillRect((station.x-pos.x)*scale-5,
+                        -(station.z-pos.z)*scale-5,10,10);
+                }
                 if(this.missionType==='story_caine'){
                     const exit=DriverCaineCompound.BRIDGE;
                     ctx.fillStyle='#4ade80';
@@ -2220,6 +2342,16 @@
                 });
                 document.getElementById('btn-free-roam').addEventListener('click', () => {
                     this.startMission('freeroam');
+                });
+                const continueHavana=document.getElementById('btn-continue-havana');
+                if(continueHavana)continueHavana.addEventListener('click',()=>{
+                    if(this.missionType!=='story_leaving' ||
+                        !this.completedMissions.has('story_leaving'))return;
+                    this.missionType='freeroam';
+                    this.changeCity('havana');
+                    this.setWeather('day');
+                    const badge=document.getElementById('player-state-badge');
+                    if(badge)badge.textContent='CAPÍTULO 2 • HAVANA';
                 });
                 const continueHome=document.getElementById('btn-continue-safehouse');
                 if(continueHome)continueHome.addEventListener('click',()=>{
