@@ -84,7 +84,8 @@
                         arms.push(arm);
                     }
                     pedGroup.add(torso,head);
-                    pedGroup.position.set(x,.35,z);
+                    const surface=city?.getSidewalkHeightAt?.(x,z) ?? .35;
+                    pedGroup.position.set(x,surface,z);
                     this.group.add(pedGroup);
                     this.pedestrians.push({
                         mesh:pedGroup,x,z,route,block,nextCorner:(edge+1)%4,
@@ -137,7 +138,8 @@
                     p.waitTimer=.8;p.diveTimer=0;
                     p.crossing=null;p.waitingCrossingPlan=null;
                     p.walkCorners=0;p.signalWaitElapsed=0;
-                    p.mesh.position.set(p.x,.35,p.z);
+                    p.mesh.position.set(p.x,
+                        this.city?.getSidewalkHeightAt?.(p.x,p.z) ?? .35,p.z);
                     p.mesh.visible=false;
                     changed++;
                 }
@@ -343,10 +345,14 @@
                         p.mesh.rotation.y+=
                             Math.sin(p.visualClock*1.15)*dt*.34;
                     }
-                    p.mesh.position.set(p.x,
-                        .35+(moving?
-                            Math.abs(Math.sin(p.walkPhase))*
-                            (crossing?.13:.09):0),p.z);
+                    // Os pés acompanham o piso: y=.35 no passeio e
+                    // descem para y=0 durante a travessia. O rig GLB
+                    // já traz o balanço de caminhada: sem bob artificial.
+                    const pavement=this.city?.getSidewalkHeightAt?.(p.x,p.z) ?? .35;
+                    const bob=p.glbFemale?0:(moving?
+                        Math.abs(Math.sin(p.walkPhase))*
+                        (crossing?.10:.07):0);
+                    p.mesh.position.set(p.x,pavement+bob,p.z);
                 }
 
                 // Publica apenas travessias ativas. A IA civil enxerga
