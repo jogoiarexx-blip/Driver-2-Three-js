@@ -375,8 +375,12 @@
                 const nextX = this.x + vx * dt;
                 const nextZ = this.z + vz * dt;
 
-                const groundBefore=cityBuilder.getGroundHeightAt(this.x,this.z);
-                const groundHeight=cityBuilder.getGroundHeightAt(nextX,nextZ);
+                // Referência de altura evita teleporte de carros sob a
+                // plataforma da ferrovia para o piso 11m acima.
+                const groundBefore=cityBuilder.getGroundHeightAt(
+                    this.x,this.z,this.y);
+                const groundHeight=cityBuilder.getGroundHeightAt(
+                    nextX,nextZ,this.y);
                 const travel=Math.hypot(nextX-this.x,nextZ-this.z);
                 const steepStep=groundHeight>groundBefore+
                     (.18+travel*.57) && groundHeight>this.y+.55;

@@ -51,6 +51,16 @@ class DriverTrafficAI {
             next = THREE.MathUtils.clamp(next + sign * this.blockSize,
                 -this.roadLimit, this.roadLimit);
         }
+        // Nunca atribuir uma rota inicial atravessando água ou paredes.
+        // Na margem de um canal o veículo retorna ao cruzamento anterior
+        // para escolher uma direção terrestre.
+        const current=this.positionInLane(axis,sign,road,along);
+        const goal=this.positionInLane(axis,sign,road,next);
+        if(typeof DriverRoadGeometry!=='undefined' &&
+            !DriverRoadGeometry.segmentDrivable(this.city,
+                current.x,current.z,goal.x,goal.z)){
+            next=this.nearestGrid(along);
+        }
         route = {
             axis, sign, road,
             target: this.positionInLane(axis, sign, road, next),
@@ -71,6 +81,12 @@ class DriverTrafficAI {
                 const nextZ = crossZ + (axis === 'z' ? sign * this.blockSize : 0);
                 if (Math.abs(nextX) > this.roadLimit || Math.abs(nextZ) > this.roadLimit) continue;
                 if (this.city.isPointBlocked(nextX, nextZ, 2)) continue;
+                // O destino livre não garante a passagem: há canais entre
+                // cruzamentos. Validar faixas no corredor inteiro.
+                if(typeof DriverRoadGeometry!=='undefined' &&
+                    !DriverRoadGeometry.laneSegment(this.city,
+                        axis,sign,crossX,crossZ,nextX,nextZ,
+                        this.laneOffset))continue;
                 const backwards = axis === route.axis && sign === -route.sign;
                 const straight = axis === route.axis && sign === route.sign;
                 const lane = this.positionInLane(axis, sign,
@@ -79,9 +95,11 @@ class DriverTrafficAI {
             }
         }
         if (!possible.length) {
-            route.sign *= -1;
-            route.target = this.positionInLane(route.axis, route.sign, route.road,
-                (route.axis === 'z' ? crossZ : crossX) + route.sign * this.blockSize);
+            // Evita fallback apontando para água/obstáculo invisível.
+            // Segure no cruzamento, depois a rotina de encalhe poderá ré.
+            route.target=this.positionInLane(route.axis,route.sign,route.road,
+                route.axis==='z'?crossZ:crossX);
+            route.reverseTimer=0.85;
             return;
         }
 

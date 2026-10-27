@@ -51,6 +51,7 @@
                 this.districtMaterialCache=new Map();
                 this.lodStats=null;
                 this.lodSeconds=0;
+                this.roadAudit=null;
                 if(buildNow)this.loadCityPreset(presetKey);
             }
 
@@ -108,6 +109,7 @@
                 this.districtMaterialCache=new Map();
                 this.lodStats=null;
                 this.lodSeconds=0;
+                this.roadAudit=null;
                 this.destructibleProps = [];
                 this.debrisPieces=[];
                 this.debrisGeometry=null;
@@ -290,7 +292,11 @@
                 this.buildMissionStartMarker();
                 DriverChicagoTrain.buildInfrastructure(this);
                 if(this.preset.id==='chicago')this.buildCaineCompoundDetails();
-                yield 'Interiores, monumentos e objetos do cenário';
+                // Diagnóstico de conectividade, executado uma única vez
+                // após o setor final (não a cada frame).
+                if(typeof DriverRoadGeometry!=='undefined')
+                    this.roadAudit=DriverRoadGeometry.auditNetwork(this);
+                yield 'Interiores, monumentos e auditoria das ruas';
             }
 
             buildDistrictRepresentations(sidewalkPositions,sidewalkMat) {
@@ -703,7 +709,7 @@
                 this.cityGroup.add(this.safeHouseBeacon);
                 this.safeHouseZone = { x: cx, z: cz + 19, radius: 5.5 };
                 this.garageParking={x:cx-9,z:cz+26,heading:0};
-                this.garageExit={x:cx-9,z:cz+30,heading:0};
+                this.garageExit={x:cx-9,z:cz+31,heading:0};
                 // Vaga externa acessível sem atravessar o collider da casa.
                 const garagePad=new THREE.Mesh(
                     new THREE.PlaneGeometry(6.5,7.2),
@@ -716,6 +722,40 @@
                 garagePad.rotation.x=-Math.PI/2;
                 garagePad.position.set(cx-9,.075,cz+26);
                 this.cityGroup.add(garagePad);
+                // Abrigo de garagem com frente aberta para a rua,
+                // separado da casa. Nunca registrar todo o volume como
+                // prédio sólido: o veículo deve entrar pela abertura.
+                const shelterX=cx-9,shelterZ=cz+26;
+                const shelterMaterial=new THREE.MeshLambertMaterial({
+                    color:0x475569
+                });
+                const roofPanel=new THREE.Mesh(
+                    new THREE.BoxGeometry(9.6,.45,10.6),shelterMaterial);
+                roofPanel.position.set(shelterX,4.05,shelterZ);
+                this.cityGroup.add(roofPanel);
+                const garageWalls=[
+                    {x:shelterX-4.6,z:shelterZ,w:.3,d:10.1},
+                    {x:shelterX+4.6,z:shelterZ,w:.3,d:10.1},
+                    {x:shelterX,z:shelterZ-5.0,w:9.5,d:.35}
+                ];
+                for(const part of garageWalls){
+                    const wall=new THREE.Mesh(
+                        new THREE.BoxGeometry(part.w,3.85,part.d),
+                        shelterMaterial);
+                    wall.position.set(part.x,1.93,part.z);
+                    this.cityGroup.add(wall);
+                    this.buildingBoxes.push({
+                        minX:part.x-part.w*.5,
+                        maxX:part.x+part.w*.5,
+                        minZ:part.z-part.d*.5,
+                        maxZ:part.z+part.d*.5
+                    });
+                }
+                const openSign=new THREE.Mesh(
+                    new THREE.BoxGeometry(5.0,.62,.12),
+                    new THREE.MeshBasicMaterial({color:0x34d399}));
+                openSign.position.set(shelterX,3.55,shelterZ+5.3);
+                this.cityGroup.add(openSign);
                 const door=new THREE.Mesh(new THREE.BoxGeometry(3.3,4.1,0.4),
                     new THREE.MeshLambertMaterial({color:0x16a34a}));
                 door.position.set(cx,2.2,cz+15.2);
@@ -1290,7 +1330,7 @@
                 this.missionStart={...place,ring,arrow};
             }
 
-            getGroundHeightAt(x,z) {
+            getGroundHeightAt(x,z,referenceY=null) {
                 if(this.trainStation){
                     const ramp=this.trainStation.ramp,p=this.trainStation.platform;
                     // Eixo da rampa é estreito. Suavizar a borda evita
@@ -1305,7 +1345,13 @@
                         return p.height*fraction*lateral;
                     }
                     if(x>=p.minX&&x<=p.maxX &&
-                        z>=p.minZ&&z<=p.maxZ)return p.height;
+                        z>=p.minZ&&z<=p.maxZ){
+                        // A plataforma está a 11,3m do solo. Veículos
+                        // passando por baixo não podem teleportar para cima.
+                        if(Number.isFinite(referenceY) &&
+                            referenceY<p.height-2.5)return 0;
+                        return p.height;
+                    }
                 }
                 if(Math.abs(x)<11.2&&z>=34&&z<=66){
                     const distFromEdge=Math.min(z-34,66-z);
@@ -1323,6 +1369,19 @@
                 if(this.caineBridgeClosed && Math.abs(x)<11+radius &&
                     z+radius>49.5 && z-radius<52.5)return true;
                 if (Math.abs(x)>this.worldLimit || Math.abs(z)>this.worldLimit)return true;
+                // Corrimãos físicos somente no volume desenhado, com
+                // alturas locais coerentes com a rampa e não com o chão.
+                if(this.trainStation){
+                    const r=this.trainStation.ramp;
+                    if(z>=r.endZ+1&&z<=r.startZ-1){
+                        const slope=(r.startZ-z)/(r.startZ-r.endZ);
+                        const top=this.trainStation.platform.height*slope;
+                        if(y<top+1.0&&y>=top-2.0){
+                            for(const rx of [-17.2,-10.8])
+                                if(Math.abs(x-rx)<radius+.12)return true;
+                        }
+                    }
+                }
                 // Só existem barreiras onde o muro visível realmente existe.
                 if(y<1.8&&y>=-1.5){
                     for(const segment of this.canalWallSegments||[]){

@@ -2218,9 +2218,13 @@
             parkTannerVehicle(){
                 const car=this.playerCar;
                 if(this.currentCityKey!=='chicago'||
+                    this.missionType!=='freeroam' ||
                     this.mode!=='driving'||!car||
-                    this.garageDistance()>9||Math.abs(car.speed)>2.5)
+                    this.garageDistance()>9||Math.abs(car.speed)>2.5){
+                    this.showGarageStatus(
+                        'PARE NA VAGA • GARAGEM DISPONÍVEL NO PASSEIO LIVRE');
                     return false;
+                }
                 if(!this.tannerGarage.store(car)){
                     this.showGarageStatus('Garagem cheia ou armazenamento indisponível.');
                     return false;
@@ -2228,7 +2232,13 @@
                 const parking=this.city.garageParking;
                 this.vehicles=this.vehicles.filter(v=>v!==car);
                 this.scene.remove(car.root);
-                this.playerCar=this.vehicles[0]||null;
+                if(typeof GPUResourceUtils!=='undefined')
+                    GPUResourceUtils.disposeSubtree(car.root);
+                // Evita selecionar a viatura/veículo secreto como o
+                // carro do jogador enquanto Tanner estiver a pé.
+                this.playerCar=this.vehicles.find(v=>
+                    !v.isPolice&&!v.isSecret&&!v.isTarget)||
+                    this.vehicles[0]||null;
                 this.mode='on_foot';
                 this.tanner.setVisible(true);
                 this.tanner.setPosition(parking.x,0,parking.z+3,0);

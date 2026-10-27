@@ -622,3 +622,41 @@ interativos em navegador com mouse/teclado/gamepad.
 atual; testes jogados nas quatro cidades, rampas, água e garagem;
 avanços gerais de IA de pedestres, regiões inéditas e LOD. Não foram
 produzidas medições confiáveis de FPS ou draw calls antes/depois.
+
+
+## REV Rede viária / rampa / garagem de Tanner (27/10/2026)
+
+### Implementado
+- `DriverRoadGeometry.segmentDrivable()` amostra o corredor inteiro
+  entre pontos a intervalos de até três unidades e rejeita cruzamentos
+  por água, muros, edifícios e bloqueios físicos. A IA consulta o
+  validador em `getRoute` e em `chooseNext`: **o destino livre já não
+  é suficiente para autorizar uma rota através do canal**.
+- `DriverRoadGeometry.auditNetwork()` verifica conexões nas avenidas
+  principais em grade de 80 unidades. Executada uma vez após a cidade
+  ser montada, guarda o resultado em `city.roadAudit`. Na geometria
+  lógica atual com ponte central, existem 81 nós acessíveis. A
+  auditoria não declara caminhos em ruas secundárias ainda não criadas.
+- Carros e Tanner passam a fornecer sua **altura atual** ao consultar a
+  plataforma ferroviária: um carro que circula no solo sob a plataforma
+  elevada de Chicago deixa de ser lançado instantaneamente para o topo
+  (11,3m). A geometria da rampa continua inclinada, com corrimãos
+  físicos onde os corrimãos visuais realmente aparecem.
+- Casa de Tanner ganha um **abrigo externo dirigível**: teto, paredes
+  laterais, parede do fundo e frente aberta, respeitando a vaga já
+  existente. Apenas as paredes visíveis têm colisores; saída conferida
+  contra veículos e prédios. Guardar carros exige passeio livre e
+  estacionamento, para não desativar a frota de uma missão ativa.
+  O jogador não assume uma viatura por engano ao estacionar.
+- O sistema de save versão 1 e o banco de garagem separado continuam
+  compatíveis. O GLB e os controles não foram modificados.
+
+### Escopo e verificação
+Novos testes automatizados verificam: malha de 81 cruzamentos,
+desconexão caso a ponte fique bloqueada, recusa de ruas inundadas,
+IA evitando atravessar canal, colisões de corrimãos, acesso à vaga e
+saída desocupada, não-teleporte para a plataforma e preservação dos
+módulos de missão. **Ainda exigem teste jogado no navegador** as
+transições visuais da rampa, direção por vários minutos e acesso
+real ao estacionamento com GLB. O abrigo é uma estrutura externa
+dirigível, não um interior completo com portas animadas.

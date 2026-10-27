@@ -82,3 +82,39 @@ visual via tecla I.
 comportamento do ônibus no tráfego, travessias entre pistas,
 framerate, rodas e câmera no GLB. Campanhas não foram alteradas.
 **Pendente crítico:** wheel meshes do GLB original não são separadas.
+
+
+---
+
+## REV 2026-10-27 — Rede viária / rampa ferroviária / garagem
+
+**Causa da IA atravessar canal:** `chooseNext()` verificava somente
+`isPointBlocked(nextX,nextZ)` no destino da rua. A água ficava no meio
+do segmento e não entrava na decisão da IA.
+
+**Correção:** amostragem contínua de faixas até o próximo cruzamento,
+rejeitando muros e água. Auditoria BFS das ruas principais (81 nós
+lógicos; ponte central é ligação indispensável). O algoritmo mantém
+semaforização, perseguição e rotas de missão já existentes.
+
+**Causa do salto para a ferrovia:** `getGroundHeightAt()` devolvia o
+topo da plataforma (11,3m) só com base em x/z, independentemente de
+carro/pedestre estar no piso inferior.
+
+**Correção:** altura de referência opcional e piso superior elegível
+somente quando o ator já está próximo da altura da plataforma; corrimãos
+receberam colisores que acompanham a elevação real da rampa.
+
+**Garagem:** construção de cobertura e três paredes físicas em
+torno da vaga externa, mantendo a entrada frontal aberta. Carros só
+podem ser guardados no passeio livre e a retirada recusa saída ocupada.
+
+**Arquivos:** `js/world/road-geometry.js`,
+`js/traffic/traffic-ai.js`, `js/world/city-builder.js`,
+`js/entities/tanner-controller.js`, `js/vehicles/driver-vehicle.js`,
+`js/engine/driver2-game-engine.js`,
+`tests/road-rail-garage-network.test.cjs`, README e este relatório.
+
+**Limites:** inspeção real de jogo, interiores de garagem animados,
+geometria viária secundária, pedestres inteligentes, ondas e sombras
+ficam para próximas revisões. Sem alegação de ganho de FPS.

@@ -107,7 +107,10 @@
                 if (Math.abs(moveDir) > 0) {
                     const nextX = this.group.position.x + Math.sin(this.heading) * walkSpeed * dt;
                     const nextZ = this.group.position.z + Math.cos(this.heading) * walkSpeed * dt;
-                    const groundY = cityBuilder.getGroundHeightAt(nextX, nextZ);
+                    // Tanner também respeita piso inferior/plataforma:
+                    // não pode subir 11m entrando pela lateral da estação.
+                    const groundY = cityBuilder.getGroundHeightAt(
+                        nextX,nextZ,this.group.position.y);
 
                     if (!cityBuilder.isPointBlocked(nextX, nextZ, 0.55, groundY)) {
                         this.group.position.x = nextX;
