@@ -71,6 +71,7 @@
 
                 const sawhorseMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
                 const stripeMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+                const beaconMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
 
                 barrierLocations.forEach(loc => {
                     const offsets = dynamic ? [-4, 0, 4] : [-6, -2, 2, 6];
@@ -85,6 +86,12 @@
                         const leg2 = leg1.clone();
                         leg2.position.x = 1.1;
                         barrier.add(beam, topStripe, leg1, leg2);
+                        // Baliza piscante sem PointLight: mantém leveza no celular.
+                        const beacon = new THREE.Mesh(
+                            new THREE.BoxGeometry(0.30, 0.30, 0.30), beaconMat
+                        );
+                        beacon.position.set(0, 1.18, 0);
+                        barrier.add(beacon);
 
                         barrier.position.set(
                             loc.x + (loc.axis === 'x' ? 0 : offset),
@@ -99,6 +106,9 @@
                             x: barrier.position.x,
                             z: barrier.position.z,
                             dynamic,
+                            arming: dynamic ? 1.25 : 0,
+                            beacon, warningStripe: topStripe,
+                            blinkClock: 0,
                             vy: 0, vx: 0, vz: 0,
                             smashed: false
                         });
@@ -116,7 +126,7 @@
                 this.roadblocks = keep;
             }
 
-            update(dt, vehicles, audio) {
+            update(dt, vehicles, audio, playerCar = vehicles[0], onBarrierImpact = null) {
                 // 1. Atualiza Pedestres e Salto de Esquiva (Dive/Dodge clássico do Driver 2)
                 for (let i = 0; i < this.pedestrians.length; i++) {
                     const p = this.pedestrians[i];
@@ -164,8 +174,17 @@
                 for (let i = 0; i < this.roadblocks.length; i++) {
                     const rb = this.roadblocks[i];
                     if (!rb.smashed) {
-                        for (let v = 0; v < vehicles.length; v++) {
-                            const car = vehicles[v];
+                        rb.arming = Math.max(0, (rb.arming || 0) - dt);
+                        rb.blinkClock = (rb.blinkClock || 0) + dt;
+                        if (rb.beacon) {
+                            rb.beacon.visible = !rb.dynamic ||
+                                Math.floor(rb.blinkClock * (rb.arming>0?8:3)) % 2 === 0;
+                        }
+                        // Só o veículo dirigido pelo jogador destrói barricadas.
+                        // Viaturas da IA não podem eliminar seu próprio bloqueio
+                        // nem concluir a missão Fura-Bloqueios no lugar de Tanner.
+                        for (const car of vehicles) {
+                            if (car !== playerCar || rb.arming > 0) continue;
                             const dx = car.x - rb.x;
                             const dz = car.z - rb.z;
                             if (dx * dx + dz * dz < 5.5 && Math.abs(car.speed) > 4) {
@@ -173,7 +192,10 @@
                                 rb.vx = Math.sin(car.heading) * Math.abs(car.speed) * 1.15 + (Math.random() - 0.5) * 8;
                                 rb.vz = Math.cos(car.heading) * Math.abs(car.speed) * 1.15 + (Math.random() - 0.5) * 8;
                                 rb.vy = 7 + Math.random() * 5;
-                                if (v === 0 && audio) audio.playCrash(0.5);
+                                if (audio) audio.playCrash(0.5);
+                                if (typeof onBarrierImpact === 'function') {
+                                    onBarrierImpact(car, rb, Math.abs(car.speed));
+                                }
                                 break;
                             }
                         }

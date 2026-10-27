@@ -780,9 +780,6 @@
                         this.felony = Math.max(0, this.felony - 3.5 * dt);
                     }
 
-                    // Bloqueios gerados na rota, com limite de vida e reaparecimento.
-                    this.roadblockDirector.update(dt, this);
-
                     if (this.playerCar.damage >= 100) {
                         if (this.missionType === 'survival') {
                             this.triggerEndScreen('FIM DO SURVIVAL!', `Você sobreviveu por ${this.survivalElapsed.toFixed(1)} segundos contra a frota de elite!`);
@@ -796,6 +793,9 @@
                         this.felony = Math.max(0, this.felony - 6.5 * dt);
                     }
                 }
+
+                // O diretor também limpa bloqueios quando Tanner sai do veículo.
+                this.roadblockDirector.update(dt, this);
 
                 // Somente o próximo portão da rota pode ser coletado.
                 if (this.missionMarkers.length > 0) {
@@ -1532,7 +1532,16 @@
                         this.felony = Math.min(100, this.felony + 5);
                     }
                 });
-                this.pedManager.update(dt, this.vehicles, this.audio);
+                this.pedManager.update(dt, this.vehicles, this.audio,
+                    this.mode === 'driving' ? this.playerCar : null,
+                    (car, barrier, speed) => {
+                        const now = performance.now();
+                        if (now - (car.lastBarrierImpactAt || -Infinity) < 350) return;
+                        car.lastBarrierImpactAt = now;
+                        car.damage = Math.min(100, car.damage + Math.min(9, speed * 0.13));
+                        car.speed *= 0.72;
+                        this.felony = Math.min(100, this.felony + (barrier.dynamic ? 2 : 0));
+                    });
                 this.effects.update(dt);
                 this.effects.updateRain(dt, this.getPlayerPosition());
                 this.updateFelonyAndMissions(dt);

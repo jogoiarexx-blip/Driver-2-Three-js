@@ -12,7 +12,7 @@ class PoliceRoadblockDirector {
         this.lastCenter = null;
         this.wave = 0;
     }
-    candidate(car, city) {
+    candidate(car, city, vehicles = []) {
         const sx = Math.sin(car.heading), sz = Math.cos(car.heading);
         const axis = Math.abs(sx) > Math.abs(sz) ? 'x' : 'z';
         const component = axis === 'x' ? sx : sz;
@@ -26,14 +26,17 @@ class PoliceRoadblockDirector {
             const point = axis === 'x' ?
                 { x:ahead, z:road, axis } :
                 { x:road, z:ahead, axis };
-            if (Math.hypot(point.x-car.x,point.z-car.z) < 65) continue;
+            const distance = Math.hypot(point.x-car.x,point.z-car.z);
+            const forward = (point.x-car.x)*sx+(point.z-car.z)*sz;
+            if (distance < 65 || forward < 56) continue;
             // Evita colocar cavaletes dentro de prédios ou sobre o canal.
             if (point.z > 34 && point.z < 66 && Math.abs(point.x) > 11) continue;
             const offsets=[-4,0,4];
             const valid=offsets.every(offset=> {
                 const x=point.x+(axis==='z'?offset:0);
                 const z=point.z+(axis==='x'?offset:0);
-                return !city.isPointBlocked(x,z,1.1);
+                return !city.isPointBlocked(x,z,1.1) &&
+                    !vehicles.some(other => Math.hypot(other.x-x,other.z-z)<9);
             });
             if (valid && (!this.lastCenter ||
                 Math.hypot(point.x-this.lastCenter.x,point.z-this.lastCenter.z)>35)) {
@@ -60,7 +63,7 @@ class PoliceRoadblockDirector {
             }
         }
         if (!active || this.active || this.cooldown>0) return;
-        const point=this.candidate(game.playerCar,game.city);
+        const point=this.candidate(game.playerCar,game.city,game.vehicles || []);
         if (!point) { this.cooldown=4; return; }
         ped.spawnPoliceRoadblocks(game.city.preset,{dynamic:true,locations:[point]});
         this.lastCenter=point;
@@ -68,5 +71,23 @@ class PoliceRoadblockDirector {
         this.active=true;
         this.wave++;
         this.cooldown=18;
+    }
+
+    // Dado de aviso puro; o HUD só exibe se o bloqueio está de fato à frente.
+    warning(car, pedManager) {
+        if (!this.active || !this.lastCenter || !car) return null;
+        const blocks=pedManager?.roadblocks || [];
+        const live=blocks.filter(b=>b.dynamic && !b.smashed);
+        if (!live.length) return null;
+        const dx=this.lastCenter.x-car.x, dz=this.lastCenter.z-car.z;
+        const distance=Math.hypot(dx,dz);
+        const forward=dx*Math.sin(car.heading)+dz*Math.cos(car.heading);
+        if (distance>185 || forward<-9) return null;
+        return {
+            distance: Math.round(distance),
+            arming: live.some(b=>(b.arming || 0)>0),
+            x:this.lastCenter.x,z:this.lastCenter.z,
+            axis:this.lastCenter.axis
+        };
     }
 }
