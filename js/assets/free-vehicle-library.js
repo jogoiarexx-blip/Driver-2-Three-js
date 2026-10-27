@@ -195,8 +195,10 @@ class FreeVehicleAssets {
             !vehicle.root.parent || !template)return false;
         const wrapped=new THREE.Group();
         const clone=template.clone(true);
-        // GLB enviado é alongado em X; o motor usa Z como eixo longitudinal.
-        clone.rotation.y=-Math.PI/2;
+        // O GLB usa X como eixo longitudinal e a frente aponta para -X.
+        // +90° traz o para-choque dianteiro para +Z (frente física do jogo).
+        // Não alterar heading, controle, velocidade ou sistema de colisão.
+        clone.rotation.y=Math.PI/2;
         wrapped.add(clone);
         wrapped.updateMatrixWorld(true);
         DriverUserCarPaint.prepare(wrapped,vehicle.color);

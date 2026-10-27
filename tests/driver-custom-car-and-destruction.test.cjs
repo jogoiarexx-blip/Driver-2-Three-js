@@ -111,7 +111,7 @@ test('pintura clonada não compartilha material entre carros',()=>{
 });
 test('modelo importado é rotacionado para o eixo Z da física',()=>{
     const src=read('js/assets/free-vehicle-library.js');
-    assert.match(src,/clone\.rotation\.y=-Math\.PI\/2/);
+    assert.match(src,/clone\.rotation\.y=Math\.PI\/2/);
     assert.match(src,/driver2_otimizado\.glb/);
     assert.match(src,/applyCC0Model\(wrapped,true\)/);
     assert.match(src,/importUserCar\(file\)/);

@@ -85,7 +85,12 @@ test('modelo carregado substitui o carro e orienta a malha para Z',async()=>{
     assert.equal(h.applied.length,1);
     assert.equal(h.applied[0].shared,true);
     assert.equal(h.applied[0].scene.children.length,1);
-    assert.equal(h.applied[0].scene.children[0].rotation.y,-Math.PI/2);
+    assert.equal(h.applied[0].scene.children[0].rotation.y,Math.PI/2);
+    // Com rotação +90° em Y, a frente original em -X vira +Z.
+    const yaw=h.applied[0].scene.children[0].rotation.y;
+    const frontOriginalX=-1;
+    const frontWorldZ=-Math.sin(yaw)*frontOriginalX;
+    assert.ok(frontWorldZ>0.99,'Frente do GLB deve acompanhar o avanço +Z');
     assert.equal(h.vehicle._userCustomModel,true);
     assert.ok(h.lib.applyDriver2Model(h.vehicle,template));
     assert.equal(h.applied.length,2,'Nova importação deve substituir, não duplicar');
