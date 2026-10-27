@@ -37,7 +37,7 @@ class DriverPoliceDoorRig {
                 doors[side].push(ia,ib,ic);
             else body.push(ia,ib,ic);
         }
-        if(doors.some(v=>v.length<2700)||body.length<9000)return null;
+        if(doors.some(v=>v.length<2700)||body.length<6000)return null;
         const createGeom=indices=>{
             const g=new THREE.BufferGeometry();
             for(const key of Object.keys(geometry.attributes))
