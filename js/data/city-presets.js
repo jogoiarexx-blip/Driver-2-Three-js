@@ -51,15 +51,17 @@
             vegas: {
                 id: 'vegas',
                 name: 'LAS VEGAS',
-                skyColor: 0x090514,
-                sunColor: 0xe879f9,
-                waterColor: 0x1e1b4b,
-                parkColor: 0x854d0e, // Areia do deserto de Nevada
+                // Céu azul-índigo: contraste legível com letreiros
+                // neon, hotéis em concreto/vidro e deserto ao fundo.
+                skyColor: 0x1a1935,
+                sunColor: 0xcac0f0,
+                waterColor: 0x242047,
+                parkColor: 0x735e43, // Jardins e deserto de Nevada
                 palettes: [
-                    { wall: '#1e1b4b', win: '#f43f5e' },
-                    { wall: '#3b0764', win: '#38bdf8' },
-                    { wall: '#111827', win: '#facc15' },
-                    { wall: '#31102f', win: '#4ade80' }
+                    { wall: '#52566b', win: '#ffcc80' },
+                    { wall: '#504364', win: '#76c9e4' },
+                    { wall: '#3b455d', win: '#f2a5d1' },
+                    { wall: '#716071', win: '#a8e5bc' }
                 ],
                 playerCarName: 'VEGAS COUGAR V8',
                 playerCarColor: 0xdc2626,
