@@ -31,6 +31,12 @@ class DriverHomeSave {
                 rear:this.bounded(vehicle.damageZones?.rear,0,100),
                 left:this.bounded(vehicle.damageZones?.left,0,100),
                 right:this.bounded(vehicle.damageZones?.right,0,100)
+            },
+            breakawayFlags:{
+                front:vehicle.breakawayFlags?.front===true,
+                rear:vehicle.breakawayFlags?.rear===true,
+                left:vehicle.breakawayFlags?.left===true,
+                right:vehicle.breakawayFlags?.right===true
             }
         };
     }
@@ -141,6 +147,8 @@ class DriverHomeSave {
             const safe=DriverHomeSave.position(raw);
             Object.assign(car,safe);
             car.speed=safe.speed;
+            car.breakawayFlags={...safe.breakawayFlags};
+            car.prevX=car.x;car.prevZ=car.z;
             car.lateralVelocity=0;
             if(typeof car.updateTransform==='function')car.updateTransform();
         }

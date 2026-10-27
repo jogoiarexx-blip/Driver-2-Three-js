@@ -436,3 +436,38 @@ visual e jogabilidade prolongada em navegador real permanecem pendentes.
 **Não incluso:** destruição estrutural de prédios, deformação de vértices
 internos do GLB ou persistência de cada poste quebrado ao sair da cidade.
 A verificação de FPS/jogabilidade em navegador continua necessária.
+
+
+## Colisões contínuas e peças soltas — próxima revisão
+
+- **Carro × carro a alta velocidade:** o resolvedor agora calcula o
+  primeiro contato entre os deslocamentos anteriores e atuais usando a
+  posição relativa dos dois veículos (swept-circle). Isso impede alguns
+  atravessamentos quando os centros se cruzam entre quadros. O sistema
+  preserva a separação por massa, danos por região e cooldown anteriores.
+- **Proteções:** sem colisões retroativas em teletransportes (mudanças de
+  fase/cidade), trajetórias paralelas afastadas, carros em alturas diferentes
+  ou recuo para dentro das paredes. Se faltam posições anteriores, continua
+  usando o método discreto tradicional.
+- **Peças soltas:** impactos suficientemente fortes fazem para-choques
+  (dianteiro/traseiro) e painéis laterais desprenderem. Cada parte é ejetada
+  uma única vez por região e carro; recebe velocidade, gravidade e quique.
+  Até 40 fragmentos simultâneos, com material descartado ao expirar.
+- **Carros procedurais:** o para-choque original é ocultado e sua peça
+  destacada é criada no mundo. **GLB personalizado:** usa fragmentos
+  simplificados com pintura semelhante; não remove malhas reais internas nem
+  reescreve o atlas/texturas da carroceria importada. Marcadores de dano
+  local continuam acompanhando o chassi sem alterar o collider.
+- **Missões/salvamento:** saves antigos mantêm compatibilidade. Os novos
+  campos `breakawayFlags` persistem quais regiões já perderam peças.
+  Não há repetição infinita de detritos após carregar um save.
+- **Integração:** paredes geram as peças no veículo; colisões entre carros
+  propagam o impacto aos dois envolvidos, enquanto o som/HUD de Tanner
+  continuam exclusivos do jogador.
+- **Testes:** `tests/high-speed-breakaways.test.cjs` verifica
+  atravessamentos, colisões legítimas, parede, teleporte, cooldown,
+  peça única por região, limite de memória e salvamento.
+
+Limitações: física simplificada por círculos, não há caixas orientadas
+de colisão nem deformação de vértices de um GLB externo. Os testes de Node
+não substituem validar carros atravessando cruzamentos no navegador.

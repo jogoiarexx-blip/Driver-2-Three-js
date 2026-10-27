@@ -10,6 +10,9 @@
                 this.maxSkidMarks = 260;
                 this.smokeParticles = [];
                 this.flyingHubcaps = [];
+                this.breakawayPieces = [];
+                this.breakawayGeometry = new THREE.BoxGeometry(1.7,0.16,0.28);
+                this.maxBreakawayPieces=40;
 
                 // Faíscas reutilizáveis: nenhum novo Mesh/material em cada impacto.
                 this.impactSparks = [];
@@ -146,6 +149,56 @@
                 });
             }
 
+            // Peças estilizadas independentes da topologia do GLB: não
+            // desmonta a textura, os ossos ou a geometria compartilhada.
+            // A peça original procedural é ocultada quando existe.
+            spawnCarBreakaway(car,zone,impactSpeed){
+                const allowed=['front','rear','left','right'];
+                if(!car || !allowed.includes(zone) ||
+                    !Number.isFinite(impactSpeed) || impactSpeed<24)
+                    return false;
+                const limit=zone==='front'||zone==='rear'?26:30;
+                if((car.damageZones?.[zone]||0)<limit)return false;
+                if(!car.breakawayFlags)car.breakawayFlags={};
+                if(car.breakawayFlags[zone])return false;
+                car.breakawayFlags[zone]=true;
+                if(zone==='front' && car.frontBumperMesh)
+                    car.frontBumperMesh.visible=false;
+                if(zone==='rear' && car.rearBumperMesh)
+                    car.rearBumperMesh.visible=false;
+                if(this.breakawayPieces.length>=this.maxBreakawayPieces){
+                    const old=this.breakawayPieces.shift();
+                    this.scene.remove(old.mesh);
+                    old.mesh.material.dispose();
+                }
+                const material=new THREE.MeshLambertMaterial({
+                    color:zone==='front'||zone==='rear'?0x949aa5:
+                        (Number.isFinite(car.color)?car.color:0x737f8d)
+                });
+                const mesh=new THREE.Mesh(this.breakawayGeometry,material);
+                const side=zone==='left'?-1:zone==='right'?1:0;
+                const front=zone==='front'?2.45:zone==='rear'?-2.45:0;
+                const sine=Math.sin(car.heading||0),cosine=Math.cos(car.heading||0);
+                mesh.position.set(
+                    car.x+sine*front+cosine*side*1.1,
+                    (car.y||0)+.65,
+                    car.z+cosine*front-sine*side*1.1
+                );
+                mesh.rotation.y=car.heading||0;
+                this.scene.add(mesh);
+                const impulse=Math.min(13,2+impactSpeed*.19);
+                this.breakawayPieces.push({
+                    mesh,life:4.6,
+                    vx:sine*(car.speed||0)*.42+cosine*side*impulse+
+                        sine*(front?Math.sign(front)*impulse:0),
+                    vy:3.7+impulse*.35,
+                    vz:cosine*(car.speed||0)*.42-sine*side*impulse+
+                        cosine*(front?Math.sign(front)*impulse:0),
+                    spin:(side||Math.sign(front)||1)*(4+impulse*.28)
+                });
+                return true;
+            }
+
             ejectHubcap(x, y, z, vx, vz, audio) {
                 const mesh = new THREE.Mesh(this.hubcapGeo, this.hubcapMat);
                 mesh.position.set(x, y + 0.35, z);
@@ -189,6 +242,29 @@
                         const scale = 1 + (1 - p.life / p.maxLife) * 2.2;
                         p.mesh.scale.set(scale, scale, scale);
                         p.mesh.material.opacity = (p.life / p.maxLife) * 0.5;
+                    }
+                }
+
+                // Fragmentos de carroceria limitados em memória/GPU.
+                for(let i=this.breakawayPieces.length-1;i>=0;i--){
+                    const p=this.breakawayPieces[i];
+                    p.life-=dt;
+                    if(p.life<=0){
+                        this.scene.remove(p.mesh);
+                        p.mesh.material.dispose();
+                        this.breakawayPieces.splice(i,1);
+                        continue;
+                    }
+                    p.vy-=19*dt;
+                    p.mesh.position.x+=p.vx*dt;
+                    p.mesh.position.y+=p.vy*dt;
+                    p.mesh.position.z+=p.vz*dt;
+                    p.mesh.rotation.x+=p.spin*dt;
+                    p.mesh.rotation.z+=p.spin*.6*dt;
+                    if(p.mesh.position.y<.16){
+                        p.mesh.position.y=.16;
+                        p.vy=Math.abs(p.vy)*.23;
+                        p.vx*=.86;p.vz*=.86;
                     }
                 }
 

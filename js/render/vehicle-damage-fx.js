@@ -145,7 +145,8 @@ class VehicleDamageFX {
         // A física usa os mesmos colliders; só a malha sofre deformação.
         if (car.damageParts.bumper) {
             const front=car.damageParts.bumper;
-            front.visible=stage.intensity>=.72 || z.front>=.16;
+            front.visible=!car.breakawayFlags?.front &&
+                (stage.intensity>=.72 || z.front>=.16);
             front.rotation.z=-z.frontBend*.8;
             front.rotation.y=z.sideLean*.45;
             front.position.z=-z.frontBend*.54;
@@ -153,7 +154,7 @@ class VehicleDamageFX {
         }
         if (car.damageParts.rearDamage) {
             const rear=car.damageParts.rearDamage;
-            rear.visible=z.rear>=.14;
+            rear.visible=!car.breakawayFlags?.rear && z.rear>=.14;
             rear.rotation.z=z.rearBend*.65;
             rear.rotation.y=-z.sideLean*.4;
             rear.position.z=z.rearBend*.5;
@@ -161,13 +162,13 @@ class VehicleDamageFX {
         }
         if (car.damageParts.leftDamage) {
             const left=car.damageParts.leftDamage;
-            left.visible=z.left>=.14;
+            left.visible=!car.breakawayFlags?.left && z.left>=.14;
             left.rotation.z=-z.left*.24;
             left.position.x=z.left*.13;
         }
         if (car.damageParts.rightDamage) {
             const right=car.damageParts.rightDamage;
-            right.visible=z.right>=.14;
+            right.visible=!car.breakawayFlags?.right && z.right>=.14;
             right.rotation.z=z.right*.24;
             right.position.x=-z.right*.13;
         }
@@ -180,6 +181,10 @@ class VehicleDamageFX {
             car.trunkPivot.rotation.x=z.rearBend*.82;
             car.trunkPivot.rotation.z=-z.sideLean*.25;
         }
+        if(car.frontBumperMesh)
+            car.frontBumperMesh.visible=!car.breakawayFlags?.front;
+        if(car.rearBumperMesh)
+            car.rearBumperMesh.visible=!car.breakawayFlags?.rear;
         if(car.damageParts.cracks)
             car.damageParts.cracks.visible=stage.glass ||
                 z.front>.53 || z.rear>.7;

@@ -34,6 +34,7 @@
                 // Estado de Dano, Deformação e Calotas (Driver 2)
                 this.damage = config.initialDamage || 0;
                 this.damageZones = { front: 0, rear: 0, left: 0, right: 0 };
+                this.breakawayFlags={front:false,rear:false,left:false,right:false};
                 this.lastImpactZone = null;
                 this.hubcaps = 4;
                 this.isDrifting = false;
@@ -71,6 +72,8 @@
                 this.tailMaterial = null;
                 this.damageGroup = null;
                 this.damageParts = null;
+                this.frontBumperMesh=null;
+                this.rearBumperMesh=null;
                 while (this.chassisTilt.children.length > 0) {
                     const old = this.chassisTilt.children[0];
                     GPUResourceUtils.disposeSubtree(old);
@@ -165,6 +168,8 @@
                 const rearBumper = new THREE.Mesh(new THREE.BoxGeometry(2.45, 0.25, 0.25), chromeMat);
                 rearBumper.position.set(0, 0.48, -2.58);
                 this.chassisTilt.add(frontBumper, rearBumper);
+                this.frontBumperMesh=frontBumper;
+                this.rearBumperMesh=rearBumper;
 
                 // Faróis dianteiros e lanternas traseiras
                 const headlightMat = new THREE.MeshBasicMaterial({ color: 0x605735 });
@@ -270,6 +275,8 @@
                     this.root.remove(w);
                 });
                 this.wheels = [];
+                this.frontBumperMesh=null;
+                this.rearBumperMesh=null;
                 this.chassisTilt.scale.set(1, 1, 1);
                 modelScene.scale.setScalar(scale);
                 modelScene.position.set(
@@ -382,9 +389,11 @@
                         const collisionZ = freeZ ? 0 : vz;
                         const contactLength = Math.hypot(collisionX,collisionZ);
                         if (contactLength>0.01) {
-                            DriverVehicleCollisions.recordZone(this,
+                            const zone=DriverVehicleCollisions.recordZone(this,
                                 collisionX/contactLength,collisionZ/contactLength,
                                 impactSpeed*armorFactor);
+                            if(effects && typeof effects.spawnCarBreakaway==='function')
+                                effects.spawnCarBreakaway(this,zone,impactSpeed);
                         }
                         if (audio && isPlayer) audio.playCrash(Math.min(1, impactSpeed / 35));
                         if (this.hubcaps > 0 && impactSpeed > 24) {

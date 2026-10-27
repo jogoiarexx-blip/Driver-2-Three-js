@@ -1316,6 +1316,14 @@
                                 this.felony = Math.min(100, this.felony + 6);
                             }
                         }
+                    },
+                    event=>{
+                        // CPU/colisões informam zona e intensidade para ambos
+                        // os carros. Detritos são criados só nos choques fortes.
+                        this.effects.spawnCarBreakaway(event.a,event.zoneA,
+                            event.closingSpeed);
+                        this.effects.spawnCarBreakaway(event.b,event.zoneB,
+                            event.closingSpeed);
                     }
                 );
             }
@@ -2686,6 +2694,8 @@
                 }
                 this.updateAIAndCollisions(dt);
                 this.city.update(dt,this.vehicles,(car,prop,speed)=>{
+                    if(speed>=24 && car?.lastImpactZone)
+                        this.effects.spawnCarBreakaway(car,car.lastImpactZone,speed);
                     // Som/danos de cenário só para o carro controlado;
                     // NPCs ainda podem derrubar postes sem punir Tanner.
                     if(this.mode!=='driving'||car!==this.playerCar)return;
