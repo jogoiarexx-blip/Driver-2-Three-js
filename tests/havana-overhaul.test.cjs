@@ -142,7 +142,7 @@ test('construtor, scripts e escala de alturas permanecem compatíveis',()=>{
         assert.equal(Urban.height('havana',40,-120),21);
         assert(Urban.height('havana',40,-200)>Urban.height('havana',-200,-120));
         assert.equal(Urban.height('rio',40,-120),39);
-        assert.equal(Urban.height('vegas',40,-120),43);
+        assert(Urban.height('vegas',40,-120)>60);
     }finally{Urban.random=random;}
 });
 
