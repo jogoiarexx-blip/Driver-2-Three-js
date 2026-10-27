@@ -156,6 +156,48 @@ class DriverVegasOverhaul {
         return DriverSpecialStructures.pack(parent,parts,'vegas-district');
     }
 
+    static detailFarDistrict(city,buildings,parent){
+        if(!this.isVegas(city)||!buildings?.length)return [];
+        const p=[],add=(x,y,z,w,h,d,c)=>{
+            if([x,y,z,w,h,d].every(Number.isFinite)&&
+                w>0&&h>0&&d>0)p.push([x,y,z,w,h,d,c,true]);
+        };
+        for(const b of buildings){
+            const {x,z}=b,h=b.height;
+            const kind=this.districtKind(x,z);
+            // Janelas econômicas no LOD distante: sem textura nova,
+            // com apenas UM lote de emissão por setor. O objeto filho
+            // fica invisível sempre que seu pai FAR vira invisível.
+            const rows=Math.min(kind==='strip'?9:5,
+                Math.floor((h-5)/7.2));
+            const warm=kind==='downtown'?0xe0bb92:0xf2c991;
+            const cool=kind==='strip'?0x83b4c8:0x8ca7bd;
+            for(let row=0;row<rows;row++){
+                const y=5+row*7.2;
+                for(const dx of [-12.3,-4.2,4.2,12.3]){
+                    add(x+dx,y,z+19.16,2.65,1.65,.13,
+                        (row+Math.round(dx))%4===0?warm:cool);
+                }
+                // Lateral dos hotéis da Strip: vista principal a partir
+                // do centro da avenida x=0, para não exibir paredões.
+                if(kind==='strip'){
+                    const sx=x+(x>=0?-19.16:19.16);
+                    for(const dz of [-12.3,-4.2,4.2,12.3])
+                        add(sx,y,z+dz,.13,1.65,2.65,
+                            (row+Math.round(dz))%4===0?warm:cool);
+                }
+            }
+            if(rows>0){
+                add(x,h+.47,z+19.18,34,.20,.18,0xd3a0bc);
+                if(kind==='strip')
+                    add(x+(x>=0?-19.17:19.17),h+.47,z,
+                        .18,.20,34,0x7acbda);
+            }
+        }
+        return DriverSpecialStructures.pack(parent,p,
+            'vegas-far-skyline-windows');
+    }
+
     static buildStrip(city){
         if(!this.isVegas(city))return [];
         const p=[],add=(...v)=>p.push(v);
