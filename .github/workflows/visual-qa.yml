@@ -10,6 +10,7 @@ on:
       - 'tests/chicago-overhaul.test.cjs'
       - 'tests/rio-overhaul.test.cjs'
       - 'tests/havana-overhaul.test.cjs'
+      - 'tests/vegas-overhaul.test.cjs'
       - 'js/data/city-presets.js'
       - 'js/world/chicago-train.js'
       - 'tests/structure-smoke.cjs'
@@ -40,6 +41,8 @@ jobs:
         run: node --test tests/rio-overhaul.test.cjs
       - name: Certificar Havana 2.0, Malecón, porto e isolamento
         run: node --test tests/havana-overhaul.test.cjs
+      - name: Certificar Vegas 2.0, Strip, cassinos e isolamento
+        run: node --test tests/vegas-overhaul.test.cjs
       - name: Instalar Chromium e Playwright
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1
