@@ -102,12 +102,12 @@ test('quatro cidades possuem margens visuais e vegetação distintas',()=>{
     assert.equal(Coast.style('vegas').kind,'desert');
     assert.equal(Coast.style('rio').kind,'tropical');
 });
-test('margens e vegetação usam quatro draw calls instanciadas por cidade',()=>{
+test('margens e vegetação usam seis lotes instanciados com LOD costeiro',()=>{
     for(const id of ['chicago','havana','vegas','rio']){
         const group={children:[],add(mesh){this.children.push(mesh)}};
         const c={preset:{id},cityGroup:group};
         const result=Coast.build(c);
-        assert.equal(group.children.length,4,id);
+        assert.equal(group.children.length,6,id);
         assert.equal(result.foamCount,40);
         assert.equal(result.plantCount,8);
         assert.equal(result.shoreMesh.count,8);
@@ -138,11 +138,97 @@ test('código integra a travessia nos pedestres e anima a água por cidade',()=>
     assert.match(ped,/state.state==='crossing'/);
     const city=read('js/world/city-builder.js');
     assert.match(city,/DriverCoastalVisuals.build\(this\)/);
-    assert.match(city,/DriverCoastalVisuals.update\(this,dt\)/);
+    assert.match(city,/DriverCoastalVisuals.update\(this,dt,focusPosition\)/);
     assert.match(city,/this.parkGeometryCache/);
     const html=read('index.html');
     assert.ok(html.indexOf('js/world/coastal-visuals.js')>
         html.indexOf('js/world/urban-districts.js'));
     assert.ok(html.indexOf('js/world/coastal-visuals.js')<
         html.indexOf('js/world/city-builder.js'));
+});
+
+test('LOD costeiro usa silhuetas leves sem alocar objetos a cada quadro',()=>{
+    const group={children:[],add(mesh){this.children.push(mesh)}};
+    const city={preset:{id:'rio'},cityGroup:group};
+    const coast=Coast.build(city);
+    assert.equal(coast.lodNear,8);
+    assert.equal(coast.farTrunks.visible,false);
+    const allMeshes=group.children.slice();
+    assert.equal(Coast.updateLOD(city,{x:1200,z:25}),8);
+    assert.equal(coast.lodNear,0);
+    assert.equal(coast.trunks.visible,false);
+    assert.equal(coast.farTrunks.visible,true);
+    assert.equal(Coast.updateLOD(city,{x:-280,z:25}),2);
+    assert.equal(coast.lodNear,2);
+    assert.equal(coast.trunks.visible,true);
+    assert.equal(coast.farTrunks.visible,true);
+    assert.equal(Coast.updateLOD(city,{x:-360,z:25}),0);
+    assert.equal(coast.lodNear,2,'Histerese preserva o nível');
+    assert.equal(group.children.length,allMeshes.length);
+    assert.ok(group.children.every((m,i)=>m===allMeshes[i]));
+});
+test('LOD costeiro limita atualizações e evita oscilações no limite',()=>{
+    const city={preset:{id:'havana'},cityGroup:{add(){}}};
+    const coast=Coast.build(city);
+    Coast.update(city,.1,{x:1400,z:0});
+    assert.equal(coast.lodUpdates,0);
+    Coast.update(city,.3,{x:1400,z:0});
+    assert.equal(coast.lodNear,0);
+    const updates=coast.lodUpdates;
+    for(let i=0;i<12;i++)Coast.update(city,.04,{x:1400,z:0});
+    assert.equal(coast.lodUpdates,updates);
+    assert.equal(coast.lodNear,0);
+});
+test('aproximação à travessia é medida na direção do carro e não da câmera',()=>{
+    const p={x:0,z:12,crossing:{x:0,z:30}};
+    const car={x:0,z:0,heading:0,speed:12};
+    assert.equal(Nav.approachingCrossing(car,[p]),12);
+    const farSide={x:8,z:12,crossing:p.crossing};
+    assert.equal(Nav.approachingCrossing(car,[farSide]),Infinity);
+    assert.equal(Nav.approachingCrossing(car,[{x:0,z:5}]),Infinity);
+    assert.equal(Nav.approachingCrossing({...car,heading:Math.PI},[p]),Infinity);
+});
+test('cruzamento em espera não aumenta artificialmente o contador de esquinas',()=>{
+    const cityClock=()=>({
+        districtBuildings:[{x:40,z:-40},{x:120,z:-40}],
+        isWaterAt:()=>false,isPointBlocked:()=>false,
+        getTrafficPhase:()=>15,isTrafficGreen:axis=>axis==='x'
+    });
+    const ped={block:{x:40,z:-40},route:Nav.route({x:40,z:-40}),
+        x:63,z:-63,nextCorner:1,walkCorners:2,
+        waitTimer:0,diveTimer:0,walkSpeed:2.65};
+    for(let i=0;i<40;i++)assert.equal(Nav.step(ped,.05,cityClock(),[]).state,'signal_wait');
+    assert.equal(ped.walkCorners,3);
+});
+test('tráfego comum recebe aviso de pedestre no caminho; missão preservada',()=>{
+    const src=read('js/traffic/traffic-ai.js');
+    assert.match(src,/DriverPedestrianSidewalks\.approachingCrossing/);
+    assert.match(src,/!pursuing&&!scripted/);
+    assert.match(src,/pedDistance<10\?0/);
+    const manager=read('js/entities/pedestrians-roadblocks.js');
+    assert.match(manager,/activePedestrianCrossings=/);
+    assert.match(manager,/targetRate=moving/);
+});
+
+test('IA civil freia para pedestre na faixa e retoma ao desocupar',()=>{
+    const Traffic=vm.runInNewContext(read('js/traffic/traffic-ai.js')+
+        '\nDriverTrafficAI',{
+            Math,Number,WeakMap,Infinity,DriverPedestrianSidewalks:Nav,
+            THREE:{MathUtils:{clamp:(x,a,b)=>Math.min(b,Math.max(a,x))}}
+        });
+    const site={roadExtent:320,isPointBlocked:()=>false,
+        isTrafficGreen:()=>true,activePedestrianCrossings:[
+            {x:4,z:-9,crossing:{axis:'z'}}
+        ]};
+    const ai=new Traffic(site);
+    const car={x:4,z:-20,heading:0,speed:13,maxSpeed:30,
+        bodyStyle:'muscle',isPolice:false,isMafia:false,isTarget:false,
+        lateralVelocity:0};
+    const braking=ai.getInput(car,.016,[car],null,0);
+    assert.equal(braking.down,true);
+    assert.equal(braking.up,false);
+    site.activePedestrianCrossings=[];
+    const free=ai.getInput(car,.016,[car],null,0);
+    assert.equal(free.up,true);
+    assert.equal(free.down,false);
 });

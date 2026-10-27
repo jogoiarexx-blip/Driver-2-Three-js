@@ -2953,7 +2953,7 @@
                     }
                     if(this.isPoliceNearPlayer(65))
                         this.felony=Math.min(100,this.felony+5);
-                });
+                },this.getPlayerPosition());
                 this.pedManager.update(dt, this.vehicles, this.audio,
                     this.mode === 'driving' ? this.playerCar : null,
                     (car, barrier, speed) => {

@@ -315,6 +315,17 @@ class DriverTrafficAI {
         if (barrierDistance < 38) {
             maxSpeed = Math.min(maxSpeed, barrierDistance < 17 ? 0 : 10);
         }
+        // Civis cedem passagem quando há alguém efetivamente na
+        // faixa. Perseguições de missão/polícia mantêm seus controles.
+        if(!pursuing&&!scripted &&
+            typeof DriverPedestrianSidewalks!=='undefined'){
+            const pedDistance=DriverPedestrianSidewalks.approachingCrossing(
+                car,this.city.activePedestrianCrossings||[],23);
+            if(pedDistance<22){
+                maxSpeed=Math.min(maxSpeed,pedDistance<10?0:
+                    Math.max(5,(pedDistance-9)*.65));
+            }
+        }
         if (stopForRed || stopForCar) maxSpeed = 0;
 
         // Saída de encalhe após colisão, sem teleportes pela cidade.

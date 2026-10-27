@@ -82,17 +82,84 @@ class DriverCoastalVisuals {
             new THREE.MeshLambertMaterial({color:style.leaf}),
             plants.map(p=>({...p,y:style.kind==='industrial'?1.5:
                 style.kind==='desert'?4.5:5.6})));
+        // A vegetação distante tem silhuetas econômicas (dois lotes)
+        // e só substitui os detalhes das instâncias que estão longe.
+        const farTrunks=this.instanced(city,
+            new THREE.CylinderGeometry(.3,.4,2.7,4),
+            new THREE.MeshLambertMaterial({color:style.trunk}),plants);
+        const farCrowns=this.instanced(city,
+            style.kind==='desert'?
+                new THREE.BoxGeometry(1.6,.52,.45):
+                new THREE.ConeGeometry(2.25,2.5,4),
+            new THREE.MeshLambertMaterial({color:style.leaf}),
+            plants.map(p=>({...p,y:style.kind==='industrial'?
+                1.35:style.kind==='desert'?3.8:4.3})));
+        farTrunks.visible=false;
+        farCrowns.visible=false;
         city.waterFoamMaterial=waterFoam;
         city.waterVisualClock=0;
         city.coastVisuals={foamMesh,shoreMesh,trunks,crowns,
+            farTrunks,farCrowns,plants,
+            levels:plants.map(()=>'near'),
+            lodClock:0,lodUpdates:0,lodNear:plants.length,
             style:style.kind,foamCount:foam.length,plantCount:plants.length};
         return city.coastVisuals;
     }
-    static update(city,dt){
+    static updateLOD(city,focus,force=false){
+        const coast=city.coastVisuals;
+        if(!coast?.farTrunks || !Number.isFinite(focus?.x) ||
+            !Number.isFinite(focus?.z))return 0;
+        const nearChanged=[],farChanged=[];
+        for(let i=0;i<coast.plants.length;i++){
+            const pos=coast.plants[i];
+            const distance=Math.hypot(pos.x-focus.x,pos.z-focus.z);
+            const current=coast.levels[i];
+            // Histerese: permanecer próximo até 220m, retornar de
+            // longe somente em <=145m. Sem piscadas na fronteira.
+            const next=current==='near'?
+                (distance>220?'far':'near'):
+                (distance<145?'near':'far');
+            if(next===current&&!force)continue;
+            coast.levels[i]=next;
+            (next==='near'?nearChanged:farChanged).push(i);
+            this.placeLODInstance(coast.trunks,i,pos,next==='near',pos.y);
+            this.placeLODInstance(coast.crowns,i,pos,next==='near',
+                coast.style==='industrial'?1.5:
+                coast.style==='desert'?4.5:5.6);
+            this.placeLODInstance(coast.farTrunks,i,pos,next==='far',pos.y);
+            this.placeLODInstance(coast.farCrowns,i,pos,next==='far',
+                coast.style==='industrial'?1.35:
+                coast.style==='desert'?3.8:4.3);
+        }
+        coast.lodNear=coast.levels.filter(x=>x==='near').length;
+        coast.trunks.visible=coast.crowns.visible=coast.lodNear>0;
+        coast.farTrunks.visible=coast.farCrowns.visible=
+            coast.lodNear<coast.plants.length;
+        const changed=nearChanged.length+farChanged.length;
+        if(changed)coast.lodUpdates++;
+        return changed;
+    }
+    static placeLODInstance(mesh,index,pos,show,height){
+        const dummy=new THREE.Object3D();
+        dummy.position.set(pos.x,height,pos.z);
+        dummy.scale.set(show?1:0,show?1:0,show?1:0);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(index,dummy.matrix);
+        mesh.instanceMatrix.needsUpdate=true;
+    }
+    static update(city,dt,focus=null){
         if(!city.waterFoamMaterial)return;
         city.waterVisualClock=(city.waterVisualClock||0)+
             Math.min(.08,Math.max(0,dt));
         city.waterFoamMaterial.opacity=.27+
             Math.sin(city.waterVisualClock*1.2)*.055;
+        const coast=city.coastVisuals;
+        if(!coast)return;
+        coast.lodClock+=Math.max(0,Math.min(dt,.15));
+        if(coast.lodClock>=.38 && Number.isFinite(focus?.x) &&
+            Number.isFinite(focus?.z)){
+            coast.lodClock=0;
+            this.updateLOD(city,focus);
+        }
     }
 }

@@ -1216,11 +1216,11 @@
                 return this.bridgeRaised;
             }
 
-            update(dt, vehicles, onPropHitCallback) {
+            update(dt, vehicles, onPropHitCallback, focusPosition=null) {
                 this.signalClock += dt;
                 this.refreshTrafficLights();
                 if(typeof DriverCoastalVisuals!=='undefined')
-                    DriverCoastalVisuals.update(this,dt);
+                    DriverCoastalVisuals.update(this,dt,focusPosition);
                 if(this.caineBridgeGate)
                     this.caineBridgeGate.visible=!!this.caineBridgeClosed;
                 const targetAngle = this.bridgeRaised ? 0.32 : 0.08;

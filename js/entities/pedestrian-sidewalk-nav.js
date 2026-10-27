@@ -130,7 +130,7 @@ class DriverPedestrianSidewalks {
                 continue;
             const vx=Math.sin(car.heading||0)*(car.speed||0);
             const vz=Math.cos(car.heading||0)*(car.speed||0);
-            for(const t of [0,.55,1.1]){
+            for(const t of [0,.55,1.1,1.8,2.4]){
                 const x=car.x+vx*t,z=car.z+vz*t;
                 const ux=plan.x-plan.startX,uz=plan.z-plan.startZ;
                 const denominator=ux*ux+uz*uz;
@@ -165,6 +165,23 @@ class DriverPedestrianSidewalks {
         }
         return {state:'crossing',dx:dx/(length||1),dz:dz/(length||1)};
     }
+    static approachingCrossing(car,walkers,lookAhead=22){
+        if(!walkers?.length||!Number.isFinite(car?.x)||
+            !Number.isFinite(car?.z))return Infinity;
+        const heading=Number(car.heading)||0;
+        const forward={x:Math.sin(heading),z:Math.cos(heading)};
+        let nearest=Infinity;
+        for(const p of walkers){
+            if(!p?.crossing||!Number.isFinite(p.x)||!Number.isFinite(p.z))
+                continue;
+            const dx=p.x-car.x,dz=p.z-car.z;
+            const along=dx*forward.x+dz*forward.z;
+            const side=Math.abs(dx*forward.z-dz*forward.x);
+            if(along>=-1&&along<=lookAhead&&side<4.5)
+                nearest=Math.min(nearest,Math.max(0,along));
+        }
+        return nearest;
+    }
     static step(p,dt,city,vehicles){
         if(!p.route||p.route.length!==4)return {state:'idle'};
         dt=Math.min(.08,Math.max(0,dt));
@@ -182,6 +199,7 @@ class DriverPedestrianSidewalks {
             // Esquiva visual e espera na calçada: um mergulho com
             // deslocamento irrestrito levaria o pedestre para o asfalto.
             p.waitTimer=.45;
+            p.dodgeSide=Math.sign(Math.sin((p.walkPhase||0)+1))||1;
             return {state:'dodge',newDodge:true};
         }
         if(p.waitTimer>0){
@@ -197,7 +215,8 @@ class DriverPedestrianSidewalks {
         const step=Math.min(length,(p.walkSpeed||2.65)*dt);
         if(length<=.045){
             p.x=dest.x;p.z=dest.z;
-            p.walkCorners=(p.walkCorners||0)+1;
+            // Um canto em espera não conta como novo canto a cada frame.
+            if(!p.waitingCrossingPlan)p.walkCorners=(p.walkCorners||0)+1;
             // Um de cada três cantos tenta cruzar, para não formar uma
             // fila de 28 pessoas no mesmo semáforo.
             const want=p.waitingCrossingPlan ||

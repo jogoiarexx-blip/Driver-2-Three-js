@@ -26,6 +26,7 @@
                 this.roadblockOfficers=[];
                 this.officerTime=0;
                 this.city=city;
+                if(city)city.activePedestrianCrossings=[];
                 this.pedestrianClock=0;
 
                 const blocks=typeof DriverPedestrianSidewalks!=='undefined'?
@@ -87,6 +88,7 @@
                         walkSpeed:2.2+(i%5)*.22,
                         waitTimer:0,diveTimer:0,diveVx:0,diveVz:0,
                         walkPhase:i*.9,dir:i%2?1:-1,arms,legs,
+                        visualClock:i*.37,stepRate:0,lookClock:0,
                         crossing:null,waitingCrossingPlan:null,
                         walkCorners:0,signalWaitElapsed:0,
                         sleepTick:0,visibleTime:0
@@ -306,25 +308,43 @@
                         {state:'walk',dx:0,dz:p.dir};
                     if(state.newDodge && playerCar && audio)
                         audio.playPedestrianDodgeVoice?.();
-                    if(state.state==='walk'||state.state==='crossing'){
-                        p.walkPhase+=dt*7.5;
-                        const swing=Math.sin(p.walkPhase)*.48;
-                        for(let i=0;i<2;i++){
-                            if(p.legs[i])p.legs[i].rotation.x=(i?1:-1)*swing;
-                            if(p.arms[i])p.arms[i].rotation.x=(i?-1:1)*swing*.8;
-                        }
-                        if(state.dx||state.dz)
-                            p.mesh.rotation.y=Math.atan2(state.dx,state.dz);
-                    }else{
-                        for(const limb of [...(p.legs||[]),...(p.arms||[])])
-                            limb.rotation.x*=Math.max(0,1-dt*10);
+                    const moving=state.state==='walk'||state.state==='crossing';
+                    const crossing=state.state==='crossing';
+                    const targetRate=moving?(crossing?12.0:7.0):0;
+                    p.stepRate=(p.stepRate||0)+
+                        (targetRate-(p.stepRate||0))*Math.min(1,dt*8);
+                    p.walkPhase+=dt*p.stepRate;
+                    p.visualClock=(p.visualClock||0)+dt;
+                    const swing=Math.sin(p.walkPhase)*
+                        (crossing?.66:moving?.47:.07);
+                    for(let i=0;i<2;i++){
+                        if(p.legs[i])p.legs[i].rotation.x=(i?1:-1)*swing;
+                        if(p.arms[i])p.arms[i].rotation.x=
+                            (i?-1:1)*(swing*.82+
+                            (moving?.06:Math.sin(p.visualClock*1.6)*.035));
                     }
-                    p.mesh.rotation.z=state.state==='dodge'?.55:0;
+                    if((state.dx||state.dz)&&moving)
+                        p.mesh.rotation.y=Math.atan2(state.dx,state.dz);
+                    // Antecipação na passada, leve inclinação ao correr.
+                    // A esquiva não altera a posição ou a colisão.
+                    p.mesh.rotation.z=state.state==='dodge'?
+                        .42*(p.dodgeSide||1):crossing?
+                        Math.sin(p.walkPhase)*.055:0;
+                    if(state.state==='signal_wait'){
+                        p.mesh.rotation.y+=
+                            Math.sin(p.visualClock*1.15)*dt*.34;
+                    }
                     p.mesh.position.set(p.x,
-                        .35+(state.state==='walk'||state.state==='crossing'?
-                        Math.abs(Math.sin(p.walkPhase))*.10:0),p.z);
+                        .35+(moving?
+                            Math.abs(Math.sin(p.walkPhase))*
+                            (crossing?.13:.09):0),p.z);
                 }
 
+                // Publica apenas travessias ativas. A IA civil enxerga
+                // esta lista sem lançar raios contra todos os pedestres.
+                if(this.city)this.city.activePedestrianCrossings=
+                    this.pedestrians.filter(p=>p.crossing&&
+                        p.mesh.visible);
                 // 2. Atualiza Barricadas Policiais Destrutíveis
                 // Vários cavaletes podem cair no mesmo frame; só gera um
                 // áudio/evento de impacto por veículo, evitando som duplicado.

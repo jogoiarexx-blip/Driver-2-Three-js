@@ -753,3 +753,15 @@ fielmente reproduzidos. O conteúdo não modifica rotas de missões.
   passagem, obstáculos, estilos regionais, contagem de instâncias,
   zonas de segurança e carregamento. Testes automatizados não
   certificam a experiência visual ou FPS em navegador.
+
+
+## REV: Pedestres animados, respeito à faixa e LOD costeiro (27/10/2026)
+
+- **Pedestres:** movimento de pernas e braços com passada adaptativa (corrida ao atravessar, caminhada normal, postura de espera, inclinação de esquiva). A animação não altera a posição física do pedestre nem a lógica de segurança no passeio.
+- **Tráfego civil:** compartilha somente os pedestres que **já estão atravessando** com a IA do trânsito; esta freia se um pedestre estiver à frente na faixa. O motorista jogador, os percursos roteirizados e as perseguições não recebem controles automáticos novos.
+- **Travessias:** ao aguardar no semáforo, um canto conta uma vez só; a previsão de carros leva em conta posições nos próximos 2,4 segundos e continua recusando obstruções.
+- **Vegetação costeira LOD:** duas malhas adicionais de baixa complexidade (caule e copa) para silhuetas distantes, com troca por instância, histerese de 145/220 unidades e atualização a cada ~0,38 segundos. O orçamento de vegetação não cria novas malhas a cada frame, permanecendo em seis lotes instanciados no máximo entre espuma, faixa costeira e vegetação próxima/distante. Para a cena atual há oito plantas/balizadores por cidade.
+- **Compatibilidade:** controles, GLB de carro, colisões, saves e missões preservados. O foco de câmera/jogador é passado ao gerenciador costeiro sem mudar a física da água.
+- **Testes:** incluídos cenários de freada pela IA, liberação da faixa, variação de passada, contador do semáforo, nível LOD próximo/distante, histerese e ausência de novas malhas durante a atualização. O GitHub Actions executa também os testes de regressão anteriores.
+
+**Limitações:** o LOD não modifica texturas nem a qualidade gráfica dos carros; não há medição de FPS em navegador, nem gameplay completo certificado. A vegetação ainda é procedural e os pedestres não usam modelos com rig complexo.
