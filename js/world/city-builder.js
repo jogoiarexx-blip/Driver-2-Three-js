@@ -22,6 +22,7 @@
                 this.buildSequence = 0;
                 this.safeHouseZone = { x: -120, z: -120, radius: 9 };
                 this.roadExtent=320; this.worldLimit=410;
+                this.trainStation=null;
                 this.interiors=[]; this.interiorById={};
 
                 // Garagem Secreta com Portão e Interruptor a Pé (Nordeste X=120, Z=120)
@@ -65,6 +66,7 @@
                 this.destructibleProps = [];
                 this.benches = [];
                 this.interiors=[]; this.interiorById={};
+                this.trainStation=null;
                 this.secretGateOpen = false;
                 this.signalClock = 0;
                 this.lastSignalPhase = -1;
@@ -162,7 +164,9 @@
                         sw.position.set(blockX, 0.175, blockZ);
                         this.cityGroup.add(sw);
 
-                        if ((blockX===-280||blockX===280)&&blockZ===-280) {
+                        if (this.preset.id==='chicago' && blockX===-40 && blockZ===-280) {
+                            this.buildChicagoStationBlock(blockX,blockZ);
+                        } else if ((blockX===-280||blockX===280)&&blockZ===-280) {
                             this.buildRegionalLandmark(blockX,blockZ);
                         } else if (blockX === -120 && blockZ === -120) {
                             this.buildSafeHouseBlock(blockX, blockZ);
@@ -198,6 +202,7 @@
                 });
                 UrbanDistricts.decorate(this);
                 this.buildInteriorRooms();
+                DriverChicagoTrain.buildInfrastructure(this);
             }
 
             buildRoadMarkings() {
@@ -595,6 +600,56 @@
                 }
             }
 
+            buildChicagoStationBlock(cx,cz) {
+                const stone=new THREE.MeshLambertMaterial({color:0x854d0e});
+                const roofMat=new THREE.MeshLambertMaterial({color:0x334155});
+                const shell=new THREE.Mesh(new THREE.BoxGeometry(20,13,25),stone);
+                shell.position.set(cx-8,6.7,cz-3);this.cityGroup.add(shell);
+                this.buildingBoxes.push({
+                    minX:cx-18.2,maxX:cx+2.2,
+                    minZ:cz-16,maxZ:cz+10
+                });
+                const roof=new THREE.Mesh(new THREE.BoxGeometry(23,1.1,29),roofMat);
+                roof.position.set(cx-8,13.7,cz-3);this.cityGroup.add(roof);
+                const p=DriverChicagoTrain.PLATFORM;
+                const platform=new THREE.Mesh(new THREE.BoxGeometry(17,0.48,36),
+                    new THREE.MeshLambertMaterial({color:0xd6d3d1}));
+                platform.position.set(p.x,p.height-0.24,p.z-4);
+                this.cityGroup.add(platform);
+                const edge=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.15,36),
+                    new THREE.MeshBasicMaterial({color:0xfacc15}));
+                edge.position.set(-6.1,p.height+0.02,p.z-4);
+                this.cityGroup.add(edge);
+                const rampLength=29,incline=Math.atan2(p.height,rampLength);
+                const ramp=new THREE.Mesh(new THREE.BoxGeometry(6,0.32,
+                    Math.hypot(rampLength,p.height)),
+                    new THREE.MeshLambertMaterial({color:0x9ca3af}));
+                ramp.rotation.x=-incline;
+                ramp.position.set(-14,p.height/2,-231.5);
+                this.cityGroup.add(ramp);
+                for(const x of [-17.2,-10.8]){
+                    const rail=new THREE.Mesh(new THREE.BoxGeometry(.16,.36,
+                        Math.hypot(rampLength,p.height)),
+                        roofMat);
+                    rail.rotation.x=-incline;
+                    rail.position.set(x,p.height/2+0.55,-231.5);
+                    this.cityGroup.add(rail);
+                }
+                const sign=new THREE.Mesh(new THREE.BoxGeometry(7.5,1.15,0.3),
+                    new THREE.MeshBasicMaterial({color:0x16a34a}));
+                sign.position.set(-14,14.2,-252);
+                this.cityGroup.add(sign);
+                this.trainStation={
+                    ramp:{minX:-17,maxX:-11,startZ:-217,endZ:-246},
+                    platform:{...p},groundEntrance:{x:-14,z:-216}
+                };
+            }
+
+            onTrainPlatform(pos) {
+                return this.preset.id==='chicago' &&
+                    DriverChicagoTrain.onPlatform(pos);
+            }
+
             buildEnterableWarehouse(cx,cz) {
                 const shell=new THREE.Mesh(new THREE.BoxGeometry(34,15,33),
                     new THREE.MeshLambertMaterial({color:0x64748b}));
@@ -731,6 +786,15 @@
             }
 
             getGroundHeightAt(x, z) {
+                if(this.trainStation){
+                    const ramp=this.trainStation.ramp,p=this.trainStation.platform;
+                    if(x>=p.minX&&x<=p.maxX &&
+                        z>=p.minZ&&z<=p.maxZ)return p.height;
+                    if(x>=ramp.minX&&x<=ramp.maxX &&
+                        z<=ramp.startZ&&z>=ramp.endZ) {
+                        return p.height*(ramp.startZ-z)/(ramp.startZ-ramp.endZ);
+                    }
+                }
                 if (Math.abs(x) < 11.2 && z >= 34 && z <= 66) {
                     const distFromEdge = Math.min(z - 34, 66 - z);
                     return 0.15 + Math.sin(this.bridgeAngle) * distFromEdge;
