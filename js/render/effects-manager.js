@@ -34,7 +34,9 @@
                     depthWrite: false
                 });
 
-                this.smokeGeo = new THREE.SphereGeometry(0.43, 7, 5);
+                this.smokeGeo = typeof THREE.SphereGeometry==='function' ?
+                    new THREE.SphereGeometry(0.43, 7, 5) :
+                    new THREE.BoxGeometry(0.6, 0.6, 0.6);
                 this.smokeMat = new THREE.MeshBasicMaterial({
                     color: 0xd1d5db,
                     transparent: true,
