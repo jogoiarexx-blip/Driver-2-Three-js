@@ -62,7 +62,12 @@ class DriverPedestrianSidewalks {
             const vx=Math.sin(car.heading||0)*(car.speed||0);
             const vz=Math.cos(car.heading||0)*(car.speed||0);
             const x=car.x+vx*.28,z=car.z+vz*.28;
-            const d=Math.hypot(x-p.x,z-p.z);
+            // Considerar perigo agora E previsão de curto prazo:
+            // não perder o pedestre que já está sob o para-choque.
+            const d=Math.min(
+                Math.hypot(car.x-p.x,car.z-p.z),
+                Math.hypot(x-p.x,z-p.z)
+            );
             if(d<limit){limit=d;near=car}
         }
         return near;
