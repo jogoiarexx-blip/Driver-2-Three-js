@@ -1236,9 +1236,10 @@
                 // Somente o próximo portão da rota pode ser coletado.
                 if (this.missionMarkers.length > 0) {
                     const pos = this.getPlayerPosition();
-                    const marker = DriverCheckpointRoute.findReached(
-                        this.missionType, this.missionMarkers, pos.x, pos.z
-                    );
+                    const marker = this.missionType==='story_leaving'?null:
+                        DriverCheckpointRoute.findReached(
+                            this.missionType, this.missionMarkers, pos.x, pos.z
+                        );
                     for (const m of this.missionMarkers) {
                         if (!m.collected && m.mesh.visible) m.mesh.rotation.y += dt * 2.5;
                     }
@@ -1306,7 +1307,7 @@
                         document.getElementById('mission-subcounter').textContent=result.message;
                         if(result.failed){
                             this.triggerEndScreen(result.failed==='destroyed'?
-                                'CARRO DESTRUÍDO!':'TREM PARTIU!',
+                                'CARRO DESTRUÍDO!':'TEMPO ESGOTADO!',
                                 'Jones não conseguiu esperar pela chegada de Tanner.');
                             return;
                         }
