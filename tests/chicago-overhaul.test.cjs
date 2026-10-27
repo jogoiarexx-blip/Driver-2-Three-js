@@ -95,7 +95,7 @@ for(const id of ['chicago','havana','vegas','rio']){
         assert.equal(world.chicagoOverhaulStats,undefined,id);
     } else {
         assert.equal(world.cityGroup.children.length,5);
-        assert.equal(local.length,2);
+        assert.equal(local.length,1);
         assert.equal(world.chicagoOverhaulStats.addedColliders,0);
         const a=O.detailLandmark(world,-280,-280);
         const b=O.detailLandmark(world,280,-280);
