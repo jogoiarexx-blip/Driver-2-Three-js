@@ -160,3 +160,13 @@ O GitHub Actions avalia testes lógicos de Node; a validação visual completa e
 - O estado do trem (posição, chegada, tempo e perda de contato) faz parte do save doméstico em localStorage.
 - O percurso é **uma adaptação retificada do traçado original do PS1**, ainda sem o circuito com bifurcações real. A missão ainda não é um port fiel 1:1 de Driver 2; os modelos são criações leves compatíveis com Three.js r128.
 - Execute testes: `node --test tests/*.test.cjs`. Um teste automatizado da física do trem e da rampa não substitui uma partida manual e inspeção do WebGL no browser.
+
+## Chicago 04 — Tailing the Drop (outubro/2026)
+
+- A quarta missão clássica agora está no menu Chicago: seguir discretamente o sedã vermelho do brasileiro até o depósito, **sem bater no alvo**. Seu objetivo é manter a distância na **barra de proximidade** (zona verde), evitando aproximação excessiva e perda do alvo.
+- Suspeita cresce quando Tanner fica a menos de 18 unidades e se reduz quando volta à faixa segura; distância superior a 100 unidades eleva o risco de perder o contato. Distâncias, tempo e percurso são ajustes de jogabilidade, não os valores exatos do PS1.
+- O suspeito usa **sete trechos pré-definidos**, velocidade e curvas físicas e respeita os semáforos. Não recebe a posição do jogador como destino. A chegada ao depósito conclui a missão se a vigilância permaneceu discreta. O radar existente indica o alvo vermelho.
+- A cidade de Chicago ganhou **lanchonete retrô** (-200,-200) e **oficina** (120,-280) com portas verdes acessíveis a pé, cômodos decorados, mobília low-poly e saída para a rua. A casa e seu salvamento permanecem independentes.
+- Save doméstico guarda também checkpoint do sedã, suspeita, distância perdida e tempo de seguimento. Coordenadas de salas ampliadas são suportadas.
+- `tests/tailing-drop.test.cjs` prova a lógica furtiva, persistência, semáforos e uma simulação completa do sedã pela malha da cidade sem colisões de edifícios.
+- **Ainda não é uma reconstrução exata** da missão PS1: o trajeto e os valores de tolerância foram adaptados à malha procedural. Os testes são lógicos/headless, não uma sessão jogada visualmente no navegador.
