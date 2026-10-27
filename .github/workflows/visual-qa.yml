@@ -9,6 +9,9 @@ on:
       - 'tests/visual-smoke.cjs'
       - 'tests/structure-smoke.cjs'
       - 'tests/female-walker-smoke.cjs'
+      - 'tests/pedestrian-curb-smoke.cjs'
+      - 'js/entities/pedestrian-sidewalk-nav.js'
+      - 'js/vehicles/driver-vehicle.js'
       - 'js/assets/driver-female-pedestrian.js'
       - 'js/entities/pedestrians-roadblocks.js'
       - 'assets/pedestrians/**'
@@ -32,6 +35,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Testar geometria, entradas e portões (sem navegador)
         run: node tests/structure-smoke.cjs
+      - name: Testar piso elevado, meio-fio e travessias nas quatro cidades
+        run: node tests/pedestrian-curb-smoke.cjs
       - name: Testar pedestre feminina, animação e GLB
         run: node tests/female-walker-smoke.cjs
       - name: Servir a versão atual do jogo
