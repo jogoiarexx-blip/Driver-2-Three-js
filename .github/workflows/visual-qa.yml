@@ -7,6 +7,7 @@ on:
       - 'index.html'
       - 'js/world/**'
       - 'tests/visual-smoke.cjs'
+      - 'tests/structure-smoke.cjs'
       - '.github/workflows/visual-qa.yml'
 
 permissions:
@@ -25,6 +26,8 @@ jobs:
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
+      - name: Testar geometria, entradas e portões (sem navegador)
+        run: node tests/structure-smoke.cjs
       - name: Servir a versão atual do jogo
         run: |
           python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-http.log 2>&1 &
