@@ -130,10 +130,11 @@
                 this.skidMarks.push(mesh);
             }
 
-            spawnTireSmoke(x, y, z, isDarkEngineSmoke = false) {
+            spawnTireSmoke(x, y, z, isDarkEngineSmoke = false, tint = null) {
                 if (this.smokeParticles.length > 50) return;
                 const mat = this.smokeMat.clone();
                 if (isDarkEngineSmoke) mat.color.setHex(0x1f2937);
+                if(tint!=null)mat.color.setHex(tint);
                 const mesh = new THREE.Mesh(this.smokeGeo, mat);
                 mesh.position.set(
                     x + (Math.random() - 0.5) * 0.6,
@@ -197,6 +198,18 @@
                     spin:(side||Math.sign(front)||1)*(4+impulse*.28)
                 });
                 return true;
+            }
+
+            spawnWaterSplash(x,y,z){
+                // Reaproveita sistema e orçamento de partículas existente.
+                for(let i=0;i<10;i++){
+                    this.spawnTireSmoke(
+                        x+(Math.random()-.5)*3,
+                        y+.1,
+                        z+(Math.random()-.5)*3,
+                        false,0x93c5fd
+                    );
+                }
             }
 
             ejectHubcap(x, y, z, vx, vz, audio) {

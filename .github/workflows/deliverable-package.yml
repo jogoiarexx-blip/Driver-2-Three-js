@@ -1,0 +1,42 @@
+name: Driver 2 - ZIP completo de fonte
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar arquivos obrigatorios
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in index.html js/engine/driver2-game-engine.js js/world/city-builder.js js/gameplay/tanner-garage.js; do
+            test -s "$f"
+          done
+          if test -f assets/vehicles/carro_driver2_otimizado.glb; then
+            echo "GLB do usuario presente"
+          else
+            echo "::warning::GLB binario ainda nao incluido: importar pelo menu ou enviar a assets/vehicles/"
+          fi
+      - name: Montar pacote sem residuos de Git
+        shell: bash
+        run: |
+          mkdir -p dist/Driver2-ThreeJS
+          rsync -a --exclude='.git' --exclude='dist' --exclude='node_modules' \
+            --exclude='*.zip' ./ dist/Driver2-ThreeJS/
+          cd dist
+          zip -qr Driver2-ThreeJS-FONTE.zip Driver2-ThreeJS
+          unzip -t Driver2-ThreeJS-FONTE.zip | tail -1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Driver2-ThreeJS-FONTE
+          path: dist/Driver2-ThreeJS-FONTE.zip
+          if-no-files-found: error
+          retention-days: 30

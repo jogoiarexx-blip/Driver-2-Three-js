@@ -27,6 +27,9 @@
                 this.heading = config.heading || 0;
                 this.speed = 0;
                 this.lateralVelocity = 0;
+                this.isSubmerged=false;
+                this.waterRecoveryClock=0;
+                this.lastDryPosition=null;
                 this.steerAngle = 0;
                 this.pitchAngle = 0;
                 this.rollAngle = 0;
@@ -299,6 +302,22 @@
             }
 
             updatePhysics(dt, input, cityBuilder, effects, audio, isPlayer = false) {
+                if(this.isSubmerged){
+                    this.waterRecoveryClock=Math.max(0,this.waterRecoveryClock-dt);
+                    this.speed=0;this.lateralVelocity=0;
+                    this.y=Math.max(-2.7,this.y-1.4*dt);
+                    if(this.waterRecoveryClock<=0){
+                        const safe=this.lastDryPosition ||
+                            {x:0,z:-80,heading:0};
+                        this.x=safe.x;this.z=safe.z;
+                        this.heading=safe.heading||0;
+                        this.y=cityBuilder.getGroundHeightAt(this.x,this.z);
+                        this.vy=0;this.isSubmerged=false;
+                        this.prevX=this.x;this.prevZ=this.z;
+                    }
+                    this.updateTransform();
+                    return;
+                }
                 const forwardThrottle = input.up ? 1 : (input.down ? -1 : 0);
                 // Correção A/D solicitada: o carro do jogador segue a
                 // percepção de direção da câmera. A IA mantém seu sinal
@@ -351,31 +370,67 @@
                 const nextX = this.x + vx * dt;
                 const nextZ = this.z + vz * dt;
 
-                const groundHeight = cityBuilder.getGroundHeightAt(nextX, nextZ);
-
-                if (this.y > groundHeight + 0.08 || this.vy > 0) {
-                    this.vy -= 24.0 * dt;
-                    this.y += this.vy * dt;
-                    if (this.y <= groundHeight) {
-                        if (this.vy < -10 && audio && isPlayer) audio.playCrash(0.6);
-                        this.y = groundHeight;
-                        this.vy = 0;
+                const groundBefore=cityBuilder.getGroundHeightAt(this.x,this.z);
+                const groundHeight=cityBuilder.getGroundHeightAt(nextX,nextZ);
+                const travel=Math.hypot(nextX-this.x,nextZ-this.z);
+                const steepStep=groundHeight>groundBefore+
+                    (.18+travel*.57) && groundHeight>this.y+.55;
+                // Um salto genuíno só ocorre ao perder uma superfície
+                // elevada enquanto vinha subindo, com velocidade suficiente.
+                const lip=groundBefore-groundHeight>.55 &&
+                    (this.surfaceSlope||0)>.07&&Math.abs(this.speed)>22;
+                if(lip&&Math.abs(this.y-groundBefore)<.8){
+                    this.vy=Math.min(7,Math.abs(this.speed)*
+                        this.surfaceSlope*.40);
+                }
+                if(groundHeight>=groundBefore){
+                    this.surfaceSlope=travel>.01?
+                        Math.min(.75,Math.max(0,
+                            (groundHeight-groundBefore)/travel)):0;
+                }
+                // A transição da rampa é resolvida por contacto com a
+                // superfície. Nunca converter um degrau em vy=altura*18.
+                if(this.y>groundHeight+.08 || this.vy>0){
+                    this.vy=Math.max(-24,this.vy-24*dt);
+                    this.y+=this.vy*dt;
+                    if(this.y<=groundHeight && !steepStep){
+                        if(this.vy < -10 && audio && isPlayer)
+                            audio.playCrash(.6);
+                        this.y=groundHeight;
+                        this.vy=0;
                     }
-                } else {
-                    if (groundHeight > this.y + 0.02 && this.speed > 22) {
-                        this.vy = (groundHeight - this.y) * 18;
-                    }
-                    this.y = groundHeight;
+                } else if(!steepStep) {
+                    this.y=groundHeight;
+                    this.vy=0;
+                }
+                if(cityBuilder.isWaterAt?.(nextX,nextZ)&&this.y<-.55){
+                    this.isSubmerged=true;
+                    this.waterRecoveryClock=1.3;
+                    this.damage=Math.min(100,this.damage+9);
+                    if(typeof effects?.spawnWaterSplash==='function')
+                        effects.spawnWaterSplash(this.x,this.y,this.z);
+                    if(isPlayer && audio?.playCrash)audio.playCrash(.6);
+                }
+                if(!cityBuilder.isWaterAt?.(this.x,this.z)&&
+                    (this.z<=26||this.z>=74) &&
+                    Math.abs(this.y-groundBefore)<.9 &&
+                    !cityBuilder.isPointBlocked?.(this.x,this.z,2.2,this.y)){
+                    this.lastDryPosition={
+                        x:this.x,z:this.z,heading:this.heading
+                    };
                 }
 
-                if (!cityBuilder.isPointBlocked(nextX, nextZ, 1.55, this.y)) {
+                if (!steepStep &&
+                    !cityBuilder.isPointBlocked(nextX, nextZ, 1.55, this.y)) {
                     this.x = nextX;
                     this.z = nextZ;
                 } else {
                     // Deslizamento junto a paredes: permite avançar no eixo livre
                     // em vez de parar completamente numa quina.
-                    const freeX = !cityBuilder.isPointBlocked(nextX, this.z, 1.55, this.y);
-                    const freeZ = !cityBuilder.isPointBlocked(this.x, nextZ, 1.55, this.y);
+                    const freeX = !steepStep &&
+                        !cityBuilder.isPointBlocked(nextX,this.z,1.55,this.y);
+                    const freeZ = !steepStep &&
+                        !cityBuilder.isPointBlocked(this.x,nextZ,1.55,this.y);
                     if (freeX) this.x = nextX;
                     if (freeZ) this.z = nextZ;
                     const impactNow = performance.now();

@@ -159,9 +159,15 @@ test('área interna é caminhável e paredes impedem sair fora do cômodo',()=>{
   assert.equal(City.prototype.isPointBlocked.call(c,1012,0),true);
   assert.equal(City.prototype.isPointBlocked.call(c,1050,-6),false);
 });
-test('região do canal mantém colisão aquática fora da ponte',()=>{
+test('canal permite queda pela abertura e só bloqueia onde há muro',()=>{
   const c=cityHarness();
-  assert.equal(City.prototype.isPointBlocked.call(c,35,50),true);
+  c.canalWallSegments=[
+    {minX:11.5,maxX:225,z:34},
+    {minX:255,maxX:427,z:34}
+  ];
+  assert.equal(City.prototype.isPointBlocked.call(c,35,50),false);
+  assert.equal(City.prototype.isPointBlocked.call(c,35,34),true);
+  assert.equal(City.prototype.isPointBlocked.call(c,240,34),false);
   assert.equal(City.prototype.isPointBlocked.call(c,0,50),false);
 });
 test('mais quarteirões e interiores estão ligados ao construtor',()=>{

@@ -471,3 +471,65 @@ A verificação de FPS/jogabilidade em navegador continua necessária.
 Limitações: física simplificada por círculos, não há caixas orientadas
 de colisão nem deformação de vértices de um GLB externo. Os testes de Node
 não substituem validar carros atravessando cruzamentos no navegador.
+
+
+## REV URBANA — auditoria de jogabilidade e persistência (27/10/2026)
+
+### Correções implementadas
+- **Curb alignment**: postes de iluminação, semáforos e sinalizações
+  instalados a 16 unidades do eixo da rua (largura 12 + recuo 4).
+  O canal tem tratamento próprio para não deixar postes na água. A
+  especificação de eixos da cidade ficou isolada em
+  `js/world/road-geometry.js`, incluindo validador de saídas de garagem.
+- **Canal**: os muros visuais e seus colisores foram divididos em
+  segmentos coincidentes. Aberturas reais nas coordenadas X
+  `[-255,-225]` e `[225,255]` permitem queda no canal.
+  Fora da ponte central, a água passa a ter profundidade lógica `-4`,
+  sem barreiras invisíveis dentro do canal.
+- **Rampa ferroviária de Chicago**: a função de altura suaviza a
+  borda lateral e a física impede entrar por degraus impossíveis;
+  transições subíveis seguem o contato com o solo sem gerar impulso
+  `vy = diferença_de_altura × 18`. Gravidade, queda, aterrissagens e
+  saltos em situações legítimas continuam previstos na física.
+- **Água/recuperação**: veículos sem proteção na margem podem afundar,
+  gerar respingos e retornar a uma posição seca anterior após a
+  submersão. Não é um sistema completo de flutuação de carro/barco.
+- **Casa e garagem**: estacionamento verde na casa de Tanner,
+  armazenamento local independente e versionado de até 5 veículos,
+  seletor de retirada, pintura e identidade mantidas. Saída ocupada
+  bloqueia a retirada. Use `P` parado na vaga para guardar, `O` para
+  abrir a lista, `T` para indicar a casa. A garagem completa está
+  disponível em Chicago, e as outras cidades preservam passeio livre.
+- **Navegação/missões**: ícones `⌂`, `P` e `!` no radar/mapa
+  ampliado; marcadores 3D em calçadas para início de Chicago 01 e
+  Havana 09, com `J` para ativar ao se aproximar. O status indica
+  disponível/ativo/concluído conforme o progresso existente.
+- **Persistência da campanha**: a garagem usa a chave separada
+  `driver2-tanner-garage-v1`, sem regravar o save antigo da casa.
+
+### Limitações e pendências
+- O GLB **carro_driver2_otimizado.glb** foi analisado e validado como GLB
+  2.0 (uma malha e uma textura JPEG). Seu caminho de carregamento é
+  `assets/vehicles/carro_driver2_otimizado.glb`, com importação local
+  e correção de rotação já existentes. O binário não faz parte do
+  repositório GitHub: para que ele carregue automaticamente para
+  *todos os visitantes*, é obrigatório colocar o arquivo nesta pasta
+  e fazer commit pelo GitHub. Alternativamente, use o botão Importar
+  GLB dentro do jogo, com armazenamento local IndexedDB quando disponível.
+- A garagem registra preferência por GLB, mas se o arquivo não estiver
+  disponível ela mantém o carro alternativo; não salva malhas de
+  terceiros no `localStorage`.
+- Nenhuma cidade é uma reprodução geométrica 1:1 do mapa PS1. A
+  arquitetura e pontos de referência procedurais continuam em evolução.
+- Marcadores completos e transições automáticas das missões além de
+  Chicago 01 / Havana 09 ainda precisam de implementação adicional.
+- Testes de Node usam réplicas matemáticas/objetos Three.js simulados;
+  NÃO equivalem a dirigir 30 minutos em navegador real.
+
+### Entrega ZIP
+- O GitHub oferece o **Source code (ZIP)** diretamente do branch
+  `main`. O workflow `deliverable-package.yml` também publica o
+  pacote da fonte como artefato para cada revisão.
+- Para ter o modelo GLB no ZIP final, inclua
+  `assets/vehicles/carro_driver2_otimizado.glb` antes de empacotar.
+  Sem esse binário, o importador local continua sendo a opção.

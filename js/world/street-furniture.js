@@ -30,8 +30,14 @@ class DriverStreetFurniture {
                     }
                 }
                 // Postes nos cantos externos sem invadir a via.
-                positions.push([x-12,z-12]);
-                positions.push([x+12,z+12]);
+                // Calçada externa: 16m do eixo (12m de pista e 4m
+                // de afastamento). Não posicionar postes no canal.
+                const south=z-16;
+                const north=z+16;
+                positions.push([x-16,
+                    south>31&&south<69?north:south]);
+                positions.push([x+16,
+                    north>31&&north<69?south:north]);
             }
         }
         const stripe = new THREE.InstancedMesh(

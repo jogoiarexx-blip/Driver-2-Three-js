@@ -24,12 +24,17 @@
                 this.signalBulbs = [];
                 this.streetAssetCache = new Map();
                 this.buildSequence = 0;
-                this.safeHouseZone = { x: -120, z: -120, radius: 9 };
+                this.safeHouseZone = {x:-120,z:-101,radius:5.5};
+                this.garageParking={x:-129,z:-94,heading:0};
+                this.garageExit={x:-129,z:-90,heading:0};
                 this.roadExtent=320; this.worldLimit=410;
                 this.trainStation=null;
+                this.canalWallSegments=[];
+                this.canalOpenings=[];
                 this.caineBridgeClosed=false;
                 this.caineBridgeGate=null;
                 this.interiors=[]; this.interiorById={};
+                this.missionStart=null;
 
                 // Garagem Secreta com Portão e Interruptor a Pé (Nordeste X=120, Z=120)
                 this.secretSwitchPos = { x: 102, z: 103 };
@@ -110,7 +115,12 @@
                 this.poleDebrisGeometry=null;
                 this.benches = [];
                 this.interiors=[]; this.interiorById={};
+                this.missionStart=null;
                 this.trainStation=null;
+                this.garageParking={x:-129,z:-94,heading:0};
+                this.garageExit={x:-129,z:-90,heading:0};
+                this.canalWallSegments=[];
+                this.canalOpenings=[];
                 this.caineBridgeClosed=false;
                 this.caineBridgeGate=null;
                 this.secretGateOpen = false;
@@ -149,17 +159,25 @@
                 river.position.set(0, 0.06, 50);
                 this.cityGroup.add(river);
 
-                // Muretas nas margens do canal
-                const wallMat = new THREE.MeshLambertMaterial({ color: 0x64748b });
-                const leftWall1 = new THREE.Mesh(new THREE.BoxGeometry(415, 1.5, 1.5), wallMat);
-                leftWall1.position.set(-219, 0.75, 34);
-                const leftWall2 = leftWall1.clone();
-                leftWall2.position.z = 66;
-                const rightWall1 = new THREE.Mesh(new THREE.BoxGeometry(415, 1.5, 1.5), wallMat);
-                rightWall1.position.set(219, 0.75, 34);
-                const rightWall2 = rightWall1.clone();
-                rightWall2.position.z = 66;
-                this.cityGroup.add(leftWall1, leftWall2, rightWall1, rightWall2);
+                // Margens protegidas por paredes físicas correspondentes ao
+                // desenho; aberturas reais permitem uma queda no canal.
+                const wallMat=new THREE.MeshLambertMaterial({color:0x64748b});
+                this.canalWallSegments=[];
+                this.canalOpenings=[
+                    {minX:-255,maxX:-225},{minX:225,maxX:255}
+                ];
+                for(const z of [34,66]){
+                    for(const [x0,x1] of [
+                        [-427,-255],[-225,-11.5],
+                        [11.5,225],[255,427]
+                    ]){
+                        const wall=new THREE.Mesh(
+                            new THREE.BoxGeometry(x1-x0,1.5,1.5),wallMat);
+                        wall.position.set((x0+x1)/2,.75,z);
+                        this.cityGroup.add(wall);
+                        this.canalWallSegments.push({minX:x0,maxX:x1,z});
+                    }
+                }
 
                 // 3. Ponte Basculante Central (X = 0, Z = 34..66)
                 const bridgeMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
@@ -269,6 +287,7 @@
                 }
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
+                this.buildMissionStartMarker();
                 DriverChicagoTrain.buildInfrastructure(this);
                 if(this.preset.id==='chicago')this.buildCaineCompoundDetails();
                 yield 'Interiores, monumentos e objetos do cenário';
@@ -432,9 +451,9 @@
                             const scale = 3 / Math.max(0.01, size.x, size.y, size.z);
                             clone.scale.setScalar(scale);
                             clone.position.set(
-                                x + 12 - (box.min.x + box.max.x) * 0.5 * scale,
+                                x + 16 - (box.min.x + box.max.x) * 0.5 * scale,
                                 0.12 - box.min.y * scale,
-                                z + 12 - (box.min.z + box.max.z) * 0.5 * scale
+                                z + 16 - (box.min.z + box.max.z) * 0.5 * scale
                             );
                             clone.traverse(obj => {
                                 if (obj.isMesh) {
@@ -452,8 +471,10 @@
                 const locations = [];
                 for (let x = -320; x <= 320; x += 80) {
                     for (let z = -320; z <= 320; z += 80) {
-                        locations.push({ x: x + 11, z: z + 11, axis: 'z' });
-                        locations.push({ x: x - 11, z: z - 11, axis: 'x' });
+                        const a=z+16>34&&z+16<66?z-16:z+16;
+                        const b=z-16>34&&z-16<66?z+16:z-16;
+                        locations.push({x:x+16,z:a,axis:'z'});
+                        locations.push({x:x-16,z:b,axis:'x'});
                     }
                 }
                 const count = locations.length;
@@ -681,6 +702,20 @@
                 this.safeHouseBeacon.position.set(cx, 0.4, cz + 19);
                 this.cityGroup.add(this.safeHouseBeacon);
                 this.safeHouseZone = { x: cx, z: cz + 19, radius: 5.5 };
+                this.garageParking={x:cx-9,z:cz+26,heading:0};
+                this.garageExit={x:cx-9,z:cz+30,heading:0};
+                // Vaga externa acessível sem atravessar o collider da casa.
+                const garagePad=new THREE.Mesh(
+                    new THREE.PlaneGeometry(6.5,7.2),
+                    new THREE.MeshBasicMaterial({
+                        color:0x16a34a,transparent:true,opacity:.4,
+                        side:THREE.DoubleSide,depthWrite:false,
+                        polygonOffset:true,polygonOffsetFactor:-2
+                    })
+                );
+                garagePad.rotation.x=-Math.PI/2;
+                garagePad.position.set(cx-9,.075,cz+26);
+                this.cityGroup.add(garagePad);
                 const door=new THREE.Mesh(new THREE.BoxGeometry(3.3,4.1,0.4),
                     new THREE.MeshLambertMaterial({color:0x16a34a}));
                 door.position.set(cx,2.2,cz+15.2);
@@ -1226,20 +1261,60 @@
                 }
             }
 
-            getGroundHeightAt(x, z) {
+            isWaterAt(x,z){
+                return z>34.85&&z<65.15&&Math.abs(x)>12.25;
+            }
+
+            buildMissionStartMarker(){
+                const city=this.preset.id;
+                if(city!=='chicago'&&city!=='havana')return;
+                // Pontos reais na calçada, fora das caixas dos prédios.
+                const place=city==='chicago'?
+                    {x:-64,z:-160,type:'story_tipoff'}:
+                    {x:16,z:-240,type:'story_havana_lead'};
+                const mat=new THREE.MeshBasicMaterial({
+                    color:0x22c55e,transparent:true,opacity:.78,
+                    depthWrite:false
+                });
+                const ring=new THREE.Mesh(
+                    new THREE.TorusGeometry(2.7,.26,5,16),mat);
+                ring.rotation.x=Math.PI/2;
+                ring.position.set(place.x,.55,place.z);
+                this.cityGroup.add(ring);
+                const arrow=new THREE.Mesh(
+                    new THREE.ConeGeometry(.9,1.7,6),
+                    new THREE.MeshBasicMaterial({color:0xfde047}));
+                arrow.rotation.x=Math.PI;
+                arrow.position.set(place.x,3.3,place.z);
+                this.cityGroup.add(arrow);
+                this.missionStart={...place,ring,arrow};
+            }
+
+            getGroundHeightAt(x,z) {
                 if(this.trainStation){
                     const ramp=this.trainStation.ramp,p=this.trainStation.platform;
+                    // Eixo da rampa é estreito. Suavizar a borda evita
+                    // degrau de 8m quando o carro passa junto ao corrimão.
+                    if(x>=ramp.minX-1&&x<=ramp.maxX+1 &&
+                        z<=ramp.startZ&&z>=ramp.endZ){
+                        const distance=Math.min(x-(ramp.minX-1),
+                            ramp.maxX+1-x);
+                        const lateral=Math.min(1,Math.max(0,distance/1.3));
+                        const fraction=Math.min(1,Math.max(0,
+                            (ramp.startZ-z)/(ramp.startZ-ramp.endZ)));
+                        return p.height*fraction*lateral;
+                    }
                     if(x>=p.minX&&x<=p.maxX &&
                         z>=p.minZ&&z<=p.maxZ)return p.height;
-                    if(x>=ramp.minX&&x<=ramp.maxX &&
-                        z<=ramp.startZ&&z>=ramp.endZ) {
-                        return p.height*(ramp.startZ-z)/(ramp.startZ-ramp.endZ);
-                    }
                 }
-                if (Math.abs(x) < 11.2 && z >= 34 && z <= 66) {
-                    const distFromEdge = Math.min(z - 34, 66 - z);
-                    return 0.15 + Math.sin(this.bridgeAngle) * distFromEdge;
+                if(Math.abs(x)<11.2&&z>=34&&z<=66){
+                    const distFromEdge=Math.min(z-34,66-z);
+                    return .15+Math.sin(this.bridgeAngle)*distFromEdge;
                 }
+                // Leito profundo sob a superfície aquática, não o mesmo
+                // asfalto plano de y=0: o carro pode cair e submergir.
+                if(typeof this.isWaterAt==='function' &&
+                    this.isWaterAt(x,z))return -4.0;
                 return 0;
             }
 
@@ -1248,7 +1323,14 @@
                 if(this.caineBridgeClosed && Math.abs(x)<11+radius &&
                     z+radius>49.5 && z-radius<52.5)return true;
                 if (Math.abs(x)>this.worldLimit || Math.abs(z)>this.worldLimit)return true;
-                if (z > 33.5 && z < 66.5 && Math.abs(x) >= 11.0 && y < 1.8) return true;
+                // Só existem barreiras onde o muro visível realmente existe.
+                if(y<1.8&&y>=-1.5){
+                    for(const segment of this.canalWallSegments||[]){
+                        if(Math.abs(z-segment.z)<.75+radius &&
+                            x>=segment.minX-radius&&x<=segment.maxX+radius)
+                            return true;
+                    }
+                }
 
                 for (let i = 0; i < this.buildingBoxes.length; i++) {
                     const b = this.buildingBoxes[i];

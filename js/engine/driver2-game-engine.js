@@ -58,6 +58,9 @@
                 this.homeSave=new DriverHomeSave(
                     (()=>{try{return window.localStorage}catch(e){return null}})()
                 );
+                this.tannerGarage=new DriverTannerGarage(this.homeSave.storage);
+                this.garagePanelOpen=false;
+                this.navigationHome=false;
                 this.completedMissions=new Set();
                 this.chapterProgress=new DriverChapterProgress(this.homeSave.storage);
                 // Saves antigos de Chicago 08 também liberam a nova etapa.
@@ -2090,6 +2093,8 @@
                     promptEl.classList.add('hidden');
                 }
 
+                this.updateGarageProximity();
+                this.updateCityNavigation();
                 this.drawRadar();
             }
 
@@ -2121,6 +2126,160 @@
                 if(entry){
                     prompt.textContent='E ou ENTER: ENTRAR EM '+entry.name.toUpperCase();
                     prompt.classList.remove('hidden');
+                }
+            }
+
+            getNearbyMissionStart(){
+                const start=this.city?.missionStart;
+                if(!start || this.currentCityKey==='havana' &&
+                    !this.chapterProgress.canTravelToHavana())return null;
+                const p=this.getPlayerPosition();
+                return Math.hypot(p.x-start.x,p.z-start.z)<9?
+                    start:null;
+            }
+            activateNearbyMission(){
+                const start=this.getNearbyMissionStart();
+                if(!start || this.gameEnded)return false;
+                if(start.type==='story_havana_lead'){
+                    this.startHavanaLead();
+                }else this.startMission(start.type);
+                return true;
+            }
+            updateCityNavigation(){
+                const start=this.city?.missionStart;
+                if(!start)return;
+                const completed=start.type==='story_havana_lead'?
+                    this.chapterProgress.hasCompletedHavanaLead():
+                    this.completedMissions?.has(start.type);
+                const locked=start.type==='story_havana_lead'&&
+                    !this.chapterProgress.canTravelToHavana();
+                const active=this.missionType===start.type &&
+                    this.missionActive;
+                const color=locked?0x475569:completed?0x94a3b8:
+                    active?0xfacc15:0x22c55e;
+                start.ring.material.color.setHex(color);
+                start.arrow.material.color.setHex(color);
+                start.arrow.rotation.y+=.02;
+                const nav=document.getElementById('driver-mission-start-status');
+                if(nav){
+                    const near=this.getNearbyMissionStart();
+                    nav.textContent=near?'MISSÃO DISPONÍVEL • J PARA INICIAR':'';
+                    nav.classList.toggle('hidden',!near);
+                }
+            }
+
+            garageDistance(){
+                const target=this.city?.garageParking;
+                if(!target)return Infinity;
+                const p=this.getPlayerPosition();
+                return Math.hypot(p.x-target.x,p.z-target.z);
+            }
+            showGarageStatus(message){
+                const el=document.getElementById('tanner-garage-status');
+                if(el)el.textContent=message;
+            }
+            renderGarageList(){
+                const root=document.getElementById('tanner-garage-list');
+                if(!root)return;
+                root.replaceChildren();
+                for(const item of this.tannerGarage.list()){
+                    const button=document.createElement('button');
+                    button.type='button';
+                    button.className='block w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 p-2 rounded mb-1 text-left';
+                    button.textContent=(item.index+1)+'. '+item.name+
+                        ' • '+(item.custom?'GLB / ':'')+
+                        '#'+item.color.toString(16).padStart(6,'0');
+                    button.addEventListener('click',()=>this.withdrawTannerVehicle(item.index));
+                    root.appendChild(button);
+                }
+                if(!root.children.length){
+                    const p=document.createElement('p');
+                    p.textContent='Nenhum carro guardado (máximo 5).';
+                    root.appendChild(p);
+                }
+            }
+            parkTannerVehicle(){
+                const car=this.playerCar;
+                if(this.currentCityKey!=='chicago'||
+                    this.mode!=='driving'||!car||
+                    this.garageDistance()>9||Math.abs(car.speed)>2.5)
+                    return false;
+                if(!this.tannerGarage.store(car)){
+                    this.showGarageStatus('Garagem cheia ou armazenamento indisponível.');
+                    return false;
+                }
+                const parking=this.city.garageParking;
+                this.vehicles=this.vehicles.filter(v=>v!==car);
+                this.scene.remove(car.root);
+                this.playerCar=this.vehicles[0]||null;
+                this.mode='on_foot';
+                this.tanner.setVisible(true);
+                this.tanner.setPosition(parking.x,0,parking.z+3,0);
+                this.showGarageStatus('VEÍCULO GUARDADO • PERSISTENTE');
+                this.renderGarageList();
+                return true;
+            }
+            withdrawTannerVehicle(index){
+                if(this.currentCityKey!=='chicago'||
+                    this.mode!=='on_foot'||this.garageDistance()>12)
+                    return false;
+                const exit=this.city.garageExit;
+                if(!DriverRoadGeometry.validGarageExit(
+                    exit.x,exit.z,this.city,this.vehicles)){
+                    this.showGarageStatus('SAÍDA OCUPADA • AFASTE OS CARROS');
+                    return false;
+                }
+                const item=this.tannerGarage.take(index);
+                if(!item)return false;
+                let vehicle=null;
+                try{
+                    vehicle=new DriverVehicle(this.scene,{
+                        name:item.name,color:item.color,
+                        bodyStyle:item.bodyStyle,
+                        maxSpeed:item.maxSpeed,accel:item.accel,
+                        initialDamage:item.damage,
+                        x:exit.x,z:exit.z,heading:exit.heading
+                    });
+                }catch(_){
+                    this.tannerGarage.cars.splice(index,0,item);
+                    this.tannerGarage.persist();
+                    return false;
+                }
+                vehicle.prevX=vehicle.x;
+                vehicle.prevZ=vehicle.z;
+                this.vehicles.push(vehicle);
+                this.playerCar=vehicle;
+                this.mode='driving';
+                this.tanner.setVisible(false);
+                if(this.freeVehicleAssets?.enabled)
+                    this.freeVehicleAssets.decorateFleet();
+                this.showGarageStatus('VEÍCULO RETIRADO • '+item.name);
+                this.renderGarageList();
+                return true;
+            }
+            updateGarageProximity(){
+                const near=this.currentCityKey==='chicago' &&
+                    this.garageDistance()<13;
+                const hint=document.getElementById('tanner-garage-hint');
+                if(hint){
+                    const stationary=this.mode==='driving' &&
+                        Math.abs(this.playerCar?.speed||0)<2.5;
+                    hint.textContent=stationary&&near?
+                        'GARAGEM • P GUARDAR / O ABRIR':
+                        near?'GARAGEM DE TANNER • O ABRIR':'';
+                    hint.classList.toggle('hidden',!near);
+                }
+                const panel=document.getElementById('tanner-garage-panel');
+                if(panel)panel.classList.toggle('hidden',
+                    !this.garagePanelOpen||!near);
+                const guide=document.getElementById('driver-route-status');
+                if(guide){
+                    const home=this.city.safeHouseZone;
+                    const player=this.getPlayerPosition();
+                    const distance=Math.hypot(home.x-player.x,home.z-player.z);
+                    guide.textContent=this.navigationHome?
+                        'CASA DE TANNER • '+Math.round(distance)+'m • 🏠':'';
+                    guide.classList.toggle('hidden',!this.navigationHome);
                 }
             }
 
@@ -2187,6 +2346,39 @@
                 ctx.beginPath();
                 ctx.arc(sx, sz, 5, 0, Math.PI * 2);
                 ctx.fill();
+
+                // Casa de Tanner, garagem e rota são visíveis no radar
+                // próximo e no mapa ampliado, nas coordenadas da cidade.
+                const homeX=(this.city.safeHouseZone.x-pos.x)*scale;
+                const homeZ=-(this.city.safeHouseZone.z-pos.z)*scale;
+                ctx.font='bold 16px sans-serif';
+                ctx.textAlign='center';
+                if(this.navigationHome){
+                    ctx.beginPath();ctx.moveTo(0,0);
+                    ctx.lineTo(homeX,homeZ);
+                    ctx.strokeStyle='#34d399';
+                    ctx.lineWidth=2;ctx.stroke();
+                }
+                ctx.fillStyle='#86efac';
+                ctx.fillText('⌂',homeX,homeZ+5);
+                const parking=this.city.garageParking;
+                if(parking){
+                    ctx.font='bold 12px sans-serif';
+                    ctx.fillStyle='#a7f3d0';
+                    ctx.fillText('P',
+                        (parking.x-pos.x)*scale,
+                        -(parking.z-pos.z)*scale);
+                }
+                const starter=this.city.missionStart;
+                if(starter && !(this.currentCityKey==='havana' &&
+                    !this.chapterProgress.canTravelToHavana())){
+                    ctx.font='bold 15px sans-serif';
+                    ctx.fillStyle=this.completedMissions?.has(starter.type)?
+                        '#94a3b8':'#facc15';
+                    ctx.fillText('!',
+                        (starter.x-pos.x)*scale,
+                        -(starter.z-pos.z)*scale);
+                }
 
                 // Garagem Secreta (Ponto Roxo Especial no Nordeste)
                 const gx = (this.city.secretGarageCenter.x - pos.x) * scale;
@@ -2460,6 +2652,15 @@
                     if (code === 'KeyH') this.triggerHornOrSiren();
                     if (code === 'KeyR') this.toggleReplayDirector();
                     if (code === 'KeyB') this.city.toggleBridge();
+                    if(code==='KeyJ'&&!e.repeat)
+                        this.activateNearbyMission();
+                    if(code==='KeyT'&&!e.repeat)
+                        this.navigationHome=!this.navigationHome;
+                    if(code==='KeyP'&&!e.repeat)this.parkTannerVehicle();
+                    if(code==='KeyO'&&!e.repeat){
+                        this.garagePanelOpen=!this.garagePanelOpen;
+                        this.renderGarageList();
+                    }
                 });
 
                 const clearInputs = () => {
@@ -2507,6 +2708,17 @@
                 if(radarZoom)radarZoom.addEventListener('click',()=>this.toggleRadarZoom());
                 const saveButton=document.getElementById('btn-save-home');
                 if(saveButton)saveButton.addEventListener('click',()=>this.saveAtHome());
+                document.getElementById('btn-garage-store')?.
+                    addEventListener('click',()=>this.parkTannerVehicle());
+                document.getElementById('btn-garage-open')?.
+                    addEventListener('click',()=>{
+                        this.garagePanelOpen=!this.garagePanelOpen;
+                        this.renderGarageList();
+                    });
+                document.getElementById('btn-route-home')?.
+                    addEventListener('click',()=>{
+                        this.navigationHome=!this.navigationHome;
+                    });
                 const exitButton=document.getElementById('btn-leave-interior');
                 if(exitButton)exitButton.addEventListener('click',()=>this.leaveInterior());
                 const loadButton=document.getElementById('btn-load-home');
