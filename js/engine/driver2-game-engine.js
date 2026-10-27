@@ -53,6 +53,11 @@
                     (()=>{try{return window.localStorage}catch(e){return null}})()
                 );
                 this.completedMissions=new Set();
+                this.chapterProgress=new DriverChapterProgress(this.homeSave.storage);
+                // Saves antigos de Chicago 08 também liberam a nova etapa.
+                const legacySave=this.homeSave.read();
+                if(legacySave?.completed?.includes('story_leaving'))
+                    this.chapterProgress.unlockHavana();
                 this.interiorPlace=null;
                 this.witnessCloseTime=0;
                 this.tanner = new TannerController(this.scene);
@@ -97,6 +102,7 @@
 
                 this.input = { up: false, down: false, left: false, right: false, handbrake: false, sprint: false };
                 this.bindEvents();
+                this.updateChapterMenu();
 
                 this.currentVFSFile = 'assets/AssetManifest.json';
                 this.selectVFSFile(this.currentVFSFile);
@@ -104,6 +110,33 @@
                 this.lastTime = performance.now();
                 this.frames = 0;
                 this.fpsTimer = 0;
+            }
+
+            updateChapterMenu() {
+                const unlocked=this.chapterProgress.canTravelToHavana();
+                const resume=document.getElementById('btn-resume-havana');
+                if(resume)resume.classList.toggle('hidden',!unlocked);
+                const status=document.getElementById('chicago-chapter-status');
+                if(status)status.textContent=unlocked?
+                    'CHICAGO 08 CONCLUÍDA • CAPÍTULO 2 LIBERADO':
+                    'CHICAGO 08 PENDENTE • HAVANA DISPONÍVEL EM PASSEIO LIVRE';
+            }
+
+            beginHavanaChapter() {
+                if(!this.chapterProgress.canTravelToHavana())return false;
+                // Muda apenas o capítulo da campanha; mantém os outros modos.
+                this.missionType='freeroam';
+                this.changeCity('havana');
+                this.setWeather('day');
+                document.getElementById('mission-title').textContent=
+                    'CAPÍTULO 2 — HAVANA';
+                document.getElementById('objective-banner').textContent=
+                    'Chicago ficou para trás. Próxima missão: FOLLOW UP THE LEAD '+
+                    '(em preparação). Explore Havana em Passeio Livre.';
+                const badge=document.getElementById('player-state-badge');
+                if(badge)badge.textContent='CAPÍTULO 2 • HAVANA';
+                this.updateChapterMenu();
+                return true;
             }
 
             changeCity(cityKey) {
@@ -219,7 +252,10 @@
 
                 this.tanner.setVisible(false);
                 const lowLight = this.weatherMode === 'night' || this.weatherMode === 'rain';
-                this.vehicles.forEach(v => VehicleVisuals.setHeadlights(v, lowLight));
+                this.vehicles.forEach(v => {
+                    v.wetRoad=this.weatherMode==='rain';
+                    VehicleVisuals.setHeadlights(v, lowLight);
+                });
                 if (this.freeVehicleAssets) this.freeVehicleAssets.decorateFleet();
             }
 
@@ -227,7 +263,10 @@
                 this.weatherMode = mode;
                 if (this.vehicles) {
                     const lowLight = mode === 'night' || mode === 'rain';
-                    this.vehicles.forEach(v => VehicleVisuals.setHeadlights(v, lowLight));
+                    this.vehicles.forEach(v => {
+                        v.wetRoad=mode==='rain';
+                        VehicleVisuals.setHeadlights(v, lowLight);
+                    });
                 }
                 const lightsButton = document.getElementById('btn-headlights');
                 if (lightsButton && this.playerCar) {
@@ -884,6 +923,7 @@
                         maxSpeed:43,accel:29
                     });
                     mafia.isMafia=true;mafia.isPolice=false;
+                    mafia.wetRoad=this.weatherMode==='rain';
                     this.vehicles.push(mafia);this.leavingMafia.push(mafia);
                 }
                 return this.leavingMafia;
@@ -1661,12 +1701,19 @@
                 this.gameEnded = true;
                 if(!/FALH|ESGOTAD|DESTRUÍDO|ESCAPOU|ATINGIDO|FIM DO SURVIVAL/i.test(title))
                     this.completedMissions.add(this.missionType);
+                // O checkpoint de capítulo só nasce após vitória real do diretor.
+                if(this.missionType==='story_leaving' &&
+                    this.leavingDirector.completed && /CONCLUÍDA/.test(title)){
+                    this.chapterProgress.unlockHavana();
+                    this.updateChapterMenu();
+                }
                 const continueHome=document.getElementById('btn-continue-safehouse');
                 if(continueHome)continueHome.classList.toggle('hidden',
                     !(this.missionType==='story_safehouse' && /CONCLUÍDA/.test(title)));
                 const havana=document.getElementById('btn-continue-havana');
                 if(havana)havana.classList.toggle('hidden',
-                    !(this.missionType==='story_leaving' && /CONCLUÍDA/.test(title)));
+                    !(this.missionType==='story_leaving' &&
+                        this.leavingDirector.completed && /CONCLUÍDA/.test(title)));
                 document.getElementById('announcement-title').textContent = title;
                 document.getElementById('announcement-desc').textContent = desc;
                 document.getElementById('center-announcement').classList.remove('hidden');
@@ -2347,12 +2394,9 @@
                 const continueHavana=document.getElementById('btn-continue-havana');
                 if(continueHavana)continueHavana.addEventListener('click',()=>{
                     if(this.missionType!=='story_leaving' ||
+                        !this.leavingDirector.completed ||
                         !this.completedMissions.has('story_leaving'))return;
-                    this.missionType='freeroam';
-                    this.changeCity('havana');
-                    this.setWeather('day');
-                    const badge=document.getElementById('player-state-badge');
-                    if(badge)badge.textContent='CAPÍTULO 2 • HAVANA';
+                    this.beginHavanaChapter();
                 });
                 const continueHome=document.getElementById('btn-continue-safehouse');
                 if(continueHome)continueHome.addEventListener('click',()=>{

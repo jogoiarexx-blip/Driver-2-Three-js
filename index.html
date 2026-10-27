@@ -300,6 +300,16 @@
                 </div>
                 <button id="btn-load-home" class="shrink-0 bg-emerald-600 rounded px-3 py-2 text-xs font-bold">CARREGAR</button>
             </div>
+            <div class="mb-4 p-3 rounded-lg border border-sky-600/40 bg-slate-950 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <div class="font-bold text-sky-300 text-sm">CAMPANHA • CHICAGO → HAVANA</div>
+                    <div id="chicago-chapter-status" class="text-xs text-slate-400">CHICAGO 08 PENDENTE • HAVANA DISPONÍVEL EM PASSEIO LIVRE</div>
+                </div>
+                <button id="btn-resume-havana" onclick="window.DriverGame.beginHavanaChapter()"
+                    class="hidden bg-sky-700 hover:bg-sky-600 border border-sky-400 rounded-lg px-4 py-2 text-xs font-extrabold text-white">
+                    CONTINUAR CAPÍTULO 2 • HAVANA
+                </button>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                 <button onclick="window.DriverGame.startMission('story_tipoff')" class="rounded-lg p-3 text-left bg-slate-950 border border-yellow-600 hover:bg-slate-800">
                     <strong class="text-amber-400">CHICAGO 01 — SURVEILLANCE TIP OFF</strong>
@@ -724,6 +734,7 @@ git push -u origin main</pre>
     <script src="./js/gameplay/chicago-intruder.js"></script>
     <script src="./js/gameplay/caine-compound.js"></script>
     <script src="./js/gameplay/leaving-chicago.js"></script>
+    <script src="./js/gameplay/chapter-progress.js"></script>
     <script src="./js/traffic/traffic-ai.js"></script>
     <script src="./js/police/roadblock-director.js"></script>
     <script src="./js/gameplay/checkpoint-route.js"></script>

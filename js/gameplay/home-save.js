@@ -195,6 +195,11 @@ class DriverHomeSave {
             (Array.isArray(data.completed)?data.completed:[])
             .filter(t=>DriverHomeSave.TYPES.includes(t)).slice(0,40)
         );
+        if(game.chapterProgress &&
+            game.completedMissions.has('story_leaving')){
+            game.chapterProgress.unlockHavana();
+            if(typeof game.updateChapterMenu==='function')game.updateChapterMenu();
+        }
         game.mode=data.mode==='on_foot'?'on_foot':'driving';
         const t=data.tanner||{};
         game.tanner.setPosition(

@@ -239,3 +239,21 @@ do trajeto com física e colisões até a estação.
 **Limites:** mapa e percurso são originais/adaptados e não cópia do traçado
 PS1. A IA e a física são testadas de forma automatizada, mas a partida completa
 em WebGL e o desempenho em aparelhos móveis exigem validação no navegador.
+
+## Checkpoint de capítulo e dirigibilidade com chuva (outubro/2026)
+
+- A vitória real de **Leaving Chicago** grava um checkpoint de desbloqueio
+  independente do save manual da casa. Ao recarregar a página, **CONTINUAR
+  CAPÍTULO 2 • HAVANA** aparece no menu de missões. Não é preciso voltar à
+  casa em Chicago depois de vencer a etapa 08.
+- Saves manuais antigos que já possuíam `story_leaving` concluída podem
+  recuperar automaticamente esse desbloqueio. O conteúdo do save da casa
+  não é modificado pelo checkpoint separado.
+- Havana abre com a introdução ao capítulo 2 em passeio livre. A missão
+  **Follow Up the Lead (09)** permanece pendente de implementação, de modo
+  que não se confunda a mudança de cenário com uma missão jogável.
+- Na chuva, os veículos têm menor aderência lateral e demoram mais para
+  estabilizar derrapagens. Física seca permanece inalterada.
+- O novo arquivo `js/gameplay/chapter-progress.js` e os testes
+  `tests/chicago-chapters.test.cjs` mantêm o sistema modular e compatível
+  com GitHub Pages; sem dependências adicionais.

@@ -56,8 +56,10 @@ class DriverArcadePhysics {
         const absSpeed = Math.abs(vehicle.speed);
         const turnAbility = this.clamp(absSpeed / 8, 0, 1);
         const topSpeedSteer = 1 / (1 + (absSpeed / Math.max(1, vehicle.maxSpeed)) * 0.85);
+        const wetRoad = vehicle.wetRoad === true;
         const driftBoost = burnoutKey ? 1.66 : handbrake ? 1.53 : 1;
-        const yawRate = (1.78 * turnAbility * topSpeedSteer * driftBoost) *
+        const yawRate = (1.78 * turnAbility * topSpeedSteer * driftBoost *
+            (wetRoad ? 0.91 : 1)) *
             (vehicle.speed >= -0.1 ? 1 : -1);
         vehicle.steerAngle += (steerInput * 0.46 - vehicle.steerAngle) * this.response(10, dt);
         vehicle.heading += steerInput * yawRate * dt;
@@ -67,9 +69,11 @@ class DriverArcadePhysics {
 
         const centrifugal = steerInput * (vehicle.speed / Math.max(1,vehicle.maxSpeed));
         const slide = handbrake || burnoutKey;
-        const lateralTarget = -centrifugal * (slide ? 12.7 : 3.6);
+        // No molhado, menor aderência aumenta a deriva lateral e demora
+        // mais para reestabilizar o carro. Sem chuva, física original.
+        const lateralTarget = -centrifugal * (slide ? 12.7 : wetRoad ? 6.0 : 3.6);
         vehicle.lateralVelocity += (lateralTarget - vehicle.lateralVelocity) *
-            this.response(slide ? 4.4 : 8.5, dt);
+            this.response(slide ? 4.4 : wetRoad ? 4.3 : 8.5, dt);
         vehicle.isBurnout = burnoutKey && (forwardThrottle > 0 || steerInput !== 0);
         vehicle.isDrifting = vehicle.isBurnout ||
             (handbrake && absSpeed > 10) ||
