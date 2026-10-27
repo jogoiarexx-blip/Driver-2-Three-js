@@ -172,7 +172,10 @@ test('LOD costeiro limita atualizações e evita oscilações no limite',()=>{
     const coast=Coast.build(city);
     Coast.update(city,.1,{x:1400,z:0});
     assert.equal(coast.lodUpdates,0);
-    Coast.update(city,.3,{x:1400,z:0});
+    // Frames longos são limitados a 0,15s; acumular 0,38s em
+    // vários quadros como acontece no jogo.
+    Coast.update(city,.15,{x:1400,z:0});
+    Coast.update(city,.15,{x:1400,z:0});
     assert.equal(coast.lodNear,0);
     const updates=coast.lodUpdates;
     for(let i=0;i<12;i++)Coast.update(city,.04,{x:1400,z:0});
