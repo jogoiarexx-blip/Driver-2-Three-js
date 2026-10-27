@@ -62,6 +62,7 @@
                 this.garagePanelOpen=false;
                 this.navigationHome=false;
                 this.debugVehiclePhysics=false;
+                this.policeDoorTransition=null;
                 this.completedMissions=new Set();
                 this.chapterProgress=new DriverChapterProgress(this.homeSave.storage);
                 // Saves antigos de Chicago 08 também liberam a nova etapa.
@@ -204,6 +205,12 @@
             }
 
             spawnAllVehicles() {
+                if(this.policeDoorTransition){
+                    if(typeof DriverPoliceDoorRig!=='undefined')
+                        DriverPoliceDoorRig.cancel(
+                            this.policeDoorTransition.vehicle);
+                    this.policeDoorTransition=null;
+                }
                 this.vehicles.forEach(v => {
                     GPUResourceUtils.disposeSubtree(v.root);
                     this.scene.remove(v.root);
@@ -1058,13 +1065,64 @@
                 return van;
             }
 
+            startPoliceDoorTransition(vehicle,kind){
+                if(this.policeDoorTransition ||
+                    typeof DriverPoliceDoorRig==='undefined' ||
+                    !vehicle?.policeDoorRig)return false;
+                const originalCar=this.playerCar;
+                vehicle.speed=0;
+                const done=()=>{
+                    if(!this.policeDoorTransition ||
+                        this.policeDoorTransition.vehicle!==vehicle)return;
+                    this.policeDoorTransition=null;
+                    const badge=document.getElementById('player-state-badge');
+                    if(kind==='enter'){
+                        const switched=vehicle!==originalCar;
+                        this.playerCar=vehicle;
+                        this.mode='driving';
+                        this.tanner.setVisible(false);
+                        if(switched&&!this.isPoliceNearPlayer(45))
+                            this.felony=Math.max(0,this.felony-65);
+                        else if(vehicle.isPolice)
+                            this.felony=Math.min(100,this.felony+35);
+                        if(badge){
+                            badge.textContent='NO VOLANTE • POLÍCIA';
+                            badge.className='px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold';
+                        }
+                    }else{
+                        this.mode='on_foot';
+                        const hx=vehicle.x-Math.cos(vehicle.heading)*2.4;
+                        const hz=vehicle.z+Math.sin(vehicle.heading)*2.4;
+                        this.tanner.setPosition(hx,vehicle.y,hz,vehicle.heading);
+                        this.tanner.setVisible(true);
+                        if(badge){
+                            badge.textContent='TANNER (A PÉ)';
+                            badge.className='px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold';
+                        }
+                    }
+                };
+                if(!DriverPoliceDoorRig.start(vehicle,kind,done))
+                    return false;
+                this.policeDoorTransition={vehicle,kind};
+                if(kind==='enter'){
+                    const x=vehicle.x-Math.cos(vehicle.heading)*2.25;
+                    const z=vehicle.z+Math.sin(vehicle.heading)*2.25;
+                    this.tanner.setPosition(x,vehicle.y,z,vehicle.heading);
+                }
+                return true;
+            }
+
             toggleVehicleEnterExit() {
-                if (this.gameEnded || this.inReplayMode) return;
+                if (this.gameEnded || this.inReplayMode ||
+                    this.policeDoorTransition) return;
                 this.audio.init();
 
                 if (this.mode === 'driving' && this.playerCar) {
                     if (Math.abs(this.playerCar.speed) > 13) return;
-
+                    if(this.playerCar.isPolice&&this.playerCar.policeDoorRig){
+                        if(this.startPoliceDoorTransition(this.playerCar,'exit'))
+                            return;
+                    }
                     this.mode = 'on_foot';
                     this.playerCar.speed = 0;
                     const exitX = this.playerCar.x - Math.cos(this.playerCar.heading) * 2.4;
@@ -1143,6 +1201,10 @@
                     }
 
                     if (closestCar) {
+                        if(closestCar.isPolice&&closestCar.policeDoorRig){
+                            if(this.startPoliceDoorTransition(closestCar,'enter'))
+                                return;
+                        }
                         const switchedCar = (closestCar !== this.playerCar);
                         this.playerCar = closestCar;
                         this.mode = 'driving';
@@ -1269,7 +1331,8 @@
                 this.trafficAI.policeRoadblocks = this.pedManager.roadblocks;
                 // O carro secreto só deixa a garagem quando o jogador assume o volante.
                 for (const vehicle of this.vehicles) {
-                    if (vehicle === this.playerCar || vehicle.isSecret) continue;
+                    if (vehicle === this.playerCar || vehicle.isSecret ||
+                        vehicle===this.policeDoorTransition?.vehicle) continue;
                     const controls = this.trafficAI.getInput(
                         vehicle, dt, this.vehicles, playerPos, this.felony
                     );
@@ -2918,10 +2981,17 @@
                     return;
                 }
 
+                if(this.policeDoorTransition&&
+                    typeof DriverPoliceDoorRig!=='undefined')
+                    DriverPoliceDoorRig.update(
+                        this.policeDoorTransition.vehicle,dt);
                 if (!this.gameEnded) {
                     if(this.trainLine&&this.missionType==='story_train'&&
                         this.missionActive)this.trainLine.update(dt);
-                    if (this.mode === 'driving' && this.playerCar) {
+                    if(this.policeDoorTransition){
+                        // Entrada/saída bloqueia controles até a porta
+                        // terminar seu ciclo, sem simular direção.
+                    } else if (this.mode === 'driving' && this.playerCar) {
                         this.playerCar.updatePhysics(dt, this.input, this.city, this.effects, this.audio, true);
                     } else {
                         this.tanner.update(dt, this.input, this.city);

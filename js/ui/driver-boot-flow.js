@@ -277,8 +277,28 @@ class DriverBootFlow {
         }else{
             report(.25,'GLB ainda indisponível • modelo provisório mantido');
         }
+        // A viatura enviada pelo usuário tem prioridade sobre o
+        // police.glb genérico do pacote CC0. Sem o asset publicado,
+        // o modo procedural/CC0 permanece disponível.
+        let policeTemplate=null,policeTimer=null;
+        try{
+            policeTemplate=await Promise.race([
+                library.getPoliceTemplate(),
+                new Promise(resolve=>{
+                    policeTimer=setTimeout(()=>resolve(null),6500);
+                })
+            ]);
+        }catch(_){policeTemplate=null}
+        finally{if(policeTimer!==null)clearTimeout(policeTimer)}
+        if(policeTemplate){
+            library.decorateFleet();
+            report(.35,'Viatura personalizada GLB pronta • portas articuladas');
+        }else{
+            report(.35,'Police GLB ausente • viatura alternativa ativa');
+        }
         const names=[...new Set(game.vehicles
             .filter(v=>!(userTemplate && library.canUseDriver2Model(v)))
+            .filter(v=>!(policeTemplate&&v.isPolice))
             .map(v=>library.getModelName(v)).filter(Boolean))];
         if(!names.length) {
             report(1,userTemplate?'Carro GLB pronto':'Malhas alternativas prontas');

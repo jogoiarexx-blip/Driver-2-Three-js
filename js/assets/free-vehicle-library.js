@@ -17,6 +17,10 @@ class FreeVehicleAssets {
         this.userModelError='';
         this.importedCount=0;
         this.userModelUrl='./assets/vehicles/carro_driver2_otimizado.glb';
+        this.policeModelUrl='./assets/vehicles/police.glb';
+        this.policeTemplate=null;
+        this.policePromise=null;
+        this.policeStatus='pending';
         this.updateButton();
     }
 
@@ -51,6 +55,52 @@ class FreeVehicleAssets {
             }));
         }
         return this.cache.get(filename);
+    }
+
+    getPoliceTemplate(){
+        if(this.policeTemplate)return Promise.resolve(this.policeTemplate);
+        if(!this.policePromise){
+            this.policePromise=new Promise(resolve=>{
+                if(!THREE.GLTFLoader){resolve(null);return}
+                try{
+                    new THREE.GLTFLoader().load(this.policeModelUrl,
+                        gltf=>resolve(gltf?.scene||null),undefined,
+                        ()=>resolve(null));
+                }catch(_){resolve(null)}
+            }).then(scene=>{
+                if(scene){this.policeTemplate=scene;this.policeStatus='github'}
+                else{
+                    this.policeStatus='missing';
+                    this.policePromise=null;
+                }
+                return scene;
+            });
+        }
+        return this.policePromise;
+    }
+
+    applyPoliceModel(vehicle,template){
+        if(!this.enabled || !vehicle?.isPolice ||
+            !this.engine.vehicles.includes(vehicle)||
+            !vehicle.root?.parent||!template)return false;
+        const clone=template.clone(true),wrapped=new THREE.Group();
+        // Mesma correção de orientação do carro GLB pessoal.
+        // Frente do arquivo aponta para -X e chassi avança para +Z.
+        clone.rotation.y=Math.PI/2;
+        wrapped.add(clone);
+        wrapped.updateMatrixWorld(true);
+        vehicle._userCustomModel=false;
+        if(vehicle.applyCC0Model(wrapped,true)===false)return false;
+        vehicle._userCustomModel=true;
+        vehicle._policeCustomModel=true;
+        // Porta do motorista em pivô real; o GLB original também pode
+        // ser separado automaticamente no navegador.
+        if(typeof DriverPoliceDoorRig!=='undefined')
+            DriverPoliceDoorRig.mount(vehicle,wrapped);
+        if(typeof DriverVehicleWheelRig!=='undefined')
+            vehicle.wheelRig=DriverVehicleWheelRig.mount(vehicle,wrapped);
+        this.updateStatus();
+        return true;
     }
 
     canUseDriver2Model(vehicle){
@@ -223,13 +273,21 @@ class FreeVehicleAssets {
                             this.updateStatus();
                     }else this.decorateStandard(vehicle);
                 });
+            } else if(vehicle.isPolice){
+                this.getPoliceTemplate().then(template=>{
+                    if(template&&this.enabled &&
+                        this.engine.vehicles.includes(vehicle)&&
+                        !vehicle._policeCustomModel){
+                        this.applyPoliceModel(vehicle,template);
+                    }else if(!template)this.decorateStandard(vehicle);
+                });
             } else this.decorateStandard(vehicle);
         });
     }
 
     decorateStandard(vehicle){
         if(vehicle._userCustomModel || vehicle._cc0ModelApplied ||
-            !this.enabled)return;
+            vehicle._policeCustomModel || !this.enabled)return;
         const filename=this.getModelName(vehicle);
         if(!filename)return;
         this.getScene(filename).then(template=>{
@@ -278,6 +336,12 @@ class FreeVehicleAssets {
                 'GLB não disponível; carros alternativos ativos. ':
                 'Preparando carro_driver2_otimizado.glb… ')+
             'Modelos 3D ativos: '+count+
+            (this.policeStatus==='github'?
+                ' • Viaturas GLB do usuário'+
+                (this.engine.vehicles.some(v=>v.policeDoorRig)?
+                    ' com portas móveis':'')+'.':
+                this.policeStatus==='missing'?
+                ' • police.glb ausente: viaturas alternativas.':'')+
             (this.failed.size?' • Alguns externos indisponíveis.':'') :
             'Malhas PS1 procedurais ativas. Pressione M para ativar 3D.';
     }

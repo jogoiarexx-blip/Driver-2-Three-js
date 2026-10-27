@@ -765,3 +765,54 @@ fielmente reproduzidos. O conteúdo não modifica rotas de missões.
 - **Testes:** incluídos cenários de freada pela IA, liberação da faixa, variação de passada, contador do semáforo, nível LOD próximo/distante, histerese e ausência de novas malhas durante a atualização. O GitHub Actions executa também os testes de regressão anteriores.
 
 **Limitações:** o LOD não modifica texturas nem a qualidade gráfica dos carros; não há medição de FPS em navegador, nem gameplay completo certificado. A vegetação ainda é procedural e os pedestres não usam modelos com rig complexo.
+
+
+## REV Viatura personalizada + portas articuladas (27/10/2026)
+
+### Arquivo de veículo
+- Coloque a versão preparada do GLB em **`assets/vehicles/police.glb`**.
+  A partir desta revisão, o carregador prefere esse arquivo local à
+  viatura genérica CC0. Caso o arquivo não esteja publicado, a viatura
+  alternativa continua funcionando sem bloquear o jogo.
+- O GLB fornecido possuía **1 malha, 47.630 triângulos, 0 animações**.
+  O utilitário `rig_police_glb.py` separa **as duas portas dianteiras**
+  em malhas próprias com dobradiças: esquerda `police_left_door_hinge`
+  e direita `police_right_door_hinge`, preservando os materiais,
+  UVs e as imagens originais.
+- Alternativamente, `DriverPoliceDoorRig.splitOriginal()` executa uma
+  separação por triângulos no navegador quando ainda é usado o GLB
+  monolítico original, sem duplicar a carroceria, geometria de rodas
+  ou pintura. Os recortes aproximados por triângulos podem ter bordas
+  irregulares, especialmente dependendo do modelo de origem.
+- O carro policial usa **a mesma adaptação de escala/orientação +90°**
+  do carro de Tanner, o sistema de rodagem `DriverVehicleWheelRig`,
+  volumes físicos, danos, faróis e sirene já existentes. A pintura
+  policial original do atlas é preservada, sem recoloração forçada.
+
+### Entrada e saída (E/Enter)
+- Quando Tanner se aproxima de uma viatura equipada com porta
+  articulada, a entrada e saída são transições de **1,35 segundos**:
+  a porta esquerda abre por 0,38s, permanece aberta por 0,55s e fecha
+  por 0,42s; Tanner passa a dirigir somente após o fechamento.
+- Repetir E durante a transição é ignorado. Volante/IA da viatura e
+  movimentação de Tanner são suspensos durante a animação.
+  Reiniciar missão ou trocar cidade cancela a transição sem executar
+  efeitos atrasados.
+- Outros veículos preservam o comportamento atual e suas animações
+  não são modificadas por esta revisão.
+
+### Testes e limites
+- `tests/police-glb-door-rig.test.cjs` valida abertura, pausa,
+  fechamento e callback único, cancelamento, geometria monolítica,
+  fallback seguro e integração dos módulos.
+- Os testes automáticos validam código; a **orientação da frente do
+  GLB e o acabamento das dobradiças precisam ser conferidos na
+  execução visual**. Com material monolítico, o recorte das portas é
+  aproximado e não cria interior 3D detalhado nem animação de Tanner
+  sentado. Os bancos e interior podem ser evoluídos numa etapa futura.
+
+**Atenção à entrega:** alterações de código podem ser publicadas
+separadamente. Até `assets/vehicles/police.glb` existir no GitHub,
+o Pages manterá a viatura genérica. Para publicar o modelo,
+extraia `Police-GLB-Preparado.zip` na raiz e envie o arquivo
+`assets/vehicles/police.glb` ao repositório.
