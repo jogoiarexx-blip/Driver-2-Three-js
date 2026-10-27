@@ -27,6 +27,10 @@
                 this.currentCityKey = 'chicago';
                 this.audio = new RetroSynthAudio();
                 this.effects = new EffectsManager(this.scene);
+                this.impactFeedback = new DriverImpactFeedback();
+                this.impactFlash = document.getElementById('impact-flash');
+                this.reducedMotion = !!(window.matchMedia &&
+                    window.matchMedia('(prefers-reduced-motion: reduce)').matches);
                 this.city = new CityBuilder(this.scene, this.currentCityKey);
                 this.trafficAI = new DriverTrafficAI(this.city);
                 this.collisionSystem = new DriverVehicleCollisions();
@@ -291,6 +295,15 @@
                 this.survivalElapsed = 0;
                 this.evidencePhase = 0;
                 this.pursuitChapter.reset();
+                this.impactFeedback.reset();
+                if (this.impactFlash) this.impactFlash.style.opacity = '0';
+                const missionCenter = document.getElementById('mission-center');
+                if (missionCenter) missionCenter.classList.remove('objective-expanded');
+                const objectiveButton = document.getElementById('btn-objective-toggle');
+                if (objectiveButton) {
+                    objectiveButton.setAttribute('aria-expanded','false');
+                    objectiveButton.textContent = 'Ver objetivo completo';
+                }
                 this.replayBuffer = [];
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
@@ -755,6 +768,14 @@
                     impact => {
                         if (this.mode !== 'driving') return;
                         this.audio.playCrash(Math.min(1, impact.closingSpeed / 35));
+                        const strength = Math.min(1, impact.closingSpeed / 38);
+                        this.effects.spawnImpactSparks(
+                            (this.playerCar.x + impact.other.x) * 0.5,
+                            this.playerCar.y || 0,
+                            (this.playerCar.z + impact.other.z) * 0.5,
+                            strength
+                        );
+                        this.impactFeedback.trigger(impact.closingSpeed);
                         // A polícia não pode aumentar o delito de Tanner
                         // simplesmente batendo no carro dele.
                         if (impact.playerApproach > 8) {
@@ -1018,6 +1039,8 @@
                         ? 2 : this.cameraMode,
                     this.lookBackActive, this.city, dt
                 );
+                this.impactFeedback.update(dt, this.camera, this.impactFlash,
+                    this.reducedMotion);
             }
 
             updateHUD() {
@@ -1059,6 +1082,34 @@
                     } else {
                         sirenBadge.classList.add('hidden');
                     }
+                }
+
+                // Aviso antecipado só para barricadas existentes e à frente.
+                const warningEl = document.getElementById('roadblock-warning');
+                const warning = this.roadblockDirector.warning(
+                    this.mode === 'driving' ? this.playerCar : null, this.pedManager
+                );
+                if (warningEl) {
+                    warningEl.classList.toggle('hidden', !warning);
+                    if (warning) {
+                        const message = warning.arming ?
+                            `POLÍCIA MONTANDO BLOQUEIO • ${warning.distance}m` :
+                            `BLOQUEIO POLICIAL À FRENTE • ${warning.distance}m`;
+                        if (warningEl.textContent !== message) warningEl.textContent = message;
+                    }
+                }
+
+                const progress = document.getElementById('mission-compact-progress');
+                if (progress) {
+                    let label = this.missionActive ? 'MISSÃO EM ANDAMENTO' : 'PASSEIO LIVRE';
+                    if (this.missionType === 'pursuit') {
+                        label = ['ATO 1/3 • CERCO','ATO 2/3 • ROTA','ATO 3/3 • FUGA'][
+                            this.pursuitChapter.phase
+                        ];
+                    } else if (this.missionMarkers.length) {
+                        label = `ETAPA ${this.markersCollected}/${this.totalMarkers}`;
+                    }
+                    if (progress.textContent !== label) progress.textContent = label;
                 }
 
                 if (this.missionActive) {
@@ -1402,6 +1453,26 @@
                 });
 
                 // Botões de UI
+                const objectiveToggle = document.getElementById('btn-objective-toggle');
+                if (objectiveToggle) {
+                    objectiveToggle.addEventListener('click', () => {
+                        const center = document.getElementById('mission-center');
+                        const opened = center.classList.toggle('objective-expanded');
+                        objectiveToggle.setAttribute('aria-expanded',String(opened));
+                        objectiveToggle.textContent = opened ?
+                            'Recolher objetivo' : 'Ver objetivo completo';
+                    });
+                }
+                const hudMore = document.getElementById('btn-hud-more');
+                if (hudMore) {
+                    hudMore.addEventListener('click', () => {
+                        const controls = document.getElementById('hud-player-panel');
+                        const opened = controls.classList.toggle('hud-expanded');
+                        hudMore.setAttribute('aria-expanded',String(opened));
+                        hudMore.textContent = opened ?
+                            '⚙ Ocultar cidades / clima' : '⚙ Cidades / clima';
+                    });
+                }
                 document.getElementById('btn-missions').addEventListener('click', () => {
                     document.getElementById('missions-modal').classList.remove('hidden');
                 });
@@ -1541,6 +1612,9 @@
                         car.damage = Math.min(100, car.damage + Math.min(9, speed * 0.13));
                         car.speed *= 0.72;
                         this.felony = Math.min(100, this.felony + (barrier.dynamic ? 2 : 0));
+                        this.effects.spawnImpactSparks(car.x, car.y || 0, car.z,
+                            Math.min(0.9,speed/38));
+                        this.impactFeedback.trigger(speed * 0.65);
                     });
                 this.effects.update(dt);
                 this.effects.updateRain(dt, this.getPlayerPosition());
