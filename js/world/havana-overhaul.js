@@ -152,9 +152,10 @@ class DriverHavanaOverhaul {
     static buildHarbor(city){
         if(!this.isHavana(city))return [];
         const parts=[],add=(...p)=>parts.push(p);
-        // Porto do canal: armazéns e pequenos guindastes decorativos,
-        // sobre terrenos/estruturas existentes e sem collider novo.
-        for(const [x,z] of [[-274,-275],[-274,205],[274,-275],[274,205]]){
+        // Porto do canal: guindastes decorativos sobre a margem sul
+        // z=26, fora de avenidas (z=0 e z=80) e dos marcos do mapa.
+        // Nenhum collider ou obstáculo funcional.
+        for(const [x,z] of [[-274,26],[274,26]]){
             // Só elementos altos; não esconder veículos na avenida.
             for(const dx of [-8,8]){
                 add(x+dx,6.9,z,.52,13.5,.52,0x7d796e,false);
