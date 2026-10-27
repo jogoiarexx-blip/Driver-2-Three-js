@@ -37,6 +37,9 @@ class DriverSafeHouseEscape {
         }else if(clear){
             this.hiddenSeconds=Math.min(DriverSafeHouseEscape.LOST_SIGHT_SECONDS,
                 this.hiddenSeconds+step);
+            // Normaliza o limite para não guardar 5.49999999 no save.
+            if(this.hiddenSeconds>=DriverSafeHouseEscape.LOST_SIGHT_SECONDS-1e-6)
+                this.hiddenSeconds=DriverSafeHouseEscape.LOST_SIGHT_SECONDS;
         }else{
             this.hiddenSeconds=Math.max(0,this.hiddenSeconds-step*0.5);
         }
