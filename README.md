@@ -257,3 +257,40 @@ em WebGL e o desempenho em aparelhos móveis exigem validação no navegador.
 - O novo arquivo `js/gameplay/chapter-progress.js` e os testes
   `tests/chicago-chapters.test.cjs` mantêm o sistema modular e compatível
   com GitHub Pages; sem dependências adicionais.
+
+
+## Menu principal e carregamento real de cidades (REV menu/loading — outubro/2026)
+
+- O jogo abre no **menu principal** sem iniciar a simulação WebGL. Modos:
+  **Undercover**, **Take a Ride**, **Load Game**, **Driving Games** e **Options**.
+  Take a Ride permite selecionar Chicago, Havana, Las Vegas ou Rio.
+  Esc ou o botão **MENU** abre o menu durante a partida e pausa a simulação.
+- O novo loader mostra **progresso das operações executadas**, não uma barra
+  com tempo aleatório: inicialização da cena, construção em 12 fases da cidade
+  (infraestrutura + canal + nove fileiras de quarteirões + interiores),
+  preparação da frota, carregamento opcional real de GLB com `GLTFLoader` e
+  `renderer.compile`/render para pré-aquecer os materiais/shaders.
+- O mapa é criado em etapas com `requestAnimationFrame` entre fileiras.
+  Isso permite atualizar a barra e reduz períodos longos de interface sem
+  resposta. As telas de cidade continuam procedurais, sem baixar 4 mapas do
+  PlayStation e sem criar cópias simultâneas das quatro cidades na memória.
+- Os assets externos Kenney CC0 não são obrigatórios. Cada modelo recebe até
+  **4,5 segundos** nesta etapa: caso não carregue, fica a malha low-poly
+  procedural existente e a tela informa o fallback. O cache dos modelos
+  continua podendo completar o download posteriormente.
+- A transição Chicago → Havana e os botões de mudança de cidade no HUD usam
+  o loader progressivo. O carregamento da partida também pode reconstruir a
+  cidade salva sem bloquear a interface por uma operação única.
+- Opções do menu: modelos 3D CC0, efeito visual PS1 e redução das animações
+  da interface. Preferências ficam no armazenamento local, separadas do save.
+- Novos módulos: `js/ui/driver-load-scheduler.js` e
+  `js/ui/driver-boot-flow.js`. Testes: `tests/menu-loading.test.cjs`.
+  Sem bundler; compatível com hospedagem estática GitHub Pages.
+
+**Limitações:** o loader não mostra percentuais de bytes para downloads de GLB:
+sua etapa conta arquivos realmente resolvidos pelo carregador (ou que
+esgotaram o prazo e receberam fallback), e a geração procedural é medida por
+lotes concluídos. Não prepara antecipadamente **as quatro cidades completas**,
+pois isso repetiria consumo de CPU e GPU sem necessidade; constrói a cidade
+selecionada e reutiliza o cache de modelos compartilháveis. Falta validar
+visualmente o menu/tempo de carregamento nos diferentes navegadores.

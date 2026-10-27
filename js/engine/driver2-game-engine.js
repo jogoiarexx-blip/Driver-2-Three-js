@@ -4,7 +4,9 @@
          * ============================================================================
          */
         class Driver2GameEngine {
-            constructor() {
+            constructor(config={}) {
+                this.isPaused=false;
+                this.loadingActive=!!config.deferCityBuild;
                 this.canvas = document.getElementById('game-canvas');
                 this.radarCanvas = document.getElementById('radar-canvas');
                 this.radarCtx = this.radarCanvas.getContext('2d');
@@ -31,7 +33,8 @@
                 this.impactFlash = document.getElementById('impact-flash');
                 this.reducedMotion = !!(window.matchMedia &&
                     window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-                this.city = new CityBuilder(this.scene, this.currentCityKey);
+                this.city = new CityBuilder(this.scene, this.currentCityKey,
+                    !config.deferCityBuild);
                 this.trafficAI = new DriverTrafficAI(this.city);
                 this.collisionSystem = new DriverVehicleCollisions();
                 this.pursuitChapter = new DriverPursuitChapter();
@@ -122,11 +125,12 @@
                     'CHICAGO 08 PENDENTE • HAVANA DISPONÍVEL EM PASSEIO LIVRE';
             }
 
-            beginHavanaChapter() {
+            async beginHavanaChapter() {
                 if(!this.chapterProgress.canTravelToHavana())return false;
-                // Muda apenas o capítulo da campanha; mantém os outros modos.
+                // Agora a mudança de capítulo passa pelo loader progressivo.
                 this.missionType='freeroam';
-                this.changeCity('havana');
+                if(window.DriverBoot)await this.requestCityChange('havana');
+                else this.changeCity('havana');
                 this.setWeather('day');
                 document.getElementById('mission-title').textContent=
                     'CAPÍTULO 2 — HAVANA';
@@ -141,6 +145,19 @@
 
             changeCity(cityKey) {
                 if (!CITY_PRESETS[cityKey]) return;
+                this.city.loadCityPreset(cityKey);
+                this.activateCityPreset(cityKey);
+            }
+
+            requestCityChange(cityKey) {
+                if (!CITY_PRESETS[cityKey])return Promise.resolve(false);
+                if(window.DriverBoot)
+                    return window.DriverBoot.switchCity(this,cityKey);
+                this.changeCity(cityKey);
+                return Promise.resolve(true);
+            }
+
+            activateCityPreset(cityKey) {
                 this.currentCityKey = cityKey;
                 const preset = CITY_PRESETS[cityKey];
 
@@ -148,7 +165,6 @@
                 this.scene.fog.color.setHex(preset.skyColor);
                 this.sunLight.color.setHex(preset.sunColor);
 
-                this.city.loadCityPreset(cityKey);
                 if(this.trainLine)this.trainLine.setCity(this.city);
 
                 // Atualiza estilo dos botões de cidade na UI
@@ -2279,8 +2295,14 @@
                 });
 
                 window.addEventListener('keydown', (e) => {
-                    this.audio.init();
                     const code = e.code;
+                    if(code==='Escape'&&!e.repeat){
+                        e.preventDefault();
+                        if(window.DriverBoot)window.DriverBoot.togglePauseMenu();
+                        return;
+                    }
+                    if(this.loadingActive||this.isPaused)return;
+                    this.audio.init();
                     if (code === 'KeyW' || code === 'ArrowUp') this.input.up = true;
                     if (code === 'KeyS' || code === 'ArrowDown') this.input.down = true;
                     if (code === 'KeyA' || code === 'ArrowLeft') this.input.left = true;
@@ -2350,7 +2372,13 @@
                 const exitButton=document.getElementById('btn-leave-interior');
                 if(exitButton)exitButton.addEventListener('click',()=>this.leaveInterior());
                 const loadButton=document.getElementById('btn-load-home');
-                if(loadButton)loadButton.addEventListener('click',()=>this.loadHomeGame());
+                if(loadButton)loadButton.addEventListener('click',()=>{
+                    if(window.DriverBoot)window.DriverBoot.loadSavedGame(this);
+                    else this.loadHomeGame();
+                });
+                document.getElementById('btn-main-menu').addEventListener('click',()=>{
+                    if(window.DriverBoot)window.DriverBoot.openMenu();
+                });
                 document.getElementById('btn-missions').addEventListener('click', () => {
                     document.getElementById('missions-modal').classList.remove('hidden');
                 });
@@ -2488,6 +2516,12 @@
                     this.fpsTimer = 0;
                 }
 
+                if(this.loadingActive)return;
+                if(this.isPaused){
+                    this.renderer.render(this.scene,this.camera);
+                    return;
+                }
+
                 if (this.inReplayMode) {
                     this.updateReplayPlayback(dt);
                     this.renderer.render(this.scene, this.camera);
@@ -2541,9 +2575,8 @@
             }
         }
 
-        // Inicializa o Jogo quando a janela carregar
+        // O motor WebGL é criado somente após o usuário iniciar no menu.
         window.onload = function () {
-            window.DriverGame = new Driver2GameEngine();
-            window.DriverGame.animate();
+            window.DriverBoot = new DriverBootFlow();
         };
     

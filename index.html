@@ -12,6 +12,74 @@
 </head>
 <body class="relative">
 
+    <!-- Menu inicial: somente HTML/CSS, sem simulação nem canvas no background -->
+    <main id="driver-main-menu" aria-label="Menu principal do Driver 2">
+        <div class="d2-menu-backdrop" aria-hidden="true">
+            <div class="d2-horizon"></div><div class="d2-road"></div>
+            <div class="d2-car-shape"><span></span></div>
+        </div>
+        <div class="d2-menu-layout">
+            <header class="d2-brand">
+                <p class="d2-eyebrow">BACK ON THE STREETS • THREE.JS EDITION</p>
+                <h1>DRIVER <em>2</em></h1>
+                <p class="d2-tagline">QUATRO CIDADES. UMA PERSEGUIÇÃO SEM FIM.</p>
+            </header>
+            <section class="d2-menu-panel" aria-label="Modos de jogo">
+                <p class="d2-menu-heading">MENU PRINCIPAL</p>
+                <button id="d2-start-story" class="d2-menu-choice d2-primary" type="button">
+                    <span>01</span><strong>UNDERCOVER</strong><small>Campanha • Chicago</small>
+                </button>
+                <button id="d2-start-ride" class="d2-menu-choice" type="button">
+                    <span>02</span><strong>TAKE A RIDE</strong><small>Explorar a cidade</small>
+                </button>
+                <button id="d2-continue" class="d2-menu-choice" type="button" disabled>
+                    <span>03</span><strong>LOAD GAME</strong><small id="d2-save-label">Sem save da casa</small>
+                </button>
+                <button id="d2-driving-games" class="d2-menu-choice" type="button">
+                    <span>04</span><strong>DRIVING GAMES</strong><small>Modos de direção</small>
+                </button>
+                <button id="d2-options-btn" class="d2-menu-choice" type="button">
+                    <span>05</span><strong>OPTIONS</strong><small>Gráficos e acessibilidade</small>
+                </button>
+                <button id="d2-resume" class="d2-resume hidden" type="button">RETOMAR PARTIDA</button>
+            </section>
+            <aside class="d2-city-panel" aria-label="Cidade para passeio livre">
+                <p class="d2-menu-heading">SELECIONE UMA CIDADE</p>
+                <div id="d2-city-list" class="d2-cities">
+                    <button data-city="chicago" class="d2-city selected" aria-pressed="true" type="button">CHICAGO <span>EUA</span></button>
+                    <button data-city="havana" class="d2-city" aria-pressed="false" type="button">HAVANA <span>CUBA</span></button>
+                    <button data-city="vegas" class="d2-city" aria-pressed="false" type="button">LAS VEGAS <span>NEVADA</span></button>
+                    <button data-city="rio" class="d2-city" aria-pressed="false" type="button">RIO DE JANEIRO <span>BRASIL</span></button>
+                </div>
+                <p id="d2-city-hint">Take a Ride. A campanha começa em Chicago.</p>
+                <div id="d2-options" class="d2-options hidden">
+                    <label><input id="d2-opt-models" type="checkbox" checked> Modelos 3D gratuitos (CC0)</label>
+                    <label><input id="d2-opt-scanlines" type="checkbox" checked> Efeito de linhas PS1</label>
+                    <label><input id="d2-opt-reduced-motion" type="checkbox"> Reduzir animações de interface</label>
+                </div>
+            </aside>
+        </div>
+        <p class="d2-menu-footer">ENTER: INICIAR • ESC: MENU / RETOMAR • HOMENAGEM FAN-MADE</p>
+    </main>
+
+    <!-- Progresso aferido em tarefas reais de construção, rede e GPU -->
+    <section id="driver-loading" class="hidden" role="status" aria-live="polite" aria-atomic="true">
+        <div class="d2-loading-panel">
+            <p class="d2-eyebrow">DRIVER 2 • CARREGAMENTO DE CENÁRIO</p>
+            <h2 id="d2-load-title">CARREGANDO CHICAGO</h2>
+            <div class="d2-progress-outer" role="progressbar" aria-label="Carregamento real"
+                aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="d2-progress-track">
+                <div id="d2-progress-fill"></div>
+            </div>
+            <div class="d2-progress-detail">
+                <span id="d2-load-status">Preparando...</span>
+                <strong id="d2-load-percent">0%</strong>
+            </div>
+            <p id="d2-load-errors" class="d2-load-note">Modelos externos indisponíveis usam alternativas low-poly.</p>
+            <button id="d2-load-return" type="button" class="d2-resume hidden">VOLTAR AO MENU</button>
+        </div>
+    </section>
+
     <!-- CANVAS 3D THREE.JS -->
     <canvas id="game-canvas"></canvas>
 
@@ -22,7 +90,7 @@
     <div id="scanline-overlay" class="ps1-scanlines fixed inset-0 z-10"></div>
 
     <!-- HUD PRINCIPAL DO DRIVER 2 -->
-    <div id="hud-layer" class="fixed inset-0 z-20 pointer-events-none flex flex-col justify-between p-3 sm:p-5">
+    <div id="hud-layer" class="hidden fixed inset-0 z-20 pointer-events-none flex flex-col justify-between p-3 sm:p-5">
         
         <!-- TOP ROW: Barras Damage/Felony (Esq) | Missão/Timer (Centro) | Controles/Arquitetura (Dir) -->
         <div id="hud-top-row" class="flex justify-between items-start gap-2 w-full">
@@ -58,10 +126,10 @@
                 <div class="hud-extra-controls mt-1 pt-1.5 border-t border-slate-800">
                     <div class="text-[10px] text-slate-400 uppercase font-bold mb-1">CIDADE ATUAL (DRIVER 2):</div>
                     <div class="grid grid-cols-2 gap-1">
-                        <button onclick="window.DriverGame.changeCity('chicago')" id="city-btn-chicago" class="city-pill text-[10px] font-extrabold py-1 px-1.5 rounded bg-amber-500 text-slate-950 border border-amber-300 transition">🏙️ CHICAGO</button>
-                        <button onclick="window.DriverGame.changeCity('havana')" id="city-btn-havana" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">🌴 HAVANA</button>
-                        <button onclick="window.DriverGame.changeCity('vegas')" id="city-btn-vegas" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">🎰 LAS VEGAS</button>
-                        <button onclick="window.DriverGame.changeCity('rio')" id="city-btn-rio" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">⛰️ RIO DE JANEIRO</button>
+                        <button onclick="window.DriverGame.requestCityChange('chicago')" id="city-btn-chicago" class="city-pill text-[10px] font-extrabold py-1 px-1.5 rounded bg-amber-500 text-slate-950 border border-amber-300 transition">🏙️ CHICAGO</button>
+                        <button onclick="window.DriverGame.requestCityChange('havana')" id="city-btn-havana" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">🌴 HAVANA</button>
+                        <button onclick="window.DriverGame.requestCityChange('vegas')" id="city-btn-vegas" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">🎰 LAS VEGAS</button>
+                        <button onclick="window.DriverGame.requestCityChange('rio')" id="city-btn-rio" class="city-pill text-[10px] font-bold py-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition">⛰️ RIO DE JANEIRO</button>
                     </div>
                 </div>
 
@@ -158,6 +226,7 @@
                     <button id="btn-architecture" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded-lg border border-indigo-400 shadow-lg flex items-center gap-1.5 transition">
                         <span>📁</span> <span class="hidden sm:inline">Arquitetura & Assets</span><span class="sm:hidden">Código</span>
                     </button>
+                    <button id="btn-main-menu" class="bg-slate-800 hover:bg-slate-700 text-xs font-bold px-3 py-2 rounded-lg border border-slate-600" title="Menu (Esc)">☰ MENU</button>
                     <button id="btn-missions" class="bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs sm:text-sm font-extrabold px-3 py-2 rounded-lg border border-amber-200 shadow-lg flex items-center gap-1.5 transition">
                         <span>🏁</span> <span>Modos & Missões</span>
                     </button>
@@ -274,19 +343,19 @@
             <div class="mb-5">
                 <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">1. Escolha a Cidade Clássica:</div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <button onclick="window.DriverGame.changeCity('chicago')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
+                    <button onclick="window.DriverGame.requestCityChange('chicago')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
                         <div class="font-extrabold text-amber-400 text-xs">🏙️ CHICAGO (EUA)</div>
                         <div class="text-[11px] text-slate-400 mt-0.5">Ponte Levadiça no Rio, céu nublado, Muscle V8 e Chicago PD.</div>
                     </button>
-                    <button onclick="window.DriverGame.changeCity('havana')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
+                    <button onclick="window.DriverGame.requestCityChange('havana')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
                         <div class="font-extrabold text-pink-400 text-xs">🌴 HAVANA (CUBA)</div>
                         <div class="text-[11px] text-slate-400 mt-0.5">Prédios coloniais pastel, palmeiras, entardecer caribenho e clássicos 50s.</div>
                     </button>
-                    <button onclick="window.DriverGame.changeCity('vegas')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
+                    <button onclick="window.DriverGame.requestCityChange('vegas')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
                         <div class="font-extrabold text-purple-400 text-xs">🎰 LAS VEGAS (NOITE)</div>
                         <div class="text-[11px] text-slate-400 mt-0.5">Cassinos com fachadas Neon brilhantes, noite no deserto e limusines V8.</div>
                     </button>
-                    <button onclick="window.DriverGame.changeCity('rio')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
+                    <button onclick="window.DriverGame.requestCityChange('rio')" class="p-2.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-amber-400 text-left transition">
                         <div class="font-extrabold text-emerald-400 text-xs">⛰️ RIO DE JANEIRO</div>
                         <div class="text-[11px] text-slate-400 mt-0.5">Praia costeira, morro com Cristo Redentor iluminado e pôr do sol tropical.</div>
                     </button>
@@ -742,6 +811,8 @@ git push -u origin main</pre>
     <script src="./js/gameplay/home-save.js"></script>
     <script src="./js/render/driver-camera-rig.js"></script>
     <script src="./js/render/impact-feedback.js"></script>
+    <script src="./js/ui/driver-load-scheduler.js"></script>
+    <script src="./js/ui/driver-boot-flow.js"></script>
     <script src="./js/engine/driver2-game-engine.js"></script>
 </body>
 </html>

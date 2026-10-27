@@ -5,7 +5,7 @@
          * ============================================================================
          */
         class CityBuilder {
-            constructor(scene, presetKey = 'chicago') {
+            constructor(scene, presetKey = 'chicago', buildNow = true) {
                 this.scene = scene;
                 this.cityGroup = new THREE.Group();
                 this.scene.add(this.cityGroup);
@@ -34,10 +34,32 @@
                 this.secretGateMesh = null;
                 this.secretGateBoxIndex = -1;
 
-                this.loadCityPreset(presetKey);
+                this.preset=CITY_PRESETS[presetKey] || CITY_PRESETS.chicago;
+                this.ready=false;
+                if(buildNow)this.loadCityPreset(presetKey);
             }
 
             loadCityPreset(presetKey) {
+                this.resetCityForPreset(presetKey);
+                this.buildEnvironment();
+                this.ready=true;
+            }
+
+            async loadCityPresetProgressive(presetKey, onProgress=()=>{}) {
+                this.resetCityForPreset(presetKey);
+                const total=12; // infraestrutura, canal, nove fileiras, detalhes
+                let done=0;
+                for(const stage of this.buildEnvironmentStages()){
+                    done++;
+                    onProgress(Math.min(1,done/total),stage);
+                    await new Promise(resolve=>requestAnimationFrame(resolve));
+                }
+                this.ready=true;
+                onProgress(1,'Cidade construída com sucesso');
+            }
+
+            resetCityForPreset(presetKey) {
+                this.ready=false;
                 this.preset = CITY_PRESETS[presetKey] || CITY_PRESETS.chicago;
                 this.buildSequence++;
 
@@ -75,10 +97,13 @@
                 this.signalClock = 0;
                 this.lastSignalPhase = -1;
 
-                this.buildEnvironment();
             }
 
             buildEnvironment() {
+                for(const _stage of this.buildEnvironmentStages()){}
+            }
+
+            *buildEnvironmentStages() {
                 const asphTex = PS1TextureFactory.createAsphaltTexture();
                 asphTex.repeat.set(64, 64);
 
@@ -94,6 +119,7 @@
                 DriverStreetFurniture.build(this);
                 this.buildTrafficLights();
                 this.decorateStreetsWithCC0();
+                yield 'Asfalto, ruas, sinalização e semáforos';
 
                 // 2. Canal Central (Rio Chicago / Baía de Havana / Canal da Orla do Rio)
                 const riverGeo = new THREE.PlaneGeometry(840, 32);
@@ -141,6 +167,7 @@
                 this.bridgeNorthLeaf.add(deckN, railN1, railN2);
 
                 this.cityGroup.add(this.bridgeSouthLeaf, this.bridgeNorthLeaf);
+                yield 'Canal, pontes e vias de acesso';
 
                 // 4. Monumentos Exclusivos por Cidade (Rio de Janeiro: Morro do Corcovado + Cristo Redentor + Praia)
                 if (this.preset.id === 'rio') {
@@ -155,7 +182,7 @@
                 const coords = [];
                 for(let p=-320;p<=320;p+=80) coords.push(p);
 
-                coords.forEach(bx => {
+                for(const [rowIndex,bx] of coords.entries()) {
                     coords.forEach(bz => {
                         if (Math.abs(bz - 50) < 35) return;
                         if (bx === 0 && bz === 0) return;
@@ -209,11 +236,13 @@
                         this.spawnDestructibleProp(blockX - 23, blockZ - 23, 'cone');
                         this.spawnDestructibleProp(blockX + 23, blockZ - 23, 'trash');
                     });
-                });
+                    yield 'Quarteirões e edifícios '+(rowIndex+1)+'/'+coords.length;
+                }
                 UrbanDistricts.decorate(this);
                 this.buildInteriorRooms();
                 DriverChicagoTrain.buildInfrastructure(this);
                 if(this.preset.id==='chicago')this.buildCaineCompoundDetails();
+                yield 'Interiores, monumentos e objetos do cenário';
             }
 
             buildRoadMarkings() {
