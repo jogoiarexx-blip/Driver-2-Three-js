@@ -152,3 +152,11 @@ O GitHub Actions avalia testes lógicos de Node; a validação visual completa e
 - Use **MAPA GERAL** ou tecla **G** para reduzir o zoom do radar e encontrar pontos mais distantes. Dentro de um prédio, o minimapa mostra um esquema do cômodo, com mesa e saída.
 - A polícia reconhece os limites da nova área urbana ao calcular interceptações.
 - Estilos e nomes de locais clássicos servem de referência, mas o traçado das ruas e a sequência da história ainda não são reproduções 1:1 do PS1.
+
+## Chicago 03 — Train Pursuit (trem elevado e estação)
+
+- Nova missão de história, com 120 s de limite, baseada em **Train Pursuit**, a terceira missão de Driver 2. Siga o trem e não fique mais de 132 metros distante por mais de 6 segundos. Na estação, saia do carro e suba pela **rampa cinza à esquerda dos trilhos**; a chegada só conta quando Tanner alcança a plataforma elevada a pé.
+- Trem low-poly original de três carros, janelas, rodas e faróis. Linha elevada atravessa Chicago, incluindo a região do canal; utiliza instancing para dormentes e pilares. A estação tem rampa caminhável a 11,3 metros de altitude, e recebe indicação no radar.
+- O estado do trem (posição, chegada, tempo e perda de contato) faz parte do save doméstico em localStorage.
+- O percurso é **uma adaptação retificada do traçado original do PS1**, ainda sem o circuito com bifurcações real. A missão ainda não é um port fiel 1:1 de Driver 2; os modelos são criações leves compatíveis com Three.js r128.
+- Execute testes: `node --test tests/*.test.cjs`. Um teste automatizado da física do trem e da rampa não substitui uma partida manual e inspeção do WebGL no browser.
