@@ -88,6 +88,10 @@ class DriverChicagoTrain {
             }
             this.group.add(carriageGroup);
         }
+        // Decorar somente o trem da missão, dentro do grupo móvel.
+        if(typeof DriverChicagoOverhaul!=='undefined' &&
+            typeof DriverSpecialStructures!=='undefined')
+            DriverChicagoOverhaul.detailTrain(this);
         this.group.position.set(0,11.65,DriverChicagoTrain.START_Z);
         scene.add(this.group);
         this.reset(false);
