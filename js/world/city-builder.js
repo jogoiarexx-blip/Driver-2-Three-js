@@ -1270,8 +1270,8 @@
                 if(city!=='chicago'&&city!=='havana')return;
                 // Pontos reais na calçada, fora das caixas dos prédios.
                 const place=city==='chicago'?
-                    {x:-64,z:-160,type:'story_tipoff'}:
-                    {x:16,z:-240,type:'story_havana_lead'};
+                    {x:-64,z:-144,type:'story_tipoff'}:
+                    {x:16,z:-224,type:'story_havana_lead'};
                 const mat=new THREE.MeshBasicMaterial({
                     color:0x22c55e,transparent:true,opacity:.78,
                     depthWrite:false

@@ -533,3 +533,41 @@ não substituem validar carros atravessando cruzamentos no navegador.
 - Para ter o modelo GLB no ZIP final, inclua
   `assets/vehicles/carro_driver2_otimizado.glb` antes de empacotar.
   Sem esse binário, o importador local continua sendo a opção.
+
+
+## Revisão GLB publicado — carregamento robusto (27/10/2026)
+
+O arquivo `assets/vehicles/carro_driver2_otimizado.glb` **agora faz
+parte do repositório**, adicionado pelo usuário no commit `1744a9f`
+(1.592.952 bytes; SHA-256
+`b692342cd53f519fe39c48c24e62f9f9ef6d9aa65e2be02884aaa50a9e80ae4f`).
+
+### O que mudou
+
+- O carregador prioriza **o GLB publicado no GitHub Pages** em vez de
+  antigas versões do carro importadas para IndexedDB. Caso o site não
+  consiga baixar o arquivo, tenta o modelo armazenado localmente.
+- Uma nova importação manual ainda tem prioridade imediata na sessão,
+  aplicando o novo arquivo aos veículos já personalizados sem criar
+  sobreposição de dois modelos.
+- Erros de download não deixam uma `Promise(null)` permanente: um
+  carregamento posterior pode recuperar o GLB.
+- O boot espera até 6,5 s pelo GLB principal, aplicando modelo e
+  pintura **antes** de preparar shaders. Modelos CC0 auxiliares ainda
+  possuem fallback sem impedir a partida.
+- O substituidor retorna sucesso/falha de maneira explícita e somente
+  marca o veículo como customizado quando o modelo foi aceito.
+- Marcadores das missões Chicago 01 e Havana 09 deslocados para as
+  calçadas em `(-64,-144)` e `(16,-224)`, fora das faixas de direção.
+- Novos testes automáticos verificam o GLB **real do repositório**
+  (bytes, glTF 2, textura, dimensões e SHA-256), prioridade de fonte,
+  orientação do carro, reimportação, fallback offline e retry.
+
+### Ainda não certificado
+
+Os testes em Node e o deploy do Pages não equivalem a completar uma
+missão dirigindo no navegador. A malha GLB precisa de inspeção visual
+de alinhamento das rodas, textura e FPS em uma sessão longa.
+A versão nova não altera a campanha, os saves de Tanner ou o
+conjunto de colisores de prédios. O modelo em si é compartilhado;
+sua pintura é individual por veículo.

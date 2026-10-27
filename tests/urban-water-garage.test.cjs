@@ -162,8 +162,8 @@ test('menu e carregamento ligam sistemas sem paths absolutos',()=>{
 });
 test('spawns de missões ficam fora dos colliders principais',()=>{
     const city=read('js/world/city-builder.js');
-    assert.match(city,/x:-64,z:-160,type:'story_tipoff'/);
-    assert.match(city,/x:16,z:-240,type:'story_havana_lead'/);
+    assert.match(city,/x:-64,z:-144,type:'story_tipoff'/);
+    assert.match(city,/x:16,z:-224,type:'story_havana_lead'/);
     assert.equal(Road.roadDistance(-64),16);
     assert.equal(Road.roadDistance(16),16);
 });

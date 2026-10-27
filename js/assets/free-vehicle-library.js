@@ -13,6 +13,8 @@ class FreeVehicleAssets {
         this.failed = new Set();
         this.userTemplate=null;
         this.userPromise=null;
+        this.userModelSource='pending';
+        this.userModelError='';
         this.importedCount=0;
         this.userModelUrl='./assets/vehicles/carro_driver2_otimizado.glb';
         this.updateButton();
@@ -118,20 +120,50 @@ class FreeVehicleAssets {
     getUserTemplate(){
         if(this.userTemplate)return Promise.resolve(this.userTemplate);
         if(!this.userPromise){
+            // O GLB que agora integra o GitHub tem prioridade sobre
+            // importações antigas persistidas no navegador.
             this.userPromise=(async()=>{
-                const stored=await FreeVehicleAssets.storedBytes();
-                if(stored){
-                    const local=await FreeVehicleAssets.parseGLB(stored);
-                    if(local){this.userTemplate=local;return local}
+                let model=null;
+                if(THREE.GLTFLoader){
+                    model=await new Promise(resolve=>{
+                        try{
+                            const loader=new THREE.GLTFLoader();
+                            loader.load(this.userModelUrl,
+                                gltf=>resolve(gltf?.scene||null),
+                                undefined,()=>resolve(null));
+                        }catch(_){resolve(null)}
+                    });
                 }
-                if(!THREE.GLTFLoader)return null;
-                return new Promise(resolve=>{
-                    new THREE.GLTFLoader().load(this.userModelUrl,gltf=>{
-                        this.userTemplate=gltf.scene;
-                        resolve(this.userTemplate);
-                    },undefined,()=>resolve(null));
-                });
-            })();
+                if(model){
+                    this.userTemplate=model;
+                    this.userModelSource='github';
+                    this.userModelError='';
+                    return model;
+                }
+                // Um modelo carregado pelo usuário anteriormente ainda
+                // pode funcionar offline se o GitHub não responder.
+                const stored=await FreeVehicleAssets.storedBytes();
+                if(stored)model=await FreeVehicleAssets.parseGLB(stored);
+                if(model){
+                    this.userTemplate=model;
+                    this.userModelSource='local';
+                    this.userModelError='';
+                    return model;
+                }
+                this.userModelSource='unavailable';
+                this.userModelError='GLB nao carregou do GitHub nem do armazenamento local';
+                return null;
+            })().then(model=>{
+                // Um erro transitório não pode envenenar o cache para
+                // toda a sessão; a próxima tentativa poderá recuperar.
+                if(!model)this.userPromise=null;
+                return model;
+            }).catch(()=>{
+                this.userModelSource='unavailable';
+                this.userModelError='Erro inesperado ao processar o GLB';
+                this.userPromise=null;
+                return null;
+            });
         }
         return this.userPromise;
     }
@@ -144,8 +176,14 @@ class FreeVehicleAssets {
         if(!model)return false;
         this.userTemplate=model;
         this.userPromise=Promise.resolve(model);
+        this.userModelSource='imported';
+        this.userModelError='';
         this.enabled=true;
         await FreeVehicleAssets.persist(file);
+        // Reimportação substitui inclusive carros que já receberam GLB,
+        // sem duplicar a carroceria no chassi.
+        for(const car of this.engine.vehicles)
+            if(car._userCustomModel)car._userCustomModel=false;
         this.updateButton();
         this.decorateFleet();
         this.updateStatus();
@@ -163,7 +201,8 @@ class FreeVehicleAssets {
         wrapped.updateMatrixWorld(true);
         DriverUserCarPaint.prepare(wrapped,vehicle.color);
         vehicle._userCustomModel=false;
-        vehicle.applyCC0Model(wrapped,true);
+        const applied=vehicle.applyCC0Model(wrapped,true);
+        if(applied===false)return false;
         vehicle._userCustomModel=true;
         this.importedCount++;
         return true;
@@ -226,8 +265,11 @@ class FreeVehicleAssets {
         const count = this.engine.vehicles.filter(v => v._cc0ModelApplied).length;
         const custom=this.engine.vehicles.filter(v=>v._userCustomModel).length;
         el.textContent = this.enabled ?
-            (custom>0?'Carro Driver 2 GLB: '+custom+' veículos com pintura individual. ':
-                'Modelo personalizado: use IMPORTAR GLB para adicioná-lo. ')+
+            (custom>0?'Carro Driver 2 GLB ('+this.userModelSource+
+                '): '+custom+' veículos com pintura individual. ':
+                this.userModelSource==='unavailable'?
+                'GLB não disponível; carros alternativos ativos. ':
+                'Preparando carro_driver2_otimizado.glb… ')+
             'Modelos 3D ativos: '+count+
             (this.failed.size?' • Alguns externos indisponíveis.':'') :
             'Malhas PS1 procedurais ativas. Pressione M para ativar 3D.';

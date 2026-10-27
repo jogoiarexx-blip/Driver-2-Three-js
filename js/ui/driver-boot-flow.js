@@ -255,10 +255,33 @@ class DriverBootFlow {
                 'Carro 3D personalizado carregado e aplicado.':
                 'Não foi possível aplicar o GLB, mantidas malhas alternativas.');
         }
-        const names=[...new Set(game.vehicles.map(v=>library.getModelName(v))
-            .filter(Boolean))];
+        // GLB publicado em assets/vehicles é prioridade. Esperamos a
+        // aplicação no jogador antes de compilar shaders/câmera, evitando
+        // primeiro frame com carro provisório e troca brusca de modelo.
+        let userTemplate=null;
+        let userTimer=null;
+        try{
+            userTemplate=await Promise.race([
+                library.getUserTemplate(),
+                new Promise(resolve=>{
+                    userTimer=setTimeout(()=>resolve(null),6500);
+                })
+            ]);
+        }catch(_){userTemplate=null}
+        finally{if(userTimer!==null)clearTimeout(userTimer)}
+        if(userTemplate){
+            library.decorateFleet();
+            await Promise.resolve();
+            report(.25,'GLB Driver 2 carregado ('+
+                library.userModelSource+') • pintura e escala prontas');
+        }else{
+            report(.25,'GLB ainda indisponível • modelo provisório mantido');
+        }
+        const names=[...new Set(game.vehicles
+            .filter(v=>!(userTemplate && library.canUseDriver2Model(v)))
+            .map(v=>library.getModelName(v)).filter(Boolean))];
         if(!names.length) {
-            report(1,'Não há novos modelos 3D necessários');
+            report(1,userTemplate?'Carro GLB pronto':'Malhas alternativas prontas');
             return;
         }
         let finished=0,success=0,skipped=0;
@@ -277,8 +300,8 @@ class DriverBootFlow {
             finally{if(timeoutId!==null)clearTimeout(timeoutId)}
             if(model)success++;else skipped++;
             finished++;
-            report(finished/names.length,
-                'Modelos 3D: '+success+' carregados, '+skipped+
+            report(.25+.75*finished/names.length,
+                'Modelos externos: '+success+' carregados, '+skipped+
                 ' usando fallback ('+finished+'/'+names.length+')');
         }));
         game.freeVehicleAssets.decorateFleet();

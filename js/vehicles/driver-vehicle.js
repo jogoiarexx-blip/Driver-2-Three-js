@@ -255,11 +255,11 @@
             applyCC0Model(modelScene, shared = true) {
                 // Usuário pode substituir outro GLB manualmente. Apenas downloads
                 // automáticos não podem sobrescrever uma importação pessoal.
-                if (!modelScene || (this._userCustomModel && shared)) return;
+                if (!modelScene || (this._userCustomModel && shared)) return false;
                 const box = new THREE.Box3().setFromObject(modelScene);
                 const size = box.getSize(new THREE.Vector3());
                 if (!Number.isFinite(size.x + size.y + size.z) ||
-                    Math.min(size.x, size.y, size.z) < 0.01) return;
+                    Math.min(size.x, size.y, size.z) < 0.01) return false;
 
                 // Ajuste ao chassi físico, sem criar um segundo carro sobre o original.
                 const width = 2.45;
@@ -299,6 +299,7 @@
                 this.trunkPivot = null;
                 this._cc0ModelApplied = shared;
                 VehicleVisuals.setHeadlights(this, this.headlightsOn);
+                return true;
             }
 
             updatePhysics(dt, input, cityBuilder, effects, audio, isPlayer = false) {
