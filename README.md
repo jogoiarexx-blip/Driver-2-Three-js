@@ -103,3 +103,16 @@ Os arquivos JavaScript são scripts clássicos e continuam compatíveis com GitH
 - `tests/pursuit-and-collisions.test.cjs`: 15 testes reprodutíveis para impactos, limites de edifícios, justiça nas multas, mudanças de fase, ordens de checkpoints e ligações do HTML.
 
 Execute localmente: `node --test tests/*.test.cjs`. Os testes de lógica não substituem partidas completas no navegador nem validam fidelidade ao Driver 2 original.
+
+
+## Revisão — bloqueios inteligentes, impactos e HUD compacto
+
+- \`js/police/roadblock-director.js\`: valida vagas livres antes de instalar barricadas, não instala bloqueios atrás do carro e oferece distância/estado para o aviso do HUD; desativa barreiras quando Tanner abandona o veículo.
+- \`js/entities/pedestrians-roadblocks.js\`: bloqueio dinâmico aguarda 1,25 segundo de montagem com balizas piscantes. Apenas o carro conduzido pelo jogador destrói as barreiras; os policiais não podem furar os próprios bloqueios nem concluir a missão por Tanner.
+- Colidir com barricadas agora causa leve dano físico, desaceleração, faíscas e retorno visual.
+- \`js/render/impact-feedback.js\`: tremor de câmera e flash temporário após colisões, com intensidade amortecida e respeito a "movimento reduzido".
+- \`js/render/effects-manager.js\`: **pool fixo de 22 faíscas** reutilizáveis, sem alocar geometrias a cada batida.
+- HUD móvel: objetivos resumidos em duas linhas com botão de expansão; cidades/clima recolhíveis, progresso dos atos e aviso de bloqueio à frente. Os controles para dirigir continuam visíveis.
+- \`tests/roadblock-feedback-mobile.test.cjs\`: 15 testes reproduzíveis para bloqueios, simulação de armar/destruir, feedback, pool de faíscas e estrutura da interface.
+
+Os testes Node exercitam lógica e não substituem testes de partida/colisões em um navegador real.
