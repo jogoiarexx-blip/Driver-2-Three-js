@@ -5,9 +5,9 @@
  */
 class DriverIntruderPursuit {
     static ROUTE=Object.freeze([
-        {x:-80,z:0},{x:0,z:0},{x:0,z:80},
-        {x:80,z:80},{x:160,z:80},{x:160,z:0},
-        {x:240,z:0},{x:240,z:-80},{x:240,z:-160},{x:200,z:-160}
+        {x:-80,z:0},{x:0,z:0},{x:80,z:0},
+        {x:80,z:-80},{x:160,z:-80},{x:160,z:-160},
+        {x:240,z:-160},{x:200,z:-160}
     ]);
     static YARD=Object.freeze({x:200,z:-160});
     static MAX_GAP=150;
