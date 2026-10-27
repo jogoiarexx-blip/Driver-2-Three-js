@@ -87,6 +87,8 @@
                         walkSpeed:2.2+(i%5)*.22,
                         waitTimer:0,diveTimer:0,diveVx:0,diveVz:0,
                         walkPhase:i*.9,dir:i%2?1:-1,arms,legs,
+                        crossing:null,waitingCrossingPlan:null,
+                        walkCorners:0,signalWaitElapsed:0,
                         sleepTick:0,visibleTime:0
                     });
                 }
@@ -124,6 +126,8 @@
                     p.nextCorner=(edge+1)%4;
                     p.x=start.x;p.z=start.z;
                     p.waitTimer=.8;p.diveTimer=0;
+                    p.crossing=null;p.waitingCrossingPlan=null;
+                    p.walkCorners=0;p.signalWaitElapsed=0;
                     p.mesh.position.set(p.x,.35,p.z);
                     p.mesh.visible=false;
                     changed++;
@@ -302,7 +306,7 @@
                         {state:'walk',dx:0,dz:p.dir};
                     if(state.newDodge && playerCar && audio)
                         audio.playPedestrianDodgeVoice?.();
-                    if(state.state==='walk'){
+                    if(state.state==='walk'||state.state==='crossing'){
                         p.walkPhase+=dt*7.5;
                         const swing=Math.sin(p.walkPhase)*.48;
                         for(let i=0;i<2;i++){
@@ -317,7 +321,7 @@
                     }
                     p.mesh.rotation.z=state.state==='dodge'?.55:0;
                     p.mesh.position.set(p.x,
-                        .35+(state.state==='walk'?
+                        .35+(state.state==='walk'||state.state==='crossing'?
                         Math.abs(Math.sin(p.walkPhase))*.10:0),p.z);
                 }
 

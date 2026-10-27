@@ -52,6 +52,9 @@
                 this.lodStats=null;
                 this.lodSeconds=0;
                 this.roadAudit=null;
+                this.waterFoamMaterial=null;
+                this.coastVisuals=null;
+                this.parkGeometryCache=null;
                 if(buildNow)this.loadCityPreset(presetKey);
             }
 
@@ -110,6 +113,9 @@
                 this.lodStats=null;
                 this.lodSeconds=0;
                 this.roadAudit=null;
+                this.waterFoamMaterial=null;
+                this.coastVisuals=null;
+                this.parkGeometryCache=null;
                 this.destructibleProps = [];
                 this.debrisPieces=[];
                 this.debrisGeometry=null;
@@ -160,6 +166,7 @@
                 const river = new THREE.Mesh(riverGeo, riverMat);
                 river.position.set(0, 0.06, 50);
                 this.cityGroup.add(river);
+                DriverCoastalVisuals.build(this);
 
                 // Margens protegidas por paredes físicas correspondentes ao
                 // desenho; aberturas reais permitem uma queda no canal.
@@ -650,22 +657,38 @@
                 grass.position.set(cx, 0.21, cz);
                 this.cityGroup.add(grass);
 
-                const isTropical = (this.preset.id === 'havana' || this.preset.id === 'rio' || this.preset.id === 'vegas');
-                const trunkMat = new THREE.MeshLambertMaterial({ color: 0x78350f });
-                const leafMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
-
-                for (let i = -1; i <= 1; i += 2) {
-                    for (let j = -1; j <= 1; j += 2) {
-                        const tx = cx + i * 12;
-                        const tz = cz + j * 12;
-                        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, isTropical ? 5.5 : 3.5, 6), trunkMat);
-                        trunk.position.set(tx, isTropical ? 2.8 : 1.9, tz);
-                        const crown = new THREE.Mesh(
-                            new THREE.ConeGeometry(isTropical ? 3.8 : 3.2, isTropical ? 3.2 : 6.5, 7),
-                            leafMat
-                        );
-                        crown.position.set(tx, isTropical ? 6.0 : 5.5, tz);
-                        this.cityGroup.add(trunk, crown);
+                const tropical=this.preset.id==='rio'||
+                    this.preset.id==='havana';
+                const desert=this.preset.id==='vegas';
+                // Mesmas geometrias e materiais usados em todos os parques
+                // da cidade; troca de cidade libera os recursos normalmente.
+                if(!this.parkGeometryCache){
+                    this.parkGeometryCache={
+                        trunkGeo:new THREE.CylinderGeometry(
+                            desert?.45:.35,desert?.53:.55,
+                            desert?4.5:tropical?5.5:3.5,6),
+                        crownGeo:desert?
+                            new THREE.BoxGeometry(2.6,.58,.72):
+                            new THREE.ConeGeometry(
+                                tropical?3.8:3.2,tropical?3.0:6.5,7),
+                        trunkMat:new THREE.MeshLambertMaterial({
+                            color:desert?0x4a7c49:0x78350f}),
+                        leafMat:new THREE.MeshLambertMaterial({
+                            color:desert?0x629c59:
+                                this.preset.id==='rio'?0x15803d:
+                                tropical?0x339a5e:0x176338
+                        })
+                    };
+                }
+                const cache=this.parkGeometryCache;
+                for(let i=-1;i<=1;i+=2){
+                    for(let j=-1;j<=1;j+=2){
+                        const tx=cx+i*12,tz=cz+j*12;
+                        const trunk=new THREE.Mesh(cache.trunkGeo,cache.trunkMat);
+                        trunk.position.set(tx,desert?2.3:tropical?2.8:1.9,tz);
+                        const crown=new THREE.Mesh(cache.crownGeo,cache.leafMat);
+                        crown.position.set(tx,desert?4.1:tropical?6.0:5.5,tz);
+                        this.cityGroup.add(trunk,crown);
                     }
                 }
 
@@ -1195,6 +1218,7 @@
             update(dt, vehicles, onPropHitCallback) {
                 this.signalClock += dt;
                 this.refreshTrafficLights();
+                DriverCoastalVisuals.update(this,dt);
                 if(this.caineBridgeGate)
                     this.caineBridgeGate.visible=!!this.caineBridgeClosed;
                 const targetAngle = this.bridgeRaised ? 0.32 : 0.08;

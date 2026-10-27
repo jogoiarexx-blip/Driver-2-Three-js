@@ -148,3 +148,38 @@ policiais. Validar em GitHub Actions e verificar visualmente no jogo.
 mais detalhadas, prédios únicos, bairros reais com ruas próprias,
 eventos comerciais e medição WebGL/FPS. A versão não afirma um mapa
 geográfico 1:1 do original.
+
+
+---
+
+## REV travessias e cenário costeiro — 27/10/2026
+
+**Antes:** os pedestres nunca cruzavam entre quadras; toda caminhada
+ocorria em torno do mesmo quarteirão. A água era um plano colorido
+único e as margens não possuíam elementos ambientais exclusivos. Os
+parques de Las Vegas reutilizavam vegetação tropical.
+
+**Depois:**
+- `js/entities/pedestrian-sidewalk-nav.js`: planejamento da travessia
+  de 34m em corredores amostrados, usando ciclos do semáforo da
+  cidade, margem de segurança temporal, detecção de veículos e
+  término garantido da passagem. Respeita a mesma física de água e
+  os obstáculos existentes, sem adicionar colisores.
+- `js/entities/pedestrians-roadblocks.js`: animação de caminhada
+  também durante a passagem entre quadras e estado de travessia
+  reiniciado ao reutilizar atores.
+- `js/world/coastal-visuals.js` (novo): quatro lotes de
+  `InstancedMesh` com espuma, solo costeiro e oito plantas/
+  balizadores por cidade; estilo tropical, caribenho, deserto ou
+  industrial. Só a opacidade de material muda ao longo do tempo.
+- `js/world/city-builder.js`: inicializa/limpa o módulo costeiro,
+  compartilha geometrias em parques e substitui árvores tropicais
+  genéricas de Las Vegas por cactos.
+- `index.html`: script costeiro inserido na ordem de dependências.
+- `tests/signal-crosswalk-coast.test.cjs`: travessias, sinais,
+  barreiras, veículos, quatro regiões, orla e disposição dos lotes.
+
+**Ainda pendente:** testes jogados com pedestres, desempenho real,
+faixas semaforizadas por cruzamento, colisão individual entre
+pedestres e carros, geografia costeira 1:1, malhas de praia com
+declives e ondas físicas. Sem medição de FPS.

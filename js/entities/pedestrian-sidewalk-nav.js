@@ -72,9 +72,106 @@ class DriverPedestrianSidewalks {
         }
         return near;
     }
+    static crossingPlan(p,corner,city) {
+        if(!city?.isTrafficGreen || !city?.getTrafficPhase ||
+            !p.block)return null;
+        const directions=[
+            {dx:0,dz:-80,target:3,axis:'z'},
+            {dx:80,dz:0,target:0,axis:'x'},
+            {dx:0,dz:80,target:1,axis:'z'},
+            {dx:-80,dz:0,target:2,axis:'x'}
+        ];
+        const move=directions[corner%4];
+        const block={x:p.block.x+move.dx,z:p.block.z+move.dz};
+        // Somente quadras existentes: não atravessar canal nem entrar em
+        // locais usados por missões, parques ou edifícios especiais.
+        if(city.districtBuildings?.length &&
+            !city.districtBuildings.some(b=>b.x===block.x&&b.z===block.z))
+            return null;
+        if(!this.blockSafe(city,block))return null;
+        const from=this.route(p.block)[corner];
+        const destination=this.route(block)[move.target];
+        if(Math.hypot(from.x-p.x,from.z-p.z)>0.2)return null;
+        const distance=Math.hypot(destination.x-from.x,
+            destination.z-from.z);
+        if(distance>36||distance<28)return null;
+        const steps=12;
+        for(let i=0;i<=steps;i++){
+            const t=i/steps;
+            const x=from.x+(destination.x-from.x)*t;
+            const z=from.z+(destination.z-from.z)*t;
+            if(city.isWaterAt?.(x,z) ||
+                city.isPointBlocked?.(x,z,.45,0))return null;
+        }
+        return {x:destination.x,z:destination.z,
+            startX:from.x,startZ:from.z,
+            axis:move.axis,route:this.route(block),block,
+            nextCorner:(move.target+1)%4,distance};
+    }
+    static crossingGreen(city,plan) {
+        if(!plan || !city?.isTrafficGreen || !city?.getTrafficPhase)
+            return false;
+        const phase=city.getTrafficPhase();
+        if(!Number.isFinite(phase))return false;
+        // Semáforos: carros em Z têm verde 0..10, em X 12..22.
+        // Pedestres cruzam apenas na fase vermelha do eixo percorrido
+        // e com tempo suficiente para percorrer 34m a 6.6m/s.
+        const time=plan.distance/6.6+1.2;
+        if(plan.axis==='x')
+            return phase>=.4&&phase+time<=12 &&
+                !city.isTrafficGreen('x');
+        return phase>=12.4&&phase+time<=24 &&
+            !city.isTrafficGreen('z');
+    }
+    static crossingTrafficClear(plan,vehicles) {
+        if(!plan)return false;
+        for(const car of vehicles||[]){
+            if(!Number.isFinite(car?.x)||!Number.isFinite(car?.z))
+                continue;
+            const vx=Math.sin(car.heading||0)*(car.speed||0);
+            const vz=Math.cos(car.heading||0)*(car.speed||0);
+            for(const t of [0,.55,1.1]){
+                const x=car.x+vx*t,z=car.z+vz*t;
+                const ux=plan.x-plan.startX,uz=plan.z-plan.startZ;
+                const denominator=ux*ux+uz*uz;
+                const projected=denominator>0?Math.max(0,Math.min(1,
+                    ((x-plan.startX)*ux+(z-plan.startZ)*uz)/denominator)):0;
+                const nearestX=plan.startX+projected*ux;
+                const nearestZ=plan.startZ+projected*uz;
+                if(Math.hypot(x-nearestX,z-nearestZ)<7)return false;
+            }
+        }
+        return true;
+    }
+    static stepCrossing(p,dt,city) {
+        const plan=p.crossing;
+        if(!plan)return null;
+        const dx=plan.x-p.x,dz=plan.z-p.z;
+        const length=Math.hypot(dx,dz);
+        const delta=Math.min(length,6.6*dt);
+        if(length>1e-6){
+            p.x+=dx/length*delta;
+            p.z+=dz/length*delta;
+        }
+        if(length<=delta+.02){
+            p.x=plan.x;p.z=plan.z;
+            p.route=plan.route;p.block=plan.block;
+            p.nextCorner=plan.nextCorner;
+            p.crossing=null;
+            p.waitingCrossingPlan=null;
+            p.signalWaitElapsed=0;
+            return {state:'crossing',dx:dx/(length||1),
+                dz:dz/(length||1),completed:true};
+        }
+        return {state:'crossing',dx:dx/(length||1),dz:dz/(length||1)};
+    }
     static step(p,dt,city,vehicles){
         if(!p.route||p.route.length!==4)return {state:'idle'};
         dt=Math.min(.08,Math.max(0,dt));
+        // Nunca parar no meio da pista devido ao semáforo virar verde.
+        // O sinal é validado ANTES de iniciar e a travessia segue até
+        // o passeio oposto.
+        if(p.crossing)return this.stepCrossing(p,dt,city);
         if(p.diveTimer>0){
             p.diveTimer=Math.max(0,p.diveTimer-dt);
             return {state:'dodge'};
@@ -91,12 +188,36 @@ class DriverPedestrianSidewalks {
             p.waitTimer=Math.max(0,p.waitTimer-dt);
             return {state:'waiting'};
         }
+        // Durante espera no canto, a direção segura é reavaliada no
+        // próximo frame; nenhuma tentativa invade a pista no vermelho.
+
         const dest=p.route[p.nextCorner%4];
         const dx=dest.x-p.x,dz=dest.z-p.z;
         const length=Math.hypot(dx,dz);
         const step=Math.min(length,(p.walkSpeed||2.65)*dt);
         if(length<=.045){
             p.x=dest.x;p.z=dest.z;
+            p.walkCorners=(p.walkCorners||0)+1;
+            // Um de cada três cantos tenta cruzar, para não formar uma
+            // fila de 28 pessoas no mesmo semáforo.
+            const want=p.waitingCrossingPlan ||
+                (p.walkCorners%3===0?
+                    this.crossingPlan(p,p.nextCorner%4,city):null);
+            if(want){
+                if(this.crossingGreen(city,want) &&
+                    this.crossingTrafficClear(want,vehicles)){
+                    p.crossing=want;p.waitingCrossingPlan=null;
+                    p.signalWaitElapsed=0;
+                    return this.stepCrossing(p,dt,city);
+                }
+                p.signalWaitElapsed=(p.signalWaitElapsed||0)+dt;
+                if(p.signalWaitElapsed<25){
+                    p.waitingCrossingPlan=want;
+                    return {state:'signal_wait'};
+                }
+                p.waitingCrossingPlan=null;
+                p.signalWaitElapsed=0;
+            }
             p.nextCorner=(p.nextCorner+1)%4;
             return {state:'walk',dx:0,dz:0};
         }

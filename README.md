@@ -708,3 +708,48 @@ ordem de carregamento e preservação de LOD. Ainda é necessária uma
 sessão em navegador para inspecionar cenários e pedestres em movimento;
 não há medição real de FPS antes/depois ou confirmação de quatro mapas
 fielmente reproduzidos. O conteúdo não modifica rotas de missões.
+
+
+## REV Travessias semaforizadas / orlas regionais (27/10/2026)
+
+### Pedestres (implementado)
+- O módulo `DriverPedestrianSidewalks` continua usando o passeio em anéis
+  no entorno dos quarteirões, mas agora pode atravessar para um
+  **quarteirão vizinho** pelas quatro direções. Usa o mesmo ciclo de
+  24 segundos dos semáforos existentes: trânsito Z verde 0–10s,
+  trânsito X verde 12–22s. Só inicia a travessia quando os carros do
+  eixo correspondente estão no vermelho e ainda há tempo para completar
+  os 34 metros entre as duas calçadas.
+- Antes de entrar na pista, valida o corredor inteiro contra muros,
+  água e construções, exige quarteirão existente e verifica os veículos
+  em posições atuais e previstas. Após iniciar, conclui a travessia sem
+  parar no meio da rua devido à mudança de sinal.
+- Pedestres continuam reutilizando **somente 28 personagens**. A
+  animação de caminhada também é usada durante a travessia. A esquiva
+  permanece na calçada, e o código não mexe nas rotas de missões.
+
+### Vegetação / litoral (implementado)
+- Adicionado `js/world/coastal-visuals.js`: o acabamento de água
+  usa uma faixa de espuma estática instanciada com transparência
+  animada lentamente, sem novas luzes, colisores ou shaders externos.
+  A superfície de água original permanece a `y=0.06`.
+- Três malhas instanciadas adicionais compõem a faixa costeira e
+  vegetação/defensas, conforme a região: **Chicago**, cais industrial;
+  **Havana**, areia e palmeiras; **Las Vegas**, margem desértica e cactos;
+  **Rio**, areia clara e palmeiras tropicais. O conjunto usa **quatro
+  lotes instanciados** e oito plantas/balizadores por cidade; a ponte e
+  as ruas permanecem livres.
+- Parques compartilham geometria/material entre seus elementos e
+  **Las Vegas usa cactos**, não árvores tropicais. Geometrias são
+  descartadas ao trocar de cidade, usando o sistema de limpeza WebGL.
+
+### Limites importantes
+- Este é um acabamento procedural leve, **não são praias navegáveis ou
+  uma reconstrução geográfica** do litoral das cidades do Driver 2
+  original. Pedestres ainda não possuem pathfinding completo ou
+  semáforos próprios interativos; os ciclos existentes controlam suas
+  travessias.
+- Novos testes cobrem fases, veículos em cruzamentos, continuidade da
+  passagem, obstáculos, estilos regionais, contagem de instâncias,
+  zonas de segurança e carregamento. Testes automatizados não
+  certificam a experiência visual ou FPS em navegador.
