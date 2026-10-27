@@ -37,6 +37,9 @@
                 this.pursuitChapter = new DriverPursuitChapter();
                 this.dropDirector=new DriverTailingDropMission();
                 this.intruderDirector=new DriverIntruderPursuit();
+                this.caineDirector=new DriverCaineCompound();
+                this.caineStatus=null;
+                this.caineVans=[];
                 this.intruderStatus=null;
                 this.intruderBlocker=null;
                 this.safeHouseEscape=new DriverSafeHouseEscape();
@@ -293,7 +296,7 @@
             }
 
             startMission(type) {
-                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop'||type==='story_safehouse'||type==='story_intruder') &&
+                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop'||type==='story_safehouse'||type==='story_intruder'||type==='story_caine') &&
                     this.currentCityKey!=='chicago')this.changeCity('chicago');
                 document.getElementById('missions-modal').classList.add('hidden');
                 document.getElementById('center-announcement').classList.add('hidden');
@@ -315,6 +318,11 @@
                 this.dropStatus=null;
                 this.intruderDirector.reset();
                 this.intruderStatus=null;
+                this.caineDirector.reset();
+                this.caineStatus=null;
+                this.caineVans=[];
+                this.city.caineBridgeClosed=false;
+                this.city.bridgeRaised=false;
                 this.intruderBlocker=null;
                 this.safeHouseEscape.reset();
                 this.safeHouseStatus=null;
@@ -343,6 +351,9 @@
                 const intruderPanel=document.getElementById('intruder-chase-progress');
                 if(intruderPanel)intruderPanel.classList.toggle('hidden',
                     type!=='story_intruder');
+                const cainePanel=document.getElementById('caine-escape-progress');
+                if(cainePanel)cainePanel.classList.toggle('hidden',
+                    type!=='story_caine');
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
                 const titleEl = document.getElementById('mission-title');
@@ -373,6 +384,33 @@
                         maxSpeed:52,accel:30
                     });
                     this.vehicles.push(this.targetCar);
+                } else if(type === 'story_caine'){
+                    this.missionActive=true;
+                    this.missionTimeLeft=170;
+                    this.setWeather('day');
+                    this.felony=0;
+                    // Tanner foge do galpão onde Jericho o deixou.
+                    const room=this.city.interiors.find(p=>p.id==='warehouse');
+                    this.mode='on_foot';
+                    this.interiorPlace=room||null;
+                    const spawn=room?room.exit:{x:200,z:-175};
+                    this.tanner.setPosition(spawn.x,0,spawn.z+0.4,0);
+                    this.tanner.setVisible(true);
+                    this.playerCar.name='CARRO DE FUGA • CAINE';
+                    this.playerCar.setPaintColor(0xeab308);
+                    this.playerCar.x=DriverCaineCompound.CAR.x;
+                    this.playerCar.z=DriverCaineCompound.CAR.z;
+                    this.playerCar.y=0;
+                    this.playerCar.heading=0;
+                    this.playerCar.speed=0;
+                    this.playerCar.updateTransform();
+                    titleEl.textContent='CHICAGO 07: CAINE\'S COMPOUND';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='SAIA DO GALPÃO E FUJA DE CARRO';
+                    objEl.textContent='Saia pela porta (E), atravesse o pátio, '+
+                        'pegue o carro amarelo, escape das vans de Caine e '+
+                        'atravesse a ponte levadiça antes de fechar.';
                 } else if(type === 'story_intruder'){
                     this.missionActive=true;
                     this.missionTimeLeft=175;
@@ -796,6 +834,25 @@
                 return ok;
             }
 
+            activateCaineVans() {
+                if(this.caineVans.length)return this.caineVans;
+                const locations=[
+                    {x:240,z:-229,heading:0},
+                    {x:160,z:-195,heading:0}
+                ];
+                for(const spawn of locations){
+                    const van=new DriverVehicle(this.scene,{
+                        name:'VAN DE CAINE',color:0xeab308,bodyStyle:'truck',
+                        isTarget:true,isPolice:false,
+                        x:spawn.x,z:spawn.z,heading:spawn.heading,
+                        maxSpeed:30,accel:19
+                    });
+                    this.vehicles.push(van);
+                    this.caineVans.push(van);
+                }
+                return this.caineVans;
+            }
+
             spawnIntruderBlocker() {
                 if(this.intruderBlocker)return this.intruderBlocker;
                 const van=new DriverVehicle(this.scene,{
@@ -1161,6 +1218,41 @@
                         if(this.witnessCloseTime>=48){
                             this.triggerEndScreen('CHASE THE WITNESS CONCLUÍDA!',
                                 'Você acompanhou a testemunha até a estação.');
+                            return;
+                        }
+                    }
+                    if(this.missionType==='story_caine'){
+                        const outcome=this.caineDirector.update(dt,{
+                            position:this.getPlayerPosition(),
+                            mode:this.mode,interiorId:this.interiorPlace?.id||null
+                        });
+                        this.caineStatus=outcome;
+                        this.city.caineBridgeClosed=outcome.bridgeClosed;
+                        this.city.bridgeRaised=outcome.bridgeClosing;
+                        const counter=document.getElementById('mission-subcounter');
+                        counter.textContent=outcome.label;
+                        if(outcome.activateVans && !this.caineVans.length)
+                            this.activateCaineVans();
+                        if(outcome.changed){
+                            const objectives={
+                                find_car:'ENCONTRE O CARRO AMARELO NO PÁTIO (E PARA ENTRAR).',
+                                escape:'FUJA DAS VANS PELO DISTRITO INDUSTRIAL '+
+                                    'E SIGA PARA A PONTE (X=0, Z=50).',
+                                bridge:'PONTE FECHANDO! ATRAVESSE ANTES DO PRAZO. '+
+                                    'A SAÍDA É O ARCO VERDE APÓS A PONTE.'
+                            };
+                            if(objectives[outcome.phase])
+                                document.getElementById('objective-banner').textContent=
+                                    objectives[outcome.phase];
+                        }
+                        if(outcome.failed){
+                            this.triggerEndScreen('PONTE FECHOU!',
+                                'Tanner não conseguiu atravessar antes de a ponte levantar.');
+                            return;
+                        }
+                        if(outcome.completed){
+                            this.triggerEndScreen('CAINE\'S COMPOUND CONCLUÍDA!',
+                                'Tanner escapou das vans e cruzou a ponte levadiça.');
                             return;
                         }
                     }
@@ -1533,6 +1625,20 @@
                     }
                 }
 
+                const cainePanel=document.getElementById('caine-escape-progress');
+                if(cainePanel && this.missionType==='story_caine' && this.caineStatus){
+                    const phase=document.getElementById('caine-escape-phase');
+                    const fill=document.getElementById('caine-bridge-fill');
+                    const detail=document.getElementById('caine-escape-detail');
+                    const status=this.caineStatus;
+                    if(phase)phase.textContent=status.label;
+                    if(fill)fill.style.width=Math.round(
+                        status.bridgeSeconds/DriverCaineCompound.BRIDGE_SECONDS*100
+                    )+'%';
+                    if(detail)detail.textContent=status.bridgeClosing?
+                        'PONTE LEVADIÇA: '+Math.ceil(status.bridgeRemaining)+'s PARA FECHAR':
+                        'SAIA DO GALPÃO • PEGUE O CARRO • FUJA DAS VANS';
+                }
                 const intruderPanel=document.getElementById('intruder-chase-progress');
                 if(intruderPanel && this.missionType==='story_intruder' &&
                     this.intruderStatus){
@@ -1609,7 +1715,9 @@
                 const progress = document.getElementById('mission-compact-progress');
                 if (progress) {
                     let label = this.missionActive ? 'MISSÃO EM ANDAMENTO' : 'PASSEIO LIVRE';
-                    if (this.missionType === 'story_intruder') {
+                    if (this.missionType === 'story_caine') {
+                        label='CHICAGO 07 • COMPLEXO DE CAINE';
+                    } else if (this.missionType === 'story_intruder') {
                         label='CHICAGO 06 • PERSIGA O INVASOR';
                     } else if (this.missionType === 'story_safehouse') {
                         label='CHICAGO 05 • FUGA POLICIAL';
@@ -1781,6 +1889,12 @@
                 ctx.fillStyle = '#c084fc';
                 ctx.fillRect(gx - 4, gz - 4, 8, 8);
 
+                if(this.missionType==='story_caine'){
+                    const exit=DriverCaineCompound.BRIDGE;
+                    ctx.fillStyle='#4ade80';
+                    ctx.fillRect((exit.x-pos.x)*scale-5,
+                        -(exit.z-pos.z)*scale-5,10,10);
+                }
                 if(this.missionType==='story_intruder'&&this.targetCar){
                     const yard=DriverIntruderPursuit.YARD;
                     const bx=(yard.x-pos.x)*scale;

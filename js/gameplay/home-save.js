@@ -10,7 +10,7 @@ class DriverHomeSave {
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
-        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder'
+        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder','story_caine'
     ];
     constructor(storage) { this.storage=storage; }
 
@@ -67,6 +67,8 @@ class DriverHomeSave {
                 arrived:game.trainLine.arrived,
                 lost:game.trainLostSeconds||0
             }:null,
+            caine:game.missionType==='story_caine' && game.caineDirector?
+                game.caineDirector.export():null,
             intruder:game.missionType==='story_intruder' && game.intruderDirector?
                 game.intruderDirector.export(game.targetCar):null,
             safeEscape:game.missionType==='story_safehouse' &&
@@ -134,6 +136,14 @@ class DriverHomeSave {
         if(data.mission.pursuitPhase!=null){
             game.pursuitChapter.phase=DriverHomeSave.bounded(data.mission.pursuitPhase,0,2);
             game.pursuitChapter.elapsed=DriverHomeSave.bounded(data.mission.pursuitElapsed,0,24);
+        }
+        if(data.caine && game.missionType==='story_caine' && game.caineDirector){
+            game.caineDirector.restore(data.caine);
+            game.city.caineBridgeClosed=game.caineDirector.bridgeClosed;
+            game.city.bridgeRaised=game.caineDirector.bridgeClosing;
+            if(game.caineDirector.vansActivated &&
+                typeof game.activateCaineVans==='function')
+                game.activateCaineVans();
         }
         if(data.intruder && game.missionType==='story_intruder' &&
             game.intruderDirector){
