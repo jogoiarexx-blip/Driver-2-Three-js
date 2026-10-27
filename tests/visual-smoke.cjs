@@ -267,6 +267,73 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         await page.screenshot({path:path.join(DIR,'havana-capitolio-driving.png')});
         havanaVisual={...detail,walked:Number(distance.toFixed(3))};
       }
+      let vegasVisual=null;
+      if(city==='vegas'){
+        const sceneInfo=await page.evaluate(()=>{
+          const g=window.DriverGame,c=g.city;
+          const names=c.cityGroup.children.map(o=>o.name||'');
+          const stats=c.vegasOverhaulStats;
+          return {
+            active:!!stats,version:stats?.version||0,
+            strip:names.some(n=>n.startsWith('vegas-strip-')),
+            palms:names.some(n=>n.startsWith('vegas-strip-streets')),
+            desert:names.filter(n=>n.startsWith('vegas-desert')).length,
+            gardens:names.some(n=>n.startsWith('vegas-resort-gardens')),
+            casino:names.some(n=>n.startsWith('vegas-casino-landmark')),
+            hotel:names.some(n=>n.startsWith('vegas-hotel-landmark')),
+            colliderDelta:stats?.addedColliders,
+            pointLights:stats?.pointLights
+          };
+        });
+        assert(sceneInfo.active&&sceneInfo.version===2&&
+          sceneInfo.strip&&sceneInfo.palms&&
+          sceneInfo.desert>=2&&sceneInfo.gardens&&
+          sceneInfo.casino&&sceneInfo.hotel&&
+          sceneInfo.colliderDelta===0&&sceneInfo.pointLights===0,
+          'Las Vegas 2.0 sem as estruturas completas');
+        // Vista a partir do asfalto da Strip, entre os hotéis.
+        await page.evaluate(()=>{
+          const g=window.DriverGame,p=g.playerCar;
+          g.mode='driving';g.tanner.setVisible(false);
+          p.x=0;p.z=-176;p.y=0;p.heading=0;p.speed=0;
+          p.prevX=p.x;p.prevZ=p.z;
+          p.root.position.set(p.x,p.y,p.z);
+          p.root.rotation.y=p.heading;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+        });
+        await sleep(950);
+        await page.screenshot({path:path.join(DIR,'vegas-strip-driving.png')});
+        // Testar a pé junto aos cassinos, sem sair do mapa.
+        const begin=await page.evaluate(()=>{
+          const g=window.DriverGame;
+          g.mode='on_foot';
+          g.tanner.setPosition(-17,0,-184,0);
+          g.tanner.setVisible(true);g.input.up=true;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+          return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
+        });
+        await sleep(380);
+        const end=await page.evaluate(()=>{
+          const g=window.DriverGame;g.input.up=false;
+          return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
+        });
+        const walkDistance=Math.hypot(end.x-begin.x,end.z-begin.z);
+        assert(walkDistance>.05,'Jogador não caminhou na Strip');
+        await page.screenshot({path:path.join(DIR,'vegas-strip-on-foot.png')});
+        // Aproximação do cassino principal; conservar a física original.
+        await page.evaluate(()=>{
+          const g=window.DriverGame,p=g.playerCar;
+          g.mode='driving';g.tanner.setVisible(false);
+          p.x=-280;p.z=-242;p.y=0;
+          p.heading=Math.PI;p.speed=0;p.prevX=p.x;p.prevZ=p.z;
+          p.root.position.set(p.x,p.y,p.z);
+          p.root.rotation.y=p.heading;
+          g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+        });
+        await sleep(900);
+        await page.screenshot({path:path.join(DIR,'vegas-casino-driving.png')});
+        vegasVisual={...sceneInfo,walkingDistance:Number(walkDistance.toFixed(3))};
+      }
       // Amostra de frames do navegador headless: não representa FPS do usuário.
       const perf=await page.evaluate(async()=>{
         const frames=[];
@@ -287,7 +354,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       report.maps.push({...initial,driving,walking:{
         from:beforeWalk,to:afterWalk,distance:Math.hypot(
           afterWalk.x-beforeWalk.x,afterWalk.z-beforeWalk.z)},
-        interior:inner,gate,perf,rioVisual,havanaVisual});
+        interior:inner,gate,perf,rioVisual,havanaVisual,vegasVisual});
       fs.writeFileSync(path.join(DIR,'report.json'),JSON.stringify(report,null,2));
     }
     assert.equal(report.runtimeErrors.length,0,'Exceções no navegador');
