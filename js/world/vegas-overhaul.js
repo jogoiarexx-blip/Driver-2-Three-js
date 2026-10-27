@@ -301,12 +301,70 @@ class DriverVegasOverhaul {
             west?'vegas-casino-landmark':'vegas-hotel-landmark');
     }
 
+    static buildAttractions(city){
+        if(!this.isVegas(city))return [];
+        const pieces=[],add=(...args)=>pieces.push(args);
+        // Silhueta inspirada na torre de observação STRAT, além
+        // de x=-410; não obstrui a avenida nem a IA de tráfego.
+        const tx=-438,tz=-175;
+        add(tx,51,tz,4.8,102,4.8,0x858194,false);
+        for(const y of [18,41,65,89])
+            add(tx,y,tz,7.2,.48,7.2,0x5f6178,false);
+        add(tx,103.8,tz,13,4.2,13,0x7e8297,false);
+        add(tx,107.1,tz,20,2.1,20,0xbbb1ae,false);
+        add(tx,109,tz,15,.6,15,0xe5b875,true);
+        add(tx,113.2,tz,15,7.6,15,0x5b5479,false);
+        add(tx,117.2,tz,19,.6,19,0xb2a9bb,false);
+        add(tx,123,tz,.8,11,.8,0xb3c1c7,false);
+        add(tx,129,tz,1.4,.9,1.4,0xedc47b,true);
+
+        // High Roller estilizado: um anel de um único mesh, 20 cabines
+        // instanciadas, estrutura afastada da área dirigível.
+        const cx=432,cz=146,cy=66,rad=25;
+        add(cx,25,cz,3.5,50,3.5,0x687d8e,false);
+        add(cx,48,cz-14,.7,25,.7,0x8390a3,false);
+        add(cx,48,cz+14,.7,25,.7,0x8390a3,false);
+        add(cx,66,cz,4.8,4.8,4.8,0xdfd6c2,false);
+        for(let i=0;i<20;i++){
+            const a=i*Math.PI/10;
+            const z=cz+Math.cos(a)*rad,y=cy+Math.sin(a)*rad;
+            add(cx,y,z,3.3,2.5,2.7,0x8295a8,false);
+            add(cx-1.85,y,z,.17,1.7,1.55,
+                i%2?0xffcb80:0x76d3ec,true);
+        }
+        const results=DriverSpecialStructures.pack(city.cityGroup,pieces,
+            'vegas-iconic-attractions');
+        const wheel=new THREE.Mesh(
+            new THREE.TorusGeometry(rad,1.1,6,40),
+            new THREE.MeshLambertMaterial({color:0xc7cad6}));
+        wheel.rotation.y=Math.PI/2;
+        wheel.position.set(cx,cy,cz);
+        wheel.name='vegas-high-roller-outline';
+        wheel.castShadow=false;
+        city.cityGroup.add(wheel);
+        results.push(wheel);
+
+        // Pirâmide estilizada em um setor do horizonte sul,
+        // sem mover o terreno/colisão. Modelo autoral geométrico.
+        const pyramid=new THREE.Mesh(
+            new THREE.ConeGeometry(35,64,4),
+            new THREE.MeshLambertMaterial({color:0x454455}));
+        pyramid.position.set(195,32,446);
+        pyramid.rotation.y=Math.PI/4;
+        pyramid.castShadow=false;
+        pyramid.name='vegas-pyramid-backdrop';
+        city.cityGroup.add(pyramid);
+        results.push(pyramid);
+        return results;
+    }
+
     static buildCity(city){
         if(!this.isVegas(city))return;
         this.buildStrip(city);
         this.buildStreetResorts(city);
         this.buildDesert(city);
         this.buildParks(city);
+        this.buildAttractions(city);
         city.vegasOverhaulStats={
             version:2,
             districts:'strip/downtown/resort/residential',
