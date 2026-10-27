@@ -235,7 +235,9 @@
 
 
             applyCC0Model(modelScene, shared = true) {
-                if (!modelScene || this._userCustomModel) return;
+                // Usuário pode substituir outro GLB manualmente. Apenas downloads
+                // automáticos não podem sobrescrever uma importação pessoal.
+                if (!modelScene || (this._userCustomModel && shared)) return;
                 const box = new THREE.Box3().setFromObject(modelScene);
                 const size = box.getSize(new THREE.Vector3());
                 if (!Number.isFinite(size.x + size.y + size.z) ||
