@@ -21,6 +21,7 @@ class VehicleVisuals {
             vehicle.tailMaterial.color.setHex(state.braking ? 0xff2434 : 0x6b171d);
         }
         if (vehicle.headlightBeams) vehicle.headlightBeams.visible = state.headlamps;
+        VehicleDamageFX.update(vehicle);
         const speed = Math.abs(vehicle.speed);
         const roadPulse = Math.sin(time * (6 + speed * 0.65));
         const amplitude = Math.min(0.060, speed * 0.00095);

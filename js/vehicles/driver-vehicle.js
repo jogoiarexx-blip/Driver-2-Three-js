@@ -66,6 +66,8 @@
                 this.sirenAssembly = null;
                 this.headlightMaterial = null;
                 this.tailMaterial = null;
+                this.damageGroup = null;
+                this.damageParts = null;
                 while (this.chassisTilt.children.length > 0) {
                     const old = this.chassisTilt.children[0];
                     GPUResourceUtils.disposeSubtree(old);
@@ -231,6 +233,8 @@
                     this.root.add(wMesh);
                     this.wheels.push(wMesh);
                 });
+                VehicleDamageFX.attach(this);
+                VehicleVisuals.setHeadlights(this, this.headlightsOn);
             }
 
 
@@ -248,7 +252,7 @@
                 const length = this.bodyStyle === 'truck' ? 6.6 : 5.15;
                 const height = this.bodyStyle === 'truck' ? 3.3 : 2.05;
                 const scale = Math.min(width / size.x, length / size.z, height / size.y);
-                const preserved = [this.sirenAssembly, this.targetMarker, this.lightsGroup];
+                const preserved = [this.sirenAssembly, this.targetMarker, this.lightsGroup, this.damageGroup];
                 this.chassisTilt.children.slice().forEach(child => {
                     if (!preserved.includes(child)) {
                         GPUResourceUtils.disposeSubtree(child);
