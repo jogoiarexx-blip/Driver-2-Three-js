@@ -180,3 +180,20 @@ O GitHub Actions avalia testes lógicos de Node; a validação visual completa e
 - O progresso da fase de fuga é guardado no `localStorage` pelo sistema de save da casa. `tests/chicago-safehouse.test.cjs` testa perseguição, visibilidade, vitória/derrota, carregamento, integração e interfaces.
 
 **Diferenças em relação ao Driver 2 do PS1:** geometria urbana, patrulha, perseguição e tempos são recriações próprias, ainda sem garantia de equivalência 1:1. Os testes Node validam regras e estruturas, mas não substituem jogar a missão inteira em navegador real.
+
+
+## Chicago 06 — Chase the Intruder
+
+A missão segue a sequência da história de Driver 2 (PS1), mas adapta ruas, tempos e
+pátio ao nosso mapa 9×9. Tanner começa no beco próximo à casa, entra no esportivo
+preto usando E e segue o carro cinza do invasor pelas avenidas. Se ficar a mais
+de 150 unidades por seis segundos, perde a perseguição. Chegando ao depósito,
+deve parar junto do carro fugitivo; uma van amarela fecha a saída, e a missão
+termina após uma breve cena. A rota do carro foi simulada com a física do projeto
+sem atravessar edifícios nem cruzar o canal fora da ponte. O pátio ganhou
+asfalto próprio, contêineres, grades e iluminação leve.
+
+O estado da perseguição e os seus checkpoints de rota entram no save da casa de
+Tanner. Testes: `node --test tests/*.test.cjs`, incluindo
+`tests/chicago-intruder.test.cjs`. A rota e a sequência são aproximações próprias;
+não há ainda validação completa em navegador/WebGL ou fidelidade de mapa 1:1.
