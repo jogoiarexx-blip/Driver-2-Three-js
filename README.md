@@ -118,3 +118,13 @@ Execute localmente: `node --test tests/*.test.cjs`. Os testes de lógica não su
 Os testes Node exercitam lógica e não substituem testes de partida/colisões em um navegador real.
 
 - Carros civis e viaturas agora freiam antes de barricadas intactas; quando as barreiras são destruídas, a perseguição pode continuar. Dois testes adicionais cobrem essa navegação.
+
+
+## Revisão — agentes nos bloqueios, busca policial e danos fortes
+
+- Duas figuras policiais low-poly passam a sinalizar no acostamento de cada bloqueio dinâmico. Animações de braço e recuo em aproximação, sem criar física ou luzes adicionais. Os atores são destruídos junto com o bloqueio e não aparecem no modo Fura-Bloqueios.
+- A IA policial deixa de receber posição exata continuamente atrás dos edifícios. Guarda o último avistamento durante alguns segundos e recebe coordenadas aproximadas por rádio com intervalos. Viaturas retomam a busca pela malha de ruas, preservando a formação das quatro viaturas.
+- Dano visual avançado: para-choque amassado a partir de 72%, motor superaquecido com brilho de material a partir de 85%. Fumaça do motor passa a usar probabilidade proporcional ao delta de tempo, preservando comportamento em 30/60 FPS.
+- Testes adicionais verificam posicionamento/recuo dos policiais, limpeza de atores, memória policial, expiração de rádio e efeitos de danos críticos. Permanecem preservadas as missões e opções de carro PS1 ou GLB.
+
+O GitHub Actions avalia testes lógicos de Node; a validação visual completa em navegador real continua sendo uma etapa separada.

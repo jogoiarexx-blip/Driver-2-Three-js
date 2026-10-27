@@ -109,3 +109,36 @@ test('HTML carrega módulos antes dos consumidores',()=>{
     ordered('police/pursuit-tactics.js','traffic/traffic-ai.js');
     ordered('world/street-furniture.js','world/city-builder.js');
 });
+
+
+test('para-choque só aparece depois de dano forte',()=>{
+    const car={chassisTilt:new Element(),damage:71};
+    Damage.attach(car);
+    assert.equal(car.damageParts.bumper.visible,false);
+    car.damage=72;Damage.update(car);
+    assert.equal(car.damageParts.bumper.visible,true);
+});
+test('motor superaquecido só aparece em dano crítico',()=>{
+    const car={chassisTilt:new Element(),damage:84};
+    Damage.attach(car);
+    assert.equal(car.damageParts.engineGlow.visible,false);
+    car.damage=85;Damage.update(car);
+    assert.equal(car.damageParts.engineGlow.visible,true);
+});
+test('pulsação visual do motor danificado respeita o tempo da animação',()=>{
+    const car={chassisTilt:new Element(),damage:90,motionClock:0};
+    Damage.attach(car);
+    const original=car.damageParts.engineGlow.scale.x;
+    car.motionClock=0.27;Damage.update(car);
+    assert.ok(car.damageParts.engineGlow.scale.x>=0.78);
+    assert.notEqual(car.damageParts.engineGlow.scale.x,original);
+});
+test('renderização de dano funciona mesmo com modelo GLB e não adiciona PointLight',()=>{
+    const car={chassisTilt:new Element(),damage:100};
+    Damage.attach(car);
+    assert.equal(car.damageGroup.parent,car.chassisTilt);
+    assert.equal(car.damageParts.heavy.visible,true);
+    assert.equal(car.damageParts.bumper.visible,true);
+    assert.equal(car.damageParts.engineGlow.visible,true);
+    assert.ok(car.damageGroup.children.every(x=>x instanceof Element));
+});

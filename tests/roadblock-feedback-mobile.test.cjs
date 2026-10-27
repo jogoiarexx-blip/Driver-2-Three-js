@@ -210,3 +210,90 @@ test('viatura retoma perseguição após barricada destruída',()=>{
     barrier.smashed=true;
     assert.equal(ai.getInput(police,1/60,[police],player,90).up,true);
 });
+
+
+test('dois policiais são posicionados fora da pista do bloqueio vertical',()=>{
+    const ped=manager();
+    ped.spawnPoliceRoadblocks({}, {dynamic:true,locations:[{x:0,z:90,axis:'z'}]});
+    assert.equal(ped.roadblockOfficers.length,2);
+    assert.ok(ped.roadblockOfficers.every(o=>Math.abs(o.mesh.position.x)>=12));
+    assert.equal(ped.roadblocks.length,3);
+});
+test('bloqueio horizontal posiciona agentes nas calçadas transversais',()=>{
+    const ped=manager();
+    ped.spawnPoliceRoadblocks({}, {dynamic:true,locations:[{x:80,z:0,axis:'x'}]});
+    assert.equal(ped.roadblockOfficers.length,2);
+    assert.ok(ped.roadblockOfficers.every(o=>Math.abs(o.mesh.position.z)>=12));
+});
+test('policiais sinalizam parar durante a animação',()=>{
+    const ped=manager();
+    ped.spawnPoliceRoadblocks({}, {dynamic:true,locations:[{x:0,z:90,axis:'z'}]});
+    const officer=ped.roadblockOfficers[0];
+    const first=officer.arms[0].rotation.z;
+    ped.updateRoadblockOfficers(0.16, null);
+    assert.notEqual(officer.arms[0].rotation.z,first);
+    assert.ok(officer.arms[0].rotation.z < -0.4);
+});
+test('policiais recuam em direção ao acostamento quando Tanner se aproxima',()=>{
+    const ped=manager();
+    ped.spawnPoliceRoadblocks({}, {dynamic:true,locations:[{x:0,z:90,axis:'z'}]});
+    const officer=ped.roadblockOfficers[1];
+    ped.updateRoadblockOfficers(0.15,{x:officer.x,z:officer.z});
+    assert.ok(officer.retreat>0);
+    assert.ok(Math.abs(officer.mesh.position.x)>Math.abs(officer.x));
+});
+test('limpar barricadas dinâmicas remove os agentes associados',()=>{
+    const ped=manager();
+    ped.spawnPoliceRoadblocks({}, {dynamic:true,locations:[{x:0,z:90,axis:'z'}]});
+    ped.clearDynamicRoadblocks();
+    assert.equal(ped.roadblocks.length,0);
+    assert.equal(ped.roadblockOfficers.length,0);
+});
+test('barricada da missão Fura-Bloqueios não cria guardas adicionais',()=>{
+    const ped=manager();
+    ped.spawnPoliceRoadblocks({}, {dynamic:false});
+    assert.equal(ped.roadblockOfficers.length,0);
+    assert.equal(ped.roadblocks.length,12);
+});
+test('recriar pedestres limpa lista de policiais de bloqueios anteriores',()=>{
+    const ped=manager();
+    ped.spawnPoliceRoadblocks({}, {dynamic:true,locations:[{x:0,z:90,axis:'z'}]});
+    ped.spawnCityPedestrians();
+    assert.equal(ped.roadblockOfficers.length,0);
+    assert.equal(ped.roadblocks.length,0);
+    assert.equal(ped.pedestrians.length,28);
+});
+test('polícia guarda última posição vista quando Tanner foge do campo de visão',()=>{
+    const ai=new Traffic({isPointBlocked:()=>false,isTrafficGreen:()=>true});
+    const cop={x:4,z:0,heading:0,isPolice:true};
+    const first=ai.pursuitInformation(cop,.016,{x:4,z:35,heading:0,speed:20},85);
+    assert.equal(first.z,35);
+    const lost=ai.pursuitInformation(cop,.5,{x:150,z:160,heading:0,speed:20},85);
+    assert.equal(lost.x,4);
+    assert.equal(lost.z,35);
+    assert.equal(ai.policeMemory.get(cop).visible,false);
+});
+test('rádio envia localização aproximada, não a posição exata',()=>{
+    const ai=new Traffic({isPointBlocked:()=>false,isTrafficGreen:()=>true});
+    const cop={x:0,z:0,heading:0,isPolice:true};
+    const dispatched=ai.pursuitInformation(cop,.016,
+        {x:135,z:93,heading:1.4,speed:40},90);
+    assert.equal(dispatched.x,160);
+    assert.equal(dispatched.z,80);
+    assert.equal(dispatched.speed,0);
+});
+test('informação de rádio expira antes do próximo aviso',()=>{
+    const ai=new Traffic({isPointBlocked:()=>false,isTrafficGreen:()=>true});
+    const cop={x:0,z:0,heading:0,isPolice:true};
+    const fugitive={x:135,z:93,heading:0,speed:0};
+    assert.ok(ai.pursuitInformation(cop,.016,fugitive,90));
+    assert.equal(ai.pursuitInformation(cop,6,fugitive,90),null);
+    assert.ok(ai.pursuitInformation(cop,5,fugitive,90));
+});
+test('procurar jogador em fuga não reaproveita memória depois do reset',()=>{
+    const ai=new Traffic({isPointBlocked:()=>false,isTrafficGreen:()=>true});
+    const cop={x:0,z:0,heading:0,isPolice:true};
+    ai.pursuitInformation(cop,.016,{x:0,z:30},90);
+    ai.reset();
+    assert.equal(ai.policeMemory.has(cop),false);
+});
