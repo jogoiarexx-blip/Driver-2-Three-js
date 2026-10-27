@@ -1,5 +1,5 @@
 /**
- * Animação de portas do police.glb. O arquivo rigado contém dois
+ * Animação de portas do car police.glb. O arquivo rigado contém dois
  * pivôs reais; o GLB original de malha única é separado em runtime
  * quando o usuário ainda não publicou a versão com rig.
  * Nunca altera o chassi físico, controles, cor ou sirene da viatura.

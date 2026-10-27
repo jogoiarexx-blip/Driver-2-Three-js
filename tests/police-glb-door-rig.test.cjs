@@ -100,7 +100,7 @@ test('viaturas usam arquivo local antes de Kenney e conservam sirene e danos',()
     const engine=read('js/engine/driver2-game-engine.js');
     const html=read('index.html');
     const boot=read('js/ui/driver-boot-flow.js');
-    assert.match(lib,/policeModelUrl='\.\/assets\/vehicles\/police\.glb'/);
+    assert.match(lib,/policeModelUrl='\.\/assets\/vehicles\/car%20police\.glb'/);
     assert.match(lib,/getPoliceTemplate\(\)/);
     assert.match(lib,/applyPoliceModel\(vehicle,template\)/);
     assert.match(lib,/DriverPoliceDoorRig\.mount\(vehicle,wrapped\)/);
@@ -113,4 +113,33 @@ test('viaturas usam arquivo local antes de Kenney e conservam sirene e danos',()
     const a=html.indexOf('js/vehicles/police-door-rig.js');
     assert.ok(a>html.indexOf('js/vehicles/vehicle-wheel-rig.js'));
     assert.ok(a<html.indexOf('js/assets/free-vehicle-library.js'));
+});
+
+test('GLB policial publicado no GitHub contém duas dobradiças reais e textura preservada',()=>{
+    const lib=read('js/assets/free-vehicle-library.js');
+    const pathMatch=lib.match(/this\.policeModelUrl='\.\/(assets\/vehicles\/[^']+)'/);
+    assert.ok(pathMatch,'o caminho precisa estar declarado no carregador');
+    const relative=decodeURIComponent(pathMatch[1]);
+    const bytes=fs.readFileSync(path.join(__dirname,'..',relative));
+    assert.ok(bytes.length>1000000,'o modelo de polícia foi encontrado');
+    assert.equal(bytes.subarray(0,4).toString('ascii'),'glTF');
+    assert.equal(bytes.readUInt32LE(8),bytes.length);
+    const jsonSize=bytes.readUInt32LE(12);
+    const json=JSON.parse(bytes.subarray(20,20+jsonSize).toString('utf8'));
+    const names=json.nodes.map(n=>n.name);
+    assert.ok(names.includes('police_left_door_hinge'));
+    assert.ok(names.includes('police_right_door_hinge'));
+    assert.ok(names.includes('Police_Door_left_Mesh'));
+    assert.ok(names.includes('Police_Door_right_Mesh'));
+    assert.equal(json.meshes.length,3);
+    assert.ok(json.textures?.length>0);
+    assert.ok(json.images?.length>0);
+    assert.ok(json.nodes.find(n=>n.name==='police_left_door_hinge').children.length>0);
+    assert.ok(json.nodes.find(n=>n.name==='police_right_door_hinge').children.length>0);
+});
+test('alternar PS1 e GLB reseta somente o rig policial sem travar restauração',()=>{
+    const lib=read('js/assets/free-vehicle-library.js');
+    assert.match(lib,/DriverPoliceDoorRig\.cancel\(v\)/);
+    assert.match(lib,/v\.policeDoorRig=null/);
+    assert.match(lib,/v\._policeCustomModel=false/);
 });

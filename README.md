@@ -816,3 +816,26 @@ separadamente. Até `assets/vehicles/police.glb` existir no GitHub,
 o Pages manterá a viatura genérica. Para publicar o modelo,
 extraia `Police-GLB-Preparado.zip` na raiz e envie o arquivo
 `assets/vehicles/police.glb` ao repositório.
+
+
+### Atualização — viatura enviada como `car police.glb` (27/10/2026)
+
+A viatura **já foi publicada pelo usuário** no GitHub em
+`assets/vehicles/car police.glb` (6.680.428 bytes, blob
+`c9bfac99169f2cc695d9efd90310f15801b8ec71`).
+É o GLB preparado, com `police_left_door_hinge`,
+`police_right_door_hinge` e três malhas separadas.
+
+A partir desta revisão o carregador usa o caminho URL-encoded
+`./assets/vehicles/car%20police.glb` em vez do antigo
+`./assets/vehicles/police.glb`. O arquivo **não precisa ser reenviado
+ou renomeado**. O suporte de entrada/saída com porta, faróis, sirene,
+colisões e danos continua integrado. O botão M (PS1/3D) também
+cancela e limpa o estado do rig policial antes de reconstruir o
+modelo procedural, permitindo recarregá-lo após reativar 3D.
+
+A suíte possui teste de regressão que lê o GLB real e verifica
+o cabeçalho, os nós de ambas as dobradiças, as malhas independentes e
+a presença de imagens e texturas incorporadas. Ainda é preciso testar
+visualmente a abertura das portas dentro do navegador; isso não se
+conclui a partir do teste de arquivos.

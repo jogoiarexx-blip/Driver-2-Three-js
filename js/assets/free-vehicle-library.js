@@ -17,7 +17,7 @@ class FreeVehicleAssets {
         this.userModelError='';
         this.importedCount=0;
         this.userModelUrl='./assets/vehicles/carro_driver2_otimizado.glb';
-        this.policeModelUrl='./assets/vehicles/police.glb';
+        this.policeModelUrl='./assets/vehicles/car%20police.glb';
         this.policeTemplate=null;
         this.policePromise=null;
         this.policeStatus='pending';
@@ -307,7 +307,16 @@ class FreeVehicleAssets {
             this.decorateFleet();
         } else {
             this.engine.vehicles.forEach(v => {
-                if (v._cc0ModelApplied) v.buildCarMesh();
+                if (v._cc0ModelApplied){
+                    if(v.isPolice){
+                        if(typeof DriverPoliceDoorRig!=='undefined')
+                            DriverPoliceDoorRig.cancel(v);
+                        v.policeDoorRig=null;
+                        v._policeCustomModel=false;
+                        v._userCustomModel=false;
+                    }
+                    v.buildCarMesh();
+                }
             });
         }
         this.updateButton();
@@ -341,7 +350,7 @@ class FreeVehicleAssets {
                 (this.engine.vehicles.some(v=>v.policeDoorRig)?
                     ' com portas móveis':'')+'.':
                 this.policeStatus==='missing'?
-                ' • police.glb ausente: viaturas alternativas.':'')+
+                ' • car police.glb ausente: viaturas alternativas.':'')+
             (this.failed.size?' • Alguns externos indisponíveis.':'') :
             'Malhas PS1 procedurais ativas. Pressione M para ativar 3D.';
     }
