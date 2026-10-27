@@ -985,6 +985,8 @@
                     }
                 }
                 this.buildRegionalLandmarkDetails(cx,cz,west);
+                if(id==='chicago')
+                    DriverChicagoOverhaul.detailLandmark(this,cx,cz);
             }
 
 
