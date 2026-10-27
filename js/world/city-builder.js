@@ -174,6 +174,12 @@
                             this.buildSecretGarageCompound(blockX, blockZ);
                         } else if (blockX===200 && blockZ===-200) {
                             this.buildEnterableWarehouse(blockX,blockZ);
+                        } else if (this.preset.id==='chicago' &&
+                            blockX===-200 && blockZ===-200) {
+                            this.buildEnterableStore(blockX,blockZ,'diner');
+                        } else if (this.preset.id==='chicago' &&
+                            blockX===120 && blockZ===-280) {
+                            this.buildEnterableStore(blockX,blockZ,'garage');
                         } else if ((blockX + blockZ) % 160 === 0) {
                             this.buildParkBlock(blockX, blockZ);
                         } else {
@@ -667,6 +673,46 @@
                 });
             }
 
+            buildEnterableStore(cx,cz,id) {
+                const diner=id==='diner';
+                const baseMat=new THREE.MeshLambertMaterial({
+                    color:diner?0x7c2d12:0x475569
+                });
+                const shell=new THREE.Mesh(new THREE.BoxGeometry(36,12,30),baseMat);
+                shell.position.set(cx,6.2,cz);
+                this.cityGroup.add(shell);
+                this.buildingBoxes.push({
+                    minX:cx-18,maxX:cx+18,minZ:cz-15,maxZ:cz+15
+                });
+                const awning=new THREE.Mesh(new THREE.BoxGeometry(36,1.4,3.4),
+                    new THREE.MeshLambertMaterial({
+                        color:diner?0xef4444:0xeab308
+                    }));
+                awning.position.set(cx,5.3,cz+16.2);
+                this.cityGroup.add(awning);
+                const sign=new THREE.Mesh(new THREE.BoxGeometry(22,2.2,0.7),
+                    new THREE.MeshBasicMaterial({
+                        color:diner?0xffedd5:0x93c5fd
+                    }));
+                sign.position.set(cx,9.4,cz+15.4);
+                this.cityGroup.add(sign);
+                for(const side of [-1,1]){
+                    const glass=new THREE.Mesh(new THREE.BoxGeometry(7,3,0.25),
+                        new THREE.MeshBasicMaterial({color:0x38bdf8}));
+                    glass.position.set(cx+side*12,2.6,cz+15.2);
+                    this.cityGroup.add(glass);
+                }
+                const door=new THREE.Mesh(new THREE.BoxGeometry(3.5,4,0.27),
+                    new THREE.MeshLambertMaterial({color:0x16a34a}));
+                door.position.set(cx,2.2,cz+15.3);
+                this.cityGroup.add(door);
+                this.interiors.push({
+                    id,name:diner?'Lanchonete de Chicago':'Oficina mecânica',
+                    kind:id,door:{x:cx,z:cz+19.5},
+                    inside:{x:diner?1120:1180,z:0}
+                });
+            }
+
             buildInteriorRooms() {
                 const make=(x,y,z,w,h,d,color)=>{
                     const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
@@ -689,6 +735,21 @@
                         make(x,0.8,z+4,4,1.6,2.2,0x92400e);
                         make(x,1.65,z+4,2.2,0.25,1.0,0x166534);
                         place.savePoint={x,z:z+4};
+                    } else if(place.kind==='diner'){
+                        // Balcão central, banquetas e mesas de uma lanchonete 70s.
+                        make(x,1,z+4.2,15,2,2.2,0x92400e);
+                        make(x,2.2,z+4.2,14,.2,2.2,0xffedd5);
+                        for(const offset of [-7,0,7]){
+                            make(x+offset,.7,z-1,3,1.4,3,0x991b1b);
+                            make(x+offset,.5,z-5,3,1,2.2,0x78350f);
+                        }
+                    } else if(place.kind==='garage'){
+                        // Bancada, prateleiras, carroceria e ferramentas.
+                        make(x-6,1.3,z+5,8,2.6,2,0x334155);
+                        make(x+4,.55,z+2,5.5,1.1,9,0x64748b);
+                        make(x+4,1.15,z+2,4,0.3,7,0xfacc15);
+                        for(const offset of [-3,0,3])
+                            make(x-8,2.1,z+offset,1,0.35,1.2,0xf97316);
                     } else {
                         for(const dx of [-6,0,6])
                             make(x+dx,1,z+3,3.3,2,3.3,0x78350f);
