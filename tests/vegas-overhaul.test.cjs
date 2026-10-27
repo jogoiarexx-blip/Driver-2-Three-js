@@ -75,6 +75,28 @@ test('Vegas diferencia quatro setores e cria letreiros em lote próximo',()=>{
     v.forEach(assertBatch);
     assert(v.reduce((a,m)=>a+m.count,0)>120);
 });
+test('LOD distante mantém janelas nas fachadas e laterais da Strip',()=>{
+    const city=mockCity('vegas'),group=new Group();
+    const buildings=[
+        {x:40,z:-120,height:78},{x:-40,z:-120,height:84},
+        {x:-200,z:-280,height:34}
+    ];
+    const boxes=JSON.stringify(city.buildingBoxes);
+    const batches=Vegas.detailFarDistrict(city,buildings,group);
+    assert.equal(batches.length,1,
+        'Um lote por setor distante, sem textura externa');
+    assert.equal(group.children.length,1);
+    assertBatch(batches[0]);
+    const pos=batches[0].matrices.map(m=>m.position);
+    assert(pos.some(m=>Math.abs(m.x-20.84)<.01),
+        'Hotel do lado direito sem janela lateral');
+    assert(pos.some(m=>Math.abs(m.x+20.84)<.01),
+        'Hotel do lado esquerdo sem janela lateral');
+    assert(batches[0].count>95,
+        'Fachadas distantes ainda aparecem lisas');
+    assert.equal(JSON.stringify(city.buildingBoxes),boxes);
+});
+
 test('letreiro em pixels gera letras legíveis sem fontes externas',()=>{
     const parts=[];
     Vegas.pixelSign(parts,'CASINO',0,20,10,.45,0xff33aa);
