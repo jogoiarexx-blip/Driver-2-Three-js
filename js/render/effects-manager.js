@@ -11,6 +11,19 @@
                 this.smokeParticles = [];
                 this.flyingHubcaps = [];
 
+                // Faíscas reutilizáveis: nenhum novo Mesh/material em cada impacto.
+                this.impactSparks = [];
+                this.sparkGeometry = new THREE.BoxGeometry(0.16, 0.16, 0.16);
+                this.sparkMaterial = new THREE.MeshBasicMaterial({color:0xffd66b});
+                for (let i = 0; i < 22; i++) {
+                    const mesh = new THREE.Mesh(this.sparkGeometry, this.sparkMaterial);
+                    mesh.visible = false;
+                    this.scene.add(mesh);
+                    this.impactSparks.push({
+                        mesh, life:0, vx:0, vy:0, vz:0
+                    });
+                }
+
                 // Geometria compartilhada para performance máxima
                 this.skidGeo = new THREE.PlaneGeometry(0.65, 1.9);
                 this.skidGeo.rotateX(-Math.PI / 2);
@@ -80,6 +93,25 @@
                 }
             }
 
+            spawnImpactSparks(x, y, z, severity = 0.6) {
+                const amount = Math.min(9, Math.max(3, Math.round(severity * 10)));
+                let emitted=0;
+                for (const spark of this.impactSparks) {
+                    if (spark.life>0) continue;
+                    spark.life = 0.28 + Math.random()*0.22;
+                    const angle=Math.random()*Math.PI*2;
+                    const speed=(3+Math.random()*7)*Math.max(0.25,severity);
+                    spark.vx=Math.cos(angle)*speed;
+                    spark.vz=Math.sin(angle)*speed;
+                    spark.vy=4+Math.random()*5;
+                    spark.mesh.position.set(x,y+0.65,z);
+                    spark.mesh.scale.set(1,1,1);
+                    spark.mesh.visible=true;
+                    if (++emitted>=amount) break;
+                }
+                return emitted;
+            }
+
             addSkidMark(x, z, angle) {
                 let mesh;
                 if (this.skidMarks.length >= this.maxSkidMarks) {
@@ -128,6 +160,20 @@
             }
 
             update(dt) {
+                for (const spark of this.impactSparks) {
+                    if (spark.life<=0) continue;
+                    spark.life=Math.max(0,spark.life-dt);
+                    if (spark.life===0) {
+                        spark.mesh.visible=false;
+                        continue;
+                    }
+                    spark.vy-=18*dt;
+                    spark.mesh.position.x+=spark.vx*dt;
+                    spark.mesh.position.y+=spark.vy*dt;
+                    spark.mesh.position.z+=spark.vz*dt;
+                    const scale=Math.max(0.12,Math.min(1,spark.life*2.8));
+                    spark.mesh.scale.set(scale,scale,scale);
+                }
                 // Atualiza fumaça de pneu / motor danificado
                 for (let i = this.smokeParticles.length - 1; i >= 0; i--) {
                     const p = this.smokeParticles[i];
