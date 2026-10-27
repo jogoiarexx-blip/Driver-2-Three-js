@@ -35,6 +35,8 @@
                 this.trafficAI = new DriverTrafficAI(this.city);
                 this.collisionSystem = new DriverVehicleCollisions();
                 this.pursuitChapter = new DriverPursuitChapter();
+                this.trainLine=new DriverChicagoTrain(this.scene,this.city);
+                this.trainLostSeconds=0;
                 this.homeSave=new DriverHomeSave(
                     (()=>{try{return window.localStorage}catch(e){return null}})()
                 );
@@ -102,6 +104,7 @@
                 this.sunLight.color.setHex(preset.sunColor);
 
                 this.city.loadCityPreset(cityKey);
+                if(this.trainLine)this.trainLine.setCity(this.city);
 
                 // Atualiza estilo dos botões de cidade na UI
                 ['chicago', 'havana', 'vegas', 'rio'].forEach(k => {
@@ -283,7 +286,7 @@
             }
 
             startMission(type) {
-                if((type==='story_tipoff'||type==='story_witness') &&
+                if((type==='story_tipoff'||type==='story_witness'||type==='story_train') &&
                     this.currentCityKey!=='chicago')this.changeCity('chicago');
                 document.getElementById('missions-modal').classList.add('hidden');
                 document.getElementById('center-announcement').classList.add('hidden');
@@ -295,6 +298,8 @@
                 this.gameEnded = false;
                 this.clearMissionMarkers();
                 this.spawnAllVehicles();
+                if(this.trainLine)this.trainLine.reset(type==='story_train');
+                this.trainLostSeconds=0;
                 this.pedManager.spawnCityPedestrians();
                 this.roadblockDirector.reset();
                 this.roadblocksSpawned = false;
@@ -346,6 +351,20 @@
                         maxSpeed:52,accel:30
                     });
                     this.vehicles.push(this.targetCar);
+                } else if (type === 'story_train') {
+                    this.missionActive=true;
+                    this.missionTimeLeft=120;
+                    this.playerCar.x=4;this.playerCar.z=217;this.playerCar.y=0;
+                    this.playerCar.heading=Math.PI;this.playerCar.speed=0;
+                    this.playerCar.updateTransform();
+                    this.tanner.setVisible(false);
+                    this.setWeather('day');
+                    titleEl.textContent='CHICAGO 03: TRAIN PURSUIT';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='SIGA O TREM ELEVADO • EVITE PERDÊ-LO';
+                    objEl.textContent='A testemunha escapou no trem! Siga os trilhos, '+
+                        'alcance a estação, saia do carro e suba a rampa à esquerda.';
                 } else if (type === 'story_witness') {
                     this.missionActive=true;
                     this.missionTimeLeft=65;
@@ -1005,6 +1024,34 @@
                             return;
                         }
                     }
+                    if(this.missionType==='story_train'&&this.trainLine){
+                        const current=this.getPlayerPosition();
+                        const train=this.trainLine;
+                        const distance=Math.hypot(current.x-train.position.x,
+                            current.z-train.position.z);
+                        const label=document.getElementById('mission-subcounter');
+                        if(!train.arrived){
+                            if(distance>132)this.trainLostSeconds+=dt;
+                            else this.trainLostSeconds=Math.max(0,this.trainLostSeconds-dt*1.6);
+                            label.textContent='TREM: '+Math.round(distance)+'m | PERDENDO: '+
+                                this.trainLostSeconds.toFixed(1)+'/6s';
+                            if(this.trainLostSeconds>6){
+                                this.triggerEndScreen('TESTEMUNHA ESCAPOU!',
+                                    'Você perdeu o trem elevado durante a perseguição.');
+                                return;
+                            }
+                        }else{
+                            label.textContent='TREM NA ESTAÇÃO • SAIA E SUBA A RAMPA';
+                            document.getElementById('objective-banner').textContent=
+                                'PARE, SAIA DO CARRO (E) E CORRA PELA RAMPA CINZA, '+
+                                'AO LADO ESQUERDO DOS TRILHOS, ATÉ A PLATAFORMA!';
+                            if(this.mode==='on_foot' && this.city.onTrainPlatform(current)){
+                                this.triggerEndScreen('TRAIN PURSUIT CONCLUÍDA!',
+                                    'Tanner alcançou o trem e encontrou a testemunha na plataforma.');
+                                return;
+                            }
+                        }
+                    }
                     if (this.missionType === 'pursuit') {
                         const result = this.pursuitChapter.update(dt, {
                             markersCollected: this.markersCollected,
@@ -1421,6 +1468,16 @@
                 ctx.fillStyle = '#c084fc';
                 ctx.fillRect(gx - 4, gz - 4, 8, 8);
 
+                // Trem vermelho e estação (verde) no radar de Chicago.
+                if(this.missionType==='story_train'&&this.trainLine?.active){
+                    const tp=this.trainLine.position;
+                    const tx=(tp.x-pos.x)*scale,tz=-(tp.z-pos.z)*scale;
+                    ctx.fillStyle='#ef4444';ctx.fillRect(tx-4,tz-8,8,17);
+                    ctx.fillStyle='#4ade80';
+                    const ex=(-14-pos.x)*scale,ez=-(-260-pos.z)*scale;
+                    ctx.fillRect(ex-5,ez-5,10,10);
+                }
+
                 // Checkpoints / Marcadores de Trailblazer no radar
                 for (const m of this.missionMarkers) {
                     if (!DriverCheckpointRoute.isActive(this.missionType, this.missionMarkers, m)) continue;
@@ -1807,6 +1864,8 @@
                 }
 
                 if (!this.gameEnded) {
+                    if(this.trainLine&&this.missionType==='story_train'&&
+                        this.missionActive)this.trainLine.update(dt);
                     if (this.mode === 'driving' && this.playerCar) {
                         this.playerCar.updatePhysics(dt, this.input, this.city, this.effects, this.audio, true);
                     } else {
