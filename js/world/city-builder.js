@@ -18,6 +18,7 @@
                 this.debrisMaterialCache=null;
                 this.poleDebrisGeometry=null;
                 this.benches = [];
+                this.chicagoParks=[];
                 this.bridgeRaised = false;
                 this.bridgeAngle = 0.14;
                 this.signalClock = 0;
@@ -124,6 +125,8 @@
                 this.debrisMaterialCache=null;
                 this.poleDebrisGeometry=null;
                 this.benches = [];
+                this.chicagoParks=[];
+                this.chicagoOverhaulStats=null;
                 this.interiors=[]; this.interiorById={};
                 this.missionStart=null;
                 this.trainStation=null;
@@ -305,7 +308,12 @@
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();
                 DriverChicagoTrain.buildInfrastructure(this);
-                if(this.preset.id==='chicago')this.buildCaineCompoundDetails();
+                if(this.preset.id==='chicago'){
+                    this.buildCaineCompoundDetails();
+                    // Ruas, rio, parques e viaduto depois dos bairros, sem
+                    // novos colliders e com LOD preservado.
+                    DriverChicagoOverhaul.buildCity(this);
+                }
                 // Diagnóstico de conectividade, executado uma única vez
                 // após o setor final (não a cada frame).
                 if(typeof DriverRoadGeometry!=='undefined')
@@ -400,6 +408,9 @@
                     group.add(mesh);
                 }
                 UrbanDistricts.decorate(this,chunk.buildings,group);
+                if(this.preset.id==='chicago')
+                    DriverChicagoOverhaul.detailDistrict(this,
+                        chunk.buildings,group);
                 group.visible=false;
                 this.cityGroup.add(group);
                 return group;
@@ -729,6 +740,10 @@
             }
 
             buildParkBlock(cx, cz) {
+                if(this.preset.id==='chicago'){
+                    if(!this.chicagoParks)this.chicagoParks=[];
+                    this.chicagoParks.push({x:cx,z:cz});
+                }
                 const grass = new THREE.Mesh(
                     new THREE.BoxGeometry(44, 0.42, 44),
                     new THREE.MeshLambertMaterial({ color: this.preset.parkColor })
