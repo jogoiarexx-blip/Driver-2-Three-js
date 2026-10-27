@@ -351,6 +351,15 @@
                     </div>
                     <button class="mt-3 w-full bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold py-2 rounded-lg text-xs">JOGAR QUICK CHASE</button>
                 </div>
+                <!-- Missão 8: cerco noturno em três atos -->
+                <div class="bg-slate-950 border border-slate-700 hover:border-rose-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('pursuit')">
+                    <div>
+                        <span class="text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded font-bold">UNDERCOVER • MISSÃO 8</span>
+                        <h3 class="text-base font-bold text-white mt-2">Cerco à Meia-Noite</h3>
+                        <p class="text-xs text-slate-400 mt-1">Três atos: resista ao cerco policial por 24 segundos, atravesse três portões em ordem e fuja a pé para o esconderijo. Inclui tomada aérea inicial.</p>
+                    </div>
+                    <button class="mt-3 w-full bg-rose-500 hover:bg-rose-400 text-slate-950 font-extrabold py-2 rounded-lg text-xs">INICIAR MISSÃO 8</button>
+                </div>
                 <!-- Missão 7: Dossiês do Cartel -->
                 <div class="bg-slate-950 border border-slate-700 hover:border-cyan-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('evidence')">
                     <div>
@@ -584,6 +593,7 @@ git push -u origin main</pre>
     <script src="./js/physics/arcade-dynamics.js"></script>
     <script src="./js/render/vehicle-damage-fx.js"></script>
     <script src="./js/render/vehicle-visuals.js"></script>
+    <script src="./js/physics/vehicle-collisions.js"></script>
     <script src="./js/vehicles/driver-vehicle.js"></script>
     <script src="./js/assets/free-vehicle-library.js"></script>
     <script src="./js/world/urban-districts.js"></script>
@@ -593,6 +603,7 @@ git push -u origin main</pre>
     <script src="./js/traffic/traffic-ai.js"></script>
     <script src="./js/police/roadblock-director.js"></script>
     <script src="./js/gameplay/checkpoint-route.js"></script>
+    <script src="./js/gameplay/pursuit-chapter.js"></script>
     <script src="./js/render/driver-camera-rig.js"></script>
     <script src="./js/engine/driver2-game-engine.js"></script>
 </body>

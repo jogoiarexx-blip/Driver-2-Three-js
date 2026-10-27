@@ -18,7 +18,7 @@ class DriverVehicleCollisions {
     }
 
     timestamp(a, b) {
-        return this.pairs.get(a)?.get(b) ?? 0;
+        return this.pairs.get(a)?.get(b) ?? -Infinity;
     }
 
     storeTimestamp(a, b, time) {
@@ -54,8 +54,14 @@ class DriverVehicleCollisions {
         const bFree = this.isFree(city, b.x + nx * moveB, b.z + nz * moveB);
         if (!aFree && bFree) moveB = separation;
         if (!bFree && aFree) moveA = separation;
-        if (aFree) { a.x -= nx * moveA; a.z -= nz * moveA; }
-        if (bFree) { b.x += nx * moveB; b.z += nz * moveB; }
+        // Revalida também o deslocamento redistribuído quando a outra
+        // carroceria está encostada em uma parede.
+        if (aFree && this.isFree(city, a.x - nx * moveA, a.z - nz * moveA)) {
+            a.x -= nx * moveA; a.z -= nz * moveA;
+        }
+        if (bFree && this.isFree(city, b.x + nx * moveB, b.z + nz * moveB)) {
+            b.x += nx * moveB; b.z += nz * moveB;
+        }
 
         const approachA = va.x * nx + va.z * nz;
         const approachB = -(vb.x * nx + vb.z * nz);

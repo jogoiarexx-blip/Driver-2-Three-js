@@ -29,6 +29,8 @@
                 this.effects = new EffectsManager(this.scene);
                 this.city = new CityBuilder(this.scene, this.currentCityKey);
                 this.trafficAI = new DriverTrafficAI(this.city);
+                this.collisionSystem = new DriverVehicleCollisions();
+                this.pursuitChapter = new DriverPursuitChapter();
                 this.tanner = new TannerController(this.scene);
                 this.pedManager = new PedestrianAndRoadblockManager(this.scene);
                 this.roadblockDirector = new PoliceRoadblockDirector();
@@ -114,6 +116,7 @@
                 });
                 this.vehicles = [];
                 if (this.trafficAI) this.trafficAI.reset();
+                if (this.collisionSystem) this.collisionSystem.reset();
                 this.targetCar = null;
 
                 const preset = CITY_PRESETS[this.currentCityKey] || CITY_PRESETS.chicago;
@@ -287,6 +290,7 @@
                 this.felony = 0;
                 this.survivalElapsed = 0;
                 this.evidencePhase = 0;
+                this.pursuitChapter.reset();
                 this.replayBuffer = [];
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
@@ -366,6 +370,21 @@
                         'ETAPA 1: recolha os 3 dossiês azuis em ordem. ' +
                         'ETAPA 2: despiste a polícia (delito abaixo de 25) ' +
                         'e entre A PÉ no esconderijo verde.';
+                } else if (type === 'pursuit') {
+                    this.missionActive = true;
+                    this.missionTimeLeft = 155;
+                    this.felony = 98;
+                    this.setWeather('night');
+                    this.roadblockDirector.cooldown = 2;
+                    titleEl.textContent = `MISSÃO 8 (${cityTitle}): CERCO À MEIA-NOITE`;
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent = 'ATO 1: RESISTA AO CERCO POLICIAL POR 24s';
+                    objEl.textContent = 'ATO 1: sobreviva ao cerco por 24 segundos. ' +
+                        'ATO 2: siga 3 portões amarelos em ordem. ' +
+                        'ATO 3: despiste as viaturas e entre A PÉ no esconderijo.';
+                    // A breve tomada aérea tem início imediato, mas não
+                    // interrompe a direção nem congela o jogo.
                 } else if (type === 'survival') {
                     this.missionActive = true;
                     this.felony = 100;
@@ -729,52 +748,24 @@
                     vehicle.updatePhysics(dt, controls, this.city, this.effects, this.audio, false);
                 }
 
-                // 2. Colisões Carro-com-Carro (Física de Impacto + Dano + Felony)
-                for (let i = 0; i < this.vehicles.length; i++) {
-                    for (let j = i + 1; j < this.vehicles.length; j++) {
-                        const a = this.vehicles[i];
-                        const b = this.vehicles[j];
-                        const dx = b.x - a.x;
-                        const dz = b.z - a.z;
-                        const dist = Math.hypot(dx, dz);
-
-                        const collisionDistance = (a.bodyStyle === 'bus' || b.bodyStyle === 'bus' ||
-                            a.bodyStyle === 'truck' || b.bodyStyle === 'truck') ? 4.5 : 3.6;
-                        if (dist < collisionDistance && dist > 0.001) {
-                            const overlap = (collisionDistance - dist) * 0.5;
-                            const nx = dx / dist;
-                            const nz = dz / dist;
-                            a.x -= nx * overlap;
-                            a.z -= nz * overlap;
-                            b.x += nx * overlap;
-                            b.z += nz * overlap;
-
-                            // Velocidade relativa projetada no eixo da batida.
-                            // Detecta colisões frontais que possuem o mesmo módulo de velocidade.
-                            const closingSpeed = DriverArcadePhysics.resolveImpact(a, b, nx, nz);
-                            const now = performance.now();
-                            if (closingSpeed > 6 && now - (a.lastImpactAt || 0) > 450 &&
-                                now - (b.lastImpactAt || 0) > 450) {
-                                a.lastImpactAt = now;
-                                b.lastImpactAt = now;
-                                a.damage = Math.min(100, a.damage + closingSpeed * 0.28);
-                                b.damage = Math.min(100, b.damage + closingSpeed * 0.28);
-                                if (a === this.playerCar || b === this.playerCar) {
-                                    this.audio.playCrash(Math.min(1.0, closingSpeed / 35));
-                                    if (a.isPolice || b.isPolice) {
-                                        this.felony = Math.min(100, this.felony + 22);
-                                    } else if (this.isPoliceNearPlayer(65)) {
-                                        this.felony = Math.min(100, this.felony + 10);
-                                    }
-                                }
+                // Separação respeita paredes; colisão usa a massa dos veículos
+                // e um cooldown por par para não aplicar dano a cada quadro.
+                this.collisionSystem.step(
+                    this.vehicles, this.playerCar, this.city, performance.now(),
+                    impact => {
+                        if (this.mode !== 'driving') return;
+                        this.audio.playCrash(Math.min(1, impact.closingSpeed / 35));
+                        // A polícia não pode aumentar o delito de Tanner
+                        // simplesmente batendo no carro dele.
+                        if (impact.playerApproach > 8) {
+                            if (impact.other.isPolice) {
+                                this.felony = Math.min(100, this.felony + 12);
+                            } else if (this.isPoliceNearPlayer(65)) {
+                                this.felony = Math.min(100, this.felony + 6);
                             }
-                            // Resolução do impulso por massa já atualizou velocidades
-                            // longitudinal e lateral de ambos os carros.
-                            a.updateTransform();
-                            b.updateTransform();
                         }
                     }
-                }
+                );
             }
 
             updateFelonyAndMissions(dt) {
@@ -835,6 +826,37 @@
 
                 // Lógica de Tempo e Condições de Vitória/Derrota das Missões
                 if (this.missionActive) {
+                    if (this.missionType === 'pursuit') {
+                        const result = this.pursuitChapter.update(dt, {
+                            markersCollected: this.markersCollected,
+                            felony: this.felony,
+                            position: this.getPlayerPosition(),
+                            mode: this.mode,
+                            policeNear: this.isPoliceNearPlayer(40),
+                            safeHouseZone: this.city.safeHouseZone
+                        });
+                        const objEl = document.getElementById('objective-banner');
+                        const subEl = document.getElementById('mission-subcounter');
+                        subEl.textContent = result.status;
+                        if (result.changed && result.phase === 1) {
+                            const escapeRoute = [
+                                { x: 0, z: 85 }, { x: -80, z: 0 }, { x: -80, z: -80 }
+                            ];
+                            escapeRoute.forEach(p => this.spawnMarkerRing(p.x, p.z, 0xfacc15));
+                            this.totalMarkers = escapeRoute.length;
+                            this.markersCollected = 0;
+                            DriverCheckpointRoute.refresh(this.missionType, this.missionMarkers);
+                            objEl.textContent = 'ATO 2: passe pelos três portões amarelos na ordem indicada no radar.';
+                        } else if (result.changed && result.phase === 2) {
+                            objEl.textContent = 'ATO 3: despiste as viaturas (delito abaixo de 35%) e ' +
+                                'entre A PÉ no esconderijo verde.';
+                        }
+                        if (result.complete) {
+                            this.triggerEndScreen('CERCO SUPERADO!',
+                                'Tanner passou pelo bloqueio, despistou as viaturas e entrou no esconderijo.');
+                            return;
+                        }
+                    }
                     if (this.missionType === 'survival') {
                         this.survivalElapsed += dt;
                         this.felony = 100;
@@ -991,8 +1013,10 @@
             updateCamera(dt) {
                 this.cameraRig.update(
                     this.camera, this.getPlayerPosition(), this.playerCar,
-                    this.mode, this.cameraMode, this.lookBackActive,
-                    this.city, dt
+                    this.mode,
+                    this.missionType === 'pursuit' && this.pursuitChapter.introSeconds > 0
+                        ? 2 : this.cameraMode,
+                    this.lookBackActive, this.city, dt
                 );
             }
 
