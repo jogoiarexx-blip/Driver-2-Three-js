@@ -1462,6 +1462,13 @@
                 const prompt=document.getElementById('interaction-prompt');
                 const banner=document.getElementById('interior-banner');
                 if(banner)banner.classList.toggle('hidden',!this.interiorPlace);
+                const interiorTitle=document.getElementById('interior-title');
+                const saveButton=document.getElementById('btn-save-home');
+                if(interiorTitle&&this.interiorPlace)
+                    interiorTitle.textContent=this.interiorPlace.name||
+                        this.interiorPlace.id.toUpperCase();
+                if(saveButton)saveButton.classList.toggle('hidden',
+                    this.interiorPlace?.id!=='home');
                 if(this.mode!=='on_foot')return;
                 if(this.interiorPlace){
                     const t=this.tanner.group.position;

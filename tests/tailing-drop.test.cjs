@@ -218,3 +218,17 @@ test('lanchonete e oficina são reservadas com interiores independentes',()=>{
     assert.match(code,/buildEnterableStore\(blockX,blockZ,'garage'\)/);
     assert.match(code,/inside:\{x:diner\?1120:1180,z:0\}/);
 });
+
+test('módulo furtivo vem antes da inteligência de tráfego',()=>{
+    const html=read('index.html');
+    const scripts=[...html.matchAll(/src="\.\/(js\/[^"]+\.js)"/g)]
+        .map(m=>m[1]);
+    assert.ok(scripts.indexOf('js/gameplay/tailing-drop.js') <
+        scripts.indexOf('js/traffic/traffic-ai.js'));
+});
+test('salvamento só aparece dentro da casa, não na lanchonete',()=>{
+    const src=read('js/engine/driver2-game-engine.js');
+    assert.match(src,/saveButton\.classList\.toggle\('hidden'/);
+    assert.match(src,/this\.interiorPlace\?\.id!=='home'/);
+    assert.match(read('index.html'),/id="interior-title"/);
+});
