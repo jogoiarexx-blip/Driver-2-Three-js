@@ -23,6 +23,8 @@
                 this.safeHouseZone = { x: -120, z: -120, radius: 9 };
                 this.roadExtent=320; this.worldLimit=410;
                 this.trainStation=null;
+                this.caineBridgeClosed=false;
+                this.caineBridgeGate=null;
                 this.interiors=[]; this.interiorById={};
 
                 // Garagem Secreta com Portão e Interruptor a Pé (Nordeste X=120, Z=120)
@@ -67,6 +69,8 @@
                 this.benches = [];
                 this.interiors=[]; this.interiorById={};
                 this.trainStation=null;
+                this.caineBridgeClosed=false;
+                this.caineBridgeGate=null;
                 this.secretGateOpen = false;
                 this.signalClock = 0;
                 this.lastSignalPhase = -1;
@@ -209,6 +213,7 @@
                 UrbanDistricts.decorate(this);
                 this.buildInteriorRooms();
                 DriverChicagoTrain.buildInfrastructure(this);
+                if(this.preset.id==='chicago')this.buildCaineCompoundDetails();
             }
 
             buildRoadMarkings() {
@@ -681,6 +686,48 @@
                     DriverChicagoTrain.onPlatform(pos);
             }
 
+            buildCaineCompoundDetails() {
+                // Pátio fortificado em volta do depósito já acessível.
+                // Colisores adicionais ficam longe do acesso viário x=240.
+                const steel=new THREE.MeshLambertMaterial({color:0x475569});
+                const concrete=new THREE.MeshLambertMaterial({color:0x78716c});
+                const crate=new THREE.MeshLambertMaterial({color:0x92400e});
+                const paint=new THREE.MeshBasicMaterial({color:0x22c55e});
+                const add=(w,h,d,x,y,z,material)=>{
+                    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
+                    mesh.position.set(x,y,z);
+                    this.cityGroup.add(mesh);
+                    return mesh;
+                };
+                for(const [x,z,w,d] of [
+                    [178,-230,.45,30],[222,-230,.45,30],
+                    [200,-246,45,.45],[170,-215,.45,18]
+                ]){
+                    add(w,5.2,d,x,2.6,z,concrete);
+                    this.buildingBoxes.push({
+                        minX:x-w/2,maxX:x+w/2,
+                        minZ:z-d/2,maxZ:z+d/2
+                    });
+                }
+                // Corredor de acesso do armazém (sem bloqueio físico).
+                for(const x of [186,214]){
+                    add(2.2,3,3.2,x,1.5,-172,crate);
+                }
+                for(const x of [183,217]){
+                    const container=add(6.2,4,13,x,2,-241,steel);
+                    container.rotation.y=0.15*(x===183?-1:1);
+                }
+                add(6,1.1,.5,200,6.5,-183,paint);
+                // Seta luminosa na saída após a ponte; visível do carro.
+                add(18,.38,1.3,0,5,95,steel);
+                for(const x of [-6,0,6])
+                    add(3,1,.3,x,5.4,95,paint);
+                // Barra levadiça que só aparece quando termina a contagem.
+                this.caineBridgeGate=add(17,2.4,1.5,0,1.35,51,
+                    new THREE.MeshLambertMaterial({color:0xdc2626}));
+                this.caineBridgeGate.visible=false;
+            }
+
             buildEnterableWarehouse(cx,cz) {
                 const shell=new THREE.Mesh(new THREE.BoxGeometry(34,15,33),
                     new THREE.MeshLambertMaterial({color:0x64748b}));
@@ -853,6 +900,8 @@
             update(dt, vehicles, onPropHitCallback) {
                 this.signalClock += dt;
                 this.refreshTrafficLights();
+                if(this.caineBridgeGate)
+                    this.caineBridgeGate.visible=!!this.caineBridgeClosed;
                 const targetAngle = this.bridgeRaised ? 0.32 : 0.08;
                 this.bridgeAngle = THREE.MathUtils.lerp(this.bridgeAngle, targetAngle, dt * 2.5);
                 if (this.bridgeSouthLeaf && this.bridgeNorthLeaf) {
@@ -918,6 +967,8 @@
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
                 if (this.interiorArea(x,z,radius))return false;
+                if(this.caineBridgeClosed && Math.abs(x)<11+radius &&
+                    z+radius>49.5 && z-radius<52.5)return true;
                 if (Math.abs(x)>this.worldLimit || Math.abs(z)>this.worldLimit)return true;
                 if (z > 33.5 && z < 66.5 && Math.abs(x) >= 11.0 && y < 1.8) return true;
 
