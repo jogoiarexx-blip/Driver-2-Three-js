@@ -692,6 +692,34 @@
                     new THREE.MeshBasicMaterial({color:0x0ea5e9}));
                 entrance.position.set(cx,2.6,cz+16.9);
                 this.cityGroup.add(entrance);
+                // Pátio industrial acessível: asfalto gasto, grades laterais
+                // e contêineres afastados da rota do suspeito (x=200,z=-160).
+                const apron=new THREE.Mesh(new THREE.BoxGeometry(48,.20,26),
+                    new THREE.MeshLambertMaterial({color:0x52525b}));
+                apron.position.set(cx,.11,cz+38);
+                this.cityGroup.add(apron);
+                const fenceMat=new THREE.MeshLambertMaterial({color:0x64748b});
+                for(const side of [-1,1]){
+                    const fence=new THREE.Mesh(new THREE.BoxGeometry(.32,3.8,22),
+                        fenceMat);
+                    fence.position.set(cx+side*24,1.95,cz+38);
+                    this.cityGroup.add(fence);
+                    for(const rz of [cz+31,cz+46]){
+                        const cargo=new THREE.Mesh(new THREE.BoxGeometry(4,2.8,4),
+                            new THREE.MeshLambertMaterial({
+                                color:side<0?0x92400e:0x14532d
+                            }));
+                        cargo.position.set(cx+side*20,1.48,rz);
+                        this.cityGroup.add(cargo);
+                    }
+                }
+                const yardLamp=new THREE.Mesh(new THREE.BoxGeometry(0.45,5,0.45),
+                    new THREE.MeshLambertMaterial({color:0x334155}));
+                yardLamp.position.set(cx+21,2.6,cz+43);
+                const yardLight=new THREE.Mesh(new THREE.BoxGeometry(1.3,.3,.9),
+                    new THREE.MeshBasicMaterial({color:0xfde68a}));
+                yardLight.position.set(cx+21,5.1,cz+43);
+                this.cityGroup.add(yardLamp,yardLight);
                 this.interiors.push({
                     id:'warehouse',name:'Depósito abandonado',kind:'warehouse',
                     door:{x:cx,z:cz+21},inside:{x:1050,z:0}

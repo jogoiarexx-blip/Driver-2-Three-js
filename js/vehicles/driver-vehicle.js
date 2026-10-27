@@ -82,6 +82,7 @@
                 this.wheels = [];
 
                 const bodyMat = new THREE.MeshLambertMaterial({ color: this.color });
+                this.bodyPaintMaterial = bodyMat;
                 const secondaryMat = new THREE.MeshLambertMaterial({ color: this.isPolice ? 0xf8fafc : (this.isSecret ? 0xfacc15 : 0x18181b) });
                 const glassMat = new THREE.MeshLambertMaterial({ color: 0x0f172a });
                 const chromeMat = new THREE.MeshLambertMaterial({ color: 0xe2e8f0 });
@@ -105,7 +106,9 @@
                 } else if (this.bodyStyle === 'truck') {
                     const cargoBox = new THREE.Mesh(
                         new THREE.BoxGeometry(2.48, 1.85, 3.2),
-                        new THREE.MeshLambertMaterial({ color: 0xf1f5f9 })
+                        new THREE.MeshLambertMaterial({
+                            color:this.isSecret?this.color:0xf1f5f9
+                        })
                     );
                     cargoBox.position.set(0, 1.75, -0.85);
                     this.chassisTilt.add(cargoBox);
@@ -436,6 +439,14 @@
 
                 VehicleVisuals.update(this, dt, input);
                 this.updateTransform();
+            }
+
+            setPaintColor(hex) {
+                this.color=hex;
+                if(this.bodyPaintMaterial &&
+                    this.bodyPaintMaterial.color &&
+                    !this._cc0ModelApplied)
+                    this.bodyPaintMaterial.color.setHex(hex);
             }
 
             updateTransform() {

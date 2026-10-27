@@ -381,7 +381,7 @@
                     // Após a invasão, Tanner acorda no beco. O esportivo preto
                     // está estacionado perto dele; o intruso foge de sedã.
                     this.playerCar.name='ESPORTIVO PRETO • TANNER';
-                    this.playerCar.color=0x111827;
+                    this.playerCar.setPaintColor(0x111827);
                     this.playerCar.x=-84;
                     this.playerCar.z=-88;
                     this.playerCar.y=0;
@@ -801,7 +801,7 @@
                 const van=new DriverVehicle(this.scene,{
                     name:'VAN AMARELA • EMBOSCADA',
                     color:0xeab308,bodyStyle:'truck',isSecret:true,
-                    x:201,z:-151,heading:Math.PI/2,
+                    x:198,z:-137,heading:Math.PI/2,
                     maxSpeed:21,accel:17
                 });
                 van.isSecret=true;
@@ -809,7 +809,7 @@
                 van.updateTransform();
                 this.vehicles.push(van);
                 this.intruderBlocker=van;
-                this.effects.spawnImpactSparks(201,0,-151,0.4);
+                this.effects.spawnImpactSparks(198,0,-137,0.4);
                 return van;
             }
 
