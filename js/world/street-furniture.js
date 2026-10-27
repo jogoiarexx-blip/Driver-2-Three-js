@@ -85,6 +85,43 @@ class DriverStreetFurniture {
                 mesh:null
             });
         });
+
+        // Placas regionais abaixo das luminárias, espaçadas para não
+        // poluir visualmente o mapa. Sem colisões ou luzes dinâmicas.
+        const signPalette={
+            chicago:[0x1e3a5f,0xe2e8f0],
+            havana:[0xa16207,0xffedd5],
+            vegas:[0x581c87,0x22d3ee],
+            rio:[0x0f766e,0xfef08a]
+        }[city.preset.id]||[0x1e3a5f,0xe2e8f0];
+        const selected=positions.filter((_,i)=>i%4===0);
+        if(selected.length){
+            const board=new THREE.InstancedMesh(
+                new THREE.BoxGeometry(2.15,.65,.17),
+                new THREE.MeshLambertMaterial({color:signPalette[0]}),
+                selected.length
+            );
+            const stripe=new THREE.InstancedMesh(
+                new THREE.BoxGeometry(1.83,.085,.2),
+                new THREE.MeshBasicMaterial({color:signPalette[1]}),
+                selected.length
+            );
+            selected.forEach(([x,z],i)=>{
+                obj.rotation.set(0,0,0);obj.scale.set(1,1,1);
+                obj.position.set(x+1.05,4.82,z);
+                obj.updateMatrix();board.setMatrixAt(i,obj.matrix);
+                obj.position.set(x+1.05,4.57,z+.04);
+                obj.updateMatrix();stripe.setMatrixAt(i,obj.matrix);
+            });
+            for(const mesh of [board,stripe]){
+                mesh.instanceMatrix.needsUpdate=true;
+                mesh.frustumCulled=false;
+                mesh.castShadow=false;
+                mesh.name='street-signs-'+city.preset.id;
+                city.cityGroup.add(mesh);
+            }
+        }
+
         // Sem sombras/luzes físicas adicionais para preservar desempenho móvel.
         for (const mesh of [stripe,pole,bulb]) {
             mesh.frustumCulled=false;
