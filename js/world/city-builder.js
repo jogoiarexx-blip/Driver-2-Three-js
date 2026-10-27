@@ -624,14 +624,14 @@
                 const ramp=new THREE.Mesh(new THREE.BoxGeometry(6,0.32,
                     Math.hypot(rampLength,p.height)),
                     new THREE.MeshLambertMaterial({color:0x9ca3af}));
-                ramp.rotation.x=-incline;
+                ramp.rotation.x=incline;
                 ramp.position.set(-14,p.height/2,-231.5);
                 this.cityGroup.add(ramp);
                 for(const x of [-17.2,-10.8]){
                     const rail=new THREE.Mesh(new THREE.BoxGeometry(.16,.36,
                         Math.hypot(rampLength,p.height)),
                         roofMat);
-                    rail.rotation.x=-incline;
+                    rail.rotation.x=incline;
                     rail.position.set(x,p.height/2+0.55,-231.5);
                     this.cityGroup.add(rail);
                 }

@@ -10,7 +10,7 @@ class DriverHomeSave {
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
-        'heist','race','secret','pursuit','story_tipoff','story_witness'
+        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train'
     ];
     constructor(storage) { this.storage=storage; }
 
@@ -61,6 +61,12 @@ class DriverHomeSave {
                 markers:game.missionMarkers.map(m=>!!m.collected),
                 c4:game.c4State?{...game.c4State}:null
             },
+            train:game.trainLine&&game.missionType==='story_train'?{
+                elapsed:game.trainLine.elapsed,
+                position:game.trainLine.position.z,
+                arrived:game.trainLine.arrived,
+                lost:game.trainLostSeconds||0
+            }:null,
             completed:Array.from(game.completedMissions||[])
         };
     }
@@ -117,6 +123,16 @@ class DriverHomeSave {
         if(data.mission.pursuitPhase!=null){
             game.pursuitChapter.phase=DriverHomeSave.bounded(data.mission.pursuitPhase,0,2);
             game.pursuitChapter.elapsed=DriverHomeSave.bounded(data.mission.pursuitElapsed,0,24);
+        }
+        if(data.train&&game.missionType==='story_train'&&game.trainLine){
+            const train=game.trainLine;
+            train.elapsed=DriverHomeSave.bounded(data.train.elapsed,0,120);
+            train.group.position.z=DriverHomeSave.bounded(
+                data.train.position,DriverChicagoTrain.STOP_Z,DriverChicagoTrain.START_Z,
+                DriverChicagoTrain.START_Z
+            );
+            train.arrived=train.group.position.z<=DriverChicagoTrain.STOP_Z;
+            game.trainLostSeconds=DriverHomeSave.bounded(data.train.lost,0,6);
         }
         if(data.mission.c4&&game.c4State?.active){
             game.c4State.planted=!!data.mission.c4.planted;
