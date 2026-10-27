@@ -37,8 +37,8 @@ const THREE={
 const context={Math,THREE,GPUResourceUtils:{disposeSubtree(){}}};
 const Train=vm.runInNewContext(read('js/world/chicago-train.js')+
     '\nDriverChicagoTrain',context);
-const City=vm.runInNewContext(read('js/world/chicago-train.js')+
-    '\n'+read('js/world/city-builder.js')+'\nCityBuilder',context);
+const City=vm.runInNewContext(read('js/world/city-builder.js')+
+    '\nCityBuilder',context);
 const Tactics=vm.runInNewContext(read('js/police/pursuit-tactics.js')+
     '\nPolicePursuitTactics',{Math});
 const Save=vm.runInNewContext(read('js/gameplay/checkpoint-route.js')+
