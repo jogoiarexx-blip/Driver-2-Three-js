@@ -84,3 +84,13 @@ Observação: os testes de lógica não substituem uma sessão real de navegador
 - `tests/vehicle-and-mission.test.cjs`: 10 testes automatizados de iluminação, suspensão, curvas e sequência de missão, adicionados à suíte GitHub Actions.
 
 Os arquivos JavaScript são scripts clássicos e continuam compatíveis com GitHub Pages sem bundler. Assets Kenney continuam opcionais, com fallback procedural.
+
+## Atualização: danos visuais, perseguição em formação e ruas — REV atual
+
+- `js/render/vehicle-damage-fx.js`: marcas de colisão em quatro níveis (20%, 38%, 64%, 85%) com arranhões, chapas amassadas, vidro trincado e capô desencaixado. O mesmo conjunto decorativo permanece sobre o GLB ao trocar de modelo.
+- `js/police/pursuit-tactics.js`: quatro viaturas podem exercer os papéis de perseguidor, flanqueador direito, flanqueador esquerdo e interceptador mais à frente. Caso o ponto de interceptação atravesse edifícios, a IA continua usando ruas e alvos seguros.
+- `js/world/street-furniture.js`: 500 faixas curtas de travessia, 50 postes e 50 luminárias em **3 lotes instanciados**, sem criar luzes WebGL adicionais.
+- `tests/damage-police-streets.test.cjs`: 10 verificações reproduzíveis integradas ao GitHub Actions, além das 31 verificações anteriores. Os testes que isolam a IA e os veículos agora carregam suas dependências explicitamente.
+- A simulação física, as missões já existentes, as opções PS1/GLB e o deploy estático foram preservados.
+
+**Validação:** GitHub Actions certifica sintaxe/algoritmos, mas não comprova uma partida completa nem substitui testes visuais em navegador desktop e smartphone.
