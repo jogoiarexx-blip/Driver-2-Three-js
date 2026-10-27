@@ -12,10 +12,12 @@ class DriverTrafficAI {
         this.blockSize = 80;
         this.laneOffset = 4;
         this.policeRoadblocks = [];
+        this.policeMemory = new WeakMap();
     }
 
     reset() {
         this.routes = new WeakMap();
+        this.policeMemory = new WeakMap();
     }
 
     nearestGrid(value) {
@@ -119,6 +121,39 @@ class DriverTrafficAI {
         return true;
     }
 
+    pursuitInformation(car, dt, playerPos, felony) {
+        if (!playerPos) return null;
+        let memory=this.policeMemory.get(car);
+        if (!memory) {
+            memory={lastKnown:null,remaining:0,radioCooldown:0,visible:false};
+            this.policeMemory.set(car,memory);
+        }
+        memory.radioCooldown=Math.max(0,memory.radioCooldown-dt);
+        const visible=this.unobstructed(car,playerPos);
+        memory.visible=visible;
+        if (visible) {
+            memory.lastKnown={
+                x:playerPos.x,z:playerPos.z,heading:playerPos.heading||0,
+                speed:playerPos.speed||0
+            };
+            memory.remaining=7;
+        } else {
+            memory.remaining=Math.max(0,memory.remaining-dt);
+            // Informação de rádio esporádica e imprecisa quando está distante;
+            // sem linha de visão a IA não recebe a localização exata contínua.
+            if (memory.remaining<=0 && memory.radioCooldown<=0 && felony>=35) {
+                memory.lastKnown={
+                    x:this.nearestGrid(playerPos.x),
+                    z:this.nearestGrid(playerPos.z),
+                    heading:0,speed:0
+                };
+                memory.remaining=5;
+                memory.radioCooldown=10;
+            }
+        }
+        return memory.remaining>0 ? memory.lastKnown : null;
+    }
+
     barrierAhead(car) {
         const fx=Math.sin(car.heading), fz=Math.cos(car.heading);
         let nearest=Infinity;
@@ -152,21 +187,25 @@ class DriverTrafficAI {
     getInput(car, dt, vehicles, playerPos, felony) {
         const route = this.getRoute(car);
         const wanted = car.isPolice && felony > 25;
+        const pursuitTarget = wanted ?
+            this.pursuitInformation(car,dt,playerPos,felony) : null;
         const previousTarget = route.target;
         if (Math.hypot(car.x - previousTarget.x, car.z - previousTarget.z) < 10) {
-            this.chooseNext(car, route, wanted || car.isTarget ? playerPos : null, wanted);
+            this.chooseNext(car, route,
+                wanted ? pursuitTarget : (car.isTarget ? playerPos : null),
+                wanted && !!pursuitTarget);
         }
 
         let target = route.target;
         const distanceToPlayer = playerPos ?
             Math.hypot(car.x - playerPos.x, car.z - playerPos.z) : Infinity;
-        if (wanted && playerPos) {
-            const formation = PolicePursuitTactics.targetFor(car,playerPos,felony);
+        if (wanted && pursuitTarget) {
+            const formation = PolicePursuitTactics.targetFor(car,pursuitTarget,felony);
             if (PolicePursuitTactics.targetIsSafe(this.city,formation) &&
                 this.unobstructed(car,formation)) {
                 target = formation;
-            } else if (this.unobstructed(car,playerPos)) {
-                target = playerPos;
+            } else if (this.unobstructed(car,pursuitTarget)) {
+                target = pursuitTarget;
             }
         }
 
@@ -240,6 +279,8 @@ class DriverTrafficAI {
             input.down = true;
         }
         car.sirenActive = wanted;
+        car.policeLineOfSight = wanted &&
+            !!this.policeMemory.get(car)?.visible;
         return input;
     }
 }
