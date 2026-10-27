@@ -22,7 +22,14 @@ class UrbanDistricts {
                 x>=160 ? 13+r*18 :      // Porto: armazéns e quadras baixas
                 12+r*18                  // Centro Habana
             ) :
-            city === 'vegas' ? 22 + r * 42 :
+            city === 'vegas' ? (
+                // Hotéis altos nos quarteirões da Strip x=±40/120;
+                // Fremont de escala média e resorts menores na borda.
+                Math.abs(x)<=125&&z>=-235&&z<=245 ?
+                    32+r*45+12*Math.max(0,1-Math.abs(z)/280) :
+                z<=-155 ? 19+r*30 :
+                x>=155 ? 24+r*34 : 14+r*20
+            ) :
             city === 'rio' ?
                 // Faixa de prédios mais altos na Zona Sul, centro com
                 // variação média e bairros baixos na periferia.
