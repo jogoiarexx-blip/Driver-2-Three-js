@@ -35,11 +35,11 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       }));
     });
     await page.goto(BASE,{waitUntil:'domcontentloaded',timeout:60000});
-    await page.waitForFunction(()=>window.DriverBoot&&window.THREE,{timeout:60000});
+    await page.waitForFunction(()=>window.DriverBoot&&window.THREE,null,{timeout:60000});
     const started=await page.evaluate(()=>window.DriverBoot.start('ride'));
     assert(started,'Não foi possível iniciar o jogo pelo menu');
     await page.waitForFunction(()=>window.DriverGame&&window.DriverGame.city.ready&&
-      window.DriverGame.playerCar&&window.DriverBoot.sessionReady,{timeout:120000});
+      window.DriverGame.playerCar&&window.DriverBoot.sessionReady,null,{timeout:120000});
     for(const city of CITIES){
       if(city!=='chicago') {
         const ok=await page.evaluate(id=>window.DriverGame.requestCityChange(id),city);
