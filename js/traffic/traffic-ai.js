@@ -186,17 +186,25 @@ class DriverTrafficAI {
 
     getInput(car, dt, vehicles, playerPos, felony) {
         const route = this.getRoute(car);
+        const scripted = car.scriptedDrive || null;
+        const waypoint = scripted ?
+            DriverTailingDropMission.advanceRoute(car) : null;
         const wanted = car.isPolice && felony > 25;
         const pursuitTarget = wanted ?
             this.pursuitInformation(car,dt,playerPos,felony) : null;
         const previousTarget = route.target;
-        if (Math.hypot(car.x - previousTarget.x, car.z - previousTarget.z) < 10) {
+        if (!scripted &&
+            Math.hypot(car.x - previousTarget.x, car.z - previousTarget.z) < 10) {
             this.chooseNext(car, route,
                 wanted ? pursuitTarget : (car.isTarget ? playerPos : null),
                 wanted && !!pursuitTarget);
         }
 
-        let target = route.target;
+        let target = scripted ?
+            (waypoint || {
+                x:car.x+Math.sin(car.heading)*10,
+                z:car.z+Math.cos(car.heading)*10
+            }) : route.target;
         const distanceToPlayer = playerPos ?
             Math.hypot(car.x - playerPos.x, car.z - playerPos.z) : Infinity;
         let maneuver=null;
@@ -236,6 +244,8 @@ class DriverTrafficAI {
         let maxSpeed = wanted ? 40 : car.isTarget ? 34 :
             (car.bodyStyle === 'bus' || car.bodyStyle === 'truck' ? 17 : 23);
         if (maneuver) maxSpeed=Math.min(maxSpeed,maneuver.speedLimit);
+        if (scripted) maxSpeed=scripted.done?0:
+            Math.min(maxSpeed,scripted.maxSpeed||23);
         car.policeManeuver = maneuver ? maneuver.mode : null;
         // A velocidade recomendada cai progressivamente quando a curva
         // aproxima de 90 graus; viaturas não fazem curvas a 140 km/h.
@@ -243,17 +253,22 @@ class DriverTrafficAI {
             maxSpeed = Math.min(maxSpeed, Math.max(8, 31 / (1 + turn * 1.7)));
         }
         // Desaceleração preventiva nas interseções urbanas.
-        const toJunction = Math.hypot(car.x - route.target.x, car.z - route.target.z);
+        const toJunction = scripted && waypoint ?
+            Math.hypot(car.x-waypoint.x,car.z-waypoint.z) :
+            Math.hypot(car.x - route.target.x, car.z - route.target.z);
         if (toJunction < 28 && Math.abs(car.speed) > 19) {
             maxSpeed = Math.min(maxSpeed, 19);
         }
 
-        const distanceToIntersection = Math.hypot(
-            car.x - route.target.x, car.z - route.target.z
-        );
-        const stopForRed = !wanted && !car.isTarget &&
-            distanceToIntersection < 28 && distanceToIntersection > 5 &&
-            !this.city.isTrafficGreen(route.axis);
+        const distanceToIntersection = scripted ? toJunction :
+            Math.hypot(car.x-route.target.x,car.z-route.target.z);
+        const junctionAxis=scripted && waypoint ?
+            (Math.abs(waypoint.x-car.x)>Math.abs(waypoint.z-car.z)?'x':'z') :
+            route.axis;
+        const stopForRed=!wanted && (!car.isTarget || !!scripted) &&
+            (!scripted || !scripted.done) &&
+            distanceToIntersection<28 && distanceToIntersection>7 &&
+            !this.city.isTrafficGreen(junctionAxis);
         const distanceAhead = this.vehicleAhead(car, vehicles);
         const stopForCar = distanceAhead < 8 + Math.max(0, car.speed) * 0.33;
         const slowForCar = distanceAhead < 14 + Math.max(0, car.speed) * 0.45;
@@ -275,7 +290,7 @@ class DriverTrafficAI {
         } else {
             route.stuckSeconds = 0;
         }
-        if (route.stuckSeconds > 2.2) {
+        if (!scripted && route.stuckSeconds > 2.2) {
             route.reverseTimer = 0.85;
             route.stuckSeconds = 0;
         }
