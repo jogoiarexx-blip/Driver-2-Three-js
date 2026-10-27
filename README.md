@@ -135,3 +135,14 @@ O GitHub Actions avalia testes lógicos de Node; a validação visual completa e
 - Nova geometria low-poly de porta e para-choque danificados é ligada apenas na área afetada; os efeitos funcionam igualmente no modelo procedural e no GLB porque permanecem no grupo visual do veículo.
 - Manobras de flanqueamento e interceptação estão habilitadas somente para viaturas com visão direta, felony alto, velocidade suficiente e trajetória sem prédios. Não há teletransporte; a IA escolhe pontos adiante e freia antecipadamente durante um corte de caminho.
 - Adicionados 18 testes de regressão para lados do contato, veículos rotacionados, ré, acúmulo de danos, visibilidade e táticas. A validação automatizada não é equivalente a uma partida completa no navegador.
+
+## Expansão urbana, interiores, casa e salvamento (outubro/2026)
+
+- Grade ampliada de **5×5 para 9×9 quarteirões** (81 posições-base); asfalto, sinalização, trânsito, limites do mapa e canal acompanham a expansão. Geometrias instanciadas continuam em poucos lotes. As dimensões representam uma expansão procedural inspirada nas cidades do Driver 2, **não um mapa idêntico/extraído da versão PS1**.
+- Melhorias de ambientação para Chicago (estádio e píer), Havana (capitólio e praça), Las Vegas (hotéis de neon) e Rio (praça e mercado), usando geometria low-poly original.
+- A **casa de Tanner** (sudoeste, entrada verde) e um **depósito** (x=200,z=-200, porta azul) permitem entrar a pé usando **E/Enter**, explorar salas 3D e sair pela porta. Na casa, aproxime-se da **mesa verde** e use **F/E** ou botão **SALVAR**.
+- Save real em `localStorage`, com versão e validação: cidade, clima, missão, checkpoints, estado do carro/danos, Tanner, garagem secreta e histórico de missões concluídas. O botão **CARREGAR** fica no menu de missões. O save fica neste navegador/origem e pode se perder caso os dados do navegador sejam apagados.
+- Modo história Chicago: **Surveillance Tip Off** (ir ao carro de Jones e entrar nele) e **Chase the Witness** (acompanhar sedã azul em vez de destruí-lo). Os objetivos seguem a estrutura das duas primeiras missões, mas percurso, tempo e posicionamento são adaptações. As restantes missões originais ainda não foram reconstruídas.
+- Testes automatizados em `tests/city-home-save.test.cjs` verificam persistência, erro de armazenamento, cidades, zonas caminháveis, interfaces e progressão.
+
+**Limitação:** ainda é necessário validar uma partida visual completa no browser, testar o save entre sessões reais e conferir desempenho em celulares com pouca memória. O navegador deve permitir armazenamento local.
