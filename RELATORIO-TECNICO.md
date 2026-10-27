@@ -1,0 +1,56 @@
+# Driver 2 Three.js — Relatório técnico da revisão urbana
+
+Revisão: 3999ec766f5e317c8fb64d1352d05f3aa92a4f55 (27/10/2026)
+Site: https://jogoiarexx-blip.github.io/Driver-2-Three-js/
+Fonte: https://github.com/jogoiarexx-blip/Driver-2-Three-js/archive/3999ec766f5e317c8fb64d1352d05f3aa92a4f55.zip
+
+## Correções implementadas e verificações
+
+1. Mobiliário viário: afastamento de 16 unidades dos eixos das ruas para postes e semáforos; reposicionamento de placas e contorno do canal. Criado js/world/road-geometry.js.
+2. Canal: colisores segmentados coincidentes com as muretas visíveis, aberturas nas margens e água com profundidade lógica -4. Carro pode cair, gerar respingos e ser recuperado para a última posição seca.
+3. Estação: elimina impulso vy proporcional à diferença brusca de terreno; limita degraus impassáveis e conserva saltos em saídas elevadas com impulso limitado.
+4. Tanner: vaga da garagem junto à casa, 5 posições persistentes em localStorage (chave driver2-tanner-garage-v1), saída checada para colisões; atalhos P (guardar), O (abrir), T (rota casa).
+5. Navegação: marcadores 3D das missões Chicago 01 e Havana 09; ativação J por proximidade, ícones de casa/garagem/missão no radar e mapa ampliado.
+6. Sistema anterior preservado: missões, cidades, frota, carregamento progressivo, LOD, dança das peças, etc.
+
+## Arquivos principais
+
+- js/world/road-geometry.js (novo)
+- js/world/street-furniture.js
+- js/world/city-builder.js
+- js/vehicles/driver-vehicle.js
+- js/render/effects-manager.js
+- js/gameplay/tanner-garage.js (novo)
+- js/engine/driver2-game-engine.js
+- index.html
+- tests/urban-water-garage.test.cjs (novo)
+- tests/city-home-save.test.cjs, tests/chicago-caine.test.cjs
+- .github/workflows/deliverable-package.yml (novo)
+- README.md
+
+## Testes realmente executados
+
+- JavaScript: sintaxe verificada para os arquivos alterados.
+- GitHub Actions 'Driver 2 — QA de lógica': SUCCESS na revisão 3999ec7 (run 40559113206).
+- GitHub Pages: SUCCESS na revisão 3999ec7 (run 40559114324).
+- Workflow ZIP: SUCCESS na revisão 3999ec7 (run 40559113153), produzindo artefato Driver2-ThreeJS-FONTE.
+- Testes Node para posicionamento, margens, rampa, água, garagem, indicadores e integração.
+- Inspeção binária local do GLB fornecido: GLB 2.0, 1 mesh, 1 material e 1 textura JPEG embutida.
+
+## Não verificado ou não implementado completamente
+
+- Não houve teste completo de pilotagem visual em Chrome real por todas as quatro cidades.
+- Não foram reproduzidas todas as ruas originais do Driver 2; cenários continuam adaptações procedurais.
+- Demais pontos de missão, além de Chicago 01 e Havana 09, não receberam todos os ícones/acionamentos.
+- Sistema da garagem não representa visualmente um interior 3D dirigível; é uma vaga externa funcional.
+- Veículos GLB usam peças de dano estilizadas, sem deformação por vértices.
+- O modelo binário GLB NÃO foi enviado ao GitHub nesta revisão; precisa ser colocado em assets/vehicles/carro_driver2_otimizado.glb e commitado, ou importado localmente no menu do jogo.
+- Otimização longa de desempenho e validação visual de z-fighting/flicker pendentes.
+
+## Como obter o projeto completo com o carro
+
+1. Baixe o ZIP da fonte GitHub correspondente à revisão 3999ec7 (link acima) ou o ZIP na execução do workflow de entrega.
+2. Extraia em uma pasta Driver2-ThreeJS.
+3. Extraia o arquivo deste pacote na raiz dessa pasta, preservando assets/vehicles/carro_driver2_otimizado.glb.
+4. Compacte a pasta resultante em ZIP. Este é o pacote integral fonte + GLB.
+5. Para publicar no GitHub Pages, envie também assets/vehicles/carro_driver2_otimizado.glb para o repositório; caso contrário use o botão IMPORTAR GLB no jogo.

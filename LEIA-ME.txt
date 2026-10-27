@@ -1,0 +1,5 @@
+PACOTE COMPLEMENTAR DE GLB + RELATORIO
+
+Inclua a pasta assets/vehicles deste ZIP na raiz do ZIP de fonte da revisao 3999ec7.
+Fonte completa: https://github.com/jogoiarexx-blip/Driver-2-Three-js/archive/3999ec766f5e317c8fb64d1352d05f3aa92a4f55.zip
+O GLB nao foi commitado no GitHub nesta revisao.
