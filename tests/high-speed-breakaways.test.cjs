@@ -23,7 +23,7 @@ test('colisão varrida impede atravessamento de carros que trocaram de lado',()=
         hit=>events.push(hit),hit=>events.push(hit));
     assert.equal(count,1);
     assert.equal(events.length,2);
-    assert.equal(events[1].swept,true);
+    assert.equal(events[0].swept,true);
     assert.ok(events[0].closingSpeed>20);
     assert.ok(a.x<b.x);
     assert.ok(a.damage>0&&b.damage>0);
