@@ -19,6 +19,7 @@
                 this.poleDebrisGeometry=null;
                 this.benches = [];
                 this.chicagoParks=[];
+                this.rioParks=[];
                 this.bridgeRaised = false;
                 this.bridgeAngle = 0.14;
                 this.signalClock = 0;
@@ -127,6 +128,8 @@
                 this.benches = [];
                 this.chicagoParks=[];
                 this.chicagoOverhaulStats=null;
+                this.rioParks=[];
+                this.rioOverhaulStats=null;
                 this.interiors=[]; this.interiorById={};
                 this.missionStart=null;
                 this.trainStation=null;
@@ -316,6 +319,9 @@
                     if(typeof DriverChicagoOverhaul!=='undefined')
                         DriverChicagoOverhaul.buildCity(this);
                 }
+                if(this.preset.id==='rio' &&
+                    typeof DriverRioOverhaul!=='undefined')
+                    DriverRioOverhaul.buildCity(this);
                 // Diagnóstico de conectividade, executado uma única vez
                 // após o setor final (não a cada frame).
                 if(typeof DriverRoadGeometry!=='undefined')
@@ -413,6 +419,10 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoOverhaul!=='undefined')
                     DriverChicagoOverhaul.detailDistrict(this,
+                        chunk.buildings,group);
+                if(this.preset.id==='rio' &&
+                    typeof DriverRioOverhaul!=='undefined')
+                    DriverRioOverhaul.detailDistrict(this,
                         chunk.buildings,group);
                 group.visible=false;
                 this.cityGroup.add(group);
@@ -748,6 +758,10 @@
                     if(!this.chicagoParks)this.chicagoParks=[];
                     this.chicagoParks.push({x:cx,z:cz});
                 }
+                if(this.preset.id==='rio'){
+                    if(!this.rioParks)this.rioParks=[];
+                    this.rioParks.push({x:cx,z:cz});
+                }
                 const grass = new THREE.Mesh(
                     new THREE.BoxGeometry(44, 0.42, 44),
                     new THREE.MeshLambertMaterial({ color: this.preset.parkColor })
@@ -993,6 +1007,9 @@
                 if(id==='chicago' &&
                     typeof DriverChicagoOverhaul!=='undefined')
                     DriverChicagoOverhaul.detailLandmark(this,cx,cz);
+                if(id==='rio' &&
+                    typeof DriverRioOverhaul!=='undefined')
+                    DriverRioOverhaul.detailLandmark(this,cx,cz);
             }
 
 
