@@ -8,6 +8,10 @@ on:
       - 'js/world/**'
       - 'tests/visual-smoke.cjs'
       - 'tests/structure-smoke.cjs'
+      - 'tests/female-walker-smoke.cjs'
+      - 'js/assets/driver-female-pedestrian.js'
+      - 'js/entities/pedestrians-roadblocks.js'
+      - 'assets/pedestrians/**'
       - '.github/workflows/visual-qa.yml'
 
 permissions:
@@ -28,6 +32,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Testar geometria, entradas e portões (sem navegador)
         run: node tests/structure-smoke.cjs
+      - name: Testar pedestre feminina, animação e GLB
+        run: node tests/female-walker-smoke.cjs
       - name: Servir a versão atual do jogo
         run: |
           python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-http.log 2>&1 &
