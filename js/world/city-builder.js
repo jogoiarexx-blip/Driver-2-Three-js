@@ -162,7 +162,9 @@
                         sw.position.set(blockX, 0.175, blockZ);
                         this.cityGroup.add(sw);
 
-                        if (blockX === -120 && blockZ === -120) {
+                        if ((blockX===-280||blockX===280)&&blockZ===-280) {
+                            this.buildRegionalLandmark(blockX,blockZ);
+                        } else if (blockX === -120 && blockZ === -120) {
                             this.buildSafeHouseBlock(blockX, blockZ);
                         } else if (blockX === 120 && blockZ === 120) {
                             this.buildSecretGarageCompound(blockX, blockZ);
@@ -483,6 +485,17 @@
                 );
                 garage.position.set(cx, 7.2, cz);
                 this.cityGroup.add(garage);
+                // Telhado e janelas reais no lugar do antigo bloco cinza.
+                const roof=new THREE.Mesh(new THREE.BoxGeometry(32,1.2,32),
+                    new THREE.MeshLambertMaterial({color:0x7c2d12}));
+                roof.position.set(cx,14.7,cz);this.cityGroup.add(roof);
+                for(const sign of [-1,1]) {
+                    const windowPane=new THREE.Mesh(
+                        new THREE.BoxGeometry(3.8,2.7,0.25),
+                        new THREE.MeshBasicMaterial({color:0x93c5fd}));
+                    windowPane.position.set(cx+sign*8.2,7,cz+15.15);
+                    this.cityGroup.add(windowPane);
+                }
 
                 this.buildingBoxes.push({
                     minX: cx - 15, maxX: cx + 15,
@@ -505,6 +518,82 @@
                 });
             }
 
+
+
+            buildRegionalLandmark(cx,cz) {
+                // Dois quarteirões memoráveis por cidade, usando malhas
+                // simples para o cenário continuar leve no celular.
+                const id=this.preset.id, west=cx<0;
+                const make=(shape,geometry,color,x,y,z)=>{
+                    const mesh=new THREE.Mesh(geometry,
+                        new THREE.MeshLambertMaterial({color}));
+                    mesh.position.set(x,y,z);this.cityGroup.add(mesh);
+                    return mesh;
+                };
+                const box=(w,h,d,color,x,y,z)=>make('box',
+                    new THREE.BoxGeometry(w,h,d),color,x,y,z);
+                const dome=(radius,height,color,x,y,z)=>make('dome',
+                    new THREE.SphereGeometry(radius,10,7),color,x,y,z);
+                const column=(radius,height,color,x,y,z)=>make('column',
+                    new THREE.CylinderGeometry(radius,radius,height,7),color,x,y,z);
+                // Pisos e pátios visitáveis; não bloqueiam a circulação.
+                box(45,0.36,45,id==='rio'?0xfde68a:0x64748b,cx,0.18,cz);
+                if(id==='chicago') {
+                    if(west) {
+                        // Estádio inspirado em Wrigley Field.
+                        box(38,0.28,37,0x15803d,cx,0.40,cz);
+                        for(const sign of [-1,1]) {
+                            box(38,7,3,0x94a3b8,cx,3.5,cz+sign*19);
+                            box(3,7,38,0x94a3b8,cx+sign*19,3.5,cz);
+                        }
+                        box(14,8,0.6,0x166534,cx,11,cz-18.5);
+                    }else{
+                        // Píer urbano e galpões da orla.
+                        for(let i=-1;i<=1;i++)box(10,6,15,0x94a3b8,
+                            cx+i*13,3.4,cz);
+                        for(const x of [cx-16,cx+16])
+                            column(0.3,7,0x334155,x,3.5,cz+15);
+                    }
+                }else if(id==='havana'){
+                    if(west) {
+                        // Fachada cívica inspirada no Capitolio de Havana.
+                        box(32,11,25,0xfde68a,cx,5.7,cz);
+                        for(let x=-12;x<=12;x+=6)
+                            column(0.8,10,0xffedd5,cx+x,6,cz+13.5);
+                        dome(8,9,0xe2e8f0,cx,19,cz-2);
+                    }else{
+                        // Praça de la Revolución: pátio e monumento.
+                        column(3,27,0xd4d4d8,cx,13.5,cz);
+                        box(12,2,12,0xe5e7eb,cx,1.0,cz);
+                        for(const x of [-16,16])
+                            column(0.8,7,0x7c2d12,cx+x,3.5,cz+10);
+                    }
+                }else if(id==='vegas'){
+                    const neon=west?0xec4899:0x22d3ee;
+                    box(31,west?43:34,29,0x334155,cx,west?21.5:17,cz);
+                    for(const x of [-12,0,12]){
+                        box(3,25,0.7,neon,cx+x,14,cz+15);
+                    }
+                    box(25,2,1,0xfacc15,cx,7,cz+16);
+                    dome(10,6,west?0x9333ea:0x0891b2,cx,west?44:36,cz);
+                }else{
+                    if(west){
+                        // Praça litorânea arborizada do Rio de Janeiro.
+                        box(42,0.35,38,0x16a34a,cx,0.45,cz);
+                        for(const x of [-13,13]){
+                            column(0.6,8,0x92400e,cx+x,4.5,cz);
+                            dome(4,4,0x166534,cx+x,9,cz);
+                        }
+                        box(14,3,9,0xfef3c7,cx,1.8,cz+10);
+                    }else{
+                        // Mercado de bairro e praça com coreto.
+                        box(32,7,21,0xfef08a,cx,3.6,cz);
+                        box(34,1.3,24,0xef4444,cx,7.8,cz);
+                        for(const x of [-12,12])
+                            column(0.45,7,0x334155,cx+x,3.5,cz+15);
+                    }
+                }
+            }
 
             buildEnterableWarehouse(cx,cz) {
                 const shell=new THREE.Mesh(new THREE.BoxGeometry(34,15,33),
