@@ -197,3 +197,21 @@ O estado da perseguição e os seus checkpoints de rota entram no save da casa d
 Tanner. Testes: `node --test tests/*.test.cjs`, incluindo
 `tests/chicago-intruder.test.cjs`. A rota e a sequência são aproximações próprias;
 não há ainda validação completa em navegador/WebGL ou fidelidade de mapa 1:1.
+
+## Chicago 07 — Caine's Compound
+
+- Depois de alcançar o invasor, Tanner começa dentro do depósito e sai pela
+porta usando E. Um carro amarelo espera do lado de fora; entre nele para fugir.
+- Duas vans inimigas surgem no complexo e tentam perseguir Tanner pelo tráfego
+já existente. Evite a colisão e alcance a ponte ao centro do mapa.
+- Ao se aproximar da ponte levadiça, uma contagem de **19 segundos** é ativada.
+A travessia leva até o arco verde na margem norte. Se o prazo acabar,
+a cancela aparece e a travessia passa a bloquear fisicamente o carro.
+- O depósito recebeu muros de concreto, grades, contêineres e marcação verde
+de saída, sem bloquear a porta de entrada ou o carro estacionado.
+- Save doméstico inclui fase, vans, ponte e tempo restante. Alterar missões
+reinicia os obstáculos exclusivos desta campanha.
+- A geometria e a rota são adaptações originais de Chicago, **não uma extração
+do mapa do PS1**. Testes em `tests/chicago-caine.test.cjs` verificam fases,
+contagem, travessia e colisões. Uma partida manual completa no navegador ainda
+deve ser validada.
