@@ -235,6 +235,43 @@ class DriverChicagoOverhaul {
         return DriverSpecialStructures.pack(city.cityGroup,parts,'chicago-park-paths');
     }
 
+    static detailTrain(train) {
+        if(!train?.group)return [];
+        const parts=[],add=(...x)=>parts.push(x);
+        // Acabamento no trem da missão: carros articulados,
+        // guarnições, portas, linha vermelha e caixas no telhado.
+        // Coordenadas locais: seguem o grupo animado do trem, sem
+        // mudar sua rota, velocidade ou detecção de plataforma.
+        for(let car=0;car<3;car++){
+            const z=car*11.9;
+            for(const side of [-1,1]){
+                const x=side*1.72;
+                add(x,1.55,z-0.2,.10,1.35,2.05,0x6e7a88,false);
+                for(const dz of [-1.12,.72]){
+                    add(x+side*.055,2.2,z+dz,.10,2.6,.13,
+                        0xdde5e7,false);
+                }
+                add(x+side*.055,3.45,z-.2,.12,.16,2.3,
+                    0xb3c4cc,false);
+                add(x+side*.08,1.23,z,.14,.2,10.2,0x973f42,false);
+                for(const dz of [-4.75,4.75])
+                    add(x+side*.1,2.6,z+dz,.20,.18,.19,
+                        0xf7e7b7,true);
+            }
+            for(const dz of [-3.2,0,3.2]){
+                add(0,4.55,z+dz,1.55,.22,1.3,0x556575,false);
+                add(0,4.71,z+dz,.95,.10,.9,0x9aa9b6,false);
+            }
+            // Cabos e engates entre os vagões.
+            if(car<2){
+                add(0,1.0,z+5.9,.75,.42,1.75,0x444b55,false);
+                add(0,2.0,z+5.8,2.8,.14,.20,0x303946,false);
+            }
+        }
+        return DriverSpecialStructures.pack(train.group,parts,
+            'chicago-el-train');
+    }
+
     static buildCity(city) {
         if(!this.isChicago(city))return;
         this.buildRiverfront(city);
