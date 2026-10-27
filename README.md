@@ -146,3 +146,9 @@ O GitHub Actions avalia testes lógicos de Node; a validação visual completa e
 - Testes automatizados em `tests/city-home-save.test.cjs` verificam persistência, erro de armazenamento, cidades, zonas caminháveis, interfaces e progressão.
 
 **Limitação:** ainda é necessário validar uma partida visual completa no browser, testar o save entre sessões reais e conferir desempenho em celulares com pouca memória. O navegador deve permitir armazenamento local.
+
+### Navegação no mundo ampliado
+
+- Use **MAPA GERAL** ou tecla **G** para reduzir o zoom do radar e encontrar pontos mais distantes. Dentro de um prédio, o minimapa mostra um esquema do cômodo, com mesa e saída.
+- A polícia reconhece os limites da nova área urbana ao calcular interceptações.
+- Estilos e nomes de locais clássicos servem de referência, mas o traçado das ruas e a sequência da história ainda não são reproduções 1:1 do PS1.

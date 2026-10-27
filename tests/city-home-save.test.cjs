@@ -191,3 +191,63 @@ test('interação exige proximidade real à mesa e preserva o local',()=>{
   assert.match(source,/this\.interiorPlace=place/);
   assert.match(source,/this\.interiorPlace=null/);
 });
+
+
+test('viaturas podem perseguir nas novas bordas da cidade',()=>{
+  const Tactics=vm.runInNewContext(
+    read('js/police/pursuit-tactics.js')+'\nPolicePursuitTactics',{Math});
+  const city={worldLimit:410,isPointBlocked:()=>false};
+  assert.equal(Tactics.targetIsSafe(city,{x:310,z:-300}),true);
+  assert.equal(Tactics.targetIsSafe(city,{x:415,z:0}),false);
+  // Mundos legados sem limite explícito mantêm a fronteira anterior.
+  assert.equal(Tactics.targetIsSafe({isPointBlocked:()=>false},{x:290,z:0}),false);
+});
+test('mapa geral pode ser ativado por tecla G e botão na interface',()=>{
+  const source=read('js/engine/driver2-game-engine.js');
+  const html=read('index.html');
+  assert.match(source,/code === 'KeyG'/);
+  assert.match(source,/toggleRadarZoom\(\)/);
+  assert.match(source,/this\.radarWide \? 0\.16 : 0\.52/);
+  assert.match(html,/id="btn-radar-zoom"/);
+});
+test('motor de interfaces leva Tanner para sala e de volta à porta real',()=>{
+  const badge={textContent:''};
+  const globals={
+    window:{},
+    document:{getElementById:()=>badge}
+  };
+  const Engine=vm.runInNewContext(
+    read('js/engine/driver2-game-engine.js')+'\nDriver2GameEngine',globals);
+  const place={id:'home',inside:{x:1000,z:0},
+    door:{x:-120,z:-101},exit:{x:1000,z:-8.8}};
+  const data={
+    mode:'on_foot',interiorPlace:null,cameraRig:{lastMode:0,focus:{}},
+    tanner:{setPosition(x,y,z,heading){this.pos={x,y,z,heading};}}
+  };
+  assert.equal(Engine.prototype.enterInterior.call(data,place),true);
+  assert.equal(data.tanner.pos.x,1000);
+  assert.equal(data.interiorPlace.id,'home');
+  assert.equal(Engine.prototype.leaveInterior.call(data),true);
+  assert.equal(data.interiorPlace,null);
+  assert.equal(data.tanner.pos.x,-120);
+});
+test('HUD orienta salvar perto da mesa, sair perto da porta',()=>{
+  const elements={
+    'interaction-prompt':{classList:{remove(){}},textContent:''},
+    'interior-banner':{classList:{toggle(){}}}
+  };
+  const Engine=vm.runInNewContext(
+    read('js/engine/driver2-game-engine.js')+'\nDriver2GameEngine',
+    {window:{},document:{getElementById:id=>elements[id]}}
+  );
+  const data={mode:'on_foot',interiorPlace:{
+    id:'home',exit:{x:1000,z:-8.8},
+    savePoint:{x:1000,z:4}
+  },tanner:{group:{position:{x:1000,z:4}}},
+  nearSaveDesk(){return this.tanner.group.position.z>0;}};
+  Engine.prototype.updateInteriorHUD.call(data);
+  assert.match(elements['interaction-prompt'].textContent,/salvar/);
+  data.tanner.group.position.z=-8;
+  Engine.prototype.updateInteriorHUD.call(data);
+  assert.match(elements['interaction-prompt'].textContent,/SAIR/);
+});
