@@ -25,13 +25,13 @@ test('pedestre só entra na travessia quando os carros da avenida recebem vermel
     for(let i=0;i<20;i++){
         const status=Nav.step(p,.05,c,[]);
         assert.equal(status.state,'signal_wait');
-        assert.equal(p.x,63);
-        assert.equal(p.z,-63);
+        assert.equal(p.x,40+Nav.HALF);
+        assert.equal(p.z,-40-Nav.HALF);
     }
     c.setPhase(1);
     const start=Nav.step(p,.05,c,[]);
     assert.equal(start.state,'crossing');
-    assert.ok(p.x>63);
+    assert.ok(p.x>40+Nav.HALF);
     assert.ok(p.crossing);
 });
 test('tempo restante deve ser suficiente até o fim da travessia',()=>{
@@ -50,14 +50,14 @@ test('pedestre termina travessia mesmo se o sinal mudar durante o percurso',()=>
         if(status.completed){finished=true;break}
     }
     assert.equal(finished,true);
-    assert.equal(p.x,97);
-    assert.equal(p.z,-63);
+    assert.equal(p.x,120-Nav.HALF);
+    assert.equal(p.z,-40-Nav.HALF);
     assert.equal(p.block.x,120);
     assert.equal(p.nextCorner,1);
     assert.equal(p.crossing,null);
 });
 test('pedestre espera quando um carro ocupa o trajeto, mesmo no sinal vermelho',()=>{
-    const c=city(1),p=makePed(),car={x:80,z:-63,heading:0,speed:0};
+    const c=city(1),p=makePed(),car={x:80,z:-40-Nav.HALF,heading:0,speed:0};
     assert.equal(Nav.step(p,.05,c,[car]).state,'signal_wait');
     car.x=160;
     assert.equal(Nav.step(p,.05,c,[car]).state,'crossing');
@@ -198,7 +198,7 @@ test('cruzamento em espera não aumenta artificialmente o contador de esquinas',
         getTrafficPhase:()=>15,isTrafficGreen:axis=>axis==='x'
     });
     const ped={block:{x:40,z:-40},route:Nav.route({x:40,z:-40}),
-        x:63,z:-63,nextCorner:1,walkCorners:2,
+        x:40+Nav.HALF,z:-40-Nav.HALF,nextCorner:1,walkCorners:2,
         waitTimer:0,diveTimer:0,walkSpeed:2.65};
     for(let i=0;i<40;i++)assert.equal(Nav.step(ped,.05,cityClock(),[]).state,'signal_wait');
     assert.equal(ped.walkCorners,3);
