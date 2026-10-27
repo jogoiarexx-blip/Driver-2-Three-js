@@ -85,15 +85,16 @@ test('flanqueadores não criam previsão infinita',()=>{
 test('faixas de pedestres são instanciadas em um lote',()=>{
     const city={preset:{id:'chicago'},cityGroup:new Element()};
     Street.build(city);
-    assert.equal(city.cityGroup.children.length,3);
-    assert.equal(city.cityGroup.children[0].count,1620);
-    assert.equal(city.cityGroup.children[0].instanceMatrix.needsUpdate,true);
+    assert.equal(city.cityGroup.children.length,5);
+    const crosswalk=city.cityGroup.children.find(mesh=>mesh.count===1620);
+    assert.ok(crosswalk,'faixas ausentes');
+    assert.equal(crosswalk.instanceMatrix.needsUpdate,true);
 });
 test('postes não criam fontes dinâmicas de luz',()=>{
     const city={preset:{id:'vegas'},cityGroup:new Element()};
     Street.build(city);
-    assert.equal(city.cityGroup.children[1].count,162);
-    assert.equal(city.cityGroup.children[2].count,162);
+    assert.equal(city.cityGroup.children.filter(m=>m.count===162).length,2);
+    assert.equal(city.cityGroup.children.filter(m=>m.count===41).length,2);
     assert.ok(city.cityGroup.children.every(m=>m.castShadow===false));
 });
 test('HTML carrega módulos antes dos consumidores',()=>{
