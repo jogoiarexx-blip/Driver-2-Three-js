@@ -166,7 +166,8 @@
                 const river = new THREE.Mesh(riverGeo, riverMat);
                 river.position.set(0, 0.06, 50);
                 this.cityGroup.add(river);
-                DriverCoastalVisuals.build(this);
+                if(typeof DriverCoastalVisuals!=='undefined')
+                    DriverCoastalVisuals.build(this);
 
                 // Margens protegidas por paredes físicas correspondentes ao
                 // desenho; aberturas reais permitem uma queda no canal.
@@ -1218,7 +1219,8 @@
             update(dt, vehicles, onPropHitCallback) {
                 this.signalClock += dt;
                 this.refreshTrafficLights();
-                DriverCoastalVisuals.update(this,dt);
+                if(typeof DriverCoastalVisuals!=='undefined')
+                    DriverCoastalVisuals.update(this,dt);
                 if(this.caineBridgeGate)
                     this.caineBridgeGate.visible=!!this.caineBridgeClosed;
                 const targetAngle = this.bridgeRaised ? 0.32 : 0.08;
