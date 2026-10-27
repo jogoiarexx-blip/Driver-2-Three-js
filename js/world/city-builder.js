@@ -215,6 +215,7 @@
                 this.bridgeNorthLeaf.add(deckN, railN1, railN2);
 
                 this.cityGroup.add(this.bridgeSouthLeaf, this.bridgeNorthLeaf);
+                DriverSpecialStructures.bridge(this);
                 yield 'Canal, pontes e vias de acesso';
 
                 // 4. Monumentos Exclusivos por Cidade (Rio de Janeiro: Morro do Corcovado + Cristo Redentor + Praia)
@@ -639,6 +640,7 @@
 
                 this.secretSwitchPos = { x: cx - 18, z: cz - 17 };
                 this.secretGarageCenter = { x: cx, z: cz };
+                DriverSpecialStructures.secretGarage(this,cx,cz);
             }
 
             unlockSecretGate() {
@@ -884,6 +886,7 @@
                     id:'home',name:'Casa de Tanner',kind:'home',
                     door:{x:cx,z:cz+19},inside:{x:1000,z:0}
                 });
+                DriverSpecialStructures.safeHouse(this,cx,cz);
             }
 
 
@@ -1115,6 +1118,7 @@
                     ramp:{minX:-17,maxX:-11,startZ:-217,endZ:-246},
                     platform:{...p},groundEntrance:{x:-14,z:-216}
                 };
+                DriverSpecialStructures.station(this,cx,cz);
             }
 
             onTrainPlatform(pos) {
@@ -1162,6 +1166,7 @@
                 this.caineBridgeGate=add(17,2.4,1.5,0,1.35,51,
                     new THREE.MeshLambertMaterial({color:0xdc2626}));
                 this.caineBridgeGate.visible=false;
+                DriverSpecialStructures.caineCompound(this);
             }
 
             buildEnterableWarehouse(cx,cz) {
@@ -1207,6 +1212,7 @@
                     id:'warehouse',name:'Depósito abandonado',kind:'warehouse',
                     door:{x:cx,z:cz+21},inside:{x:1050,z:0}
                 });
+                DriverSpecialStructures.warehouse(this,cx,cz);
             }
 
             buildEnterableStore(cx,cz,id) {
@@ -1247,6 +1253,7 @@
                     kind:id,door:{x:cx,z:cz+19.5},
                     inside:{x:diner?1120:1180,z:0}
                 });
+                DriverSpecialStructures.store(this,cx,cz,id);
             }
 
             buildInteriorRooms() {
@@ -1291,6 +1298,7 @@
                             make(x+dx,1,z+3,3.3,2,3.3,0x78350f);
                     }
                     place.exit={x,z:z-8.8};
+                    DriverSpecialStructures.interior(this,place);
                 }
             }
 
