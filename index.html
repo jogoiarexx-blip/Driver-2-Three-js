@@ -88,6 +88,13 @@
                     <div id="mission-timer" class="text-xl sm:text-3xl font-extrabold text-white tracking-wider font-mono hidden">01:30.00</div>
                     <div id="mission-subcounter" class="text-xs font-extrabold text-emerald-400 hidden">CONES / PORTÕES: 0 / 10</div>
                 </div>
+                <div id="intruder-chase-progress" class="hidden pointer-events-none mt-1 rounded-lg bg-slate-950/95 border border-amber-500/40 text-center p-2 w-64 max-w-[95vw]">
+                    <div id="intruder-chase-phase" class="font-bold text-amber-400 text-[10px]">SIGA O INVASOR</div>
+                    <div class="h-2 mt-1 rounded overflow-hidden bg-slate-700">
+                        <div id="intruder-chase-fill" class="h-full bg-amber-400 rounded" style="width:0%"></div>
+                    </div>
+                    <div id="intruder-chase-distance" class="mt-1 text-[10px] text-slate-300">DISTÂNCIA DO INVASOR</div>
+                </div>
                 <div id="safehouse-escape-progress" class="hidden pointer-events-none mt-1 rounded-lg bg-slate-950/95 p-2 border border-emerald-500/50 text-center w-64 max-w-[95vw]">
                     <div id="safehouse-phase" class="text-[10px] text-amber-400 font-bold">FUJA DO CERCO POLICIAL</div>
                     <div class="h-2 bg-slate-800 rounded mt-1 overflow-hidden">
@@ -300,6 +307,13 @@
                 <div class="text-xs text-slate-300 mt-1">
                     Fuja das viaturas, despiste a polícia e estacione na casa segura.
                     Depois entre a pé para salvar a campanha na mesa verde.
+                </div>
+            </button>
+            <button onclick="window.DriverGame.startMission('story_intruder')"
+                class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-amber-600 hover:bg-slate-800">
+                <strong class="text-amber-400">CHICAGO 06 — CHASE THE INTRUDER</strong>
+                <div class="text-xs text-slate-300 mt-1">
+                    Pegue o esportivo preto, persiga o invasor até os depósitos e enfrente uma emboscada com van amarela.
                 </div>
             </button>
             <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">2. Missões adicionais e modos:</div>
@@ -675,6 +689,7 @@ git push -u origin main</pre>
     <script src="./js/police/pursuit-tactics.js"></script>
     <script src="./js/gameplay/tailing-drop.js"></script>
     <script src="./js/gameplay/safehouse-escape.js"></script>
+    <script src="./js/gameplay/chicago-intruder.js"></script>
     <script src="./js/traffic/traffic-ai.js"></script>
     <script src="./js/police/roadblock-director.js"></script>
     <script src="./js/gameplay/checkpoint-route.js"></script>

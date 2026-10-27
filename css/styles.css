@@ -141,3 +141,6 @@
 
 #safehouse-escape-progress.hidden{display:none;}
 @media(max-width:767px){#safehouse-escape-progress{width:min(240px,90vw);padding:5px 7px;}}
+
+#intruder-chase-progress.hidden{display:none;}
+@media(max-width:767px){#intruder-chase-progress{width:min(240px,90vw);padding:5px 7px;}}

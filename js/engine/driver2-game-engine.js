@@ -36,6 +36,9 @@
                 this.collisionSystem = new DriverVehicleCollisions();
                 this.pursuitChapter = new DriverPursuitChapter();
                 this.dropDirector=new DriverTailingDropMission();
+                this.intruderDirector=new DriverIntruderPursuit();
+                this.intruderStatus=null;
+                this.intruderBlocker=null;
                 this.safeHouseEscape=new DriverSafeHouseEscape();
                 this.safeHouseStatus=null;
                 this.dropStatus=null;
@@ -290,7 +293,7 @@
             }
 
             startMission(type) {
-                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop'||type==='story_safehouse') &&
+                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop'||type==='story_safehouse'||type==='story_intruder') &&
                     this.currentCityKey!=='chicago')this.changeCity('chicago');
                 document.getElementById('missions-modal').classList.add('hidden');
                 document.getElementById('center-announcement').classList.add('hidden');
@@ -310,6 +313,9 @@
                 this.tailOutOfRangeTimer = 0;
                 this.dropDirector.reset();
                 this.dropStatus=null;
+                this.intruderDirector.reset();
+                this.intruderStatus=null;
+                this.intruderBlocker=null;
                 this.safeHouseEscape.reset();
                 this.safeHouseStatus=null;
                 this.mode = 'driving';
@@ -334,6 +340,9 @@
                 const escapePanel=document.getElementById('safehouse-escape-progress');
                 if(escapePanel)escapePanel.classList.toggle('hidden',
                     type!=='story_safehouse');
+                const intruderPanel=document.getElementById('intruder-chase-progress');
+                if(intruderPanel)intruderPanel.classList.toggle('hidden',
+                    type!=='story_intruder');
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
                 const titleEl = document.getElementById('mission-title');
@@ -364,6 +373,41 @@
                         maxSpeed:52,accel:30
                     });
                     this.vehicles.push(this.targetCar);
+                } else if(type === 'story_intruder'){
+                    this.missionActive=true;
+                    this.missionTimeLeft=175;
+                    this.setWeather('day');
+                    this.felony=0;
+                    // Após a invasão, Tanner acorda no beco. O esportivo preto
+                    // está estacionado perto dele; o intruso foge de sedã.
+                    this.playerCar.name='ESPORTIVO PRETO • TANNER';
+                    this.playerCar.color=0x111827;
+                    this.playerCar.x=-84;
+                    this.playerCar.z=-88;
+                    this.playerCar.y=0;
+                    this.playerCar.heading=0;
+                    this.playerCar.speed=0;
+                    this.playerCar.maxSpeed=57;
+                    this.playerCar.accel=34;
+                    this.playerCar.updateTransform();
+                    this.mode='on_foot';
+                    this.tanner.setPosition(-85,0,-100,0);
+                    this.tanner.setVisible(true);
+                    this.targetCar=new DriverVehicle(this.scene,{
+                        name:'CARRO DO INVASOR',color:0x64748b,
+                        bodyStyle:'muscle',isTarget:true,
+                        x:-80,z:-36,heading:0,maxSpeed:51,accel:29
+                    });
+                    DriverIntruderPursuit.attach(this.targetCar);
+                    this.vehicles.push(this.targetCar);
+                    titleEl.textContent='CHICAGO 06: CHASE THE INTRUDER';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='ENTRE NO ESPORTIVO E SIGA O INVASOR';
+                    objEl.textContent='O invasor escapou pela escada de incêndio! '+
+                        'Pegue o carro preto (E), siga o sedã cinza sem perdê-lo '+
+                        'e pare ao lado dele no pátio dos depósitos. '+
+                        'Não destrua o carro: descubra para onde ele vai.';
                 } else if (type === 'story_safehouse') {
                     this.missionActive=true;
                     this.missionTimeLeft=165;
@@ -752,6 +796,23 @@
                 return ok;
             }
 
+            spawnIntruderBlocker() {
+                if(this.intruderBlocker)return this.intruderBlocker;
+                const van=new DriverVehicle(this.scene,{
+                    name:'VAN AMARELA • EMBOSCADA',
+                    color:0xeab308,bodyStyle:'truck',isSecret:true,
+                    x:201,z:-151,heading:Math.PI/2,
+                    maxSpeed:21,accel:17
+                });
+                van.isSecret=true;
+                van.speed=0;
+                van.updateTransform();
+                this.vehicles.push(van);
+                this.intruderBlocker=van;
+                this.effects.spawnImpactSparks(201,0,-151,0.4);
+                return van;
+            }
+
             toggleVehicleEnterExit() {
                 if (this.gameEnded || this.inReplayMode) return;
                 this.audio.init();
@@ -1103,6 +1164,40 @@
                             return;
                         }
                     }
+                    if(this.missionType==='story_intruder'&&this.targetCar){
+                        const result=this.intruderDirector.update(
+                            dt,this.getPlayerPosition(),this.targetCar,this.mode
+                        );
+                        this.intruderStatus=result;
+                        const counter=document.getElementById('mission-subcounter');
+                        counter.textContent=result.message||'PERSIGA O INVASOR';
+                        if(result.changed && result.phase==='yard'){
+                            document.getElementById('objective-banner').textContent=
+                                'O INVASOR PAROU NO PÁTIO INDUSTRIAL! '+
+                                'Siga até o depósito (ponto vermelho no radar) '+
+                                'e pare seu carro ao lado dele.';
+                        }
+                        if(result.changed && result.phase==='blocked'){
+                            this.spawnIntruderBlocker();
+                            document.getElementById('objective-banner').textContent=
+                                'ARMADILHA! Uma van amarela bloqueou a saída. '+
+                                'Você encontrou o destino do invasor!';
+                        }
+                        if(result.failed){
+                            this.triggerEndScreen(
+                                result.failed==='wrecked'?
+                                'CARRO DO INVASOR DESTRUÍDO!':
+                                'O INVASOR ESCAPOU!',
+                                'Você precisa acompanhá-lo até o pátio industrial.');
+                            return;
+                        }
+                        if(result.complete){
+                            this.triggerEndScreen('CHASE THE INTRUDER CONCLUÍDA!',
+                                'Tanner seguiu o invasor até o pátio. '+
+                                'Uma van amarela fechou a saída. Próximo: Caine\'s Compound.');
+                            return;
+                        }
+                    }
                     if(this.missionType==='story_safehouse'){
                         const pos=this.getPlayerPosition();
                         const watch=DriverSafeHouseEscape.policeHasSight(
@@ -1438,6 +1533,27 @@
                     }
                 }
 
+                const intruderPanel=document.getElementById('intruder-chase-progress');
+                if(intruderPanel && this.missionType==='story_intruder' &&
+                    this.intruderStatus){
+                    const data=this.intruderStatus;
+                    const phase=document.getElementById('intruder-chase-phase');
+                    const gauge=document.getElementById('intruder-chase-fill');
+                    const distance=document.getElementById('intruder-chase-distance');
+                    if(phase)phase.textContent=data.phase==='opening'?
+                        'INVASOR EM FUGA • ENCONTRE O CARRO':
+                        data.phase==='chase'?'SIGA O SEDÃ CINZA':
+                        data.phase==='yard'?'CHEGUE AO PÁTIO DOS DEPÓSITOS':
+                        'VAN AMARELA BLOQUEANDO A SAÍDA';
+                    if(gauge){
+                        const fill=data.phase==='opening'?0:
+                            data.phase==='chase'?data.routeProgress*85:
+                            data.phase==='yard'?90:100;
+                        gauge.style.width=Math.round(fill)+'%';
+                    }
+                    if(distance)distance.textContent='INVASOR '+
+                        Math.round(data.distance)+'m • PERDA '+data.lostSeconds.toFixed(1)+'/6s';
+                }
                 const escapeMeter=document.getElementById('safehouse-escape-progress');
                 if(escapeMeter && this.missionType==='story_safehouse' &&
                     this.safeHouseStatus){
@@ -1493,7 +1609,9 @@
                 const progress = document.getElementById('mission-compact-progress');
                 if (progress) {
                     let label = this.missionActive ? 'MISSÃO EM ANDAMENTO' : 'PASSEIO LIVRE';
-                    if (this.missionType === 'story_safehouse') {
+                    if (this.missionType === 'story_intruder') {
+                        label='CHICAGO 06 • PERSIGA O INVASOR';
+                    } else if (this.missionType === 'story_safehouse') {
                         label='CHICAGO 05 • FUGA POLICIAL';
                     } else if (this.missionType === 'story_drop') {
                         label='CHICAGO 04 • VIGILÂNCIA';
@@ -1663,6 +1781,13 @@
                 ctx.fillStyle = '#c084fc';
                 ctx.fillRect(gx - 4, gz - 4, 8, 8);
 
+                if(this.missionType==='story_intruder'&&this.targetCar){
+                    const yard=DriverIntruderPursuit.YARD;
+                    const bx=(yard.x-pos.x)*scale;
+                    const bz=-(yard.z-pos.z)*scale;
+                    ctx.fillStyle='#facc15';
+                    ctx.fillRect(bx-5,bz-5,10,10);
+                }
                 // Trem vermelho e estação (verde) no radar de Chicago.
                 if(this.missionType==='story_train'&&this.trainLine?.active){
                     const tp=this.trainLine.position;

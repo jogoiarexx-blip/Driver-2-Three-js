@@ -10,7 +10,7 @@ class DriverHomeSave {
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
-        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse'
+        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder'
     ];
     constructor(storage) { this.storage=storage; }
 
@@ -67,6 +67,8 @@ class DriverHomeSave {
                 arrived:game.trainLine.arrived,
                 lost:game.trainLostSeconds||0
             }:null,
+            intruder:game.missionType==='story_intruder' && game.intruderDirector?
+                game.intruderDirector.export(game.targetCar):null,
             safeEscape:game.missionType==='story_safehouse' &&
                 game.safeHouseEscape?game.safeHouseEscape.export():null,
             drop:game.missionType==='story_drop'?{
@@ -132,6 +134,13 @@ class DriverHomeSave {
         if(data.mission.pursuitPhase!=null){
             game.pursuitChapter.phase=DriverHomeSave.bounded(data.mission.pursuitPhase,0,2);
             game.pursuitChapter.elapsed=DriverHomeSave.bounded(data.mission.pursuitElapsed,0,24);
+        }
+        if(data.intruder && game.missionType==='story_intruder' &&
+            game.intruderDirector){
+            game.intruderDirector.restore(data.intruder,game.targetCar);
+            if(data.intruder.blockadeShown &&
+                typeof game.spawnIntruderBlocker==='function')
+                game.spawnIntruderBlocker();
         }
         if(data.safeEscape && game.missionType==='story_safehouse' &&
             game.safeHouseEscape)game.safeHouseEscape.restore(data.safeEscape);
