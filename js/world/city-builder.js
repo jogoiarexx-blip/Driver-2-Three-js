@@ -11,6 +11,7 @@
                 this.scene.add(this.cityGroup);
 
                 this.buildingBoxes = [];
+                this.sidewalkGrid = new Set();
                 this.destructibleProps = [];
                 this.debrisPieces=[];
                 this.debrisGeometry=null;
@@ -105,6 +106,7 @@
                 geometries.forEach(geometry => geometry.dispose());
                 this.cityGroup.clear();
                 this.buildingBoxes = [];
+                this.sidewalkGrid = new Set();
                 this.districtBuildings = [];
                 this.districtLOD=null;
                 this.districtChunks=new Map();
@@ -242,6 +244,9 @@
 
                         // Calçadas agrupadas em uma única draw call instanciada.
                         sidewalkPositions.push({x:blockX,z:blockZ});
+                        // Grade física única para o piso elevado e para a IA.
+                        // As missões e as garagens mantêm seus colliders próprios.
+                        this.sidewalkGrid.add(blockX+':'+blockZ);
 
                         if (this.preset.id==='chicago' && blockX===-40 && blockZ===-280) {
                             this.buildChicagoStationBlock(blockX,blockZ);
@@ -1544,6 +1549,34 @@
                 this.missionStart={...place,ring,arrow};
             }
 
+            // Calçadas 50x50 com tampo em y=.35. Consultas O(1), sem
+            // percorrer dezenas de caixas a cada frame ou criar colisores
+            // verticais que bloqueariam acessos de garagens e missões.
+            sidewalkCell(x,z) {
+                if(!Number.isFinite(x)||!Number.isFinite(z))return null;
+                const cx=Math.round((x-40)/80)*80+40;
+                const cz=Math.round((z+40)/80)*80-40;
+                return this.sidewalkGrid?.has(cx+':'+cz) ? {x:cx,z:cz} : null;
+            }
+
+            isOnSidewalk(x,z,radius=0) {
+                const cell=this.sidewalkCell(x,z);
+                const clear=25-Math.max(0,Number(radius)||0);
+                return !!cell&&clear>=0&&
+                    Math.abs(x-cell.x)<=clear&&
+                    Math.abs(z-cell.z)<=clear;
+            }
+
+            getSidewalkHeightAt(x,z) {
+                const cell=this.sidewalkCell(x,z);
+                if(!cell)return 0;
+                const edge=25-Math.max(Math.abs(x-cell.x),Math.abs(z-cell.z));
+                if(edge<=0)return 0;
+                // Borda suavizada (0.9m) para a suspensão subir sem teleporte.
+                // A partir de 0.9m para dentro, o chão acompanha y=.35.
+                return .35*Math.min(1,edge/.9);
+            }
+
             getGroundHeightAt(x,z,referenceY=null) {
                 if(this.trainStation){
                     const ramp=this.trainStation.ramp,p=this.trainStation.platform;
@@ -1575,7 +1608,7 @@
                 // asfalto plano de y=0: o carro pode cair e submergir.
                 if(typeof this.isWaterAt==='function' &&
                     this.isWaterAt(x,z))return -4.0;
-                return 0;
+                return this.getSidewalkHeightAt(x,z);
             }
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
