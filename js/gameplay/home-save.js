@@ -116,6 +116,16 @@ class DriverHomeSave {
             game.changeCity(data.city);
         }
         game.startMission(data.mission.type);
+        // Restaura a frota dinâmica ANTES de aplicar posições persistidas.
+        // Do contrário os carros adicionais não recebem o estado salvo.
+        if(data.caine && game.missionType==='story_caine' && game.caineDirector){
+            game.caineDirector.restore(data.caine);
+            game.city.caineBridgeClosed=game.caineDirector.bridgeClosed;
+            game.city.bridgeRaised=game.caineDirector.bridgeClosing;
+            if(game.caineDirector.vansActivated &&
+                typeof game.activateCaineVans==='function')
+                game.activateCaineVans();
+        }
         for(let i=0;i<Math.min(data.vehicles.length,game.vehicles.length);i++){
             const car=game.vehicles[i],raw=data.vehicles[i];
             const safe=DriverHomeSave.position(raw);
@@ -136,14 +146,6 @@ class DriverHomeSave {
         if(data.mission.pursuitPhase!=null){
             game.pursuitChapter.phase=DriverHomeSave.bounded(data.mission.pursuitPhase,0,2);
             game.pursuitChapter.elapsed=DriverHomeSave.bounded(data.mission.pursuitElapsed,0,24);
-        }
-        if(data.caine && game.missionType==='story_caine' && game.caineDirector){
-            game.caineDirector.restore(data.caine);
-            game.city.caineBridgeClosed=game.caineDirector.bridgeClosed;
-            game.city.bridgeRaised=game.caineDirector.bridgeClosing;
-            if(game.caineDirector.vansActivated &&
-                typeof game.activateCaineVans==='function')
-                game.activateCaineVans();
         }
         if(data.intruder && game.missionType==='story_intruder' &&
             game.intruderDirector){

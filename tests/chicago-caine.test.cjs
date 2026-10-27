@@ -185,3 +185,79 @@ test('não altera condições das seis missões anteriores',()=>{
         'story_drop','story_safehouse','story_intruder'])
         assert.match(js,new RegExp(name));
 });
+
+test('fuga completa é navegável pelo motor de física antes de a ponte fechar',()=>{
+    const sources=[
+        'js/physics/arcade-dynamics.js',
+        'js/police/pursuit-tactics.js',
+        'js/gameplay/tailing-drop.js',
+        'js/traffic/traffic-ai.js'
+    ].map(read).join('\n');
+    const {Physics,Traffic}=vm.runInNewContext(sources+
+        '\n({Physics:DriverArcadePhysics,Traffic:DriverTrafficAI})',{
+            Math,THREE:{MathUtils:{clamp:(v,a,b)=>Math.max(a,Math.min(b,v))}}
+        });
+    const city={
+        roadExtent:320,worldLimit:410,caineBridgeClosed:false,
+        isTrafficGreen:()=>true,
+        isPointBlocked(x,z,r=1.7) {
+            if(Math.abs(x)>410||Math.abs(z)>410)return true;
+            if(this.caineBridgeClosed&&Math.abs(x)<11+r&&
+                z+r>49.5&&z-r<52.5)return true;
+            if(z>33.5&&z<66.5&&Math.abs(x)>=11)return true;
+            for(let bx=-320;bx<=320;bx+=80)
+                for(let bz=-320;bz<=320;bz+=80){
+                    const cx=bx+40,cz=bz-40;
+                    if(Math.abs(cz-50)<28||(cx===200&&cz===-200))continue;
+                    if(x+r>cx-19.2&&x-r<cx+19.2&&
+                        z+r>cz-19.2&&z-r<cz+19.2)return true;
+                }
+            return false;
+        }
+    };
+    const car={
+        x:240,z:-160,heading:0,speed:0,damage:0,maxSpeed:52,accel:28,
+        lateralVelocity:0,wheelSpin:0,steerAngle:0,pitchAngle:0,rollAngle:0,
+        chassisTilt:{rotation:{x:0,z:0}},bodyStyle:'muscle',
+        scriptedDrive:{
+            waypoints:[
+                {x:240,z:-80},{x:160,z:-80},{x:80,z:-80},{x:0,z:-80},
+                {x:0,z:0},{x:0,z:95}
+            ],index:0,done:false,maxSpeed:34
+        }
+    };
+    const director=new Director();
+    director.update(.05,state({position:{x:200,z:-175},interiorId:null}));
+    director.update(.05,state({position:{x:240,z:-160},
+        mode:'driving',interiorId:null}));
+    const ai=new Traffic(city);
+    let collided=0,won=false,seconds=0;
+    for(let i=0;i<6000;i++){
+        const dt=1/60;
+        const input=ai.getInput(car,dt,[car],null,0);
+        const steer=input.left?-1:input.right?1:0;
+        Physics.update(car,dt,input.up?1:input.down?-1:0,
+            steer,input.handbrake,input.sprint);
+        const v=Physics.velocity(car);
+        const nx=car.x+v.x*dt,nz=car.z+v.z*dt;
+        if(city.isPointBlocked(nx,nz,1.7)){collided++;car.speed=0;}
+        else{car.x=nx;car.z=nz;}
+        const result=director.update(dt,{
+            position:{x:car.x,z:car.z},mode:'driving',interiorId:null
+        });
+        city.caineBridgeClosed=result.bridgeClosed;
+        seconds=i/60;
+        if(result.failed)assert.fail('A ponte fechou antes da travessia');
+        if(result.completed){won=true;break;}
+    }
+    assert.equal(won,true);
+    assert.equal(collided,0);
+    assert.ok(seconds<60);
+    assert.ok(car.z>66);
+});
+test('restore de save ativa vans antes de aplicar estados dos veículos',()=>{
+    const js=read('js/gameplay/home-save.js');
+    const activation=js.indexOf('game.activateCaineVans();');
+    const positions=js.indexOf('for(let i=0;i<Math.min(data.vehicles.length');
+    assert.ok(activation>0&&activation<positions);
+});
