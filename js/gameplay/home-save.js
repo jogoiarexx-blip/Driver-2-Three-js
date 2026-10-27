@@ -10,7 +10,7 @@ class DriverHomeSave {
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
-        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train'
+        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop'
     ];
     constructor(storage) { this.storage=storage; }
 
@@ -20,7 +20,7 @@ class DriverHomeSave {
     }
     static position(vehicle) {
         return {
-            x:this.bounded(vehicle.x,-1100,1100),
+            x:this.bounded(vehicle.x,-1500,1500),
             y:this.bounded(vehicle.y,0,150),
             z:this.bounded(vehicle.z,-500,500),
             heading:this.bounded(vehicle.heading,-30,30),
@@ -67,6 +67,13 @@ class DriverHomeSave {
                 arrived:game.trainLine.arrived,
                 lost:game.trainLostSeconds||0
             }:null,
+            drop:game.missionType==='story_drop'?{
+                routeIndex:game.targetCar?.scriptedDrive?.index||0,
+                done:!!game.targetCar?.scriptedDrive?.done,
+                suspicion:game.dropDirector.suspicion,
+                lost:game.dropDirector.lost,
+                safeSeconds:game.dropDirector.safeSeconds
+            }:null,
             completed:Array.from(game.completedMissions||[])
         };
     }
@@ -85,7 +92,7 @@ class DriverHomeSave {
             data.vehicles.length<=32 && typeof data.tanner?.x==='number' &&
             typeof data.tanner?.z==='number' &&
             Number.isFinite(data.tanner.x) && Number.isFinite(data.tanner.z) &&
-            (data.interior==null||['home','warehouse'].includes(data.interior));
+            (data.interior==null||['home','warehouse','diner','garage'].includes(data.interior));
     }
     read() {
         try {
@@ -124,6 +131,16 @@ class DriverHomeSave {
             game.pursuitChapter.phase=DriverHomeSave.bounded(data.mission.pursuitPhase,0,2);
             game.pursuitChapter.elapsed=DriverHomeSave.bounded(data.mission.pursuitElapsed,0,24);
         }
+        if(data.drop && game.missionType==='story_drop' &&
+            game.targetCar?.scriptedDrive && game.dropDirector){
+            const director=game.dropDirector,route=game.targetCar.scriptedDrive;
+            route.index=Math.floor(DriverHomeSave.bounded(
+                data.drop.routeIndex,0,route.waypoints.length));
+            route.done=!!data.drop.done;
+            director.suspicion=DriverHomeSave.bounded(data.drop.suspicion,0,100);
+            director.lost=DriverHomeSave.bounded(data.drop.lost,0,100);
+            director.safeSeconds=DriverHomeSave.bounded(data.drop.safeSeconds,0,999);
+        }
         if(data.train&&game.missionType==='story_train'&&game.trainLine){
             const train=game.trainLine;
             train.elapsed=DriverHomeSave.bounded(data.train.elapsed,0,120);
@@ -152,8 +169,8 @@ class DriverHomeSave {
         game.mode=data.mode==='on_foot'?'on_foot':'driving';
         const t=data.tanner||{};
         game.tanner.setPosition(
-            DriverHomeSave.bounded(t.x,-1100,1100),
-            DriverHomeSave.bounded(t.y,0,10),
+            DriverHomeSave.bounded(t.x,-1500,1500),
+            DriverHomeSave.bounded(t.y,0,150),
             DriverHomeSave.bounded(t.z,-500,500),
             DriverHomeSave.bounded(t.heading,-30,30)
         );

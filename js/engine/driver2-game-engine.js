@@ -35,6 +35,8 @@
                 this.trafficAI = new DriverTrafficAI(this.city);
                 this.collisionSystem = new DriverVehicleCollisions();
                 this.pursuitChapter = new DriverPursuitChapter();
+                this.dropDirector=new DriverTailingDropMission();
+                this.dropStatus=null;
                 this.trainLine=new DriverChicagoTrain(this.scene,this.city);
                 this.trainLostSeconds=0;
                 this.homeSave=new DriverHomeSave(
@@ -286,7 +288,7 @@
             }
 
             startMission(type) {
-                if((type==='story_tipoff'||type==='story_witness'||type==='story_train') &&
+                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop') &&
                     this.currentCityKey!=='chicago')this.changeCity('chicago');
                 document.getElementById('missions-modal').classList.add('hidden');
                 document.getElementById('center-announcement').classList.add('hidden');
@@ -304,6 +306,8 @@
                 this.roadblockDirector.reset();
                 this.roadblocksSpawned = false;
                 this.tailOutOfRangeTimer = 0;
+                this.dropDirector.reset();
+                this.dropStatus=null;
                 this.mode = 'driving';
                 this.interiorPlace=null;
                 this.witnessCloseTime=0;
@@ -321,6 +325,8 @@
                     objectiveButton.textContent = 'Ver objetivo completo';
                 }
                 this.replayBuffer = [];
+                const proximity=document.getElementById('tail-proximity');
+                if(proximity)proximity.classList.toggle('hidden',type!=='story_drop');
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
                 const titleEl = document.getElementById('mission-title');
@@ -350,6 +356,34 @@
                         isSecret:true,x:244,z:-240,heading:Math.PI,
                         maxSpeed:52,accel:30
                     });
+                    this.vehicles.push(this.targetCar);
+                } else if (type === 'story_drop') {
+                    this.missionActive=true;
+                    this.missionTimeLeft=112;
+                    this.playerCar.x=4;
+                    this.playerCar.z=-108;
+                    this.playerCar.y=0;
+                    this.playerCar.heading=0;
+                    this.playerCar.speed=0;
+                    this.playerCar.updateTransform();
+                    this.tanner.setVisible(false);
+                    this.setWeather('day');
+                    titleEl.textContent='CHICAGO 04: TAILING THE DROP';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='SIGA O CARRO VERMELHO SEM SER VISTO';
+                    objEl.textContent='Mantenha a barra de proximidade VERDE. '+
+                        'Não encoste no suspeito nem fique distante demais. '+
+                        'Siga-o até o depósito de Chicago.';
+                    this.targetCar=new DriverVehicle(this.scene,{
+                        name:'BRASILEIRO — SEDÃ VERMELHO',
+                        color:0xd94828,
+                        bodyStyle:'muscle',
+                        isTarget:true,
+                        x:4,z:-54,
+                        heading:0,maxSpeed:39,accel:24
+                    });
+                    DriverTailingDropMission.attachRoute(this.targetCar);
                     this.vehicles.push(this.targetCar);
                 } else if (type === 'story_train') {
                     this.missionActive=true;
@@ -626,7 +660,7 @@
                 this.tanner.setPosition(place.inside.x,0,place.inside.z-6,0);
                 this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
                 document.getElementById('player-state-badge').textContent=
-                    place.id==='home'?'DENTRO DE CASA':'DENTRO DO DEPÓSITO';
+                    'DENTRO: '+place.name.toUpperCase();
                 return true;
             }
 
@@ -673,7 +707,7 @@
                 this.showSaveStatus(ok?'Partida carregada com sucesso!':
                     'Não foi possível restaurar a partida.');
                 if(ok)document.getElementById('player-state-badge').textContent=
-                    this.interiorPlace?'DENTRO DE CASA':
+                    this.interiorPlace?'DENTRO: '+this.interiorPlace.name.toUpperCase():
                     this.mode==='on_foot'?'TANNER (A PÉ)':'NO VOLANTE (V8)';
                 return ok;
             }
@@ -911,6 +945,11 @@
                             strength
                         );
                         this.impactFeedback.trigger(impact.closingSpeed);
+                        if(this.missionType==='story_drop' &&
+                            impact.other===this.targetCar && this.dropStatus){
+                            this.dropDirector.suspicion=Math.min(100,
+                                this.dropDirector.suspicion+50);
+                        }
                         if (impact.closingSpeed >= 29) {
                             // Colisões fortes soltam vapor do capô sem luzes caras.
                             this.effects.spawnTireSmoke(
@@ -1021,6 +1060,33 @@
                         if(this.witnessCloseTime>=48){
                             this.triggerEndScreen('CHASE THE WITNESS CONCLUÍDA!',
                                 'Você acompanhou a testemunha até a estação.');
+                            return;
+                        }
+                    }
+                    if(this.missionType==='story_drop'&&this.targetCar){
+                        const info=this.dropDirector.update(
+                            dt,this.getPlayerPosition(),this.targetCar,this.mode
+                        );
+                        this.dropStatus=info;
+                        const counter=document.getElementById('mission-subcounter');
+                        const state=info.zone==='close'?
+                            'AFASTE-SE! O SUSPEITO ESTÁ DESCONFIADO':
+                            info.zone==='far'?
+                            'APROXIME-SE! VOCÊ ESTÁ PERDENDO O ALVO':
+                            'DISTÂNCIA SEGURA • NÃO SEJA VISTO';
+                        counter.textContent=state+' • '+Math.round(info.distance)+' m';
+                        if(info.failed){
+                            const title=info.failed==='seen'?
+                                'O SUSPEITO VIU VOCÊ!':
+                                info.failed==='lost'?'O SUSPEITO ESCAPOU!':
+                                'ALVO DESTRUÍDO!';
+                            this.triggerEndScreen(title,
+                                'A vigilância foi comprometida. Mantenha a barra verde e não bata no sedã.');
+                            return;
+                        }
+                        if(info.complete){
+                            this.triggerEndScreen('TAILING THE DROP CONCLUÍDA!',
+                                'Tanner seguiu o brasileiro discretamente até o depósito.');
                             return;
                         }
                     }
@@ -1291,6 +1357,22 @@
                     }
                 }
 
+                const stealthHud=document.getElementById('tail-proximity');
+                if(stealthHud && this.missionType==='story_drop'&&this.dropStatus){
+                    const s=this.dropStatus;
+                    const needle=document.getElementById('tail-needle');
+                    const warning=document.getElementById('tail-zone-label');
+                    const caution=document.getElementById('tail-exposure');
+                    const ratio=Math.min(100,Math.max(0,
+                        (s.distance/140)*100));
+                    needle.style.left=ratio+'%';
+                    warning.textContent=s.zone==='green'?'SEGURANÇA':
+                        s.zone==='close'?'PERTO DEMAIS':'MUITO LONGE';
+                    warning.className='tail-zone-'+s.zone;
+                    caution.textContent='SUSPEITA '+Math.round(s.suspicion)+
+                        '% • DISTÂNCIA '+Math.round(s.distance)+' m';
+                    stealthHud.setAttribute('aria-valuenow',String(Math.round(s.distance)));
+                }
                 // Aviso antecipado só para barricadas existentes e à frente.
                 const warningEl = document.getElementById('roadblock-warning');
                 const warning = this.roadblockDirector.warning(
@@ -1309,7 +1391,9 @@
                 const progress = document.getElementById('mission-compact-progress');
                 if (progress) {
                     let label = this.missionActive ? 'MISSÃO EM ANDAMENTO' : 'PASSEIO LIVRE';
-                    if (this.missionType === 'pursuit') {
+                    if (this.missionType === 'story_drop') {
+                        label='CHICAGO 04 • VIGILÂNCIA';
+                    } else if (this.missionType === 'pursuit') {
                         label = ['ATO 1/3 • CERCO','ATO 2/3 • ROTA','ATO 3/3 • FUGA'][
                             this.pursuitChapter.phase
                         ];

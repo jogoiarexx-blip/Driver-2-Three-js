@@ -124,3 +124,17 @@
 }
 
 @media(max-width:640px){#btn-radar-zoom{max-width:72px;line-height:1.1;padding:8px 5px;}}
+
+/* Barra de proximidade da quarta missão Undercover (zona verde central). */
+.tail-spectrum { background:linear-gradient(90deg,
+    #dc2626 0%,#dc2626 11.5%,#f97316 13%,
+    #facc15 15%,#22c55e 17%,#16a34a 71%,
+    #eab308 72%,#f97316 75%,#dc2626 97%);
+}
+#tail-needle { transform:translateX(-50%);z-index:1; }
+.tail-zone-green {color:#4ade80}
+.tail-zone-close,.tail-zone-far {color:#fb923c}
+#tail-proximity.hidden {display:none}
+@media(max-width:767px) {
+    #tail-proximity {width:min(240px,90vw);padding:4px 7px;font-size:10px;}
+}
