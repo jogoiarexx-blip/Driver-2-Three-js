@@ -72,3 +72,15 @@ Observação: os testes de lógica não substituem uma sessão real de navegador
 - `tests/driving-camera.test.cjs`: 12 testes de regressão, executados junto à suíte anterior por GitHub Actions.
 
 **Compatibilidade:** GitHub Pages estático, scripts clássicos e assets CC0 opcionais mantidos. A verificação automática testa lógica; a qualidade visual e a física final ainda requerem partidas manuais reais em desktop/celular.
+
+## Revisão: Veículos e Missão 7 — 2026-10-26
+
+- `js/render/vehicle-visuals.js`: faróis e lanternas de freio funcionais sem luzes dinâmicas pesadas; carroceria e rodas com microanimações de suspensão.
+- `js/vehicles/driver-vehicle.js`: grupo de iluminação persistente ao substituir carro procedural por GLB Kenney ou GLB manual. A importação de um segundo GLB personalizado também funciona sem ser sobrescrita pelo carregamento automático.
+- Controle **L / 💡 ON-OFF** para ligar e desligar os faróis (também utilizável no celular).
+- Clima noturno/chuvoso acende automaticamente os faróis dos veículos recém-criados e presentes.
+- `js/traffic/traffic-ai.js`: velocidade recalculada de acordo com a intensidade da curva, desaceleração na aproximação de cruzamentos e três veículos civis adicionais.
+- **Missão 7 — Dossiês do Cartel**: reúna três provas na sequência, despiste a polícia até delito abaixo de 25 e entre **a pé** no esconderijo antes do tempo terminar.
+- `tests/vehicle-and-mission.test.cjs`: 10 testes automatizados de iluminação, suspensão, curvas e sequência de missão, adicionados à suíte GitHub Actions.
+
+Os arquivos JavaScript são scripts clássicos e continuam compatíveis com GitHub Pages sem bundler. Assets Kenney continuam opcionais, com fallback procedural.
