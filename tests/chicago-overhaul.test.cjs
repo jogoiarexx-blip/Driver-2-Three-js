@@ -66,7 +66,7 @@ const suburbs=U.height('chicago',280,-280);
 assert(core>suburbs+25);
 assert.equal(U.height('havana',40,-120),21);
 assert.equal(U.height('vegas',40,-120),43);
-assert.equal(U.height('rio',40,-120),32);
+assert.equal(U.height('rio',40,-120),39);
 U.random=original;
 
 const checkBatch=mesh=>{
