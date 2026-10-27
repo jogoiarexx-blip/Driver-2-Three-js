@@ -57,9 +57,10 @@ test('arquitetura acrescenta só duas instâncias de fachadas por setor de perto
         const group={children:[],add(m){this.children.push(m)}};
         const builder={preset:{id},cityGroup:group,districtBuildings:buildings};
         Districts.decorate(builder,buildings,group);
-        assert.equal(group.children.length,5,id);
-        assert.ok(group.children.every(m=>m.count===2),id);
-        const [front,accent]=group.children.slice(-2);
+        assert.equal(group.children.length,7,id);
+        assert.equal(group.children.slice(0,5).every(m=>m.count===2),true,id);
+        assert.ok(group.children.slice(-2).every(m=>m.userData.architecture===true),id);
+        const [front,accent]=group.children.slice(3,5);
         assert.equal(front.userData.regionalStyle,Districts.profile(id).style);
         assert.equal(accent.userData.regionalStyle,Districts.profile(id).style);
         assert.equal(front.instanceMatrix.needsUpdate,true);
