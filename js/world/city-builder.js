@@ -890,6 +890,115 @@
                             column(0.45,7,0x334155,cx+x,3.5,cz+15);
                     }
                 }
+                this.buildRegionalLandmarkDetails(cx,cz,west);
+            }
+
+
+            // Refinamento dos marcos urbanos dos quatro mapas.
+            // Detalhes são somente visuais e preservam os colisores e caminhos.
+            buildRegionalLandmarkDetails(cx,cz,west) {
+                const city=this.preset.id;
+                const opaque=[],light=[];
+                const add=(glow,x,y,z,w,h,d,color)=>{
+                    if([x,y,z,w,h,d].every(Number.isFinite)&&w>0&&h>0&&d>0)
+                        (glow?light:opaque).push({x,y,z,w,h,d,color});
+                };
+                if(city==='chicago') {
+                    if(west){
+                        // Estádio: grades, pilares e placa sobre a entrada.
+                        for(let x=-15;x<=15;x+=6){
+                            add(false,cx+x,4,cz+20.6,.55,8,.5,0x334155);
+                            add(false,cx+x,4,cz-20.6,.55,8,.5,0x334155);
+                        }
+                        for(let z=-12;z<=12;z+=6) {
+                            add(false,cx+20.6,4,cz+z,.5,8,.55,0x334155);
+                            add(false,cx-20.6,4,cz+z,.5,8,.55,0x334155);
+                        }
+                        add(false,cx,9.1,cz+20.1,21,1,.9,0x166534);
+                        add(true,cx,9.2,cz+20.66,18,.25,.16,0xffe8a3);
+                    }else{
+                        // Armazéns do píer: portas de carga e platibanda.
+                        for(const dx of [-13,0,13]){
+                            add(false,cx+dx,6.75,cz,11,.65,16,0x475569);
+                            add(false,cx+dx,2.6,cz+7.68,5.4,4.8,.24,0x334155);
+                            add(true,cx+dx,3.6,cz+7.86,4.3,.65,.12,0xa5b4c5);
+                            for(const offset of [-3.3,3.3])
+                                add(false,cx+dx+offset,4.4,cz+7.82,.28,4.6,.35,0xe2e8f0);
+                        }
+                    }
+                } else if(city==='havana') {
+                    if(west){
+                        // Capitolio: cornija trabalhada, molduras e frisos.
+                        add(false,cx,11.5,cz,34,.85,27,0xffedd5);
+                        for(const x of [-10,-5,0,5,10]){
+                            add(true,cx+x,7.2,cz+12.78,2.8,2.6,.16,0x9cb6c5);
+                            add(false,cx+x,8.6,cz+12.94,3.4,.25,.35,0xfff1ce);
+                        }
+                        add(false,cx,15.1,cz-2,19,.55,17,0xd6c7b0);
+                    }else{
+                        // Monumento: base, patamares e detalhes verticais.
+                        for(const y of [.55,1.15,2.2])
+                            add(false,cx,y,cz,15-y*1.4,.35,15-y*1.4,0xf5e4cf);
+                        for(const z of [-1.8,1.8])
+                            add(true,cx,20,cz+z,.6,9,.24,0xffe8a3);
+                    }
+                } else if(city==='vegas') {
+                    // Fachadas de cassinos, janelas iluminadas e marquise.
+                    const neon=west?0xec4899:0x22d3ee;
+                    const height=west?43:34;
+                    for(let y=10;y<height-3;y+=4.8){
+                        for(let x=-10;x<=10;x+=5){
+                            add(true,cx+x,y,cz+14.72,2.9,2.3,.15,
+                                (Math.round(y+x)%3===0)?0xffe3a3:0x6c82a2);
+                            add(false,cx+x,y+1.35,cz+14.9,3.25,.2,.35,0xd1d5db);
+                        }
+                    }
+                    add(false,cx,5.5,cz+16.2,29,2.2,2.7,0x322345);
+                    add(true,cx,6.65,cz+17.65,29.4,.35,.22,neon);
+                    add(true,cx,4.35,cz+17.65,29.4,.35,.22,neon);
+                    for(const x of [-14.4,14.4])
+                        add(true,cx+x,height/2,cz+14.8,.43,height-1,.42,neon);
+                } else if(west) {
+                    // Praça litorânea: piso decorativo, floreiras e bordas.
+                    for(const x of [-17,17]){
+                        add(false,cx+x,.55,cz,1,.45,34,0xeee4c8);
+                        add(false,cx+x,1.05,cz-15,5,.85,3,0x4c8b60);
+                    }
+                    add(false,cx,.52,cz+15,35,.16,3,0xf0ddae);
+                } else {
+                    // Mercado do Rio: lojas, toldos e telhado com platibanda.
+                    for(const x of [-11,-3.7,3.7,11]){
+                        add(true,cx+x,3.8,cz+10.69,4.8,3.7,.19,0x79b1b7);
+                        add(false,cx+x,6.2,cz+11.2,5.4,.55,1.25,0xb45309);
+                        add(false,cx+x,1.9,cz+10.93,.25,3.7,.35,0xe7d8b2);
+                    }
+                    add(false,cx,8.7,cz,35,.62,24,0x9f4137);
+                }
+                if(!opaque.length&&!light.length)return;
+                const geo=new THREE.BoxGeometry(1,1,1),colors=new Map();
+                const colorOf=c=>{
+                    if(!colors.has(c))colors.set(c,new THREE.Color(c));
+                    return colors.get(c);
+                };
+                for(const [items,glow] of [[opaque,false],[light,true]]){
+                    if(!items.length)continue;
+                    const mat=glow?
+                        new THREE.MeshBasicMaterial({color:0xffffff}):
+                        new THREE.MeshLambertMaterial({color:0xffffff});
+                    const mesh=new THREE.InstancedMesh(geo,mat,items.length);
+                    const d=new THREE.Object3D();
+                    items.forEach((p,i)=>{
+                        d.position.set(p.x,p.y,p.z);d.scale.set(p.w,p.h,p.d);
+                        d.rotation.set(0,0,0);d.updateMatrix();
+                        mesh.setMatrixAt(i,d.matrix);
+                        mesh.setColorAt(i,colorOf(p.color));
+                    });
+                    mesh.instanceMatrix.needsUpdate=true;
+                    if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+                    mesh.frustumCulled=false;
+                    mesh.name='landmark-detail-'+city+(glow?'-glass':'-solid');
+                    this.cityGroup.add(mesh);
+                }
             }
 
             buildChicagoStationBlock(cx,cz) {
