@@ -57,6 +57,7 @@ class DriverPoliceDoorRig {
             part.position.set(.46,0,left?.31:-.31);
             part.frustumCulled=false;
             part.castShadow=false;
+            part.userData=part.userData||{};
             part.userData.cc0SharedAsset=true;
             hinge.add(part);mesh.add(hinge);
         }
