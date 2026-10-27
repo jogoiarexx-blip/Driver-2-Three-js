@@ -4,7 +4,10 @@
  * Independente de THREE; testável com Node e reutilizável em quatro cidades.
  */
 class DriverPedestrianSidewalks {
-    static HALF=23;
+    // Rota agora 3 m para dentro da borda de 25 m do passeio;
+    // mantém espaço para braços, roupa e esquiva da personagem GLB maior.
+    static HALF=22;
+    static BODY_RADIUS=.7;
     static route(block) {
         const h=this.HALF;
         return [
@@ -33,7 +36,11 @@ class DriverPedestrianSidewalks {
         if(typeof DriverRoadGeometry!=='undefined' &&
             DriverRoadGeometry.inDrivingLane(x,z,.75))return false;
         if(city?.isWaterAt?.(x,z))return false;
-        if(city?.isPointBlocked?.(x,z,.40,0))return false;
+        // Fora da travessia sinalizada, o corpo inteiro deve caber na
+        // calçada física. Nenhum pedestre pisa na pista por flutuação.
+        if(city?.sidewalkGrid?.size && city?.isOnSidewalk &&
+            !city.isOnSidewalk(x,z,this.BODY_RADIUS))return false;
+        if(city?.isPointBlocked?.(x,z,this.BODY_RADIUS,0))return false;
         return true;
     }
     static blockSafe(city,block){
@@ -101,7 +108,7 @@ class DriverPedestrianSidewalks {
             const x=from.x+(destination.x-from.x)*t;
             const z=from.z+(destination.z-from.z)*t;
             if(city.isWaterAt?.(x,z) ||
-                city.isPointBlocked?.(x,z,.45,0))return null;
+                city.isPointBlocked?.(x,z,this.BODY_RADIUS,0))return null;
         }
         return {x:destination.x,z:destination.z,
             startX:from.x,startZ:from.z,
