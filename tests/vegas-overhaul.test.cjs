@@ -33,6 +33,7 @@ class InstancedMesh extends Mesh{
 }
 const THREE={Group,Object3D,Mesh,InstancedMesh,
     Vector3,BoxGeometry:Geo,ConeGeometry:Geo,PlaneGeometry:Geo,
+    TorusGeometry:Geo,
     MeshBasicMaterial:Mat,MeshLambertMaterial:Mat,Color,Sphere};
 const context=vm.createContext({THREE,Map,Set,Number,Math});
 for(const file of ['js/world/special-structures.js',
@@ -126,6 +127,20 @@ test('cassino e hotel possuem letreiros, sem bloquear missões',()=>{
     assert(hotel[1].count>60);
     assert.equal(JSON.stringify(c.buildingBoxes),before);
 });
+test('High Roller, torre e pirâmide são silhuetas sem colisão',()=>{
+    const city=mockCity('vegas'),boxes=JSON.stringify(city.buildingBoxes);
+    const attraction=Vegas.buildAttractions(city);
+    assert.equal(attraction.length,4);
+    attraction.filter(m=>m instanceof InstancedMesh).forEach(assertBatch);
+    const wheel=city.cityGroup.children.find(m=>
+        m.name==='vegas-high-roller-outline');
+    const pyramid=city.cityGroup.children.find(m=>
+        m.name==='vegas-pyramid-backdrop');
+    assert(wheel&&pyramid);
+    assert(wheel.position.x>410);
+    assert(pyramid.position.z>410);
+    assert.equal(JSON.stringify(city.buildingBoxes),boxes);
+});
 test('skyline da Strip é mais alto; outros mapas preservam alturas',()=>{
     const old=Urban.random;
     try{
@@ -157,6 +172,8 @@ test('isolamento de Chicago, Havana e Rio e conservação de colisões',()=>{
     assert.equal(city.vegasOverhaulStats.addedColliders,0);
     assert.equal(city.vegasOverhaulStats.externalAssets,0);
     assert.equal(city.vegasOverhaulStats.pointLights,0);
+    assert(city.cityGroup.children.some(m=>m.name==='vegas-high-roller-outline'));
+    assert(city.cityGroup.children.some(m=>m.name==='vegas-pyramid-backdrop'));
     assert(city.cityGroup.children.length>=8);
     assert.equal(JSON.stringify(city.buildingBoxes),boxes);
     assert.equal(JSON.stringify(city.roadAudit),road);
