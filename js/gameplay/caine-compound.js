@@ -4,7 +4,7 @@
  * atravessar a ponte antes que ela levante. Layout adaptado ao mundo aberto.
  */
 class DriverCaineCompound {
-    static BRIDGE={x:0,z:91,radius:14};
+    static BRIDGE={x:0,z:80,radius:14};
     static START={x:200,z:-178};
     static CAR={x:240,z:-160};
     static BRIDGE_SECONDS=19;
