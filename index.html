@@ -88,6 +88,13 @@
                     <div id="mission-timer" class="text-xl sm:text-3xl font-extrabold text-white tracking-wider font-mono hidden">01:30.00</div>
                     <div id="mission-subcounter" class="text-xs font-extrabold text-emerald-400 hidden">CONES / PORTÕES: 0 / 10</div>
                 </div>
+                <div id="leaving-chicago-progress" class="hidden pointer-events-none mt-1 rounded-lg bg-slate-950/95 border border-sky-600/50 text-center p-2 w-64 max-w-[95vw]">
+                    <div id="leaving-chicago-title" class="text-sky-300 font-bold text-[10px]">ALCANCE O TREM</div>
+                    <div class="h-2 bg-slate-700 rounded mt-1 overflow-hidden">
+                        <div id="leaving-chicago-fill" class="h-full bg-emerald-400 rounded" style="width:0%"></div>
+                    </div>
+                    <div id="leaving-chicago-distance" class="text-slate-300 text-[10px] mt-1">ESTAÇÃO • JONES</div>
+                </div>
                 <div id="caine-escape-progress" class="hidden pointer-events-none mt-1 rounded-lg bg-slate-950/95 border border-rose-500/50 text-center p-2 w-64 max-w-[95vw]">
                     <div id="caine-escape-phase" class="text-amber-400 font-bold text-[10px]">SAIA DO GALPÃO</div>
                     <div class="h-2 bg-slate-700 rounded mt-1 overflow-hidden">
@@ -181,6 +188,9 @@
             <div class="flex flex-wrap justify-center gap-3">
                 <button id="btn-restart-mode" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-5 py-2.5 rounded-lg transition">
                     JOGAR NOVAMENTE
+                </button>
+                <button id="btn-continue-havana" class="hidden bg-sky-700 hover:bg-sky-600 text-white font-bold px-4 py-2.5 rounded-lg border border-sky-400">
+                    SEGUIR PARA HAVANA
                 </button>
                 <button id="btn-continue-safehouse" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-lg border border-emerald-400">
                     ENTRAR NA CASA E SALVAR
@@ -328,6 +338,14 @@
                 <strong class="text-rose-400">CHICAGO 07 — CAINE'S COMPOUND</strong>
                 <div class="text-xs text-slate-300 mt-1">
                     Saia do depósito, entre no carro de fuga, despiste as vans e atravesse a ponte antes de fechar.
+                </div>
+            </button>
+            <button onclick="window.DriverGame.startMission('story_leaving')"
+                class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-sky-600 hover:bg-slate-800">
+                <strong class="text-sky-400">CHICAGO 08 — LEAVING CHICAGO</strong>
+                <div class="text-xs text-slate-300 mt-1">
+                    Noite chuvosa. Fuja da máfia e encontre Jones na estação antes de 3:30.
+                    Ao concluir, siga para Havana.
                 </div>
             </button>
             <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">2. Missões adicionais e modos:</div>
@@ -705,6 +723,7 @@ git push -u origin main</pre>
     <script src="./js/gameplay/safehouse-escape.js"></script>
     <script src="./js/gameplay/chicago-intruder.js"></script>
     <script src="./js/gameplay/caine-compound.js"></script>
+    <script src="./js/gameplay/leaving-chicago.js"></script>
     <script src="./js/traffic/traffic-ai.js"></script>
     <script src="./js/police/roadblock-director.js"></script>
     <script src="./js/gameplay/checkpoint-route.js"></script>

@@ -10,7 +10,7 @@ class DriverHomeSave {
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
-        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder','story_caine'
+        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder','story_caine','story_leaving'
     ];
     constructor(storage) { this.storage=storage; }
 
@@ -67,6 +67,8 @@ class DriverHomeSave {
                 arrived:game.trainLine.arrived,
                 lost:game.trainLostSeconds||0
             }:null,
+            leaving:game.missionType==='story_leaving' &&
+                game.leavingDirector?game.leavingDirector.export():null,
             caine:game.missionType==='story_caine' && game.caineDirector?
                 game.caineDirector.export():null,
             intruder:game.missionType==='story_intruder' && game.intruderDirector?
@@ -118,6 +120,8 @@ class DriverHomeSave {
         game.startMission(data.mission.type);
         // Restaura a frota dinâmica ANTES de aplicar posições persistidas.
         // Do contrário os carros adicionais não recebem o estado salvo.
+        if(data.leaving&&game.missionType==='story_leaving'&&game.leavingDirector)
+            game.leavingDirector.restore(data.leaving);
         if(data.caine && game.missionType==='story_caine' && game.caineDirector){
             game.caineDirector.restore(data.caine);
             game.city.caineBridgeClosed=game.caineDirector.bridgeClosed;

@@ -147,3 +147,6 @@
 
 #caine-escape-progress.hidden{display:none;}
 @media(max-width:767px){#caine-escape-progress{width:min(240px,90vw);padding:5px 7px;}}
+
+#leaving-chicago-progress.hidden{display:none;}
+@media(max-width:767px){#leaving-chicago-progress{width:min(240px,90vw);padding:5px 7px;}}
