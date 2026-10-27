@@ -156,3 +156,23 @@ test('HUD da missão apresenta visão, delito e progresso da fuga',()=>{
  assert.match(engine,/LOST_SIGHT_SECONDS/);
  assert.match(engine,/safeHouseStatus/);
 });
+
+test('ao vencer, botão permite ir diretamente à casa e manter conquista',()=>{
+ const engine=read('js/engine/driver2-game-engine.js');
+ const html=read('index.html');
+ assert.match(html,/id="btn-continue-safehouse"/);
+ assert.match(engine,/completedMissions\.has\('story_safehouse'\)/);
+ assert.match(engine,/tanner\.setPosition\(house\.x,0,house\.z\+4/);
+ assert.match(engine,/continueHome\.classList\.toggle\('hidden'/);
+});
+test('perder policiais atrás de prédio reduz delito mesmo perto',()=>{
+ const code=read('js/engine/driver2-game-engine.js');
+ assert.match(code,/if\(!watch && this\.felony>0\)/);
+ assert.match(code,/this\.felony=Math\.max\(0,this\.felony-5\.2\*dt\)/);
+});
+test('casa segura tem varanda, marquise, pilares e caixa de correio',()=>{
+ const city=read('js/world/city-builder.js');
+ assert.match(city,/const walkway=new THREE\.Mesh/);
+ assert.match(city,/const awning=new THREE\.Mesh/);
+ assert.match(city,/const mailbox=new THREE\.Mesh/);
+});

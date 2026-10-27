@@ -1109,6 +1109,10 @@
                             this.vehicles,pos,
                             (cop,p)=>this.trafficAI.unobstructed(cop,p)
                         );
+                        // A fuga também conta quando policiais estão perto mas
+                        // não conseguem mais ver Tanner atrás de edifícios.
+                        if(!watch && this.felony>0)
+                            this.felony=Math.max(0,this.felony-5.2*dt);
                         const result=this.safeHouseEscape.update(dt,{
                             position:pos,
                             safeHouseZone:this.city.safeHouseZone,
@@ -1373,6 +1377,9 @@
                 this.gameEnded = true;
                 if(!/FALH|ESGOTAD|DESTRUÍDO|ESCAPOU|ATINGIDO|FIM DO SURVIVAL/i.test(title))
                     this.completedMissions.add(this.missionType);
+                const continueHome=document.getElementById('btn-continue-safehouse');
+                if(continueHome)continueHome.classList.toggle('hidden',
+                    !(this.missionType==='story_safehouse' && /CONCLUÍDA/.test(title)));
                 document.getElementById('announcement-title').textContent = title;
                 document.getElementById('announcement-desc').textContent = desc;
                 document.getElementById('center-announcement').classList.remove('hidden');
@@ -1974,6 +1981,26 @@
                 });
                 document.getElementById('btn-free-roam').addEventListener('click', () => {
                     this.startMission('freeroam');
+                });
+                const continueHome=document.getElementById('btn-continue-safehouse');
+                if(continueHome)continueHome.addEventListener('click',()=>{
+                    if(this.missionType!=='story_safehouse' ||
+                        !this.completedMissions.has('story_safehouse'))return;
+                    this.startMission('freeroam');
+                    const house=this.city.safeHouseZone;
+                    // Jogador pode entrar na casa diretamente; a conquista fica
+                    // no Set até salvar o progresso na mesa verde.
+                    this.playerCar.x=house.x-6;
+                    this.playerCar.z=house.z+9;
+                    this.playerCar.speed=0;
+                    this.playerCar.heading=Math.PI;
+                    this.playerCar.updateTransform();
+                    this.mode='on_foot';
+                    this.tanner.setPosition(house.x,0,house.z+4,Math.PI);
+                    this.tanner.setVisible(true);
+                    this.felony=0;
+                    const badge=document.getElementById('player-state-badge');
+                    if(badge)badge.textContent='TANNER (A PÉ) • CASA SEGURA';
                 });
 
                 document.querySelectorAll('.arch-tab-btn').forEach(btn => {

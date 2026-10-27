@@ -523,6 +523,31 @@
                     new THREE.MeshLambertMaterial({color:0x16a34a}));
                 door.position.set(cx,2.2,cz+15.2);
                 this.cityGroup.add(door);
+                // Varanda, entrada sombreada e caminho de carros para identificar
+                // o endereço mesmo à noite. Decoração de baixo custo.
+                const porchMat=new THREE.MeshLambertMaterial({color:0x78716c});
+                const walkway=new THREE.Mesh(new THREE.BoxGeometry(10,.16,13),
+                    porchMat);
+                walkway.position.set(cx,.1,cz+23.6);
+                this.cityGroup.add(walkway);
+                const awning=new THREE.Mesh(new THREE.BoxGeometry(9,.55,5),
+                    new THREE.MeshLambertMaterial({color:0x166534}));
+                awning.position.set(cx,4.55,cz+17.5);
+                this.cityGroup.add(awning);
+                for(const dx of [-3.65,3.65]){
+                    const column=new THREE.Mesh(new THREE.BoxGeometry(.35,4.15,.35),
+                        porchMat);
+                    column.position.set(cx+dx,2.18,cz+19.5);
+                    this.cityGroup.add(column);
+                }
+                const mailbox=new THREE.Mesh(new THREE.BoxGeometry(.8,1.4,.85),
+                    new THREE.MeshLambertMaterial({color:0x334155}));
+                mailbox.position.set(cx+7.5,.72,cz+22);
+                this.cityGroup.add(mailbox);
+                const address=new THREE.Mesh(new THREE.BoxGeometry(2.3,.6,.1),
+                    new THREE.MeshBasicMaterial({color:0xfde68a}));
+                address.position.set(cx,5.6,cz+15.35);
+                this.cityGroup.add(address);
                 this.interiors.push({
                     id:'home',name:'Casa de Tanner',kind:'home',
                     door:{x:cx,z:cz+19},inside:{x:1000,z:0}
