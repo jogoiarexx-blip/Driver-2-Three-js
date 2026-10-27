@@ -5,7 +5,11 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
-const Save=vm.runInNewContext(read('js/gameplay/home-save.js')+'\nDriverHomeSave',{Math,Date,JSON,Set});
+const Save=vm.runInNewContext(
+  read('js/gameplay/checkpoint-route.js')+'\n'+
+  read('js/gameplay/home-save.js')+'\nDriverHomeSave',
+  {Math,Date,JSON,Set}
+);
 const City=vm.runInNewContext(read('js/world/city-builder.js')+'\nCityBuilder',{Math});
 const Route=vm.runInNewContext(read('js/gameplay/checkpoint-route.js')+'\nDriverCheckpointRoute',{Math});
 function storage(){
