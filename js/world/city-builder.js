@@ -383,6 +383,12 @@
                     if(far.instanceColor)far.instanceColor.needsUpdate=true;
                     far.frustumCulled=false;
                     far.name='district-far-'+chunk.id;
+                    // LOD de Vegas mantém janelas mesmo com torres
+                    // distantes, escondendo-as junto com o pai far.
+                    if(this.preset.id==='vegas' &&
+                        typeof DriverVegasOverhaul!=='undefined')
+                        DriverVegasOverhaul.detailFarDistrict(
+                            this,chunk.buildings,far);
                     this.cityGroup.add(far);
                     this.districtLOD.register({
                         id:chunk.id,x:chunk.x,z:chunk.z,far,
