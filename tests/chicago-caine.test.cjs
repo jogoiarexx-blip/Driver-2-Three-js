@@ -141,7 +141,8 @@ test('portão da ponte bloqueia colisão apenas quando fecha',()=>{
     env.caineBridgeClosed=true;
     assert.equal(City.prototype.isPointBlocked.call(env,0,51),true);
     assert.equal(City.prototype.isPointBlocked.call(env,0,30),false);
-    assert.equal(City.prototype.isPointBlocked.call(env,16,51),true);
+    // O canal aberto nao e um collider invisivel: a agua permite queda.
+    assert.equal(City.prototype.isPointBlocked.call(env,16,51),false);
 });
 test('acesso ao depósito e carro permanecem fora das paredes novas',()=>{
     const env={cityGroup:new Node(),buildingBoxes:[],caineBridgeGate:null};
