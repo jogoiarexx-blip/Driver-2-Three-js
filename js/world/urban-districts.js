@@ -17,7 +17,13 @@ class UrbanDistricts {
         return city === 'chicago' ?
             18+r*29 + loop*(28+63*r) :
             city === 'havana' ? 12 + r * 18 :
-            city === 'vegas' ? 22 + r * 42 : 16 + r * 32;
+            city === 'vegas' ? 22 + r * 42 :
+            city === 'rio' ?
+                // Faixa de prédios mais altos na Zona Sul, centro com
+                // variação média e bairros baixos na periferia.
+                (x>=155 ? 25+r*32+10*Math.max(0,1-Math.abs(z)/340) :
+                    Math.abs(x)<155 ? 20+r*38 : 14+r*25) :
+                16+r*32;
     }
     // Perfis de fachadas do jogo PS1: Wrigley/Downtown, Habana Vieja,
     // Strip e fachadas sombreadas da orla. Não altera vias nem colisores.
