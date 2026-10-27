@@ -72,7 +72,7 @@ class DriverStreetFurniture {
         // Postes visuais instanciados continuam em apenas duas draw calls.
         // O registro individual permite derrubar somente a instância
         // atingida, sem recalcular nem esconder os demais postes.
-        positions.forEach(([x,z],index)=>{
+        if(Array.isArray(city.destructibleProps))positions.forEach(([x,z],index)=>{
             city.destructibleProps.push({
                 type:'pole',x,z,hit:false,shattered:false,
                 instanceIndex:index,poleMesh:pole,lampMesh:bulb,

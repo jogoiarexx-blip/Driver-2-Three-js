@@ -205,12 +205,12 @@ test('colisões de NPC quebram objetos sem áudio/delito de Tanner',()=>{
     const src=read('js/engine/driver2-game-engine.js');
     assert.match(src,/car!==this\.playerCar\)return/);
     assert.match(src,/this\.effects\.spawnImpactSparks/);
-    assert.match(src,/onPropHitCallback\(car,p,impact\)/);
+    assert.match(read('js/world/city-builder.js'),/onPropHitCallback\(car,p,impact\)/);
 });
 test('colisões continuam usando os mesmos colliders físicos',()=>{
     const c=read('js/world/city-builder.js');
     assert.match(c,/isPointBlocked\(x, z, radius = 1\.2, y = 0\)/);
     assert.match(c,/this\.buildingBoxes/);
     const v=read('js/render/vehicle-damage-fx.js');
-    assert.match(v,/não deformar a caixa física/);
+    assert.match(v,/sem deformar a caixa física/);
 });
