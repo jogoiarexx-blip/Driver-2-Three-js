@@ -8,7 +8,8 @@
             constructor(scene) {
                 this.scene = scene;
                 this.pedestrians = [];
-                this.femalePedestrian = new DriverFemalePedestrian(this);
+                this.femalePedestrian = typeof DriverFemalePedestrian==='function'?
+                    new DriverFemalePedestrian(this):null;
                 this.roadblocks = [];
                 this.roadblockOfficers = [];
                 this.officerTime = 0;
@@ -20,7 +21,7 @@
                 // Uma única frota de 28 personagens e sem animações
                 // exigindo esqueleto/CPU em personagens distantes.
                 // Preserva o rig GLB antes da limpeza dos objetos da cidade anterior.
-                this.femalePedestrian.release();
+                this.femalePedestrian?.release();
                 GPUResourceUtils.disposeSubtree(this.group);
                 while(this.group.children.length>0)
                     this.group.remove(this.group.children[0]);
@@ -100,8 +101,8 @@
                 }
                 // Uma mulher animada entre os 28 pedestres normais.
                 // Mesma rota, semáforos, colisões, reciclagem e esquiva.
-                this.femalePedestrian.attachToFirst();
-                this.femalePedestrian.load();
+                this.femalePedestrian?.attachToFirst();
+                this.femalePedestrian?.load();
             }
 
             recycleDistantPedestrians(focus,dt){
@@ -335,7 +336,7 @@
                     if((state.dx||state.dz)&&moving)
                         p.mesh.rotation.y=Math.atan2(state.dx,state.dz);
                     if(p.glbFemale)
-                        this.femalePedestrian.update(p,dt,moving,crossing);
+                        this.femalePedestrian?.update(p,dt,moving,crossing);
                     // Antecipação na passada, leve inclinação ao correr.
                     // A esquiva não altera a posição ou a colisão.
                     p.mesh.rotation.z=state.state==='dodge'?
