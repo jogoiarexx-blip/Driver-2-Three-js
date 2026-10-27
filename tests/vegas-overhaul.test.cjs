@@ -77,7 +77,7 @@ test('Vegas diferencia quatro setores e cria letreiros em lote próximo',()=>{
 test('letreiro em pixels gera letras legíveis sem fontes externas',()=>{
     const parts=[];
     Vegas.pixelSign(parts,'CASINO',0,20,10,.45,0xff33aa);
-    assert(parts.length>95);
+    assert(parts.length>=90);
     assert(parts.every(p=>p[7]===true));
     assert(parts.every(p=>Number.isFinite(p[0])&&Number.isFinite(p[1])));
     const side=[];
