@@ -170,3 +170,13 @@ O GitHub Actions avalia testes lógicos de Node; a validação visual completa e
 - Save doméstico guarda também checkpoint do sedã, suspeita, distância perdida e tempo de seguimento. Coordenadas de salas ampliadas são suportadas.
 - `tests/tailing-drop.test.cjs` prova a lógica furtiva, persistência, semáforos e uma simulação completa do sedã pela malha da cidade sem colisões de edifícios.
 - **Ainda não é uma reconstrução exata** da missão PS1: o trajeto e os valores de tolerância foram adaptados à malha procedural. Os testes são lógicos/headless, não uma sessão jogada visualmente no navegador.
+
+## Chicago 05 — Escape to the Safe House (revisão outubro de 2026)
+
+- Missão da campanha original: comece cercado pela polícia (delito 92%), perca contato visual e dirija até o marcador da casa segura no sudoeste. Uma volta à casa a pé também é aceita, mas não é obrigatório coletar checkpoints artificiais. A missão se conclui ao parar o carro dentro do alcance do marcador após despistar a polícia, ou entrar em casa depois da fuga.
+- Lógica de fuga: um policial precisa estar dentro de 95 unidades **e ter linha de visão** para manter contato; o delito deve ficar abaixo de 32%, com 5,5 segundos sem observação. O retorno de uma viatura à linha de visão interrompe o progresso. Esses limiares foram adaptados para o mapa procedural, não extraídos do PS1.
+- Frota reposicionada no começo para uma perseguição imediata em Chicago. O diretor de bloqueios existente continua ativo; o bairro da casa segura e sua entrada são reutilizados.
+- HUD central indica fase, distância até a casa, delito e tempo sem contato. A garagem, interiores, salvamento na mesa verde, mapa geral e anteriores missões permanecem disponíveis.
+- O progresso da fase de fuga é guardado no `localStorage` pelo sistema de save da casa. `tests/chicago-safehouse.test.cjs` testa perseguição, visibilidade, vitória/derrota, carregamento, integração e interfaces.
+
+**Diferenças em relação ao Driver 2 do PS1:** geometria urbana, patrulha, perseguição e tempos são recriações próprias, ainda sem garantia de equivalência 1:1. Os testes Node validam regras e estruturas, mas não substituem jogar a missão inteira em navegador real.
