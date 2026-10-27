@@ -114,15 +114,15 @@ class DriverIntruderPursuit {
         const states=['opening','chase','yard','blocked'];
         this.phase=states.includes(data?.phase)?data.phase:'opening';
         const number=(n,a,b)=>Number.isFinite(n)?Math.max(a,Math.min(b,n)):a;
-        this.lostSeconds=number(data?.lostSeconds,0,this.LOST_LIMIT);
-        this.yardSeconds=number(data?.yardSeconds,0,this.YARD_WAIT);
+        this.lostSeconds=number(data?.lostSeconds,0,DriverIntruderPursuit.LOST_LIMIT);
+        this.yardSeconds=number(data?.yardSeconds,0,DriverIntruderPursuit.YARD_WAIT);
         this.captureSeconds=number(data?.captureSeconds,0,2);
         this.blockadeShown=!!data?.blockadeShown;
         if(target?.scriptedDrive){
             const route=target.scriptedDrive;
             route.index=Math.floor(number(data?.routeIndex,0,route.waypoints.length));
             route.done=!!data?.done;
-            route.waitSeconds=number(data?.waitSeconds,0,this.WAIT_AT_START);
+            route.waitSeconds=number(data?.waitSeconds,0,DriverIntruderPursuit.WAIT_AT_START);
         }
     }
 }
