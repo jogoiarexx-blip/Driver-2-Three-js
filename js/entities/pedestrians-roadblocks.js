@@ -171,6 +171,9 @@
                 }
 
                 // 2. Atualiza Barricadas Policiais Destrutíveis
+                // Vários cavaletes podem cair no mesmo frame; só gera um
+                // áudio/evento de impacto por veículo, evitando som duplicado.
+                const impactedVehicles = new Set();
                 for (let i = 0; i < this.roadblocks.length; i++) {
                     const rb = this.roadblocks[i];
                     if (!rb.smashed) {
@@ -192,9 +195,12 @@
                                 rb.vx = Math.sin(car.heading) * Math.abs(car.speed) * 1.15 + (Math.random() - 0.5) * 8;
                                 rb.vz = Math.cos(car.heading) * Math.abs(car.speed) * 1.15 + (Math.random() - 0.5) * 8;
                                 rb.vy = 7 + Math.random() * 5;
-                                if (audio) audio.playCrash(0.5);
-                                if (typeof onBarrierImpact === 'function') {
-                                    onBarrierImpact(car, rb, Math.abs(car.speed));
+                                if (!impactedVehicles.has(car)) {
+                                    impactedVehicles.add(car);
+                                    if (audio) audio.playCrash(0.5);
+                                    if (typeof onBarrierImpact === 'function') {
+                                        onBarrierImpact(car, rb, Math.abs(car.speed));
+                                    }
                                 }
                                 break;
                             }
