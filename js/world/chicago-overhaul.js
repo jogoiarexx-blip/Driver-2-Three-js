@@ -94,6 +94,10 @@ class DriverChicagoOverhaul {
             }
             // Evita sinalizadores soltos que confundem com itens de missão.
         }
+        // Janelas autoiluminadas já são desenhadas pelo UrbanDistricts:
+        // mesclar este reforço arquitetônico em UM só lote Lambert por
+        // chunk corta as draw calls do reforço pela metade sem perder LOD.
+        P.forEach(part=>{part[7]=false;});
         return DriverSpecialStructures.pack(parent,P,'chicago-district');
     }
 
