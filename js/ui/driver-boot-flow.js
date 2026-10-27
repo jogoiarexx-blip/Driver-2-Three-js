@@ -6,6 +6,8 @@
 class DriverBootFlow {
     constructor() {
         this.game=null;
+        this.sessionReady=false;
+        this.loopStarted=false;
         this.busy=false;
         this.menuVisible=true;
         this.selectedCity='chicago';
@@ -46,7 +48,7 @@ class DriverBootFlow {
         if(label)label.textContent=save?
             'Continuar em '+save.city.toUpperCase():'Sem save da casa';
         const resume=document.getElementById('d2-resume');
-        if(resume)resume.classList.toggle('hidden',!this.game);
+        if(resume)resume.classList.toggle('hidden',!this.sessionReady);
     }
     setupEvents() {
         const listen=(id,fn)=>{
@@ -130,7 +132,7 @@ class DriverBootFlow {
         return true;
     }
     resume() {
-        if(this.busy||!this.game)return false;
+        if(this.busy||!this.game||!this.sessionReady)return false;
         this.game.isPaused=false;
         this.game.loadingActive=false;
         this.game.lastTime=performance.now();
@@ -141,7 +143,7 @@ class DriverBootFlow {
         return true;
     }
     togglePauseMenu() {
-        if(this.busy||!this.game)return false;
+        if(this.busy||!this.game||!this.sessionReady)return false;
         return this.menuVisible?this.resume():this.openMenu();
     }
     paintProgress(data) {
@@ -285,7 +287,8 @@ class DriverBootFlow {
         const success=await this.runLoading(
             'CARREGANDO '+city.toUpperCase(),tasks);
         if(!success)return false;
-        if(first)game.animate();
+        this.sessionReady=true;
+        if(!this.loopStarted){game.animate();this.loopStarted=true}
         this.resume();
         if(mode==='driving')
             document.getElementById('missions-modal').classList.remove('hidden');
