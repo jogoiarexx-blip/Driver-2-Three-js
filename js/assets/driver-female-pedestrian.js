@@ -44,16 +44,19 @@ class DriverFemalePedestrian {
                     const dimensions=bounds.getSize(new THREE.Vector3());
                     if(!(dimensions.y>0.5) || !Number.isFinite(dimensions.y))
                         throw new Error('Escala inválida do pedestre');
-                    // O modelo original tem aprox. 1,72 unidades de altura.
-                    // Conservar 1,7m no mundo; pés no y=0, independentemente do GLB.
-                    const scale=1.7/dimensions.y;
+                    // Ajuste visual: pedestre cerca de 20% maior que a versão
+                    // anterior (1.7 -> 2.05 m), sem alterar o collider lógico.
+                    const scale=2.05/dimensions.y;
                     root.scale.multiplyScalar(scale);
                     root.position.set(
                         -(bounds.min.x+bounds.max.x)*.5*scale,
                         -bounds.min.y*scale,
                         -(bounds.min.z+bounds.max.z)*.5*scale
                     );
-                    root.rotation.y=Math.PI;
+                    // O GLB já foi exportado com o eixo frontal compatível com
+                    // a rota (+Z). O antigo PI invertia o corpo: parecia andar
+                    // de costas enquanto a IA avançava na direção correta.
+                    root.rotation.y=0;
                     root.traverse(node=>{
                         if(node.isMesh){
                             node.castShadow=false;
@@ -62,9 +65,9 @@ class DriverFemalePedestrian {
                         }
                     });
                     this.container=new THREE.Group();
-                    // O pedestre procedural tem origem y=+0.35;
-                    // neutralizar para os pés do GLB encostarem no passeio.
-                    this.container.position.y=-.35;
+                    // A calçada real termina em y=.35. O grupo do pedestre já
+                    // está nessa altura; descontar -.35 afundava os tornozelos.
+                    this.container.position.y=0;
                     this.container.add(root);
                     this.mixer=new THREE.AnimationMixer(root);
                     this.action=this.mixer.clipAction(clip);
