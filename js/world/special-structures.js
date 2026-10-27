@@ -21,7 +21,30 @@ class DriverSpecialStructures {
             if([x,y,z,w,h,d].every(Number.isFinite)&&w>0&&h>0&&d>0)
                 batches[glow?1:0].push(part);
         }
+        // Borda conservadora de TODAS as instâncias no espaço local do pai.
+        // Three.js r128 não calcula a esfera de InstancedMesh automaticamente:
+        // com bbox do cubo unitário, o frustum culling ocultaria detalhes visíveis.
+        const all=batches[0].concat(batches[1]);
+        const mins=[Infinity,Infinity,Infinity],maxs=[-Infinity,-Infinity,-Infinity];
+        for(const [x,y,z,w,h,d] of all){
+            const lo=[x-w/2,y-h/2,z-d/2],hi=[x+w/2,y+h/2,z+d/2];
+            for(let k=0;k<3;k++){
+                mins[k]=Math.min(mins[k],lo[k]);
+                maxs[k]=Math.max(maxs[k],hi[k]);
+            }
+        }
+        const useBounds=typeof THREE.Sphere==='function' &&
+            typeof THREE.Vector3==='function' && all.length>0;
         const geometry=new THREE.BoxGeometry(1,1,1),meshes=[];
+        if(useBounds){
+            const center=new THREE.Vector3(
+                (mins[0]+maxs[0])/2,(mins[1]+maxs[1])/2,
+                (mins[2]+maxs[2])/2
+            );
+            const radius=Math.hypot(maxs[0]-mins[0],maxs[1]-mins[1],
+                maxs[2]-mins[2])/2+1;
+            geometry.boundingSphere=new THREE.Sphere(center,radius);
+        }
         for(let channel=0;channel<2;channel++){
             const entries=batches[channel];
             if(!entries.length)continue;
@@ -41,8 +64,9 @@ class DriverSpecialStructures {
             mesh.instanceMatrix.needsUpdate=true;
             if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
             mesh.name=name+(channel?'-lighting':'-structure');
-            // Posição fixa do lote, frustum do chunk / setor gerencia visibilidade.
-            mesh.frustumCulled=false;
+            // Correto também para interiores distantes e folhas móveis da
+            // ponte: uma esfera local acompanha a matriz de cada pai.
+            mesh.frustumCulled=useBounds;
             mesh.castShadow=false;mesh.receiveShadow=false;
             mesh.userData.specialStructure=true;
             parent.add(mesh);meshes.push(mesh);
