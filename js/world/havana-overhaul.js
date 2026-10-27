@@ -154,7 +154,7 @@ class DriverHavanaOverhaul {
         const parts=[],add=(...p)=>parts.push(p);
         // Porto do canal: armazéns e pequenos guindastes decorativos,
         // sobre terrenos/estruturas existentes e sem collider novo.
-        for(const [x,z] of [[-304,-275],[-304,210],[306,-275],[306,220]]){
+        for(const [x,z] of [[-274,-275],[-274,205],[274,-275],[274,205]]){
             // Só elementos altos; não esconder veículos na avenida.
             for(const dx of [-8,8]){
                 add(x+dx,6.9,z,.52,13.5,.52,0x7d796e,false);
