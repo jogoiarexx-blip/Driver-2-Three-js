@@ -11,9 +11,9 @@
 
                 this.scene = new THREE.Scene();
                 this.scene.background = new THREE.Color(0x1e293b);
-                this.scene.fog = new THREE.FogExp2(0x1e293b, 0.0040);
+                this.scene.fog = new THREE.FogExp2(0x1e293b, 0.0032);
 
-                this.camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 360);
+                this.camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 620);
                 this.cameraRig = new DriverCameraRig();
                 this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -35,6 +35,12 @@
                 this.trafficAI = new DriverTrafficAI(this.city);
                 this.collisionSystem = new DriverVehicleCollisions();
                 this.pursuitChapter = new DriverPursuitChapter();
+                this.homeSave=new DriverHomeSave(
+                    (()=>{try{return window.localStorage}catch(e){return null}})()
+                );
+                this.completedMissions=new Set();
+                this.interiorPlace=null;
+                this.witnessCloseTime=0;
                 this.tanner = new TannerController(this.scene);
                 this.pedManager = new PedestrianAndRoadblockManager(this.scene);
                 this.roadblockDirector = new PoliceRoadblockDirector();
@@ -276,6 +282,8 @@
             }
 
             startMission(type) {
+                if((type==='story_tipoff'||type==='story_witness') &&
+                    this.currentCityKey!=='chicago')this.changeCity('chicago');
                 document.getElementById('missions-modal').classList.add('hidden');
                 document.getElementById('center-announcement').classList.add('hidden');
 
@@ -291,6 +299,8 @@
                 this.roadblocksSpawned = false;
                 this.tailOutOfRangeTimer = 0;
                 this.mode = 'driving';
+                this.interiorPlace=null;
+                this.witnessCloseTime=0;
                 this.felony = 0;
                 this.survivalElapsed = 0;
                 this.evidencePhase = 0;
@@ -317,6 +327,39 @@
                     titleEl.textContent = `TAKE A RIDE: ${cityTitle}`;
                     timerEl.classList.add('hidden');
                     objEl.innerHTML = 'Passeio livre! Pedestres saltam na calçada, <kbd class="px-1 bg-slate-800 text-amber-400 rounded">SHIFT</kbd> faz Burnout, <kbd class="px-1 bg-slate-800 text-amber-400 rounded">Q</kbd> olha para trás e <kbd class="px-1 bg-slate-800 text-amber-400 rounded">R</kbd> abre o Film Director!';
+                } else if (type === 'story_tipoff') {
+                    this.missionActive=true;
+                    this.missionTimeLeft=175;
+                    this.mode='on_foot';
+                    this.tanner.setPosition(2,0,-19,0);
+                    this.tanner.setVisible(true);
+                    titleEl.textContent='CHICAGO 01: SURVEILLANCE TIP OFF';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='ENCONTRE O CARRO DE JONES';
+                    objEl.textContent='Entre no carro, encontre Jones no norte da cidade, '+
+                        'saia a pé e entre no carro dele antes que a testemunha parta.';
+                    this.targetCar=new DriverVehicle(this.scene,{
+                        name:'CARRO DE JONES',color:0x94a3b8,isTarget:true,
+                        isSecret:true,x:244,z:-240,heading:Math.PI,
+                        maxSpeed:52,accel:30
+                    });
+                    this.vehicles.push(this.targetCar);
+                } else if (type === 'story_witness') {
+                    this.missionActive=true;
+                    this.missionTimeLeft=65;
+                    this.witnessCloseTime=0;
+                    titleEl.textContent='CHICAGO 02: CHASE THE WITNESS';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='MANTENHA-SE PERTO DO SEDÃ AZUL';
+                    objEl.textContent='Siga o sedã azul por 48 segundos, sem perder contato '+
+                        'por mais de quatro segundos. Não destrua o alvo.';
+                    this.targetCar=new DriverVehicle(this.scene,{
+                        name:'SEDÃ DA TESTEMUNHA',color:0x2563eb,isTarget:true,
+                        x:4,z:14,heading:0,maxSpeed:46,accel:30
+                    });
+                    this.vehicles.push(this.targetCar);
                 } else if (type === 'chase') {
                     this.missionActive = true;
                     this.missionTimeLeft = 90.0;
@@ -557,6 +600,64 @@
                 }
             }
 
+            enterInterior(place) {
+                if(!place||this.mode!=='on_foot')return false;
+                this.interiorPlace=place;
+                this.tanner.setPosition(place.inside.x,0,place.inside.z-6,0);
+                this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
+                document.getElementById('player-state-badge').textContent=
+                    place.id==='home'?'DENTRO DE CASA':'DENTRO DO DEPÓSITO';
+                return true;
+            }
+
+            leaveInterior() {
+                const place=this.interiorPlace;
+                if(!place)return false;
+                this.interiorPlace=null;
+                this.tanner.setPosition(place.door.x,0,place.door.z+4,Math.PI);
+                this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
+                document.getElementById('player-state-badge').textContent='TANNER (A PÉ)';
+                return true;
+            }
+
+            nearSaveDesk() {
+                const place=this.interiorPlace;
+                if(this.mode!=='on_foot'||place?.id!=='home'||!place.savePoint)return false;
+                const pos=this.tanner.group.position;
+                return Math.hypot(pos.x-place.savePoint.x,pos.z-place.savePoint.z)<3.6;
+            }
+
+            showSaveStatus(message) {
+                const el=document.getElementById('home-save-status');
+                if(el)el.textContent=message;
+            }
+
+            saveAtHome() {
+                if(!this.nearSaveDesk()){
+                    this.showSaveStatus('Aproxime-se da mesa verde da casa para salvar.');
+                    return false;
+                }
+                const ok=this.homeSave.write(this.homeSave.capture(this));
+                this.showSaveStatus(ok?'PARTIDA GRAVADA! O progresso está no navegador.':
+                    'Falha ao salvar. Verifique o armazenamento do navegador.');
+                return ok;
+            }
+
+            loadHomeGame() {
+                const save=this.homeSave.read();
+                if(!save) {
+                    this.showSaveStatus('Nenhuma partida salva válida neste navegador.');
+                    return false;
+                }
+                const ok=this.homeSave.restore(this,save);
+                this.showSaveStatus(ok?'Partida carregada com sucesso!':
+                    'Não foi possível restaurar a partida.');
+                if(ok)document.getElementById('player-state-badge').textContent=
+                    this.interiorPlace?'DENTRO DE CASA':
+                    this.mode==='on_foot'?'TANNER (A PÉ)':'NO VOLANTE (V8)';
+                return ok;
+            }
+
             toggleVehicleEnterExit() {
                 if (this.gameEnded || this.inReplayMode) return;
                 this.audio.init();
@@ -575,6 +676,17 @@
                     badge.textContent = 'TANNER (A PÉ)';
                     badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold';
                 } else if (this.mode === 'on_foot') {
+                    if(this.interiorPlace){
+                        const pos=this.tanner.group.position;
+                        if(this.nearSaveDesk()){this.saveAtHome();return;}
+                        if(Math.hypot(pos.x-this.interiorPlace.exit.x,
+                            pos.z-this.interiorPlace.exit.z)<4.2)
+                            this.leaveInterior();
+                        return;
+                    }
+                    const doorway=this.city.interiorAt(
+                        this.tanner.group.position.x,this.tanner.group.position.z);
+                    if(doorway){this.enterInterior(doorway);return;}
                     // 0. Se for a Missão 5 (Sabotagem C4) e Tanner estiver na zona da bomba
                     if (this.c4State.active && !this.c4State.planted) {
                         const distBomb = Math.hypot(
@@ -1038,6 +1150,8 @@
 
             triggerEndScreen(title, desc) {
                 this.gameEnded = true;
+                if(!/FALH|ESGOTAD|DESTRUÍDO|ESCAPOU|ATINGIDO|FIM DO SURVIVAL/i.test(title))
+                    this.completedMissions.add(this.missionType);
                 document.getElementById('announcement-title').textContent = title;
                 document.getElementById('announcement-desc').textContent = desc;
                 document.getElementById('center-announcement').classList.remove('hidden');
@@ -1433,7 +1547,9 @@
                     if (code === 'Space') this.input.handbrake = true;
                     if (code === 'ShiftLeft' || code === 'ShiftRight' || code === 'KeyC') this.input.sprint = true;
 
-                    if (code === 'KeyE' || code === 'Enter') this.toggleVehicleEnterExit();
+                    if((code==='KeyE'||code==='Enter')&&!e.repeat)
+                        this.toggleVehicleEnterExit();
+                    if(code==='KeyF'&&!e.repeat)this.saveAtHome();
                     if (code === 'KeyV') this.cameraMode = (this.cameraMode + 1) % 3;
                     if (code === 'KeyQ') this.lookBackActive = true;
                     if (code === 'KeyN') this.cycleWeather();
@@ -1485,6 +1601,12 @@
                             '⚙ Ocultar cidades / clima' : '⚙ Cidades / clima';
                     });
                 }
+                const saveButton=document.getElementById('btn-save-home');
+                if(saveButton)saveButton.addEventListener('click',()=>this.saveAtHome());
+                const exitButton=document.getElementById('btn-leave-interior');
+                if(exitButton)exitButton.addEventListener('click',()=>this.leaveInterior());
+                const loadButton=document.getElementById('btn-load-home');
+                if(loadButton)loadButton.addEventListener('click',()=>this.loadHomeGame());
                 document.getElementById('btn-missions').addEventListener('click', () => {
                     document.getElementById('missions-modal').classList.remove('hidden');
                 });
