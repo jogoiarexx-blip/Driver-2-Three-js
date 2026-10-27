@@ -2685,10 +2685,18 @@
                     if(meter && meter.textContent!==value)meter.textContent=value;
                 }
                 this.updateAIAndCollisions(dt);
-                this.city.update(dt, this.vehicles, () => {
-                    if (this.isPoliceNearPlayer(65)) {
-                        this.felony = Math.min(100, this.felony + 5);
+                this.city.update(dt,this.vehicles,(car,prop,speed)=>{
+                    // Som/danos de cenário só para o carro controlado;
+                    // NPCs ainda podem derrubar postes sem punir Tanner.
+                    if(this.mode!=='driving'||car!==this.playerCar)return;
+                    if(speed>9){
+                        this.effects.spawnImpactSparks(car.x,car.y||0,car.z,
+                            Math.min(0.9,speed/45));
+                        this.audio.playCrash(Math.min(.75,speed/50));
+                        this.impactFeedback.trigger(speed*.55);
                     }
+                    if(this.isPoliceNearPlayer(65))
+                        this.felony=Math.min(100,this.felony+5);
                 });
                 this.pedManager.update(dt, this.vehicles, this.audio,
                     this.mode === 'driving' ? this.playerCar : null,

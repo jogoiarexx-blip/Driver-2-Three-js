@@ -15,6 +15,7 @@
                 this.debrisPieces=[];
                 this.debrisGeometry=null;
                 this.debrisMaterialCache=null;
+                this.poleDebrisGeometry=null;
                 this.benches = [];
                 this.bridgeRaised = false;
                 this.bridgeAngle = 0.14;
@@ -106,6 +107,7 @@
                 this.debrisPieces=[];
                 this.debrisGeometry=null;
                 this.debrisMaterialCache=null;
+                this.poleDebrisGeometry=null;
                 this.benches = [];
                 this.interiors=[]; this.interiorById={};
                 this.trainStation=null;
@@ -256,6 +258,12 @@
                         this.spawnDestructibleProp(blockX + 23, blockZ - 23, 'trash');
                         if((Math.abs(bx+bz)/80)%3===0)
                             this.spawnDestructibleProp(blockX + 23, blockZ + 23,'crate');
+                        // Trechos esparsos de cerca na borda da calçada:
+                        // preserva saídas de interiores/garagens e vias.
+                        if((Math.abs(bx-bz)/80)%6===0 &&
+                            blockX!==-120 && blockX!==120 &&
+                            blockZ!==-120 && blockZ!==120)
+                            this.spawnDestructibleProp(blockX-21,blockZ+22,'fence');
                     });
                     yield 'Quarteirões e edifícios '+(rowIndex+1)+'/'+coords.length;
                 }
@@ -1034,6 +1042,20 @@
                         new THREE.MeshLambertMaterial({color:0x9a6538})
                     );
                     mesh.position.set(x,.53,z);
+                }else if(type==='fence'){
+                    mesh=new THREE.Group();
+                    const fenceMat=new THREE.MeshLambertMaterial({color:0x737f8d});
+                    const railGeo=new THREE.BoxGeometry(5,.16,.16);
+                    const postGeo=new THREE.BoxGeometry(.19,1.65,.19);
+                    for(const y of [.65,1.27]){
+                        const rail=new THREE.Mesh(railGeo,fenceMat);
+                        rail.position.y=y;mesh.add(rail);
+                    }
+                    for(const offset of [-2.4,2.4]){
+                        const post=new THREE.Mesh(postGeo,fenceMat);
+                        post.position.set(offset,.83,0);mesh.add(post);
+                    }
+                    mesh.position.set(x,0,z);
                 }else{
                     mesh = new THREE.Mesh(
                         new THREE.CylinderGeometry(0.5, 0.45, 1.2, 8),
@@ -1050,8 +1072,13 @@
             shatterProp(prop,impactSpeed){
                 if(!prop || prop.shattered)return false;
                 prop.shattered=true;
-                prop.mesh.visible=false;
-                const count=prop.type==='crate'?6:4;
+                if(prop.type==='pole'){
+                    DriverStreetFurniture.hidePole(prop);
+                } else if(prop.mesh) {
+                    prop.mesh.visible=false;
+                }
+                const count=prop.type==='pole'?3:
+                    prop.type==='fence'?5:prop.type==='crate'?6:4;
                 const color=prop.type==='crate'?0xa36f42:
                     prop.type==='cone'?0xf97316:0x64748b;
                 if(!this.debrisGeometry)
@@ -1062,16 +1089,24 @@
                     this.debrisMaterialCache.set(color,
                         new THREE.MeshLambertMaterial({color}));
                 const material=this.debrisMaterialCache.get(color);
+                if(prop.type==='pole'&&!this.poleDebrisGeometry)
+                    this.poleDebrisGeometry=new THREE.CylinderGeometry(.12,.16,2.5,6);
                 for(let i=0;i<count;i++){
-                    const part=new THREE.Mesh(this.debrisGeometry,material);
-                    part.position.set(prop.x,.7,prop.z);
+                    // Orçamento de objetos de detrito: não acumular centenas
+                    // de malhas após destruir postes e cercas seguidos.
+                    if(this.debrisPieces.length>=140)break;
+                    const geo=prop.type==='pole' && i<2 ?
+                        this.poleDebrisGeometry : this.debrisGeometry;
+                    const part=new THREE.Mesh(geo,material);
+                    part.position.set(prop.x,prop.type==='pole'?2.3:.7,prop.z);
+                    part.rotation.z=prop.type==='pole'?0.14:0;
                     const angle=Math.PI*2*i/count;
                     const boost=1+Math.min(2,impactSpeed/22);
                     this.cityGroup.add(part);
                     this.debrisPieces.push({
                         mesh:part,vx:Math.cos(angle)*boost*2,
                         vy:3+i*.45,vz:Math.sin(angle)*boost*2,
-                        life:2.5
+                        life:prop.type==='pole'?3.8:2.5
                     });
                 }
                 return true;
@@ -1115,22 +1150,41 @@
                             const dx=(ax+vx*t)-p.x;
                             const dz=(az+vz*t)-p.z;
                             const impact=Math.abs(car.speed);
-                            if(dx*dx+dz*dz<4.2 && impact>3){
+                            const radiusSq=p.type==='fence'?12.25:
+                                p.type==='pole'?5.1:4.2;
+                            if(dx*dx+dz*dz<radiusSq &&
+                                impact>(p.type==='pole'?6:3)){
                                 p.hit=true;
                                 p.vx=Math.sin(car.heading)*impact*1.1+
                                     (Math.random()-.5)*6;
                                 p.vz=Math.cos(car.heading)*impact*1.1+
                                     (Math.random()-.5)*6;
                                 p.vy=6+Math.random()*5;
-                                if(impact>14 || p.type==='crate')
+                                if(impact>14 || p.type==='crate' ||
+                                    p.type==='pole' || p.type==='fence')
                                     this.shatterProp(p,impact);
-                                if(p.type==='crate'){
-                                    car.speed*=.92;
-                                    car.damage=Math.min(100,car.damage+
-                                        Math.min(2,impact*.045));
+                                if(p.type==='crate' || p.type==='pole' ||
+                                    p.type==='fence'){
+                                    const factor=p.type==='pole'?.69:
+                                        p.type==='fence'?.84:.92;
+                                    car.speed*=factor;
+                                    const severity=p.type==='pole'?.18:
+                                        p.type==='fence'?.09:.045;
+                                    car.damage=Math.min(100,(car.damage||0)+
+                                        Math.min(p.type==='pole'?9:4,
+                                            impact*severity));
+                                    if(typeof DriverVehicleCollisions!=='undefined' &&
+                                        typeof DriverVehicleCollisions.recordZone==='function'){
+                                        const nx=p.x-car.x,nz=p.z-car.z;
+                                        const len=Math.hypot(nx,nz);
+                                        const dirX=len>.01?nx/len:Math.sin(car.heading);
+                                        const dirZ=len>.01?nz/len:Math.cos(car.heading);
+                                        DriverVehicleCollisions.recordZone(
+                                            car,dirX,dirZ,impact*severity);
+                                    }
                                 }
-                                if(onPropHitCallback && v===0)
-                                    onPropHitCallback();
+                                if(onPropHitCallback)
+                                    onPropHitCallback(car,p,impact);
                                 break;
                             }
                         }

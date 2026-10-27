@@ -3,6 +3,19 @@
  * Instancing mantém quatro chamadas principais, independentemente do mapa.
  */
 class DriverStreetFurniture {
+    static hidePole(prop) {
+        if(!prop || prop.type!=='pole' || prop.hidden)return false;
+        const dummy=new THREE.Object3D();
+        dummy.position.set(0,-1000,0);
+        dummy.scale.set(0,0,0);
+        dummy.updateMatrix();
+        prop.poleMesh.setMatrixAt(prop.instanceIndex,dummy.matrix);
+        prop.lampMesh.setMatrixAt(prop.instanceIndex,dummy.matrix);
+        prop.poleMesh.instanceMatrix.needsUpdate=true;
+        prop.lampMesh.instanceMatrix.needsUpdate=true;
+        prop.hidden=true;
+        return true;
+    }
     static build(city) {
         const positions = [];
         const crosswalks = [];
@@ -56,6 +69,16 @@ class DriverStreetFurniture {
         });
         pole.instanceMatrix.needsUpdate=true;
         bulb.instanceMatrix.needsUpdate=true;
+        // Postes visuais instanciados continuam em apenas duas draw calls.
+        // O registro individual permite derrubar somente a instância
+        // atingida, sem recalcular nem esconder os demais postes.
+        positions.forEach(([x,z],index)=>{
+            city.destructibleProps.push({
+                type:'pole',x,z,hit:false,shattered:false,
+                instanceIndex:index,poleMesh:pole,lampMesh:bulb,
+                mesh:null
+            });
+        });
         // Sem sombras/luzes físicas adicionais para preservar desempenho móvel.
         for (const mesh of [stripe,pole,bulb]) {
             mesh.frustumCulled=false;

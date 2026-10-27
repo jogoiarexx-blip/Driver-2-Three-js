@@ -403,3 +403,36 @@ visual e jogabilidade prolongada em navegador real permanecem pendentes.
 - Testes: `tests/driver-custom-car-and-destruction.test.cjs`. A suíte Node
   testa sinais de direção, fumaça, colisões varridas e integração de arquivos.
   Não substitui validação visual no browser.
+
+
+## Postes, cercas e deformação direcional (revisão subsequente)
+
+- Postes de iluminação continuam agrupados em `InstancedMesh` para baixo
+  custo gráfico, mas cada posição possui um registro de colisão independente.
+  Em impacto suficientemente rápido o poste e a luminária daquela posição
+  são ocultados por matriz da instância, sem esconder postes vizinhos.
+  Uma geometria quebrada cai com fragmentos temporários.
+- Cerca metálica curta junto a algumas calçadas, com rails/postes próprios.
+  Pode quebrar ao bater; caixas e cones continuam destrutíveis.
+- Detecção por segmento `(prevX, prevZ) -> (x, z)` aplicada também a
+  postes/cercas, diminuindo atravessamentos em alta velocidade. O impacto
+  reduz a velocidade, causa pequeno dano e registra o lado atingido.
+  Objetos leves não se tornam paredes invisíveis permanentes.
+- Partículas de fragmentos têm limite global por cidade (140) e tempo de
+  vida. Ao trocar de cidade as instâncias, colisões e detritos são
+  reinicializados pela rotina já existente. Não há peças caídas permanentes.
+- A estrutura existente `VehicleDamageFX` reage agora **progressivamente**
+  ao dano de frente, traseira, esquerda e direita: para-choques se deslocam/
+  inclinam, painéis laterais se abrem e capô/porta-malas ficam desalinhados.
+  As deformações gráficas não alteram o tamanho do collider, inclusive em
+  modelos GLB. Danos salvos continuam usando `damageZones`.
+- Efeitos de impacto (faíscas, áudio e tremor) são ligados ao carro
+  controlado; colisões de NPCs ainda derrubam elementos do cenário, mas não
+  penalizam o jogador por engano.
+- Testes de regressão em `tests/street-destruction-damage.test.cjs`:
+  instanciamento, ocultação individual, batidas rápidas/lentas, orçamento de
+  detritos, danos por região e compatibilidade com a física existente.
+
+**Não incluso:** destruição estrutural de prédios, deformação de vértices
+internos do GLB ou persistência de cada poste quebrado ao sair da cidade.
+A verificação de FPS/jogabilidade em navegador continua necessária.

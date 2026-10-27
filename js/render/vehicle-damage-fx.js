@@ -14,6 +14,25 @@ class VehicleDamageFX {
         };
     }
 
+    static zoneState(car) {
+        const clamp=v=>{
+            const n=Number(v);
+            return Number.isFinite(n)?Math.max(0,Math.min(100,n))/100:0;
+        };
+        const z=car?.damageZones||{};
+        const total=clamp(car?.damage);
+        return {
+            front:clamp(z.front),
+            rear:clamp(z.rear),
+            left:clamp(z.left),
+            right:clamp(z.right),
+            total,
+            frontBend:Math.max(clamp(z.front)*.42,total*.15),
+            rearBend:Math.max(clamp(z.rear)*.34,total*.10),
+            sideLean:(clamp(z.right)-clamp(z.left))*.15
+        };
+    }
+
     static attach(car) {
         if (!car || !car.chassisTilt) return;
         if (car.damageGroup && car.damageGroup.parent) {
@@ -121,19 +140,49 @@ class VehicleDamageFX {
         car.damageParts.cracks.visible = stage.glass;
         car.damageParts.heavy.visible = stage.critical;
         const zones=car.damageZones || {};
+        const z=this.zoneState(car);
+        // Dobras ficam proporcionais à energia recebida em cada lado.
+        // A física usa os mesmos colliders; só a malha sofre deformação.
         if (car.damageParts.bumper) {
-            car.damageParts.bumper.visible = stage.intensity >= 0.72 ||
-                (zones.front || 0) >= 16;
+            const front=car.damageParts.bumper;
+            front.visible=stage.intensity>=.72 || z.front>=.16;
+            front.rotation.z=-z.frontBend*.8;
+            front.rotation.y=z.sideLean*.45;
+            front.position.z=-z.frontBend*.54;
+            front.position.y=-z.frontBend*.28;
         }
         if (car.damageParts.rearDamage) {
-            car.damageParts.rearDamage.visible = (zones.rear || 0)>=14;
+            const rear=car.damageParts.rearDamage;
+            rear.visible=z.rear>=.14;
+            rear.rotation.z=z.rearBend*.65;
+            rear.rotation.y=-z.sideLean*.4;
+            rear.position.z=z.rearBend*.5;
+            rear.position.y=-z.rearBend*.2;
         }
         if (car.damageParts.leftDamage) {
-            car.damageParts.leftDamage.visible = (zones.left || 0)>=14;
+            const left=car.damageParts.leftDamage;
+            left.visible=z.left>=.14;
+            left.rotation.z=-z.left*.24;
+            left.position.x=z.left*.13;
         }
         if (car.damageParts.rightDamage) {
-            car.damageParts.rightDamage.visible = (zones.right || 0)>=14;
+            const right=car.damageParts.rightDamage;
+            right.visible=z.right>=.14;
+            right.rotation.z=z.right*.24;
+            right.position.x=-z.right*.13;
         }
+        if(car.hoodPivot && z.front>.1){
+            car.hoodPivot.rotation.x=Math.min(-.06,
+                -z.frontBend*.75);
+            car.hoodPivot.rotation.z=z.sideLean*.35;
+        }
+        if(car.trunkPivot && z.rear>.1){
+            car.trunkPivot.rotation.x=z.rearBend*.82;
+            car.trunkPivot.rotation.z=-z.sideLean*.25;
+        }
+        if(car.damageParts.cracks)
+            car.damageParts.cracks.visible=stage.glass ||
+                z.front>.53 || z.rear>.7;
         if (car.damageParts.engineGlow) {
             car.damageParts.engineGlow.visible = stage.critical;
             const pulse = 0.78 + Math.abs(Math.sin((car.motionClock || 0) * 9)) * 0.22;
