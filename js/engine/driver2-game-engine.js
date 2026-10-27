@@ -36,6 +36,8 @@
                 this.collisionSystem = new DriverVehicleCollisions();
                 this.pursuitChapter = new DriverPursuitChapter();
                 this.dropDirector=new DriverTailingDropMission();
+                this.safeHouseEscape=new DriverSafeHouseEscape();
+                this.safeHouseStatus=null;
                 this.dropStatus=null;
                 this.trainLine=new DriverChicagoTrain(this.scene,this.city);
                 this.trainLostSeconds=0;
@@ -288,7 +290,7 @@
             }
 
             startMission(type) {
-                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop') &&
+                if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop'||type==='story_safehouse') &&
                     this.currentCityKey!=='chicago')this.changeCity('chicago');
                 document.getElementById('missions-modal').classList.add('hidden');
                 document.getElementById('center-announcement').classList.add('hidden');
@@ -308,6 +310,8 @@
                 this.tailOutOfRangeTimer = 0;
                 this.dropDirector.reset();
                 this.dropStatus=null;
+                this.safeHouseEscape.reset();
+                this.safeHouseStatus=null;
                 this.mode = 'driving';
                 this.interiorPlace=null;
                 this.witnessCloseTime=0;
@@ -327,6 +331,9 @@
                 this.replayBuffer = [];
                 const proximity=document.getElementById('tail-proximity');
                 if(proximity)proximity.classList.toggle('hidden',type!=='story_drop');
+                const escapePanel=document.getElementById('safehouse-escape-progress');
+                if(escapePanel)escapePanel.classList.toggle('hidden',
+                    type!=='story_safehouse');
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
                 const titleEl = document.getElementById('mission-title');
@@ -357,6 +364,39 @@
                         maxSpeed:52,accel:30
                     });
                     this.vehicles.push(this.targetCar);
+                } else if (type === 'story_safehouse') {
+                    this.missionActive=true;
+                    this.missionTimeLeft=165;
+                    this.setWeather('day');
+                    this.felony=92;
+                    // Começa sob perseguição na parte leste de Chicago.
+                    this.playerCar.x=164;
+                    this.playerCar.y=0;
+                    this.playerCar.z=-152;
+                    this.playerCar.heading=Math.PI;
+                    this.playerCar.speed=0;
+                    this.playerCar.damage=13;
+                    this.playerCar.updateTransform();
+                    const police=[
+                        {x:164,z:-210,heading:0},
+                        {x:244,z:-156,heading:-Math.PI/2},
+                        {x:84,z:-228,heading:0}
+                    ];
+                    let next=0;
+                    for(const cop of this.vehicles.filter(v=>v.isPolice)){
+                        const spot=police[next++ % police.length];
+                        cop.x=spot.x;cop.z=spot.z;
+                        cop.heading=spot.heading;cop.speed=0;
+                        cop.updateTransform();
+                    }
+                    this.roadblockDirector.cooldown=3.0;
+                    titleEl.textContent='CHICAGO 05: ESCAPE TO THE SAFE HOUSE';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='DESPISTE A POLÍCIA E VOLTE À CASA SEGURA';
+                    objEl.textContent='Fuja das viaturas, quebre a linha de visão e reduza '+
+                        'o delito abaixo de 32%. Depois, pare junto à porta verde '+
+                        'da casa segura (sudoeste). Você também pode entrar a pé.';
                 } else if (type === 'story_drop') {
                     this.missionActive=true;
                     this.missionTimeLeft=112;
@@ -1063,6 +1103,40 @@
                             return;
                         }
                     }
+                    if(this.missionType==='story_safehouse'){
+                        const pos=this.getPlayerPosition();
+                        const watch=DriverSafeHouseEscape.policeHasSight(
+                            this.vehicles,pos,
+                            (cop,p)=>this.trafficAI.unobstructed(cop,p)
+                        );
+                        const result=this.safeHouseEscape.update(dt,{
+                            position:pos,
+                            safeHouseZone:this.city.safeHouseZone,
+                            felony:this.felony,
+                            policeWatching:watch,
+                            mode:this.mode,
+                            speed:this.playerCar?.speed||0,
+                            interiorId:this.interiorPlace?.id||null
+                        });
+                        this.safeHouseStatus=result;
+                        const info=document.getElementById('mission-subcounter');
+                        info.textContent=result.label;
+                        if(result.changed){
+                            document.getElementById('objective-banner').textContent=
+                                result.phase==='reach_home'?
+                                'A POLÍCIA PERDEU TANNER! Siga para a casa verde '+
+                                'no sudoeste de Chicago e pare no marcador. '+
+                                'Também vale entrar no imóvel a pé.' :
+                                'A polícia voltou a avistar você! Faça curvas, '+
+                                'use os prédios como cobertura e fuja novamente.';
+                        }
+                        if(result.completed){
+                            this.triggerEndScreen('ESCAPE TO THE SAFE HOUSE CONCLUÍDA!',
+                                'Tanner despistou as viaturas e chegou à casa segura. '+
+                                'Para gravar a campanha, entre na casa e use a mesa verde.');
+                            return;
+                        }
+                    }
                     if(this.missionType==='story_drop'&&this.targetCar){
                         const info=this.dropDirector.update(
                             dt,this.getPlayerPosition(),this.targetCar,this.mode
@@ -1357,6 +1431,27 @@
                     }
                 }
 
+                const escapeMeter=document.getElementById('safehouse-escape-progress');
+                if(escapeMeter && this.missionType==='story_safehouse' &&
+                    this.safeHouseStatus){
+                    const s=this.safeHouseStatus;
+                    const green=s.phase==='reach_home';
+                    const phaseEl=document.getElementById('safehouse-phase');
+                    const fill=document.getElementById('safehouse-hidden-fill');
+                    const distanceEl=document.getElementById('safehouse-distance');
+                    if(phaseEl)phaseEl.textContent=green?
+                        'DESPISTOU A POLÍCIA • VÁ PARA CASA':'FUJA DO CERCO POLICIAL';
+                    if(fill){
+                        fill.style.width=Math.round(s.hiddenSeconds/
+                            DriverSafeHouseEscape.LOST_SIGHT_SECONDS*100)+'%';
+                        fill.className='h-full rounded '+(green?
+                            'bg-emerald-400':'bg-orange-400');
+                    }
+                    if(distanceEl)distanceEl.textContent=
+                        'CASA '+Math.round(s.distance)+'m • DELITO '+
+                        Math.round(s.felony)+'%'+
+                        (s.policeWatching?' • EM VISÃO':' • SEM VISÃO');
+                }
                 const stealthHud=document.getElementById('tail-proximity');
                 if(stealthHud && this.missionType==='story_drop'&&this.dropStatus){
                     const s=this.dropStatus;
@@ -1391,7 +1486,9 @@
                 const progress = document.getElementById('mission-compact-progress');
                 if (progress) {
                     let label = this.missionActive ? 'MISSÃO EM ANDAMENTO' : 'PASSEIO LIVRE';
-                    if (this.missionType === 'story_drop') {
+                    if (this.missionType === 'story_safehouse') {
+                        label='CHICAGO 05 • FUGA POLICIAL';
+                    } else if (this.missionType === 'story_drop') {
                         label='CHICAGO 04 • VIGILÂNCIA';
                     } else if (this.missionType === 'pursuit') {
                         label = ['ATO 1/3 • CERCO','ATO 2/3 • ROTA','ATO 3/3 • FUGA'][

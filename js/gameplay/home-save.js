@@ -10,7 +10,7 @@ class DriverHomeSave {
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
-        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop'
+        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse'
     ];
     constructor(storage) { this.storage=storage; }
 
@@ -67,6 +67,8 @@ class DriverHomeSave {
                 arrived:game.trainLine.arrived,
                 lost:game.trainLostSeconds||0
             }:null,
+            safeEscape:game.missionType==='story_safehouse' &&
+                game.safeHouseEscape?game.safeHouseEscape.export():null,
             drop:game.missionType==='story_drop'?{
                 routeIndex:game.targetCar?.scriptedDrive?.index||0,
                 done:!!game.targetCar?.scriptedDrive?.done,
@@ -131,6 +133,8 @@ class DriverHomeSave {
             game.pursuitChapter.phase=DriverHomeSave.bounded(data.mission.pursuitPhase,0,2);
             game.pursuitChapter.elapsed=DriverHomeSave.bounded(data.mission.pursuitElapsed,0,24);
         }
+        if(data.safeEscape && game.missionType==='story_safehouse' &&
+            game.safeHouseEscape)game.safeHouseEscape.restore(data.safeEscape);
         if(data.drop && game.missionType==='story_drop' &&
             game.targetCar?.scriptedDrive && game.dropDirector){
             const director=game.dropDirector,route=game.targetCar.scriptedDrive;

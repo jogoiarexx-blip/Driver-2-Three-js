@@ -88,6 +88,13 @@
                     <div id="mission-timer" class="text-xl sm:text-3xl font-extrabold text-white tracking-wider font-mono hidden">01:30.00</div>
                     <div id="mission-subcounter" class="text-xs font-extrabold text-emerald-400 hidden">CONES / PORTÕES: 0 / 10</div>
                 </div>
+                <div id="safehouse-escape-progress" class="hidden pointer-events-none mt-1 rounded-lg bg-slate-950/95 p-2 border border-emerald-500/50 text-center w-64 max-w-[95vw]">
+                    <div id="safehouse-phase" class="text-[10px] text-amber-400 font-bold">FUJA DO CERCO POLICIAL</div>
+                    <div class="h-2 bg-slate-800 rounded mt-1 overflow-hidden">
+                        <div id="safehouse-hidden-fill" class="h-full bg-orange-400 rounded" style="width:0%"></div>
+                    </div>
+                    <div id="safehouse-distance" class="text-[10px] text-slate-300 mt-1">CASA • DELITO • VISÃO</div>
+                </div>
                 <div id="tail-proximity" class="hidden pointer-events-none mt-1 rounded-lg bg-slate-950/95 p-2 border border-slate-500 text-center w-64 max-w-[95vw]" role="meter" aria-label="Proximidade do suspeito" aria-valuemin="0" aria-valuemax="140" aria-valuenow="55">
                     <div class="flex items-center justify-between text-[10px] text-slate-300 font-bold">
                         <span>PRÓXIMO</span><span id="tail-zone-label" class="tail-zone-green">SEGURANÇA</span><span>DISTANTE</span>
@@ -283,6 +290,14 @@
             <button onclick="window.DriverGame.startMission('story_drop')" class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-red-500 hover:bg-slate-800">
                 <strong class="text-orange-400">CHICAGO 04 — TAILING THE DROP</strong>
                 <div class="text-xs text-slate-300 mt-1">Siga discretamente o sedã vermelho até o depósito. A barra de proximidade deve permanecer verde.</div>
+            </button>
+            <button onclick="window.DriverGame.startMission('story_safehouse')"
+                class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-emerald-500 hover:bg-slate-800">
+                <strong class="text-emerald-400">CHICAGO 05 — ESCAPE TO THE SAFE HOUSE</strong>
+                <div class="text-xs text-slate-300 mt-1">
+                    Fuja das viaturas, despiste a polícia e estacione na casa segura.
+                    Depois entre a pé para salvar a campanha na mesa verde.
+                </div>
             </button>
             <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">2. Missões adicionais e modos:</div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-5">
@@ -656,6 +671,7 @@ git push -u origin main</pre>
     <script src="./js/world/city-builder.js"></script>
     <script src="./js/police/pursuit-tactics.js"></script>
     <script src="./js/gameplay/tailing-drop.js"></script>
+    <script src="./js/gameplay/safehouse-escape.js"></script>
     <script src="./js/traffic/traffic-ai.js"></script>
     <script src="./js/police/roadblock-director.js"></script>
     <script src="./js/gameplay/checkpoint-route.js"></script>
