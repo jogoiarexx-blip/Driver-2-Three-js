@@ -7,15 +7,17 @@
             chicago: {
                 id: 'chicago',
                 name: 'CHICAGO',
-                skyColor: 0x1e293b,
-                sunColor: 0xfde68a,
-                waterColor: 0x0c4a6e,
-                parkColor: 0x166534,
+                // Chicago: ar azul-acinzentado, tijolos ferrugem,
+                // arranha-céus de pedra/aço e água profunda.
+                skyColor: 0x475a70,
+                sunColor: 0xffddb2,
+                waterColor: 0x1e566e,
+                parkColor: 0x205c40,
                 palettes: [
-                    { wall: '#334155', win: '#fef08a' },
-                    { wall: '#475569', win: '#bae6fd' },
-                    { wall: '#451a03', win: '#fed7aa' },
-                    { wall: '#1e293b', win: '#fde047' }
+                    { wall: '#4a5e70', win: '#f3d6a4' },
+                    { wall: '#6d7680', win: '#a7c8d8' },
+                    { wall: '#784c3e', win: '#dfb58a' },
+                    { wall: '#293d50', win: '#e6c08a' }
                 ],
                 playerCarName: 'BUICK 70 V8',
                 playerCarColor: 0xd97706,
