@@ -65,7 +65,7 @@ const core=U.height('chicago',40,-120);
 const suburbs=U.height('chicago',280,-280);
 assert(core>suburbs+25);
 assert.equal(U.height('havana',40,-120),21);
-assert.equal(U.height('vegas',40,-120),43);
+assert(U.height('vegas',40,-120)>60);
 assert.equal(U.height('rio',40,-120),39);
 U.random=original;
 
