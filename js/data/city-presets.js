@@ -69,15 +69,17 @@
             rio: {
                 id: 'rio',
                 name: 'RIO DE JANEIRO',
-                skyColor: 0x0284c7,
-                sunColor: 0xfef08a,
-                waterColor: 0x0369a1,
-                parkColor: 0x15803d,
+                // Orla de dia: azul menos saturado, luz quente,
+                // prédios de cerâmica branca, pastel e concreto.
+                skyColor: 0x60b7dd,
+                sunColor: 0xffe0ad,
+                waterColor: 0x087b9c,
+                parkColor: 0x20764d,
                 palettes: [
-                    { wall: '#0f766e', win: '#fef9c3' },
-                    { wall: '#b45309', win: '#ffedd5' },
-                    { wall: '#334155', win: '#e0f2fe' },
-                    { wall: '#1d4ed8', win: '#fef08a' }
+                    { wall: '#d5ded7', win: '#7eb9ce' },
+                    { wall: '#d8b99b', win: '#f6f0db' },
+                    { wall: '#9ab6b7', win: '#dbe7df' },
+                    { wall: '#b4c4ce', win: '#f1dcac' }
                 ],
                 playerCarName: 'OPALA SS 74 V8',
                 playerCarColor: 0xeab308,
