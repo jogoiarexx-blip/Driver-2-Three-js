@@ -161,8 +161,16 @@ class DriverTrafficAI {
 
         let maxSpeed = wanted ? 40 : car.isTarget ? 34 :
             (car.bodyStyle === 'bus' || car.bodyStyle === 'truck' ? 17 : 23);
-        if (turn > 0.85) maxSpeed = Math.min(maxSpeed, 11);
-        else if (turn > 0.38) maxSpeed = Math.min(maxSpeed, 18);
+        // A velocidade recomendada cai progressivamente quando a curva
+        // aproxima de 90 graus; viaturas não fazem curvas a 140 km/h.
+        if (turn > 0.24) {
+            maxSpeed = Math.min(maxSpeed, Math.max(8, 31 / (1 + turn * 1.7)));
+        }
+        // Desaceleração preventiva nas interseções urbanas.
+        const toJunction = Math.hypot(car.x - route.target.x, car.z - route.target.z);
+        if (toJunction < 28 && Math.abs(car.speed) > 19) {
+            maxSpeed = Math.min(maxSpeed, 19);
+        }
 
         const distanceToIntersection = Math.hypot(
             car.x - route.target.x, car.z - route.target.z

@@ -169,7 +169,10 @@
                     { name: 'CAMINHÃO CARGA', color: 0x0284c7, bodyStyle: 'truck', x: 102, z: -84, heading: Math.PI / 2, maxSpeed: 45, accel: 22 },
                     { name: 'STRETCH LIMO V8', color: 0x18181b, bodyStyle: 'limo', x: 84, z: 122, heading: 0, maxSpeed: 52, accel: 27 },
                     { name: 'CADILLAC VERDE', color: 0x15803d, bodyStyle: 'muscle', x: -76, z: 27, heading: 0, maxSpeed: 46, accel: 24 },
-                    { name: 'COUPE TURQUESA', color: 0x0d9488, bodyStyle: 'muscle', x: 116, z: -4, heading: Math.PI / 2, maxSpeed: 48, accel: 25 }
+                    { name: 'COUPE TURQUESA', color: 0x0d9488, bodyStyle: 'muscle', x: 116, z: -4, heading: Math.PI / 2, maxSpeed: 48, accel: 25 },
+                    { name: 'DODGE BEGE', color: 0xc4a07c, bodyStyle: 'muscle', x: -4, z: 145, heading: Math.PI, maxSpeed: 47, accel: 25 },
+                    { name: 'SEDAN AZUL', color: 0x2563eb, bodyStyle: 'muscle', x: -130, z: 4, heading: -Math.PI / 2, maxSpeed: 48, accel: 27 },
+                    { name: 'TÁXI AMARELO', color: 0xeab308, bodyStyle: 'muscle', x: 84, z: -148, heading: 0, maxSpeed: 48, accel: 26 }
                 ];
                 civilSpecs.forEach(c => {
                     const civ = new DriverVehicle(this.scene, {
@@ -195,6 +198,10 @@
                 if (this.vehicles) {
                     const lowLight = mode === 'night' || mode === 'rain';
                     this.vehicles.forEach(v => VehicleVisuals.setHeadlights(v, lowLight));
+                }
+                const lightsButton = document.getElementById('btn-headlights');
+                if (lightsButton && this.playerCar) {
+                    lightsButton.textContent = this.playerCar.headlightsOn ? '💡 ON' : '💡 OFF';
                 }
                 const badge = document.getElementById('weather-badge');
                 if (mode === 'day') {
@@ -278,6 +285,7 @@
                 this.mode = 'driving';
                 this.felony = 0;
                 this.survivalElapsed = 0;
+                this.evidencePhase = 0;
                 this.replayBuffer = [];
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
@@ -334,6 +342,29 @@
                     titleEl.textContent = `MISSÃO 3 (${cityTitle}): ENTREGA SOB FOGO`;
                     timerEl.classList.remove('hidden');
                     objEl.textContent = 'OBJETIVO: Seu carro está com 50% de dano e cercado! Troque de carro ou fuja até entrar A PÉ no Esconderijo Verde!';
+                } else if (type === 'evidence') {
+                    // Nova operação inspirada nas missões de fuga de Driver.
+                    // Primeiro recolhe três dossiês em ordem; depois despista
+                    // a polícia e chega ao esconderijo a pé.
+                    this.missionActive = true;
+                    this.missionTimeLeft = 165;
+                    this.felony = 68;
+                    this.evidencePhase = 0;
+                    titleEl.textContent = `MISSÃO 7 (${cityTitle}): DOSSIÊS DO CARTEL`;
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    const evidenceStops = [
+                        { x: 0, z: -80 },
+                        { x: 80, z: -80 },
+                        { x: 80, z: 0 }
+                    ];
+                    evidenceStops.forEach(p => this.spawnMarkerRing(p.x, p.z, 0x22d3ee));
+                    this.totalMarkers = evidenceStops.length;
+                    subEl.textContent = `DOSSIÊS: 0 / ${this.totalMarkers}`;
+                    objEl.textContent =
+                        'ETAPA 1: recolha os 3 dossiês azuis em ordem. ' +
+                        'ETAPA 2: despiste a polícia (delito abaixo de 25) ' +
+                        'e entre A PÉ no esconderijo verde.';
                 } else if (type === 'survival') {
                     this.missionActive = true;
                     this.felony = 100;
@@ -793,8 +824,9 @@
                             document.getElementById('mission-subcounter').textContent =
                                 `MARCADORES: ${this.markersCollected} / ${this.totalMarkers} (+4s!)`;
                         } else {
+                            const kind = this.missionType === 'evidence' ? 'DOSSIÊS' : 'CHECKPOINTS';
                             document.getElementById('mission-subcounter').textContent =
-                                `CHECKPOINTS: ${this.markersCollected} / ${this.totalMarkers}`;
+                                `${kind}: ${this.markersCollected} / ${this.totalMarkers}`;
                         }
                         DriverCheckpointRoute.refresh(this.missionType, this.missionMarkers);
                     }
@@ -828,6 +860,27 @@
                             );
                             if (dSafe <= this.city.safeHouseZone.radius) {
                                 this.triggerEndScreen('ROTA CONCLUÍDA!', 'Você passou por todos os Checkpoints e entrou a pé no Esconderijo em segurança!');
+                                return;
+                            }
+                        }
+                    } else if (this.missionType === 'evidence') {
+                        const subEl = document.getElementById('mission-subcounter');
+                        const objEl = document.getElementById('objective-banner');
+                        if (this.markersCollected >= this.totalMarkers) {
+                            if (this.evidencePhase !== 1) {
+                                this.evidencePhase = 1;
+                                objEl.textContent =
+                                    'ETAPA 2: despiste as viaturas e entre A PÉ no esconderijo verde.';
+                            }
+                            const position = this.getPlayerPosition();
+                            const safe = this.city.safeHouseZone;
+                            const distance = Math.hypot(position.x - safe.x, position.z - safe.z);
+                            const clear = this.felony < 25 && !this.isPoliceNearPlayer(42);
+                            subEl.textContent = `ESCONDERIJO: ${Math.round(distance)}m | ` +
+                                `DELITO: ${Math.round(this.felony)}% (META: <25%)`;
+                            if (clear && this.mode === 'on_foot' && distance <= safe.radius) {
+                                this.triggerEndScreen('DOSSIÊS RECUPERADOS!',
+                                    'Você recolheu as provas e despistou a polícia antes de entrar no esconderijo.');
                                 return;
                             }
                         }
