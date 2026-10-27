@@ -83,10 +83,33 @@ class VehicleDamageFX {
         engineStrip.position.set(0, 1.20, 1.82);
         engineGlow.add(engineStrip);
 
-        group.add(scratches, dents, cracks, heavy, bumper, engineGlow);
+        // Cada lado conserva danos próprios, sem recalcular geometrias por frame.
+        const rearDamage = new THREE.Group();
+        const rearBumper = new THREE.Mesh(new THREE.BoxGeometry(2.16,0.16,0.21),metal);
+        rearBumper.position.set(-0.16,0.46,-2.68);
+        rearBumper.rotation.z=0.16;
+        const rearScuff = new THREE.Mesh(new THREE.BoxGeometry(1.4,0.25,0.07),rusty);
+        rearScuff.position.set(0.2,0.75,-2.72);
+        rearDamage.add(rearBumper,rearScuff);
+        const leftDamage = new THREE.Group();
+        const rightDamage = new THREE.Group();
+        for (const sign of [-1,1]) {
+            const door = new THREE.Mesh(new THREE.BoxGeometry(0.075,0.50,1.28),metal);
+            door.position.set(sign*1.24,0.79,-0.1);
+            door.rotation.z = sign*0.12;
+            const scrape = new THREE.Mesh(new THREE.BoxGeometry(0.09,0.12,1.14),rusty);
+            scrape.position.set(sign*1.29,0.86,-0.13);
+            const target=sign<0?leftDamage:rightDamage;
+            target.add(door,scrape);
+        }
+        group.add(scratches, dents, cracks, heavy, bumper, engineGlow,
+            rearDamage,leftDamage,rightDamage);
         car.chassisTilt.add(group);
         car.damageGroup = group;
-        car.damageParts = { scratches, dents, cracks, heavy, bumper, engineGlow };
+        car.damageParts = {
+            scratches, dents, cracks, heavy, bumper, engineGlow,
+            rearDamage,leftDamage,rightDamage
+        };
         this.update(car);
     }
 
@@ -97,8 +120,19 @@ class VehicleDamageFX {
         car.damageParts.dents.visible = stage.dents;
         car.damageParts.cracks.visible = stage.glass;
         car.damageParts.heavy.visible = stage.critical;
+        const zones=car.damageZones || {};
         if (car.damageParts.bumper) {
-            car.damageParts.bumper.visible = stage.intensity >= 0.72;
+            car.damageParts.bumper.visible = stage.intensity >= 0.72 ||
+                (zones.front || 0) >= 16;
+        }
+        if (car.damageParts.rearDamage) {
+            car.damageParts.rearDamage.visible = (zones.rear || 0)>=14;
+        }
+        if (car.damageParts.leftDamage) {
+            car.damageParts.leftDamage.visible = (zones.left || 0)>=14;
+        }
+        if (car.damageParts.rightDamage) {
+            car.damageParts.rightDamage.visible = (zones.right || 0)>=14;
         }
         if (car.damageParts.engineGlow) {
             car.damageParts.engineGlow.visible = stage.critical;
