@@ -10,7 +10,7 @@ class DriverHomeSave {
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
-        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder','story_caine','story_leaving'
+        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder','story_caine','story_leaving','story_havana_lead'
     ];
     constructor(storage) { this.storage=storage; }
 
@@ -69,6 +69,9 @@ class DriverHomeSave {
             }:null,
             leaving:game.missionType==='story_leaving' &&
                 game.leavingDirector?game.leavingDirector.export():null,
+            havanaLead:game.missionType==='story_havana_lead' &&
+                game.havanaLeadDirector?
+                game.havanaLeadDirector.export(game.targetCar):null,
             caine:game.missionType==='story_caine' && game.caineDirector?
                 game.caineDirector.export():null,
             intruder:game.missionType==='story_intruder' && game.intruderDirector?
@@ -122,6 +125,9 @@ class DriverHomeSave {
         // Do contrário os carros adicionais não recebem o estado salvo.
         if(data.leaving&&game.missionType==='story_leaving'&&game.leavingDirector)
             game.leavingDirector.restore(data.leaving);
+        if(data.havanaLead&&game.missionType==='story_havana_lead'&&
+            game.havanaLeadDirector)
+            game.havanaLeadDirector.restore(data.havanaLead,game.targetCar);
         if(data.caine && game.missionType==='story_caine' && game.caineDirector){
             game.caineDirector.restore(data.caine);
             game.city.caineBridgeClosed=game.caineDirector.bridgeClosed;
@@ -195,9 +201,12 @@ class DriverHomeSave {
             (Array.isArray(data.completed)?data.completed:[])
             .filter(t=>DriverHomeSave.TYPES.includes(t)).slice(0,40)
         );
-        if(game.chapterProgress &&
-            game.completedMissions.has('story_leaving')){
-            game.chapterProgress.unlockHavana();
+        if(game.chapterProgress){
+            if(game.completedMissions.has('story_leaving') ||
+                game.completedMissions.has('story_havana_lead'))
+                game.chapterProgress.unlockHavana();
+            if(game.completedMissions.has('story_havana_lead'))
+                game.chapterProgress.completeHavanaLead();
             if(typeof game.updateChapterMenu==='function')game.updateChapterMenu();
         }
         game.mode=data.mode==='on_foot'?'on_foot':'driving';

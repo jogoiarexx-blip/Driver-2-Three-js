@@ -156,6 +156,13 @@
                     <div id="mission-timer" class="text-xl sm:text-3xl font-extrabold text-white tracking-wider font-mono hidden">01:30.00</div>
                     <div id="mission-subcounter" class="text-xs font-extrabold text-emerald-400 hidden">CONES / PORTÕES: 0 / 10</div>
                 </div>
+                <div id="havana-lead-progress" class="hidden pointer-events-none mt-1 rounded-lg bg-slate-950/95 border border-emerald-500/50 text-center p-2 w-64 max-w-[95vw]">
+                    <div id="havana-lead-phase" class="font-bold text-emerald-300 text-[10px]">SEGUINDO INTERMEDIÁRIO • HAVANA</div>
+                    <div class="h-2 bg-slate-800 rounded mt-1 overflow-hidden">
+                        <div id="havana-lead-fill" class="h-full bg-emerald-400 rounded" style="width:0%"></div>
+                    </div>
+                    <div id="havana-lead-distance" class="text-[10px] text-slate-300 mt-1">DISTÂNCIA SEGURA • 16–125m</div>
+                </div>
                 <div id="leaving-chicago-progress" class="hidden pointer-events-none mt-1 rounded-lg bg-slate-950/95 border border-sky-600/50 text-center p-2 w-64 max-w-[95vw]">
                     <div id="leaving-chicago-title" class="text-sky-300 font-bold text-[10px]">ALCANCE O TREM</div>
                     <div class="h-2 bg-slate-700 rounded mt-1 overflow-hidden">
@@ -257,6 +264,9 @@
             <div class="flex flex-wrap justify-center gap-3">
                 <button id="btn-restart-mode" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-5 py-2.5 rounded-lg transition">
                     JOGAR NOVAMENTE
+                </button>
+                <button id="btn-havana-free-roam" class="hidden bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-4 py-2.5 rounded-lg border border-emerald-400">
+                    EXPLORAR HAVANA
                 </button>
                 <button id="btn-continue-havana" class="hidden bg-sky-700 hover:bg-sky-600 text-white font-bold px-4 py-2.5 rounded-lg border border-sky-400">
                     SEGUIR PARA HAVANA
@@ -376,7 +386,7 @@
                 </div>
                 <button id="btn-resume-havana" onclick="window.DriverGame.beginHavanaChapter()"
                     class="hidden bg-sky-700 hover:bg-sky-600 border border-sky-400 rounded-lg px-4 py-2 text-xs font-extrabold text-white">
-                    CONTINUAR CAPÍTULO 2 • HAVANA
+                    INICIAR HAVANA 09 • FOLLOW UP THE LEAD
                 </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
@@ -425,6 +435,14 @@
                 <div class="text-xs text-slate-300 mt-1">
                     Noite chuvosa. Fuja da máfia e encontre Jones na estação antes de 3:30.
                     Ao concluir, siga para Havana.
+                </div>
+            </button>
+            <button id="btn-story-havana-lead" onclick="window.DriverGame.startHavanaLead()"
+                class="hidden w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-emerald-600 hover:bg-slate-800">
+                <strong class="text-emerald-300">HAVANA 09 — FOLLOW UP THE LEAD</strong>
+                <div class="text-xs text-slate-300 mt-1">
+                    Capítulo 2. Siga o intermediário num sedã verde pelas ruas de Havana
+                    sem se aproximar demais ou perdê-lo. Descubra o ponto de encontro nos cais.
                 </div>
             </button>
             <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">2. Missões adicionais e modos:</div>
@@ -807,6 +825,7 @@ git push -u origin main</pre>
     <script src="./js/gameplay/chicago-intruder.js"></script>
     <script src="./js/gameplay/caine-compound.js"></script>
     <script src="./js/gameplay/leaving-chicago.js"></script>
+    <script src="./js/gameplay/havana-lead.js"></script>
     <script src="./js/gameplay/chapter-progress.js"></script>
     <script src="./js/traffic/traffic-ai.js"></script>
     <script src="./js/police/roadblock-director.js"></script>

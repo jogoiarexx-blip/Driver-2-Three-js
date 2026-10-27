@@ -10,6 +10,7 @@ class DriverChapterProgress {
     constructor(storage) {
         this.storage=storage;
         this.chicagoComplete=false;
+        this.havana09Complete=false;
         this.read();
     }
     read() {
@@ -17,8 +18,9 @@ class DriverChapterProgress {
             const raw=this.storage?.getItem(DriverChapterProgress.KEY);
             if(!raw || raw.length>2048)return false;
             const data=JSON.parse(raw);
-            this.chicagoComplete=data?.version===DriverChapterProgress.VERSION &&
-                data.chicago08===true;
+            const compatible=data?.version===DriverChapterProgress.VERSION;
+            this.chicagoComplete=compatible && data.chicago08===true;
+            this.havana09Complete=this.chicagoComplete && data.havana09===true;
             return this.chicagoComplete;
         } catch (e) { return false; }
     }
@@ -27,7 +29,8 @@ class DriverChapterProgress {
             if(!this.storage)return false;
             this.storage.setItem(DriverChapterProgress.KEY,JSON.stringify({
                 version:DriverChapterProgress.VERSION,
-                chicago08:this.chicagoComplete
+                chicago08:this.chicagoComplete,
+                havana09:this.havana09Complete
             }));
             return true;
         } catch (e) { return false; }
@@ -38,4 +41,11 @@ class DriverChapterProgress {
         return this.save();
     }
     canTravelToHavana() { return this.chicagoComplete; }
+    completeHavanaLead() {
+        if(!this.chicagoComplete)return false;
+        if(this.havana09Complete)return true;
+        this.havana09Complete=true;
+        return this.save();
+    }
+    hasCompletedHavanaLead(){return this.havana09Complete;}
 }

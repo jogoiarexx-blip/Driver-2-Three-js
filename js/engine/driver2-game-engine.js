@@ -43,6 +43,9 @@
                 this.caineDirector=new DriverCaineCompound();
                 this.leavingDirector=new DriverLeavingChicago();
                 this.leavingStatus=null;this.leavingMafia=[];this.stationJones=null;
+                this.havanaLeadDirector=new DriverHavanaLead();
+                this.havanaLeadStatus=null;
+                this._startingHavana=false;
                 this.caineStatus=null;
                 this.caineVans=[];
                 this.intruderStatus=null;
@@ -59,8 +62,11 @@
                 this.chapterProgress=new DriverChapterProgress(this.homeSave.storage);
                 // Saves antigos de Chicago 08 também liberam a nova etapa.
                 const legacySave=this.homeSave.read();
-                if(legacySave?.completed?.includes('story_leaving'))
+                if(legacySave?.completed?.includes('story_leaving') ||
+                    legacySave?.completed?.includes('story_havana_lead'))
                     this.chapterProgress.unlockHavana();
+                if(legacySave?.completed?.includes('story_havana_lead'))
+                    this.chapterProgress.completeHavanaLead();
                 this.interiorPlace=null;
                 this.witnessCloseTime=0;
                 this.tanner = new TannerController(this.scene);
@@ -119,28 +125,37 @@
                 const unlocked=this.chapterProgress.canTravelToHavana();
                 const resume=document.getElementById('btn-resume-havana');
                 if(resume)resume.classList.toggle('hidden',!unlocked);
+                const missionButton=document.getElementById('btn-story-havana-lead');
+                if(missionButton)missionButton.classList.toggle('hidden',!unlocked);
+                if(resume)resume.textContent=this.chapterProgress.hasCompletedHavanaLead()?
+                    'REPETIR HAVANA 09 • FOLLOW UP THE LEAD':
+                    'INICIAR HAVANA 09 • FOLLOW UP THE LEAD';
                 const status=document.getElementById('chicago-chapter-status');
-                if(status)status.textContent=unlocked?
-                    'CHICAGO 08 CONCLUÍDA • CAPÍTULO 2 LIBERADO':
-                    'CHICAGO 08 PENDENTE • HAVANA DISPONÍVEL EM PASSEIO LIVRE';
+                if(status)status.textContent=!unlocked?
+                    'CHICAGO 08 PENDENTE • HAVANA LIVRE DISPONÍVEL':
+                    this.chapterProgress.hasCompletedHavanaLead()?
+                    'CHICAGO 08 E HAVANA 09 CONCLUÍDAS • PROGRESSO SALVO':
+                    'CHICAGO 08 CONCLUÍDA • HAVANA 09 DISPONÍVEL';
             }
 
             async beginHavanaChapter() {
-                if(!this.chapterProgress.canTravelToHavana())return false;
-                // Agora a mudança de capítulo passa pelo loader progressivo.
-                this.missionType='freeroam';
-                if(window.DriverBoot)await this.requestCityChange('havana');
-                else this.changeCity('havana');
-                this.setWeather('day');
-                document.getElementById('mission-title').textContent=
-                    'CAPÍTULO 2 — HAVANA';
-                document.getElementById('objective-banner').textContent=
-                    'Chicago ficou para trás. Próxima missão: FOLLOW UP THE LEAD '+
-                    '(em preparação). Explore Havana em Passeio Livre.';
-                const badge=document.getElementById('player-state-badge');
-                if(badge)badge.textContent='CAPÍTULO 2 • HAVANA';
-                this.updateChapterMenu();
-                return true;
+                return this.startHavanaLead();
+            }
+
+            async startHavanaLead() {
+                if(!this.chapterProgress.canTravelToHavana() ||
+                    this._startingHavana || window.DriverBoot?.busy)return false;
+                this._startingHavana=true;
+                try {
+                    if(this.currentCityKey!=='havana'){
+                        this.missionType='freeroam';
+                        const loaded=await this.requestCityChange('havana');
+                        if(!loaded)return false;
+                    }
+                    this.startMission('story_havana_lead');
+                    this.updateChapterMenu();
+                    return true;
+                } finally {this._startingHavana=false;}
             }
 
             changeCity(cityKey) {
@@ -353,6 +368,10 @@
             }
 
             startMission(type) {
+                if(type==='story_havana_lead' && this.currentCityKey!=='havana'){
+                    this.startHavanaLead();
+                    return;
+                }
                 if((type==='story_tipoff'||type==='story_witness'||type==='story_train'||type==='story_drop'||type==='story_safehouse'||type==='story_intruder'||type==='story_caine'||type==='story_leaving') &&
                     this.currentCityKey!=='chicago')this.changeCity('chicago');
                 document.getElementById('missions-modal').classList.add('hidden');
@@ -383,6 +402,8 @@
                 this.caineStatus=null;this.caineVans=[];
                 this.leavingDirector.reset();
                 this.leavingStatus=null;this.leavingMafia=[];
+                this.havanaLeadDirector.reset();
+                this.havanaLeadStatus=null;
                 this.city.caineBridgeClosed=false;
                 this.city.bridgeRaised=false;
                 this.intruderBlocker=null;
@@ -419,6 +440,9 @@
                 const leavingPanel=document.getElementById('leaving-chicago-progress');
                 if(leavingPanel)leavingPanel.classList.toggle('hidden',
                     type!=='story_leaving');
+                const havanaPanel=document.getElementById('havana-lead-progress');
+                if(havanaPanel)havanaPanel.classList.toggle('hidden',
+                    type!=='story_havana_lead');
 
                 const cityTitle = CITY_PRESETS[this.currentCityKey].name;
                 const titleEl = document.getElementById('mission-title');
@@ -431,6 +455,36 @@
                     titleEl.textContent = `TAKE A RIDE: ${cityTitle}`;
                     timerEl.classList.add('hidden');
                     objEl.innerHTML = 'Passeio livre! Pedestres saltam na calçada, <kbd class="px-1 bg-slate-800 text-amber-400 rounded">SHIFT</kbd> faz Burnout, <kbd class="px-1 bg-slate-800 text-amber-400 rounded">Q</kbd> olha para trás e <kbd class="px-1 bg-slate-800 text-amber-400 rounded">R</kbd> abre o Film Director!';
+                } else if(type==='story_havana_lead'){
+                    this.missionActive=true;
+                    this.missionTimeLeft=DriverHavanaLead.LIMIT;
+                    this.setWeather('dusk');
+                    const start=DriverHavanaLead.START;
+                    Object.assign(this.playerCar,{
+                        x:start.x,y:0,z:start.z,heading:start.heading,
+                        speed:0,damage:0
+                    });
+                    this.playerCar.updateTransform();
+                    this.mode='driving';
+                    this.tanner.setVisible(false);
+                    this.targetCar=new DriverVehicle(this.scene,{
+                        name:'INTERMEDIÁRIO DE HAVANA',
+                        color:0x0f766e,bodyStyle:'muscle',isTarget:true,
+                        x:DriverHavanaLead.SUSPECT.x,
+                        z:DriverHavanaLead.SUSPECT.z,
+                        heading:DriverHavanaLead.SUSPECT.heading,
+                        maxSpeed:43,accel:25
+                    });
+                    DriverHavanaLead.attachRoute(this.targetCar);
+                    this.vehicles.push(this.targetCar);
+                    this.freeVehicleAssets.decorateFleet();
+                    titleEl.textContent='CAPÍTULO 2 — HAVANA 09: FOLLOW UP THE LEAD';
+                    timerEl.classList.remove('hidden');
+                    subEl.classList.remove('hidden');
+                    subEl.textContent='SIGA O SEDÃ VERDE • NÃO SE APROXIME DEMAIS';
+                    objEl.textContent='Siga o intermediário pelas ruas de Havana '+
+                        'até o encontro nos cais. Mantenha distância entre 16 e '+
+                        '125 m, não bata no carro suspeito e não o perca de vista.';
                 } else if (type === 'story_tipoff') {
                     this.missionActive=true;
                     this.missionTimeLeft=175;
@@ -1238,6 +1292,12 @@
                             this.dropDirector.suspicion=Math.min(100,
                                 this.dropDirector.suspicion+50);
                         }
+                        if(this.missionType==='story_havana_lead' &&
+                            impact.other===this.targetCar){
+                            this.havanaLeadDirector.alertSeconds=Math.min(
+                                DriverHavanaLead.ALERT_SECONDS,
+                                this.havanaLeadDirector.alertSeconds+1.8);
+                        }
                         if (impact.closingSpeed >= 29) {
                             // Colisões fortes soltam vapor do capô sem luzes caras.
                             this.effects.spawnTireSmoke(
@@ -1349,6 +1409,35 @@
                         if(this.witnessCloseTime>=48){
                             this.triggerEndScreen('CHASE THE WITNESS CONCLUÍDA!',
                                 'Você acompanhou a testemunha até a estação.');
+                            return;
+                        }
+                    }
+                    if(this.missionType==='story_havana_lead'&&this.targetCar){
+                        const result=this.havanaLeadDirector.update(dt,{
+                            player:this.getPlayerPosition(),
+                            target:this.targetCar,mode:this.mode,
+                            timeLeft:this.missionTimeLeft
+                        });
+                        this.havanaLeadStatus=result;
+                        document.getElementById('mission-subcounter').textContent=
+                            result.message+' • CONTATO '+Math.floor(
+                                result.tailSeconds)+'s';
+                        if(result.failed){
+                            this.triggerEndScreen(result.failed==='timeout'?
+                                'TEMPO ESGOTADO!':'MISSÃO FALHOU!',
+                                result.failed==='detected'?
+                                'O intermediário percebeu Tanner. Mantenha distância.':
+                                result.failed==='lost'?
+                                'O sedã escapou. Continue entre 16 e 125 metros.':
+                                result.failed==='destroyed'?
+                                'O suspeito perdeu o carro antes de chegar aos cais.':
+                                'Não foi possível acompanhar o intermediário.');
+                            return;
+                        }
+                        if(result.complete){
+                            this.triggerEndScreen('FOLLOW UP THE LEAD CONCLUÍDA!',
+                                'Tanner seguiu o intermediário discretamente '+
+                                'até o encontro nos cais de Havana.');
                             return;
                         }
                     }
@@ -1723,9 +1812,18 @@
                     this.chapterProgress.unlockHavana();
                     this.updateChapterMenu();
                 }
+                if(this.missionType==='story_havana_lead' &&
+                    this.havanaLeadDirector.complete && /CONCLUÍDA/.test(title)){
+                    this.chapterProgress.completeHavanaLead();
+                    this.updateChapterMenu();
+                }
                 const continueHome=document.getElementById('btn-continue-safehouse');
                 if(continueHome)continueHome.classList.toggle('hidden',
                     !(this.missionType==='story_safehouse' && /CONCLUÍDA/.test(title)));
+                const roamHavana=document.getElementById('btn-havana-free-roam');
+                if(roamHavana)roamHavana.classList.toggle('hidden',
+                    !(this.missionType==='story_havana_lead' &&
+                        this.havanaLeadDirector.complete && /CONCLUÍDA/.test(title)));
                 const havana=document.getElementById('btn-continue-havana');
                 if(havana)havana.classList.toggle('hidden',
                     !(this.missionType==='story_leaving' &&
@@ -1789,6 +1887,23 @@
                 }
 
                 const cainePanel=document.getElementById('caine-escape-progress');
+                if(this.missionType==='story_havana_lead'&&this.havanaLeadStatus){
+                    const panel=document.getElementById('havana-lead-progress');
+                    const s=this.havanaLeadStatus;
+                    if(panel){
+                        document.getElementById('havana-lead-phase').textContent=
+                            s.phase==='meet'?'ENCONTRO NOS CAIS • CONTATO CONFIRMADO':
+                            'SEGUINDO INTERMEDIÁRIO • HAVANA';
+                        document.getElementById('havana-lead-fill').style.width=
+                            Math.round(s.progress*100)+'%';
+                        const detail=document.getElementById('havana-lead-distance');
+                        detail.textContent=Math.round(s.distance)+'m • ALERTA '+
+                            Math.round(s.alertSeconds/DriverHavanaLead.ALERT_SECONDS*100)+
+                            '% • PERDA '+s.lostSeconds.toFixed(1)+'s';
+                        detail.className='text-[10px] mt-1 '+
+                            (s.zone==='safe'?'text-emerald-300':'text-rose-300');
+                    }
+                }
                 if(this.missionType==='story_leaving'&&this.leavingStatus){
                     const panel=document.getElementById('leaving-chicago-progress');
                     const title=document.getElementById('leaving-chicago-title');
@@ -1893,7 +2008,9 @@
                 const progress = document.getElementById('mission-compact-progress');
                 if (progress) {
                     let label = this.missionActive ? 'MISSÃO EM ANDAMENTO' : 'PASSEIO LIVRE';
-                    if (this.missionType === 'story_leaving') {
+                    if (this.missionType === 'story_havana_lead') {
+                        label='HAVANA 09 • SIGA O INTERMEDIÁRIO';
+                    } else if (this.missionType === 'story_leaving') {
                         label='CHICAGO 08 • ALCANCE O TREM';
                     } else if (this.missionType === 'story_caine') {
                         label='CHICAGO 07 • COMPLEXO DE CAINE';
@@ -2069,6 +2186,19 @@
                 ctx.fillStyle = '#c084fc';
                 ctx.fillRect(gx - 4, gz - 4, 8, 8);
 
+                if(this.missionType==='story_havana_lead'){
+                    const destination=DriverHavanaLead.RENDEZVOUS;
+                    ctx.fillStyle='#34d399';
+                    ctx.fillRect((destination.x-pos.x)*scale-5,
+                        -(destination.z-pos.z)*scale-5,10,10);
+                    if(this.targetCar){
+                        ctx.fillStyle='#fbbf24';
+                        ctx.beginPath();
+                        ctx.arc((this.targetCar.x-pos.x)*scale,
+                            -(this.targetCar.z-pos.z)*scale,5,0,Math.PI*2);
+                        ctx.fill();
+                    }
+                }
                 if(this.missionType==='story_leaving'){
                     const station=DriverLeavingChicago.STATION;
                     ctx.fillStyle='#4ade80';
@@ -2417,6 +2547,12 @@
                     this.startMission(this.missionType);
                 });
                 document.getElementById('btn-free-roam').addEventListener('click', () => {
+                    this.startMission('freeroam');
+                });
+                const havanaRoam=document.getElementById('btn-havana-free-roam');
+                if(havanaRoam)havanaRoam.addEventListener('click',()=>{
+                    if(this.missionType!=='story_havana_lead'||
+                        !this.havanaLeadDirector.complete)return;
                     this.startMission('freeroam');
                 });
                 const continueHavana=document.getElementById('btn-continue-havana');

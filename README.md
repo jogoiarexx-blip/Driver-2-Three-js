@@ -329,3 +329,37 @@ por cidade para assegurar jogabilidade consistente. Texturas reutilizadas
 continuam em cache até trocar de cidade. O ganho efetivo de FPS/draw calls
 precisa de medição em navegador/placa de vídeo real; as provas automatizadas
 validam a lógica de LOD, não um benchmark WebGL completo.
+
+
+## Havana 09 — Follow Up the Lead (campanha do capítulo 2)
+
+- A opção **SEGUIR PARA HAVANA** após Chicago 08 abre o *loading real*
+  de Havana e inicia a primeira missão jogável do capítulo 2.
+  O botão **HAVANA 09 — FOLLOW UP THE LEAD** também aparece na Central de
+  Modos após a liberação da campanha. O passeio livre nas quatro cidades
+  continua independente da progressão narrativa.
+- Um intermediário dirige um **sedã verde** pelas ruas de Havana
+  num percurso próprio, ligando avenidas, canal/ponte e a região dos cais.
+  O carro é controlado pela física/IA já existente, usando uma rota
+  `scriptedDrive` de 12 pontos. Não é uma extração dos dados do jogo PS1.
+- **Objetivo:** segui-lo discretamente entre 16 e 125 metros e confirmar
+  o ponto de encontro. O jogador falha se perder contato por tempo
+  prolongado, permanecer perto demais, destruir o veículo suspeito ou
+  esgotar o cronômetro. Choques contra o alvo aumentam o alerta.
+- O HUD mostra a distância, o alerta do suspeito, a margem para perda de
+  contato e o avanço da rota. O radar destaca o alvo em amarelo e o
+  destino em verde, sem interferir nas missões anteriores.
+- A vitória em Havana 09 grava um checkpoint de capítulo separado
+  (`driver2-three-chapter-v1`, compatível com registros anteriores).
+  O save manual da casa também aceita `story_havana_lead`, incluindo
+  índice do percurso e contadores do diretor. Saves anteriores continuam
+  válidos e não são sobrescritos pela conquista.
+- Arquivos principais: `js/gameplay/havana-lead.js`,
+  `js/engine/driver2-game-engine.js`,
+  `js/gameplay/chapter-progress.js`, `js/gameplay/home-save.js`,
+  `index.html`. Testes de regressão: `tests/havana-lead.test.cjs`.
+
+**Limites:** cenário e missão são uma adaptação do projeto e não
+reproduzem o mapa/cinemáticas/dados do Driver 2 original. Testes lógicos
+verificam timers, estados, persistência e progressão de rota; teste
+visual e jogabilidade prolongada em navegador real permanecem pendentes.
