@@ -57,7 +57,9 @@ class PolicePursuitTactics {
     }
 
     static targetIsSafe(city, point) {
-        return !!point && Math.abs(point.x)<238 && Math.abs(point.z)<238 &&
+        const limit=city&&Number.isFinite(city.worldLimit)?
+            city.worldLimit-10:238;
+        return !!point && Math.abs(point.x)<limit && Math.abs(point.z)<limit &&
             (!city || !city.isPointBlocked(point.x,point.z,1.7));
     }
 }

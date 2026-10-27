@@ -48,6 +48,7 @@
 
                 this.mode = 'driving';
                 this.cameraMode = 0;
+                this.radarWide = false;
                 this.lookBackActive = false;
                 this.weatherMode = 'default';
                 this.felony = 0;
@@ -1350,19 +1351,41 @@
                 }
             }
 
+            toggleRadarZoom() {
+                this.radarWide=!this.radarWide;
+                const button=document.getElementById('btn-radar-zoom');
+                if(button)button.textContent=this.radarWide?'RADAR PERTO':'MAPA GERAL';
+            }
+
             drawRadar() {
                 const ctx = this.radarCtx;
                 const w = this.radarCanvas.width;
                 const h = this.radarCanvas.height;
                 const cx = w / 2;
                 const cy = h / 2;
-                const scale = 0.52;
+                const scale = this.radarWide ? 0.16 : 0.52;
 
                 ctx.clearRect(0, 0, w, h);
                 ctx.fillStyle = '#0f172a';
                 ctx.fillRect(0, 0, w, h);
 
                 const pos = this.getPlayerPosition();
+                if(this.interiorPlace) {
+                    ctx.fillStyle='#1e293b';
+                    ctx.fillRect(15,17,w-30,h-34);
+                    ctx.strokeStyle='#86efac';
+                    ctx.strokeRect(16,18,w-32,h-36);
+                    ctx.fillStyle='#4ade80';
+                    if(this.interiorPlace.id==='home')ctx.fillRect(cx-7,cy-18,14,8);
+                    ctx.fillStyle='#38bdf8';
+                    ctx.fillRect(cx-9,h-27,18,5);
+                    ctx.fillStyle='#facc15';
+                    ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fill();
+                    ctx.fillStyle='#e2e8f0';
+                    ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+                    ctx.fillText(this.interiorPlace.id==='home'?'CASA':'DEPÓSITO',cx,14);
+                    return;
+                }
 
                 ctx.save();
                 ctx.translate(cx, cy);
@@ -1610,6 +1633,7 @@
                     if (code === 'KeyV') this.cameraMode = (this.cameraMode + 1) % 3;
                     if (code === 'KeyQ') this.lookBackActive = true;
                     if (code === 'KeyN') this.cycleWeather();
+                    if (code === 'KeyG'&&!e.repeat) this.toggleRadarZoom();
                     if (code === 'KeyM' && !e.repeat) this.freeVehicleAssets.toggle();
                     if (code === 'KeyL' && !e.repeat) this.togglePlayerHeadlights();
                     if (code === 'KeyH') this.triggerHornOrSiren();
@@ -1658,6 +1682,8 @@
                             '⚙ Ocultar cidades / clima' : '⚙ Cidades / clima';
                     });
                 }
+                const radarZoom=document.getElementById('btn-radar-zoom');
+                if(radarZoom)radarZoom.addEventListener('click',()=>this.toggleRadarZoom());
                 const saveButton=document.getElementById('btn-save-home');
                 if(saveButton)saveButton.addEventListener('click',()=>this.saveAtHome());
                 const exitButton=document.getElementById('btn-leave-interior');

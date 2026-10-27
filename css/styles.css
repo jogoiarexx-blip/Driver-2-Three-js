@@ -122,3 +122,5 @@
     #interior-banner{max-width:92vw;padding:6px;font-size:11px;}
     #interior-banner button{min-height:36px;}
 }
+
+@media(max-width:640px){#btn-radar-zoom{max-width:72px;line-height:1.1;padding:8px 5px;}}
