@@ -660,7 +660,7 @@
                 this.tanner.setPosition(place.inside.x,0,place.inside.z-6,0);
                 this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
                 document.getElementById('player-state-badge').textContent=
-                    'DENTRO: '+place.name.toUpperCase();
+                    'DENTRO: '+(place.name||place.id).toUpperCase();
                 return true;
             }
 

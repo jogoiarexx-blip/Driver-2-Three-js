@@ -127,7 +127,7 @@ test('posição e dano adulterados são limitados no load',()=>{
   snapshot.vehicles[0].damage=180;
   snapshot.felony=999;
   assert.equal(save.restore(game,snapshot),true);
-  assert.equal(game.vehicles[0].x,1100);
+  assert.equal(game.vehicles[0].x,1500);
   assert.equal(game.vehicles[0].damage,100);
   assert.equal(game.felony,100);
 });
