@@ -12,8 +12,10 @@ const context = {
   THREE: { MathUtils: { clamp: (x,min,max) => Math.max(min,Math.min(max,x)) } }
 };
 const Visual = vm.runInNewContext(
+  read('js/render/vehicle-damage-fx.js') + '\n' +
   read('js/render/vehicle-visuals.js') + '\nVehicleVisuals;', context);
 const Traffic = vm.runInNewContext(
+  read('js/police/pursuit-tactics.js') + '\n' +
   read('js/traffic/traffic-ai.js') + '\nDriverTrafficAI;', context);
 const Route = vm.runInNewContext(
   read('js/gameplay/checkpoint-route.js') + '\nDriverCheckpointRoute;', context);
@@ -105,7 +107,7 @@ test('dossiês são coletados estritamente na ordem',()=>{
 test('modelo 3D personalizado pode ser substituído sem perder proteção do cache',()=>{
   const code=read('js/vehicles/driver-vehicle.js');
   assert.match(code,/\(this\._userCustomModel && shared\)/);
-  assert.match(code,/preserved = \[this\.sirenAssembly, this\.targetMarker, this\.lightsGroup\]/);
+  assert.match(code,/preserved = \[this\.sirenAssembly, this\.targetMarker, this\.lightsGroup, this\.damageGroup\]/);
   assert.match(code,/obj\.userData\.cc0SharedAsset = shared/);
 });
 test('missão 7 e botão de faróis estão vinculados ao jogo',()=>{
