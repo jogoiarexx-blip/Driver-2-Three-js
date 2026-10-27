@@ -6,6 +6,7 @@
 class DriverBootFlow {
     constructor() {
         this.game=null;
+        this.pendingUserCarFile=null;
         this.sessionReady=false;
         this.loopStarted=false;
         this.busy=false;
@@ -21,13 +22,17 @@ class DriverBootFlow {
     }
 
     readSettings() {
-        const defaults={models:true,scanlines:true,reducedMotion:false};
+        const defaults={models:true,scanlines:true,
+            reducedMotion:false,playerColor:'#d53934'};
         try {
             const raw=localStorage.getItem('driver2-menu-preferences-v1');
             const saved=raw ? JSON.parse(raw) : null;
             if(saved && typeof saved==='object')
                 for(const key of Object.keys(defaults))
                     if(typeof saved[key]==='boolean')defaults[key]=saved[key];
+            if(typeof saved?.playerColor==='string' &&
+                /^#[a-f0-9]{6}$/i.test(saved.playerColor))
+                defaults.playerColor=saved.playerColor;
         } catch(_) {}
         return defaults;
     }
@@ -64,6 +69,44 @@ class DriverBootFlow {
             document.getElementById('d2-options').classList.toggle('hidden');
         });
         listen('d2-load-return',()=>this.openMenu());
+        const uploader=document.getElementById('driver-car-file');
+        for(const button of document.querySelectorAll('[data-import-driver-car]'))
+            button.addEventListener('click',()=>{
+                if(!this.busy && uploader)uploader.click();
+            });
+        if(uploader)uploader.addEventListener('change',async()=>{
+            const file=uploader.files?.[0];
+            uploader.value='';
+            if(!file || this.busy)return;
+            if(!this.game){
+                this.pendingUserCarFile=file;
+                this.showCarStatus('Modelo selecionado: '+file.name+
+                    '. Será preparado ao iniciar o jogo.');
+                return;
+            }
+            this.showCarStatus('Validando e aplicando o modelo...');
+            try{
+                const ok=await this.game.freeVehicleAssets.importUserCar(file);
+                if(ok){
+                    this.settings.models=true;this.saveSettings();
+                    const toggle=document.getElementById('d2-opt-models');
+                    if(toggle)toggle.checked=true;
+                    this.showCarStatus('GLB aplicado. Carros com cores independentes.');
+                }else this.showCarStatus('Falha ao ler GLB. Use um arquivo válido até 12 MB.');
+            }catch(_){this.showCarStatus('GLB inválido ou memória insuficiente.')}
+        });
+        for(const input of document.querySelectorAll('[data-driver-paint]')){
+            input.value=this.settings.playerColor;
+            input.addEventListener('input',()=>{
+                const color=input.value;
+                if(!/^#[a-f0-9]{6}$/i.test(color))return;
+                this.settings.playerColor=color;this.saveSettings();
+                for(const other of document.querySelectorAll('[data-driver-paint]'))
+                    if(other!==input)other.value=color;
+                if(this.game?.playerCar)
+                    this.game.playerCar.setPaintColor(parseInt(color.slice(1),16));
+            });
+        }
         for(const btn of document.querySelectorAll('#d2-city-list [data-city]')){
             btn.addEventListener('click',()=>{
                 this.selectedCity=btn.dataset.city;
@@ -93,6 +136,13 @@ class DriverBootFlow {
         });
         this.updateCitySelection();
     }
+    showCarStatus(message){
+        const label=document.getElementById('d2-car-status');
+        if(label)label.textContent=message;
+        const hud=document.getElementById('asset-loader-status');
+        if(hud)hud.textContent=message;
+    }
+
     updateCitySelection() {
         for(const btn of document.querySelectorAll('#d2-city-list [data-city]')){
             const selected=btn.dataset.city===this.selectedCity;
@@ -113,6 +163,9 @@ class DriverBootFlow {
         if(this.game.freeVehicleAssets &&
             this.game.freeVehicleAssets.enabled!==this.settings.models)
             this.game.freeVehicleAssets.toggle();
+        if(this.game.playerCar)
+            this.game.playerCar.setPaintColor(
+                parseInt(this.settings.playerColor.slice(1),16));
     }
     openMenu() {
         if(this.busy)return false;
@@ -194,6 +247,14 @@ class DriverBootFlow {
             return;
         }
         const library=game.freeVehicleAssets;
+        if(this.pendingUserCarFile){
+            const file=this.pendingUserCarFile;
+            this.pendingUserCarFile=null;
+            const ok=await library.importUserCar(file);
+            this.showCarStatus(ok?
+                'Carro 3D personalizado carregado e aplicado.':
+                'Não foi possível aplicar o GLB, mantidas malhas alternativas.');
+        }
         const names=[...new Set(game.vehicles.map(v=>library.getModelName(v))
             .filter(Boolean))];
         if(!names.length) {

@@ -34,7 +34,7 @@
                     depthWrite: false
                 });
 
-                this.smokeGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+                this.smokeGeo = new THREE.SphereGeometry(0.43, 7, 5);
                 this.smokeMat = new THREE.MeshBasicMaterial({
                     color: 0xd1d5db,
                     transparent: true,
@@ -180,6 +180,7 @@
                     p.life -= dt;
                     if (p.life <= 0) {
                         this.scene.remove(p.mesh);
+                        p.mesh.material.dispose();
                         this.smokeParticles.splice(i, 1);
                     } else {
                         p.mesh.position.y += p.vy * dt;

@@ -75,8 +75,11 @@ class DriverArcadePhysics {
         vehicle.lateralVelocity += (lateralTarget - vehicle.lateralVelocity) *
             this.response(slide ? 4.4 : wetRoad ? 4.3 : 8.5, dt);
         vehicle.isBurnout = burnoutKey && (forwardThrottle > 0 || steerInput !== 0);
+        // Curvas rápidas também devem cantar pneu, sem exigir Shift.
+        const fastCorner = absSpeed > 22 &&
+            Math.abs(steerInput) > .45 && Math.abs(centrifugal) > .26;
         vehicle.isDrifting = vehicle.isBurnout ||
-            (handbrake && absSpeed > 10) ||
+            (handbrake && absSpeed > 10) || fastCorner ||
             (Math.abs(centrifugal) > 0.55 && absSpeed > 22);
 
         const targetPitch = forwardThrottle > 0 ? (burnoutKey ? -0.09 : -0.06) :

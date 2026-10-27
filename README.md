@@ -363,3 +363,43 @@ validam a lógica de LOD, não um benchmark WebGL completo.
 reproduzem o mapa/cinemáticas/dados do Driver 2 original. Testes lógicos
 verificam timers, estados, persistência e progressão de rota; teste
 visual e jogabilidade prolongada em navegador real permanecem pendentes.
+
+
+## Direção, pintura GLB e colisões — atualização outubro/2026
+
+- **A e D do jogador invertidos em relação ao comportamento anterior**
+  conforme solicitado, sem trocar os sinais usados internamente pela IA de
+  tráfego: os veículos automáticos continuam seguindo suas rotas normalmente.
+- **Curvas rápidas:** um `fastCorner` na física ativa a derrapagem e o áudio
+  de pneu mesmo sem acionar SHIFT. Fumaça com malha arredondada, marcas no
+  asfalto e emissões reguladas para não depender de 30/60 FPS. As partículas
+  liberam o material GPU ao desaparecer.
+- **Mais destruição no cenário:** caixas de madeira nos cantos de alguns
+  quarteirões, fragmentos lançados com impulso, tempo de vida limitado,
+  redução moderada de velocidade e dano no carro. Também afeta cones e
+  latas de lixo atingidos com força suficiente. Detecção contínua aproximada
+  de colisão usando segmento entre posição anterior/atual para evitar que um
+  veículo rápido atravesse o objeto em um único quadro.
+- **Carro fornecido pelo usuário:** loader específico para
+  `assets/vehicles/carro_driver2_otimizado.glb` com correção de orientação
+  X→Z, escala proporcional ao chassi, carros com pintura variável, shader
+  aplicado ao atlas verde-oliva com tentativa de preservar pneus, vidros e
+  lanternas. Utiliza a mesma geometria/textura e clona somente materiais.
+  O carro é usado prioritariamente nos veículos comuns estilo *muscle*
+  (incluindo o jogador), sem substituir polícia, veículos pesados e alvos.
+- O menu e HUD possuem botão **Importar meu carro GLB** e seletor de
+  **cor da carroceria de Tanner**. Arquivos escolhidos são importados por
+  `GLTFLoader.parse` e guardados em IndexedDB quando disponível; o
+  armazenamento do navegador pode não persistir em navegação privada.
+  Modelo inválido ou indisponível mantém a carroceria alternativa.
+- O GLB binário original acompanha um pacote ZIP separado para colocação
+  no caminho esperado do projeto. **O commit de código por si só não contém
+  o arquivo GLB:** a API de escrita GitHub disponível no ambiente não recebe
+  diretamente o arquivo binário do upload local. Para distribuição automática
+  a qualquer visitante do GitHub Pages, faça commit de
+  `assets/vehicles/carro_driver2_otimizado.glb` no repositório. Na ausência
+  desse arquivo, o botão de importação local já permite usar o modelo na sua
+  sessão e salva uma cópia no navegador (quando permitido).
+- Testes: `tests/driver-custom-car-and-destruction.test.cjs`. A suíte Node
+  testa sinais de direção, fumaça, colisões varridas e integração de arquivos.
+  Não substitui validação visual no browser.

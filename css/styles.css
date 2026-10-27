@@ -275,3 +275,18 @@
 }
 @media(prefers-reduced-motion:reduce){#driver-main-menu *,
     #driver-loading *{transition:none!important;animation:none!important}}
+
+/* Importação do carro GLB otimizado e cor individual, responsiva. */
+.d2-car-import-panel {
+    display:flex;flex-direction:column;gap:10px;
+    border:1px solid rgba(245,158,11,.48);border-radius:6px;
+    padding:13px 14px;margin-top:14px;background:rgba(12,18,26,.94);
+    color:#e2e8f0;
+}
+.d2-car-import-panel strong {font-size:13px;color:#fbbf74;letter-spacing:.12em}
+.d2-car-import-panel .d2-resume {margin:0;font-size:12px}
+.d2-car-import-panel label {display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px}
+.d2-car-import-panel small {color:#9daec3;line-height:1.45;font-size:11px}
+#driver-car-file {display:none!important}
+[data-driver-paint] {border:0;width:42px;height:30px;cursor:pointer;background:transparent}
+@media(max-width:767px) {.d2-car-import-panel{padding:11px}.d2-car-import-panel .d2-resume{padding:11px}}

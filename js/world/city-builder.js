@@ -12,6 +12,9 @@
 
                 this.buildingBoxes = [];
                 this.destructibleProps = [];
+                this.debrisPieces=[];
+                this.debrisGeometry=null;
+                this.debrisMaterialCache=null;
                 this.benches = [];
                 this.bridgeRaised = false;
                 this.bridgeAngle = 0.14;
@@ -100,6 +103,9 @@
                 this.lodStats=null;
                 this.lodSeconds=0;
                 this.destructibleProps = [];
+                this.debrisPieces=[];
+                this.debrisGeometry=null;
+                this.debrisMaterialCache=null;
                 this.benches = [];
                 this.interiors=[]; this.interiorById={};
                 this.trainStation=null;
@@ -248,6 +254,8 @@
 
                         this.spawnDestructibleProp(blockX - 23, blockZ - 23, 'cone');
                         this.spawnDestructibleProp(blockX + 23, blockZ - 23, 'trash');
+                        if((Math.abs(bx+bz)/80)%3===0)
+                            this.spawnDestructibleProp(blockX + 23, blockZ + 23,'crate');
                     });
                     yield 'Quarteirões e edifícios '+(rowIndex+1)+'/'+coords.length;
                 }
@@ -1020,7 +1028,13 @@
                         new THREE.MeshLambertMaterial({ color: 0xf97316 })
                     );
                     mesh.position.set(x, 0.6, z);
-                } else {
+                } else if(type==='crate'){
+                    mesh=new THREE.Mesh(
+                        new THREE.BoxGeometry(1.45,1.05,1.45),
+                        new THREE.MeshLambertMaterial({color:0x9a6538})
+                    );
+                    mesh.position.set(x,.53,z);
+                }else{
                     mesh = new THREE.Mesh(
                         new THREE.CylinderGeometry(0.5, 0.45, 1.2, 8),
                         new THREE.MeshLambertMaterial({ color: 0x64748b })
@@ -1029,8 +1043,38 @@
                 }
                 this.cityGroup.add(mesh);
                 this.destructibleProps.push({
-                    mesh, x, z, vx: 0, vy: 0, vz: 0, hit: false
+                    mesh, type, x, z, vx:0, vy:0, vz:0, hit:false
                 });
+            }
+
+            shatterProp(prop,impactSpeed){
+                if(!prop || prop.shattered)return false;
+                prop.shattered=true;
+                prop.mesh.visible=false;
+                const count=prop.type==='crate'?6:4;
+                const color=prop.type==='crate'?0xa36f42:
+                    prop.type==='cone'?0xf97316:0x64748b;
+                if(!this.debrisGeometry)
+                    this.debrisGeometry=new THREE.BoxGeometry(.25,.25,.25);
+                if(!this.debrisMaterialCache)
+                    this.debrisMaterialCache=new Map();
+                if(!this.debrisMaterialCache.has(color))
+                    this.debrisMaterialCache.set(color,
+                        new THREE.MeshLambertMaterial({color}));
+                const material=this.debrisMaterialCache.get(color);
+                for(let i=0;i<count;i++){
+                    const part=new THREE.Mesh(this.debrisGeometry,material);
+                    part.position.set(prop.x,.7,prop.z);
+                    const angle=Math.PI*2*i/count;
+                    const boost=1+Math.min(2,impactSpeed/22);
+                    this.cityGroup.add(part);
+                    this.debrisPieces.push({
+                        mesh:part,vx:Math.cos(angle)*boost*2,
+                        vy:3+i*.45,vz:Math.sin(angle)*boost*2,
+                        life:2.5
+                    });
+                }
+                return true;
             }
 
             toggleBridge() {
@@ -1060,18 +1104,37 @@
                     if (!p.hit) {
                         for (let v = 0; v < vehicles.length; v++) {
                             const car = vehicles[v];
-                            const dx = car.x - p.x;
-                            const dz = car.z - p.z;
-                            if (dx * dx + dz * dz < 4.2 && Math.abs(car.speed) > 3) {
-                                p.hit = true;
-                                p.vx = Math.sin(car.heading) * Math.abs(car.speed) * 1.1 + (Math.random() - 0.5) * 6;
-                                p.vz = Math.cos(car.heading) * Math.abs(car.speed) * 1.1 + (Math.random() - 0.5) * 6;
-                                p.vy = 6 + Math.random() * 5;
-                                if (onPropHitCallback && v === 0) onPropHitCallback();
+                            // Colisão por segmento: carros rápidos não pulam
+                            // por cima do objeto entre dois frames de física.
+                            const ax=Number.isFinite(car.prevX)?car.prevX:car.x;
+                            const az=Number.isFinite(car.prevZ)?car.prevZ:car.z;
+                            const vx=car.x-ax,vz=car.z-az;
+                            const len2=vx*vx+vz*vz;
+                            const t=len2>0?Math.max(0,Math.min(1,
+                                ((p.x-ax)*vx+(p.z-az)*vz)/len2)):1;
+                            const dx=(ax+vx*t)-p.x;
+                            const dz=(az+vz*t)-p.z;
+                            const impact=Math.abs(car.speed);
+                            if(dx*dx+dz*dz<4.2 && impact>3){
+                                p.hit=true;
+                                p.vx=Math.sin(car.heading)*impact*1.1+
+                                    (Math.random()-.5)*6;
+                                p.vz=Math.cos(car.heading)*impact*1.1+
+                                    (Math.random()-.5)*6;
+                                p.vy=6+Math.random()*5;
+                                if(impact>14 || p.type==='crate')
+                                    this.shatterProp(p,impact);
+                                if(p.type==='crate'){
+                                    car.speed*=.92;
+                                    car.damage=Math.min(100,car.damage+
+                                        Math.min(2,impact*.045));
+                                }
+                                if(onPropHitCallback && v===0)
+                                    onPropHitCallback();
                                 break;
                             }
                         }
-                    } else {
+                    } else if(!p.shattered){
                         p.vy -= 18 * dt;
                         p.mesh.position.x += p.vx * dt;
                         p.mesh.position.y += p.vy * dt;
@@ -1085,6 +1148,26 @@
                             p.vx *= 0.8;
                             p.vz *= 0.8;
                         }
+                    }
+                }
+                for(let i=this.debrisPieces.length-1;i>=0;i--){
+                    const d=this.debrisPieces[i];
+                    d.life-=dt;
+                    if(d.life<=0){
+                        this.cityGroup.remove(d.mesh);
+                        this.debrisPieces.splice(i,1);
+                        continue;
+                    }
+                    d.vy-=18*dt;
+                    d.mesh.position.x+=d.vx*dt;
+                    d.mesh.position.y=Math.max(.14,
+                        d.mesh.position.y+d.vy*dt);
+                    d.mesh.position.z+=d.vz*dt;
+                    d.mesh.rotation.x+=dt*8;
+                    d.mesh.rotation.y+=dt*6;
+                    if(d.mesh.position.y<=.15){
+                        d.vy=Math.abs(d.vy)*.22;
+                        d.vx*=.85;d.vz*=.85;
                     }
                 }
             }

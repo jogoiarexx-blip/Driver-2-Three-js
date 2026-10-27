@@ -58,6 +58,7 @@
 
             buildCarMesh() {
                 this._cc0ModelApplied = false;
+                this._userCustomModel = false;
                 this.hoodPivot = null;
                 this.trunkPivot = null;
                 this.sirenRed = null;
@@ -292,8 +293,12 @@
 
             updatePhysics(dt, input, cityBuilder, effects, audio, isPlayer = false) {
                 const forwardThrottle = input.up ? 1 : (input.down ? -1 : 0);
-                // Heading positivo aponta para +X: esquerda deve reduzir heading.
-                const steerInput = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+                // Correção A/D solicitada: o carro do jogador segue a
+                // percepção de direção da câmera. A IA mantém seu sinal
+                // original para não inverter as rotas dos veículos NPC.
+                const steerInput = isPlayer ?
+                    (input.left ? 1 : 0) - (input.right ? 1 : 0) :
+                    (input.right ? 1 : 0) - (input.left ? 1 : 0);
                 const handbrake = !!input.handbrake;
                 const burnoutKey = !!input.sprint; // Botão dedicado de Burnout (SHIFT / C)
 
@@ -334,6 +339,8 @@
                 const vx = Math.sin(this.heading) * this.speed + Math.cos(this.heading) * this.lateralVelocity;
                 const vz = Math.cos(this.heading) * this.speed - Math.sin(this.heading) * this.lateralVelocity;
 
+                this.prevX=this.x;
+                this.prevZ=this.z;
                 const nextX = this.x + vx * dt;
                 const nextZ = this.z + vz * dt;
 
@@ -391,18 +398,29 @@
                     this.lateralVelocity *= 0.42;
                 }
 
-                // 6. Marcas de Pneu no Asfalto e Fumaça de Burnout/Drift
-                if (this.isDrifting && this.y < 0.3) {
+                // 6. Curvas fechadas em alta velocidade cantam pneu,
+                // deixam marcas e soltam fumaça mesmo sem SHIFT/Espaço.
+                const hardCorner = Math.abs(steerInput) > .45 &&
+                    Math.abs(this.speed) > 22;
+                const shouldSmoke = (this.isDrifting || hardCorner) &&
+                    this.y < 0.3;
+                if(shouldSmoke) {
+                    this.skidFxClock=(this.skidFxClock||0)+dt;
+                    const markNow=this.skidFxClock>=.075;
+                    if(markNow)this.skidFxClock=0;
                     const rearLeftX = this.x - Math.sin(this.heading) * 1.5 - Math.cos(this.heading) * 1.05;
                     const rearLeftZ = this.z - Math.cos(this.heading) * 1.5 + Math.sin(this.heading) * 1.05;
                     const rearRightX = this.x - Math.sin(this.heading) * 1.5 + Math.cos(this.heading) * 1.05;
                     const rearRightZ = this.z - Math.cos(this.heading) * 1.5 - Math.sin(this.heading) * 1.05;
 
-                    effects.addSkidMark(rearLeftX, rearLeftZ, this.heading);
-                    effects.addSkidMark(rearRightX, rearRightZ, this.heading);
-                    if (Math.random() < 0.75) {
-                        effects.spawnTireSmoke(rearLeftX, this.y, rearLeftZ, false);
-                        effects.spawnTireSmoke(rearRightX, this.y, rearRightZ, false);
+                    if(markNow){
+                        effects.addSkidMark(rearLeftX,rearLeftZ,this.heading);
+                        effects.addSkidMark(rearRightX,rearRightZ,this.heading);
+                        // Até 18 partículas/segundo, independente de FPS.
+                        if(Math.random()<(hardCorner?.72:.54)){
+                            effects.spawnTireSmoke(rearLeftX,this.y,rearLeftZ,false);
+                            effects.spawnTireSmoke(rearRightX,this.y,rearRightZ,false);
+                        }
                     }
                 }
 
@@ -443,10 +461,13 @@
 
             setPaintColor(hex) {
                 this.color=hex;
-                if(this.bodyPaintMaterial &&
+                if(this._userCustomModel){
+                    DriverUserCarPaint.setColor(this.chassisTilt,hex);
+                } else if(this.bodyPaintMaterial &&
                     this.bodyPaintMaterial.color &&
-                    !this._cc0ModelApplied)
+                    !this._cc0ModelApplied){
                     this.bodyPaintMaterial.color.setHex(hex);
+                }
             }
 
             updateTransform() {

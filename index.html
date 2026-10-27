@@ -52,6 +52,16 @@
                     <button data-city="rio" class="d2-city" aria-pressed="false" type="button">RIO DE JANEIRO <span>BRASIL</span></button>
                 </div>
                 <p id="d2-city-hint">Take a Ride. A campanha começa em Chicago.</p>
+                <div class="d2-car-import-panel">
+                    <strong>CARRO DRIVER 2 • GLB</strong>
+                    <button type="button" data-import-driver-car class="d2-resume">
+                        IMPORTAR MEU CARRO GLB
+                    </button>
+                    <label>Cor da carroceria
+                        <input type="color" data-driver-paint value="#d53934">
+                    </label>
+                    <small id="d2-car-status">Importe o GLB uma vez. O navegador tenta mantê-lo no armazenamento local.</small>
+                </div>
                 <div id="d2-options" class="d2-options hidden">
                     <label><input id="d2-opt-models" type="checkbox" checked> Modelos 3D gratuitos (CC0)</label>
                     <label><input id="d2-opt-scanlines" type="checkbox" checked> Efeito de linhas PS1</label>
@@ -80,6 +90,8 @@
         </div>
     </section>
 
+    <input id="driver-car-file" type="file" accept=".glb,model/gltf-binary"
+        class="hidden" aria-label="Importar modelo GLB do carro">
     <!-- CANVAS 3D THREE.JS -->
     <canvas id="game-canvas"></canvas>
 
@@ -243,6 +255,11 @@
                     <button id="btn-audio" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold px-2.5 py-2 rounded-lg border border-slate-600 shadow transition" title="Ativar/Desativar Som">
                         🔊
                     </button>
+                    <button type="button" data-import-driver-car class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3 py-2 rounded border border-slate-600" title="Importar carro_driver2_otimizado.glb">🚗 GLB</button>
+                    <label class="bg-slate-800 rounded border border-slate-600 p-1.5" title="Cor do carro de Tanner">
+                        <input type="color" data-driver-paint value="#d53934"
+                            class="w-7 h-6 cursor-pointer" aria-label="Pintura do carro de Tanner">
+                    </label>
                     <button id="btn-free-assets" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold px-2.5 py-2 rounded-lg border border-slate-600 shadow transition" title="Modelos gratuitos CC0 (M)">🚘 3D CC0</button>
 <button id="btn-headlights" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold px-2.5 py-2 rounded-lg border border-slate-600 shadow transition" title="Faróis (L)">💡 OFF</button>
 <button id="btn-camera" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold px-2.5 py-2 rounded-lg border border-slate-600 shadow transition" title="Trocar Câmera (V)">
@@ -813,6 +830,7 @@ git push -u origin main</pre>
     <script src="./js/render/vehicle-visuals.js"></script>
     <script src="./js/physics/vehicle-collisions.js"></script>
     <script src="./js/vehicles/driver-vehicle.js"></script>
+    <script src="./js/assets/driver-user-car-paint.js"></script>
     <script src="./js/assets/free-vehicle-library.js"></script>
     <script src="./js/world/urban-districts.js"></script>
     <script src="./js/world/district-lod.js"></script>
