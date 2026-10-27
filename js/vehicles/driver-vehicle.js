@@ -43,6 +43,10 @@
                 this.trunkPivot = null;
                 this.wheels = [];
                 this.wheelSpin = 0;
+                this.motionClock = 0;
+                this._suspensionBaseY = 0;
+                this.headlightsOn = false;
+                this.brakeLightsOn = false;
                 this._cc0ModelApplied = false;
                 this._userCustomModel = false;
                 this.buildCarMesh();
@@ -58,6 +62,10 @@
                 this.sirenBlue = null;
                 this.targetMarker = null;
                 this.headlightBeams = null;
+                this.lightsGroup = null;
+                this.sirenAssembly = null;
+                this.headlightMaterial = null;
+                this.tailMaterial = null;
                 while (this.chassisTilt.children.length > 0) {
                     const old = this.chassisTilt.children[0];
                     GPUResourceUtils.disposeSubtree(old);
@@ -151,8 +159,11 @@
                 this.chassisTilt.add(frontBumper, rearBumper);
 
                 // Faróis dianteiros e lanternas traseiras
-                const headlightMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
-                const taillightMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+                const headlightMat = new THREE.MeshBasicMaterial({ color: 0x605735 });
+                const taillightMat = new THREE.MeshBasicMaterial({ color: 0x6b171d });
+                this.headlightMaterial = headlightMat;
+                this.tailMaterial = taillightMat;
+                this.lightsGroup = new THREE.Group();
                 const hlLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.1), headlightMat);
                 hlLeft.position.set(-0.75, 0.78, 2.55);
                 const hlRight = hlLeft.clone();
@@ -170,13 +181,15 @@
                 });
                 this.headlightBeams = new THREE.Mesh(beamGeo, beamMat);
                 this.headlightBeams.position.set(0, 0.45, 7.2);
-                this.chassisTilt.add(this.headlightBeams);
+                this.headlightBeams.visible = this.headlightsOn;
+                this.lightsGroup.add(this.headlightBeams);
 
                 const tlLeft = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.2, 0.1), taillightMat);
                 tlLeft.position.set(-0.75, 0.78, -2.55);
                 const tlRight = tlLeft.clone();
                 tlRight.position.x = 0.75;
-                this.chassisTilt.add(hlLeft, hlRight, tlLeft, tlRight);
+                this.lightsGroup.add(hlLeft, hlRight, tlLeft, tlRight);
+                this.chassisTilt.add(this.lightsGroup);
 
                 // Giroflex Policial
                 if (this.isPolice) {
@@ -186,7 +199,9 @@
                     this.sirenRed.position.set(-0.38, 1.78, -0.1);
                     this.sirenBlue = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.18, 0.28), new THREE.MeshBasicMaterial({ color: 0x2563eb }));
                     this.sirenBlue.position.set(0.38, 1.78, -0.1);
-                    this.chassisTilt.add(barBase, this.sirenRed, this.sirenBlue);
+                    this.sirenAssembly = new THREE.Group();
+                    this.sirenAssembly.add(barBase, this.sirenRed, this.sirenBlue);
+                    this.chassisTilt.add(this.sirenAssembly);
                 }
 
                 // Seta indicadora acima do carro-alvo em missões
@@ -219,7 +234,7 @@
             }
 
 
-            applyCC0Model(modelScene) {
+            applyCC0Model(modelScene, shared = true) {
                 if (!modelScene || this._userCustomModel) return;
                 const box = new THREE.Box3().setFromObject(modelScene);
                 const size = box.getSize(new THREE.Vector3());
@@ -231,7 +246,7 @@
                 const length = this.bodyStyle === 'truck' ? 6.6 : 5.15;
                 const height = this.bodyStyle === 'truck' ? 3.3 : 2.05;
                 const scale = Math.min(width / size.x, length / size.z, height / size.y);
-                const preserved = [this.sirenRed, this.sirenBlue, this.targetMarker, this.headlightBeams];
+                const preserved = [this.sirenAssembly, this.targetMarker, this.lightsGroup];
                 this.chassisTilt.children.slice().forEach(child => {
                     if (!preserved.includes(child)) {
                         GPUResourceUtils.disposeSubtree(child);
@@ -254,13 +269,14 @@
                     if (obj.isMesh) {
                         obj.frustumCulled = true;
                         obj.castShadow = false;
-                        obj.userData.cc0SharedAsset = true;
+                        obj.userData.cc0SharedAsset = shared;
                     }
                 });
                 this.chassisTilt.add(modelScene);
                 this.hoodPivot = null;
                 this.trunkPivot = null;
-                this._cc0ModelApplied = true;
+                this._cc0ModelApplied = shared;
+                VehicleVisuals.setHeadlights(this, this.headlightsOn);
             }
 
             updatePhysics(dt, input, cityBuilder, effects, audio, isPlayer = false) {
@@ -398,6 +414,7 @@
                     this.targetMarker.position.y = 3.2 + Math.sin(Date.now() * 0.008) * 0.35;
                 }
 
+                VehicleVisuals.update(this, dt, input);
                 this.updateTransform();
             }
 

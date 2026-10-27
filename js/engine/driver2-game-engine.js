@@ -185,11 +185,17 @@
                 });
 
                 this.tanner.setVisible(false);
+                const lowLight = this.weatherMode === 'night' || this.weatherMode === 'rain';
+                this.vehicles.forEach(v => VehicleVisuals.setHeadlights(v, lowLight));
                 if (this.freeVehicleAssets) this.freeVehicleAssets.decorateFleet();
             }
 
             setWeather(mode) {
                 this.weatherMode = mode;
+                if (this.vehicles) {
+                    const lowLight = mode === 'night' || mode === 'rain';
+                    this.vehicles.forEach(v => VehicleVisuals.setHeadlights(v, lowLight));
+                }
                 const badge = document.getElementById('weather-badge');
                 if (mode === 'day') {
                     this.scene.background.setHex(0x38bdf8);
@@ -468,6 +474,13 @@
                 }
                 DriverCheckpointRoute.refresh(this.missionType, this.missionMarkers);
                 if (this.freeVehicleAssets) this.freeVehicleAssets.decorateFleet();
+            }
+
+            togglePlayerHeadlights() {
+                if (this.mode !== 'driving' || !this.playerCar) return;
+                VehicleVisuals.setHeadlights(this.playerCar, !this.playerCar.headlightsOn);
+                const button = document.getElementById('btn-headlights');
+                if (button) button.textContent = this.playerCar.headlightsOn ? '💡 ON' : '💡 OFF';
             }
 
             triggerHornOrSiren() {
@@ -1243,25 +1256,13 @@
             }
 
             applyCustomModelToPlayerCar(modelScene, name) {
-                if (!this.playerCar) return;
-                while (this.playerCar.chassisTilt.children.length > 0) {
-                    const old = this.playerCar.chassisTilt.children[0];
-                    GPUResourceUtils.disposeSubtree(old);
-                    this.playerCar.chassisTilt.remove(old);
-                }
-                // Normaliza escala automática do modelo GLTF para caber no chassi
-                const box = new THREE.Box3().setFromObject(modelScene);
-                const size = new THREE.Vector3();
-                box.getSize(size);
-                const maxDim = Math.max(size.x, size.y, size.z, 0.01);
-                const scale = 4.8 / maxDim;
-                modelScene.scale.set(scale, scale, scale);
-                modelScene.position.y = 0.25;
-
-                this.playerCar.chassisTilt.add(modelScene);
+                if (!this.playerCar || !modelScene) return;
+                // Remove a malha antiga e suas rodas, mas preserva faróis,
+                // lanternas de freio e giroflex sobre o GLB importado.
+                this.playerCar.applyCC0Model(modelScene, false);
                 this.playerCar._userCustomModel = true;
                 this.playerCar._cc0ModelApplied = false;
-                this.playerCar.name = name.slice(0, 14);
+                this.playerCar.name = name.slice(0, 25);
             }
 
             restoreDefaultCarMesh() {
@@ -1296,9 +1297,7 @@
                     if (code === 'KeyQ') this.lookBackActive = true;
                     if (code === 'KeyN') this.cycleWeather();
                     if (code === 'KeyM' && !e.repeat) this.freeVehicleAssets.toggle();
-                    if (code === 'KeyL' && this.playerCar && this.playerCar.headlightBeams) {
-                        this.playerCar.headlightBeams.visible = !this.playerCar.headlightBeams.visible;
-                    }
+                    if (code === 'KeyL' && !e.repeat) this.togglePlayerHeadlights();
                     if (code === 'KeyH') this.triggerHornOrSiren();
                     if (code === 'KeyR') this.toggleReplayDirector();
                     if (code === 'KeyB') this.city.toggleBridge();
@@ -1348,6 +1347,10 @@
                 document.getElementById('btn-free-assets').addEventListener('click', () => {
                     this.freeVehicleAssets.toggle();
                 });
+                const headlightButton = document.getElementById('btn-headlights');
+                if (headlightButton) {
+                    headlightButton.addEventListener('click', () => this.togglePlayerHeadlights());
+                }
                 document.getElementById('btn-camera').addEventListener('click', () => {
                     if (this.inReplayMode) this.cycleDirectorCamera();
                     else this.cameraMode = (this.cameraMode + 1) % 3;
