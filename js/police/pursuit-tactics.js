@@ -26,6 +26,36 @@ class PolicePursuitTactics {
         };
     }
 
+    // Manobras opcionais em ruas abertas: flanquear ou fechar a passagem.
+    // Nunca executa o corte sem visão direta e velocidade compatível.
+    static maneuverFor(cop, seenTarget, felony, city, visible = false) {
+        if (!cop || !seenTarget || !visible || felony < 62) return null;
+        const role = Number.isInteger(cop.pursuitRole) ? cop.pursuitRole % 4 : 0;
+        if (role === 0) return null;
+        const distance = Math.hypot(seenTarget.x - cop.x, seenTarget.z - cop.z);
+        const targetSpeed = Math.max(0,Number(seenTarget.speed)||0);
+        if (distance < 9 || distance > 44 || targetSpeed < 9 ||
+            Math.abs(cop.speed || 0) < 5) return null;
+        const heading = Number(seenTarget.heading)||0;
+        const fx=Math.sin(heading), fz=Math.cos(heading);
+        const side = role===1 ? 4.2 : role===2 ? -4.2 : 0;
+        const lead = role===3 ?
+            Math.min(24,Math.max(12,targetSpeed*0.7)) :
+            Math.min(11,Math.max(5,targetSpeed*0.31));
+        const point={
+            x:seenTarget.x+fx*lead+fz*side,
+            z:seenTarget.z+fz*lead-fx*side
+        };
+        if (!this.targetIsSafe(city,point)) return null;
+        return {
+            x:point.x,z:point.z,
+            mode:role===3?'intercept':'flank',
+            speedLimit:role===3 && distance < 22 ?
+                Math.min(21,targetSpeed*0.85) :
+                Math.min(37,Math.max(18,targetSpeed*1.06))
+        };
+    }
+
     static targetIsSafe(city, point) {
         return !!point && Math.abs(point.x)<238 && Math.abs(point.z)<238 &&
             (!city || !city.isPointBlocked(point.x,point.z,1.7));

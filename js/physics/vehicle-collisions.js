@@ -7,6 +7,24 @@ class DriverVehicleCollisions {
     constructor() { this.reset(); }
     reset() { this.pairs = new WeakMap(); }
 
+    // Frente/traseira/laterais no referencial local do carro (+Z = frente).
+    static impactZone(car, directionX, directionZ) {
+        const forward=directionX*Math.sin(car.heading)+directionZ*Math.cos(car.heading);
+        const right=directionX*Math.cos(car.heading)-directionZ*Math.sin(car.heading);
+        if (forward>=Math.abs(right)*0.85) return 'front';
+        if (-forward>=Math.abs(right)*0.85) return 'rear';
+        return right>=0 ? 'right' : 'left';
+    }
+
+    static recordZone(car, nx, nz, speed) {
+        const zone=this.impactZone(car,nx,nz);
+        if (!car.damageZones) car.damageZones={front:0,rear:0,left:0,right:0};
+        const increment=Math.max(0,Math.min(42,Math.abs(speed)*1.15));
+        car.damageZones[zone]=Math.min(100,(car.damageZones[zone]||0)+increment);
+        car.lastImpactZone=zone;
+        return zone;
+    }
+
     collisionRadius(a, b) {
         const heavy = v => v.bodyStyle === 'bus' || v.bodyStyle === 'truck';
         return heavy(a) || heavy(b) ? 4.5 : 3.6;
@@ -73,12 +91,15 @@ class DriverVehicleCollisions {
             const strength = Math.min(18, closing * 0.27);
             a.damage = Math.min(100, a.damage + strength * Math.min(1.5, Math.sqrt(massB / massA)));
             b.damage = Math.min(100, b.damage + strength * Math.min(1.5, Math.sqrt(massA / massB)));
+            const zoneA=DriverVehicleCollisions.recordZone(a,nx,nz,closing);
+            const zoneB=DriverVehicleCollisions.recordZone(b,-nx,-nz,closing);
             if (typeof onPlayerImpact === 'function' && (a === player || b === player)) {
                 const other = a === player ? b : a;
                 onPlayerImpact({
                     closingSpeed: closing,
                     other,
-                    playerApproach: a === player ? approachA : approachB
+                    playerApproach: a === player ? approachA : approachB,
+                    impactZone: a === player ? zoneA : zoneB
                 });
             }
         }

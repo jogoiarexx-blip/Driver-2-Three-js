@@ -33,6 +33,8 @@
 
                 // Estado de Dano, Deformação e Calotas (Driver 2)
                 this.damage = config.initialDamage || 0;
+                this.damageZones = { front: 0, rear: 0, left: 0, right: 0 };
+                this.lastImpactZone = null;
                 this.hubcaps = 4;
                 this.isDrifting = false;
                 this.isBurnout = false;
@@ -365,6 +367,15 @@
                     if (impactSpeed > 8 && impactNow - (this.lastWallImpactAt || 0) > 450) {
                         this.lastWallImpactAt = impactNow;
                         this.damage = Math.min(100, this.damage + impactSpeed * 0.30 * armorFactor);
+                        // Localiza o choque na lataria sem deslocar os colliders.
+                        const collisionX = freeX ? 0 : vx;
+                        const collisionZ = freeZ ? 0 : vz;
+                        const contactLength = Math.hypot(collisionX,collisionZ);
+                        if (contactLength>0.01) {
+                            DriverVehicleCollisions.recordZone(this,
+                                collisionX/contactLength,collisionZ/contactLength,
+                                impactSpeed*armorFactor);
+                        }
                         if (audio && isPlayer) audio.playCrash(Math.min(1, impactSpeed / 35));
                         if (this.hubcaps > 0 && impactSpeed > 24) {
                             this.hubcaps--;

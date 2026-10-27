@@ -199,13 +199,26 @@ class DriverTrafficAI {
         let target = route.target;
         const distanceToPlayer = playerPos ?
             Math.hypot(car.x - playerPos.x, car.z - playerPos.z) : Infinity;
+        let maneuver=null;
         if (wanted && pursuitTarget) {
+            // Somente policiais que enxergam Tanner tentam fechar a trajetória.
+            // Caso haja edifício ou obstáculo no trajeto, permanecem nas ruas.
+            const seen = !!this.policeMemory.get(car)?.visible;
+            const candidate = PolicePursuitTactics.maneuverFor(
+                car,pursuitTarget,felony,this.city,seen
+            );
+            if (candidate && this.unobstructed(car,candidate)) {
+                maneuver=candidate;
+                target=candidate;
+            }
             const formation = PolicePursuitTactics.targetFor(car,pursuitTarget,felony);
-            if (PolicePursuitTactics.targetIsSafe(this.city,formation) &&
-                this.unobstructed(car,formation)) {
-                target = formation;
-            } else if (this.unobstructed(car,pursuitTarget)) {
-                target = pursuitTarget;
+            if (!maneuver) {
+                if (PolicePursuitTactics.targetIsSafe(this.city,formation) &&
+                    this.unobstructed(car,formation)) {
+                    target = formation;
+                } else if (this.unobstructed(car,pursuitTarget)) {
+                    target = pursuitTarget;
+                }
             }
         }
 
@@ -222,6 +235,8 @@ class DriverTrafficAI {
 
         let maxSpeed = wanted ? 40 : car.isTarget ? 34 :
             (car.bodyStyle === 'bus' || car.bodyStyle === 'truck' ? 17 : 23);
+        if (maneuver) maxSpeed=Math.min(maxSpeed,maneuver.speedLimit);
+        car.policeManeuver = maneuver ? maneuver.mode : null;
         // A velocidade recomendada cai progressivamente quando a curva
         // aproxima de 90 graus; viaturas não fazem curvas a 140 km/h.
         if (turn > 0.24) {
