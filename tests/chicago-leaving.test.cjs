@@ -112,7 +112,9 @@ test('reiniciar zera estado da missão',()=>{
 test('Carros da máfia não exigem delito para perseguir Tanner',()=>{
  const all=['js/police/pursuit-tactics.js','js/gameplay/tailing-drop.js',
   'js/traffic/traffic-ai.js'].map(read).join('\n');
- const AI=vm.runInNewContext(all+'\nDriverTrafficAI',{Math});
+ const AI=vm.runInNewContext(all+'\nDriverTrafficAI',{
+  Math,THREE:{MathUtils:{clamp:(v,a,b)=>Math.max(a,Math.min(b,v))}}
+ });
  const city={roadExtent:320,isPointBlocked:()=>false,isTrafficGreen:()=>true};
  const ai=new AI(city);
  const car={x:-240,z:224,speed:0,heading:Math.PI,isMafia:true,isPolice:false,
