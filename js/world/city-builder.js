@@ -220,7 +220,8 @@
                 this.bridgeNorthLeaf.add(deckN, railN1, railN2);
 
                 this.cityGroup.add(this.bridgeSouthLeaf, this.bridgeNorthLeaf);
-                DriverSpecialStructures.bridge(this);
+                if(typeof DriverSpecialStructures!=='undefined')
+                    DriverSpecialStructures.bridge(this);
                 yield 'Canal, pontes e vias de acesso';
 
                 // 4. Monumentos Exclusivos por Cidade (Rio de Janeiro: Morro do Corcovado + Cristo Redentor + Praia)
@@ -312,7 +313,8 @@
                     this.buildCaineCompoundDetails();
                     // Ruas, rio, parques e viaduto depois dos bairros, sem
                     // novos colliders e com LOD preservado.
-                    DriverChicagoOverhaul.buildCity(this);
+                    if(typeof DriverChicagoOverhaul!=='undefined')
+                        DriverChicagoOverhaul.buildCity(this);
                 }
                 // Diagnóstico de conectividade, executado uma única vez
                 // após o setor final (não a cada frame).
@@ -408,7 +410,8 @@
                     group.add(mesh);
                 }
                 UrbanDistricts.decorate(this,chunk.buildings,group);
-                if(this.preset.id==='chicago')
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoOverhaul!=='undefined')
                     DriverChicagoOverhaul.detailDistrict(this,
                         chunk.buildings,group);
                 group.visible=false;
@@ -656,7 +659,8 @@
 
                 this.secretSwitchPos = { x: cx - 18, z: cz - 17 };
                 this.secretGarageCenter = { x: cx, z: cz };
-                DriverSpecialStructures.secretGarage(this,cx,cz);
+                if(typeof DriverSpecialStructures!=='undefined')
+                    DriverSpecialStructures.secretGarage(this,cx,cz);
             }
 
             unlockSecretGate() {
@@ -906,7 +910,8 @@
                     id:'home',name:'Casa de Tanner',kind:'home',
                     door:{x:cx,z:cz+19},inside:{x:1000,z:0}
                 });
-                DriverSpecialStructures.safeHouse(this,cx,cz);
+                if(typeof DriverSpecialStructures!=='undefined')
+                    DriverSpecialStructures.safeHouse(this,cx,cz);
             }
 
 
@@ -985,7 +990,8 @@
                     }
                 }
                 this.buildRegionalLandmarkDetails(cx,cz,west);
-                if(id==='chicago')
+                if(id==='chicago' &&
+                    typeof DriverChicagoOverhaul!=='undefined')
                     DriverChicagoOverhaul.detailLandmark(this,cx,cz);
             }
 
@@ -1140,7 +1146,8 @@
                     ramp:{minX:-17,maxX:-11,startZ:-217,endZ:-246},
                     platform:{...p},groundEntrance:{x:-14,z:-216}
                 };
-                DriverSpecialStructures.station(this,cx,cz);
+                if(typeof DriverSpecialStructures!=='undefined')
+                    DriverSpecialStructures.station(this,cx,cz);
             }
 
             onTrainPlatform(pos) {
@@ -1188,7 +1195,8 @@
                 this.caineBridgeGate=add(17,2.4,1.5,0,1.35,51,
                     new THREE.MeshLambertMaterial({color:0xdc2626}));
                 this.caineBridgeGate.visible=false;
-                DriverSpecialStructures.caineCompound(this);
+                if(typeof DriverSpecialStructures!=='undefined')
+                    DriverSpecialStructures.caineCompound(this);
             }
 
             buildEnterableWarehouse(cx,cz) {
@@ -1234,7 +1242,8 @@
                     id:'warehouse',name:'Depósito abandonado',kind:'warehouse',
                     door:{x:cx,z:cz+21},inside:{x:1050,z:0}
                 });
-                DriverSpecialStructures.warehouse(this,cx,cz);
+                if(typeof DriverSpecialStructures!=='undefined')
+                    DriverSpecialStructures.warehouse(this,cx,cz);
             }
 
             buildEnterableStore(cx,cz,id) {
@@ -1275,7 +1284,8 @@
                     kind:id,door:{x:cx,z:cz+19.5},
                     inside:{x:diner?1120:1180,z:0}
                 });
-                DriverSpecialStructures.store(this,cx,cz,id);
+                if(typeof DriverSpecialStructures!=='undefined')
+                    DriverSpecialStructures.store(this,cx,cz,id);
             }
 
             buildInteriorRooms() {
@@ -1320,6 +1330,7 @@
                             make(x+dx,1,z+3,3.3,2,3.3,0x78350f);
                     }
                     place.exit={x,z:z-8.8};
+                    if(typeof DriverSpecialStructures!=='undefined')
                     DriverSpecialStructures.interior(this,place);
                 }
             }
@@ -1625,7 +1636,10 @@
                 // asfalto plano de y=0: o carro pode cair e submergir.
                 if(typeof this.isWaterAt==='function' &&
                     this.isWaterAt(x,z))return -4.0;
-                return this.getSidewalkHeightAt(x,z);
+                // Mantém compatibilidade com cenários isolados dos testes
+                // que chamam esta rotina com uma superfície simulada.
+                return typeof this.getSidewalkHeightAt==='function'?
+                    this.getSidewalkHeightAt(x,z):0;
             }
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
