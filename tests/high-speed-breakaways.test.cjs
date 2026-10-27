@@ -37,7 +37,9 @@ test('duas trajetórias paralelas sem aproximação não geram colisão',()=>{
 });
 test('carros que cruzam o mesmo espaço em tempos diferentes não colidem',()=>{
     const a=car({x:5,prevX:-5,z:0,prevZ:0,heading:Math.PI/2});
-    const b=car({x:0,prevX:0,z:8,prevZ:3,heading:Math.PI});
+    // O antigo prevZ=3 causa contato real entre os cantos das novas OBBs.
+    // Separação >=4.4 mantém os corpos afastados em todos os instantes.
+    const b=car({x:0,prevX:0,z:9.4,prevZ:4.4,heading:Math.PI});
     assert.equal(new Collisions().step([a,b],a,street,300),0);
 });
 test('teleporte entre cidades não é confundido com batida',()=>{
