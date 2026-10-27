@@ -116,6 +116,9 @@ class DriverFemalePedestrian {
         this.current=ped;
         this.action.reset().play();
         this.action.paused=true;
+        // Ao recarregar a cidade, não herdar o estado 'andando' anterior:
+        // isso deixava o novo pedestre em pausa indefinidamente.
+        this.lastMoving=false;
         return true;
     }
 
