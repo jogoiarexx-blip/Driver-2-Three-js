@@ -7,6 +7,9 @@ on:
       - 'index.html'
       - 'js/world/**'
       - 'tests/visual-smoke.cjs'
+      - 'tests/chicago-overhaul.test.cjs'
+      - 'js/data/city-presets.js'
+      - 'js/world/chicago-train.js'
       - 'tests/structure-smoke.cjs'
       - 'tests/female-walker-smoke.cjs'
       - 'tests/pedestrian-curb-smoke.cjs'
@@ -29,6 +32,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Certificar Chicago 2.0 e isolamento entre cidades
+        run: node tests/chicago-overhaul.test.cjs
       - name: Instalar Chromium e Playwright
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1
