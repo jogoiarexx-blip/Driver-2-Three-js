@@ -150,7 +150,7 @@
                     { x: -116, z: -84, heading: Math.PI / 2 },
                     { x: 124, z: 84, heading: -Math.PI / 2 }
                 ];
-                copCoords.forEach(c => {
+                copCoords.forEach((c, index) => {
                     const cop = new DriverVehicle(this.scene, {
                         name: preset.copName,
                         color: preset.copColor,
@@ -160,6 +160,7 @@
                         maxSpeed: 56,
                         accel: 33
                     });
+                    cop.pursuitRole = index;
                     this.vehicles.push(cop);
                 });
 

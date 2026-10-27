@@ -82,6 +82,7 @@
 
                 // Faixas centrais instanciadas: baixa contagem de draw calls, sem texturas extras.
                 this.buildRoadMarkings();
+                DriverStreetFurniture.build(this);
                 this.buildTrafficLights();
                 this.decorateStreetsWithCC0();
 

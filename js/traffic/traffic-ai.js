@@ -83,9 +83,13 @@ class DriverTrafficAI {
         }
 
         let selected;
-        if (playerPos && (wanted || car.isTarget)) {
+        const intercept = wanted && playerPos ?
+            PolicePursuitTactics.targetFor(car, playerPos, 90) : playerPos;
+        const routeGoal = wanted && PolicePursuitTactics.targetIsSafe(this.city, intercept) ?
+            intercept : playerPos;
+        if (routeGoal && (wanted || car.isTarget)) {
             const ranked = possible.map(item => {
-                const d = Math.abs(item.lane.x - playerPos.x) + Math.abs(item.lane.z - playerPos.z);
+                const d = Math.abs(item.lane.x - routeGoal.x) + Math.abs(item.lane.z - routeGoal.z);
                 return { item, score: car.isTarget ? -d : d };
             }).sort((a, b) => a.score - b.score);
             selected = ranked[0].item;
@@ -140,12 +144,14 @@ class DriverTrafficAI {
         let target = route.target;
         const distanceToPlayer = playerPos ?
             Math.hypot(car.x - playerPos.x, car.z - playerPos.z) : Infinity;
-        if (wanted && playerPos && this.unobstructed(car, playerPos)) {
-            const lead = Math.min(1.0, distanceToPlayer / 55);
-            target = {
-                x: playerPos.x + Math.sin(playerPos.heading || 0) * (playerPos.speed || 0) * lead,
-                z: playerPos.z + Math.cos(playerPos.heading || 0) * (playerPos.speed || 0) * lead
-            };
+        if (wanted && playerPos) {
+            const formation = PolicePursuitTactics.targetFor(car,playerPos,felony);
+            if (PolicePursuitTactics.targetIsSafe(this.city,formation) &&
+                this.unobstructed(car,formation)) {
+                target = formation;
+            } else if (this.unobstructed(car,playerPos)) {
+                target = playerPos;
+            }
         }
 
         const desiredHeading = Math.atan2(target.x - car.x, target.z - car.z);
