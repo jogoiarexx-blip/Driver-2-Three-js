@@ -94,3 +94,12 @@ Os arquivos JavaScript são scripts clássicos e continuam compatíveis com GitH
 - A simulação física, as missões já existentes, as opções PS1/GLB e o deploy estático foram preservados.
 
 **Validação:** GitHub Actions certifica sintaxe/algoritmos, mas não comprova uma partida completa nem substitui testes visuais em navegador desktop e smartphone.
+
+## Revisão — colisões inteligentes e Missão 8 (outubro/2026)
+
+- `js/physics/vehicle-collisions.js`: separação entre carrocerias ponderada pela massa, com verificação das caixas de colisão dos prédios; dano por par com intervalo de 480 ms e prevenção de travamento quando os centros coincidem.
+- `js/engine/driver2-game-engine.js`: polícia não aumenta automaticamente o delito do jogador ao bater nele; somente aproximação ativa do jogador contabiliza infração ao atingir uma viatura. A colisão preserva o sistema de lataria danificada.
+- `js/gameplay/pursuit-chapter.js`: **Missão 8: Cerco à Meia-Noite**, com três atos (24 segundos de sobrevivência à perseguição, três portões de fuga ordenados e chegada a pé ao esconderijo com delito abaixo de 35%). Uma tomada aérea curta abre a sequência sem interromper os controles.
+- `tests/pursuit-and-collisions.test.cjs`: 15 testes reprodutíveis para impactos, limites de edifícios, justiça nas multas, mudanças de fase, ordens de checkpoints e ligações do HTML.
+
+Execute localmente: `node --test tests/*.test.cjs`. Os testes de lógica não substituem partidas completas no navegador nem validam fidelidade ao Driver 2 original.
