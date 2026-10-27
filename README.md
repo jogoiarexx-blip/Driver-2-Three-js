@@ -660,3 +660,51 @@ módulos de missão. **Ainda exigem teste jogado no navegador** as
 transições visuais da rampa, direção por vários minutos e acesso
 real ao estacionamento com GLB. O abrigo é uma estrutura externa
 dirigível, não um interior completo com portas animadas.
+
+
+## REV Cidades com fachadas regionais / calçadas vivas — 27/10/2026
+
+Nesta revisão foram preservados os quatro cenários, save e campanha,
+complementando `UrbanDistricts` **somente nos LODs próximos**. As
+referências urbanas são interpretações low-poly do Driver 2 original,
+não reprodução 1:1 de quarteirões reais.
+
+- **Chicago**: pilastras metálicas altas e frisos horizontais de prédios
+  downtown, sem alterar a geometria viária nem os marcos Wrigley/Píer.
+- **Havana**: sacadas coloniais e guarda-corpos junto às fachadas,
+  mantendo paleta quente e edifícios baixos.
+- **Las Vegas**: letreiros verticais de neon e marquises baixas na
+  arquitetura da Strip, sem adicionar fontes dinâmicas de luz.
+- **Rio de Janeiro**: brises e sombreamentos nas fachadas urbanas,
+  preservando marcos e vegetação tropical já existentes.
+
+`UrbanDistricts.addRegionalFacades()` emprega **duas novas malhas
+instanciadas por setor próximo** (além das três já existentes). LOD
+distante continua exibindo as silhuetas anteriores e não instancia
+fachadas até a aproximação. As cores variam por cidade.
+
+### Pedestres e otimização
+
+- Novo `js/entities/pedestrian-sidewalk-nav.js` com rotas fechadas
+  ao redor de quarteirões, selecionando locais livres de vias, água e
+  caixas dos prédios. Pedestres deixam de avançar em linha reta
+  ignorando cruzamentos.
+- Animações simples de braços e pernas na caminhada; quando carro
+  rápido se aproxima, agacham/esquivam **na mesma calçada**, sem salto
+  físico para o asfalto. Continuam compatíveis com vozes de esquiva.
+- 28 personagens reutilizados, com materiais/geometrias compartilhados;
+  pedestres além de 235m não são renderizados nem atualizados a cada
+  quadro; até três atores distantes são reaproveitados por ciclo ao
+  dirigir para outro bairro. Não geramos novos NPCs ao dirigir.
+- Bloqueios e policiais existentes conservados. No futuro: faixas de
+  travessia seguras com semáforos, entrada em comércios, pedestres
+  com desvio completo e hierarquias de animação detalhadas.
+
+### Testes e limites
+
+`tests/city-facades-pedestrians.test.cjs` valida quatro estilos,
+instancing por setor, segurança de caminhos, esquiva, curvas, pooling,
+ordem de carregamento e preservação de LOD. Ainda é necessária uma
+sessão em navegador para inspecionar cenários e pedestres em movimento;
+não há medição real de FPS antes/depois ou confirmação de quatro mapas
+fielmente reproduzidos. O conteúdo não modifica rotas de missões.

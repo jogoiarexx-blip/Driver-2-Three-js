@@ -14,6 +14,86 @@ class UrbanDistricts {
             city === 'havana' ? 12 + r * 18 :
             city === 'vegas' ? 22 + r * 42 : 16 + r * 32;
     }
+    // Perfis de fachadas do jogo PS1: Wrigley/Downtown, Habana Vieja,
+    // Strip e fachadas sombreadas da orla. Não altera vias nem colisores.
+    static profile(id){
+        const map={
+            chicago:{style:'steel-piers',color:0x94a3b8,secondary:0x475569,
+                front:[.75,16,.55],accent:[23,.75,1.3]},
+            havana:{style:'colonial-balconies',color:0xe7d4ba,
+                secondary:0x64748b,front:[10,.42,2.15],
+                accent:[10,.9,.18]},
+            vegas:{style:'casino-neon',color:0x38bdf8,
+                secondary:0xf472b6,front:[3,13,.45],
+                accent:[18,.6,2.0]},
+            rio:{style:'coastal-brise',color:0xe2e8f0,
+                secondary:0x0f766e,front:[20,.3,1.4],
+                accent:[19,1.0,.28]}
+        };
+        return map[id]||map.chicago;
+    }
+
+    static addRegionalFacades(builder,buildings,parent) {
+        if(!buildings.length)return;
+        const id=builder.preset.id,profile=this.profile(id);
+        // Só nos setores LOD próximos: 2 draw calls em instancing para
+        // todos os prédios do setor, sem colocar modelos na rua.
+        const make=(dims,color)=>new THREE.InstancedMesh(
+            new THREE.BoxGeometry(...dims),
+            new THREE.MeshLambertMaterial({color:0xffffff}),
+            buildings.length);
+        const front=make(profile.front,profile.color);
+        const accent=make(profile.accent,profile.secondary);
+        const dummy=new THREE.Object3D();
+        for(const [i,b] of buildings.entries()){
+            const phase=this.random(b.x,b.z,14);
+            const hue1=new THREE.Color(profile.color);
+            const hue2=new THREE.Color(profile.secondary);
+            let frontX=b.x+12,frontY=6,frontZ=b.z+19.5;
+            let accentX=b.x,accentY=8,accentZ=b.z+20;
+            if(id==='chicago'){
+                frontX=b.x+(phase>.5?13:-13);
+                frontY=b.height*.47;
+                frontZ=b.z+19.45;
+                accentY=Math.min(b.height-.8,14);
+            }else if(id==='havana'){
+                frontX=b.x+(phase>.5?8:-8);
+                frontY=6;
+                frontZ=b.z+20.25;
+                accentX=frontX;accentY=6.75;accentZ=b.z+21.2;
+            }else if(id==='vegas'){
+                frontX=b.x+(phase>.5?12:-12);
+                frontY=Math.min(b.height*.5,18);
+                frontZ=b.z+19.55;
+                accentY=4.7;accentZ=b.z+21.0;
+            }else{
+                frontX=b.x;
+                frontY=7+(Math.floor(phase*4)*3);
+                frontZ=b.z+19.6;
+                accentY=frontY+2.4;
+                accentZ=b.z+19.5;
+            }
+            dummy.rotation.set(0,0,0);
+            dummy.scale.set(1,id==='chicago'?
+                Math.max(.6,b.height/36):1,1);
+            dummy.position.set(frontX,frontY,frontZ);
+            dummy.updateMatrix();
+            front.setMatrixAt(i,dummy.matrix);
+            dummy.scale.set(1,1,1);
+            dummy.position.set(accentX,accentY,accentZ);
+            dummy.updateMatrix();
+            accent.setMatrixAt(i,dummy.matrix);
+            front.setColorAt(i,hue1);
+            accent.setColorAt(i,hue2);
+        }
+        for(const mesh of [front,accent]){
+            mesh.instanceMatrix.needsUpdate=true;
+            if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+            mesh.frustumCulled=false;
+            mesh.userData.regionalStyle=profile.style;
+            parent.add(mesh);
+        }
+    }
     static decorate(builder, buildings=builder.districtBuildings,
         parent=builder.cityGroup) {
         if (!buildings.length) return;
@@ -59,5 +139,6 @@ class UrbanDistricts {
             mesh.frustumCulled=false;
             parent.add(mesh);
         });
+        this.addRegionalFacades(builder,buildings,parent);
     }
 }

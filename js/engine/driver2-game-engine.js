@@ -76,7 +76,7 @@
                 this.tanner = new TannerController(this.scene);
                 this.pedManager = new PedestrianAndRoadblockManager(this.scene);
                 this.roadblockDirector = new PoliceRoadblockDirector();
-                this.pedManager.spawnCityPedestrians();
+                this.pedManager.spawnCityPedestrians(this.city,{x:0,z:-20});
 
                 this.mode = 'driving';
                 this.cameraMode = 0;
@@ -394,7 +394,7 @@
                 this.spawnAllVehicles();
                 if(this.trainLine)this.trainLine.reset(type==='story_train');
                 this.trainLostSeconds=0;
-                this.pedManager.spawnCityPedestrians();
+                this.pedManager.spawnCityPedestrians(this.city,this.getPlayerPosition());
                 this.roadblockDirector.reset();
                 this.roadblocksSpawned = false;
                 this.tailOutOfRangeTimer = 0;
@@ -2966,7 +2966,7 @@
                         this.effects.spawnImpactSparks(car.x, car.y || 0, car.z,
                             Math.min(0.9,speed/38));
                         this.impactFeedback.trigger(speed * 0.65);
-                    });
+                    },this.getPlayerPosition());
                 this.effects.update(dt);
                 this.effects.updateRain(dt, this.getPlayerPosition());
                 this.updateFelonyAndMissions(dt);

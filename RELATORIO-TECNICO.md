@@ -118,3 +118,33 @@ podem ser guardados no passeio livre e a retirada recusa saída ocupada.
 **Limites:** inspeção real de jogo, interiores de garagem animados,
 geometria viária secundária, pedestres inteligentes, ondas e sombras
 ficam para próximas revisões. Sem alegação de ganho de FPS.
+
+
+---
+
+## REV regionalização urbana e IA de pedestres — 27/10/2026
+
+**Diagnóstico:** `UrbanDistricts.decorate()` adicionava os mesmos
+três tipos de detalhe em todas as cidades e trocava somente cor. Os
+28 pedestres se moviam no eixo Z arbitrariamente, atravessando
+cruzamentos e podendo sair das calçadas ao esquivar-se.
+
+**Mudanças:** `js/world/urban-districts.js` recebeu `profile()` e
+`addRegionalFacades()`, com pares de `InstancedMesh` por bairro
+quando o LOD próximo está ativo. Chicago (pilastras), Havana (sacadas),
+Vegas (neon), Rio (brises). Novo
+`js/entities/pedestrian-sidewalk-nav.js`, ligado a
+`js/entities/pedestrians-roadblocks.js` e
+`js/engine/driver2-game-engine.js`, define caminhos de contorno,
+evita rua/água/prédios, esquiva local e reciclagem de até 3 atores
+fora do foco por período. `index.html` carrega o módulo antes do
+consumidor. 28 atores, sem criar grupos extras no streaming.
+
+**Testes:** `tests/city-facades-pedestrians.test.cjs` e testes de
+regressão da frota, campanhas, colisões, módulos de LOD e bloqueios
+policiais. Validar em GitHub Actions e verificar visualmente no jogo.
+
+**Pendências:** travessias legais nos semáforos, florestas/vegetação
+mais detalhadas, prédios únicos, bairros reais com ruas próprias,
+eventos comerciais e medição WebGL/FPS. A versão não afirma um mapa
+geográfico 1:1 do original.

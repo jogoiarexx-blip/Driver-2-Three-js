@@ -15,52 +15,120 @@
                 this.scene.add(this.group);
             }
 
-            spawnCityPedestrians() {
-                // Libera geometrias e materiais dos pedestres e bloqueios anteriores.
+            spawnCityPedestrians(city=null,focus={x:0,z:-20}) {
+                // Uma única frota de 28 personagens e sem animações
+                // exigindo esqueleto/CPU em personagens distantes.
                 GPUResourceUtils.disposeSubtree(this.group);
-                while (this.group.children.length > 0) {
+                while(this.group.children.length>0)
                     this.group.remove(this.group.children[0]);
-                }
-                this.pedestrians = [];
-                this.roadblocks = [];
-                this.roadblockOfficers = [];
-                this.officerTime = 0;
+                this.pedestrians=[];
+                this.roadblocks=[];
+                this.roadblockOfficers=[];
+                this.officerTime=0;
+                this.city=city;
+                this.pedestrianClock=0;
 
-                const shirtColors = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b, 0xa855f7, 0xec4899, 0xf8fafc];
-                const skinMat = new THREE.MeshLambertMaterial({ color: 0xfdba74 });
-                const pantsMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
-
-                // Cria 28 pedestres caminhando próximo às calçadas dos quarteirões
-                for (let i = 0; i < 28; i++) {
-                    const pedGroup = new THREE.Group();
-                    const shirtMat = new THREE.MeshLambertMaterial({ color: shirtColors[i % shirtColors.length] });
-
-                    const legs = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.65, 0.22), pantsMat);
-                    legs.position.y = 0.35;
-                    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.62, 0.26), shirtMat);
-                    torso.position.y = 0.95;
-                    const head = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), skinMat);
-                    head.position.y = 1.45;
-
-                    pedGroup.add(legs, torso, head);
-
-                    // Posiciona nas bordas das calçadas
-                    const avenueX = [-102, -58, -22, 18, 62, 102][i % 6];
-                    const posZ = -150 + (i * 11) % 300;
-                    pedGroup.position.set(avenueX, 0.35, posZ);
+                const blocks=typeof DriverPedestrianSidewalks!=='undefined'?
+                    DriverPedestrianSidewalks.pick(city,focus,28):[];
+                this.pedestrianBlocks=blocks;
+                const colors=city?.preset?.id==='havana'?
+                    [0xfda4af,0xfbbf24,0x67e8f9,0xfb7185]:
+                    city?.preset?.id==='vegas'?
+                    [0xf9a8d4,0x5eead4,0xfcd34d,0x818cf8]:
+                    city?.preset?.id==='rio'?
+                    [0x38bdf8,0x4ade80,0xfde047,0xfb7185]:
+                    [0xef4444,0x3b82f6,0x10b981,0xf59e0b,0xa855f7];
+                const skinMat=new THREE.MeshLambertMaterial({color:0xfdba74});
+                const pantsMat=new THREE.MeshLambertMaterial({color:0x1e293b});
+                const shirtMats=colors.map(color=>
+                    new THREE.MeshLambertMaterial({color}));
+                const legGeo=new THREE.BoxGeometry(.17,.64,.23);
+                const armGeo=new THREE.BoxGeometry(.15,.55,.2);
+                const torsoGeo=new THREE.BoxGeometry(.43,.62,.29);
+                const headGeo=new THREE.BoxGeometry(.31,.31,.31);
+                for(let i=0;i<28;i++){
+                    const block=blocks[i]||{x:40+(i%4)*80,z:-200+Math.floor(i/4)*80};
+                    const route=typeof DriverPedestrianSidewalks!=='undefined'?
+                        DriverPedestrianSidewalks.route(block):[
+                            {x:block.x-23,z:block.z-23},
+                            {x:block.x+23,z:block.z-23},
+                            {x:block.x+23,z:block.z+23},
+                            {x:block.x-23,z:block.z+23}
+                        ];
+                    const edge=i%4,t=.16+(i%3)*.16;
+                    const p0=route[edge],p1=route[(edge+1)%4];
+                    const x=p0.x+(p1.x-p0.x)*t;
+                    const z=p0.z+(p1.z-p0.z)*t;
+                    const pedGroup=new THREE.Group();
+                    const torso=new THREE.Mesh(torsoGeo,shirtMats[i%colors.length]);
+                    torso.position.y=.95;
+                    const head=new THREE.Mesh(headGeo,skinMat);
+                    head.position.y=1.45;
+                    const legs=[],arms=[];
+                    for(const side of [-1,1]){
+                        const leg=new THREE.Group();
+                        leg.position.set(side*.12,.69,0);
+                        const legMesh=new THREE.Mesh(legGeo,pantsMat);
+                        legMesh.position.y=-.34;
+                        leg.add(legMesh);pedGroup.add(leg);
+                        legs.push(leg);
+                        const arm=new THREE.Group();
+                        arm.position.set(side*.32,1.18,0);
+                        const armMesh=new THREE.Mesh(armGeo,shirtMats[i%colors.length]);
+                        armMesh.position.y=-.26;
+                        arm.add(armMesh);pedGroup.add(arm);
+                        arms.push(arm);
+                    }
+                    pedGroup.add(torso,head);
+                    pedGroup.position.set(x,.35,z);
                     this.group.add(pedGroup);
-
                     this.pedestrians.push({
-                        mesh: pedGroup,
-                        x: avenueX,
-                        z: posZ,
-                        dir: (i % 2 === 0) ? 1 : -1,
-                        diveTimer: 0,
-                        diveVx: 0,
-                        diveVz: 0,
-                        walkPhase: Math.random() * 10
+                        mesh:pedGroup,x,z,route,block,nextCorner:(edge+1)%4,
+                        walkSpeed:2.2+(i%5)*.22,
+                        waitTimer:0,diveTimer:0,diveVx:0,diveVz:0,
+                        walkPhase:i*.9,dir:i%2?1:-1,arms,legs,
+                        sleepTick:0,visibleTime:0
                     });
                 }
+            }
+
+            recycleDistantPedestrians(focus,dt){
+                this.pedestrianClock=(this.pedestrianClock||0)+Math.max(0,dt);
+                if(this.pedestrianClock<1.1||
+                    typeof DriverPedestrianSidewalks==='undefined')return 0;
+                this.pedestrianClock=0;
+                if(!Number.isFinite(focus?.x)||!Number.isFinite(focus?.z))
+                    return 0;
+                // Mantém somente 28 meshes, realocando alguns que já
+                // estão fora da câmera para bairros próximos do jogador.
+                const candidates=DriverPedestrianSidewalks.pick(
+                    this.city,focus,28).filter(b=>{
+                        const d=Math.hypot(b.x-focus.x,b.z-focus.z);
+                        return d>95&&d<205;
+                    });
+                if(!candidates.length)return 0;
+                let changed=0;
+                for(const p of this.pedestrians){
+                    if(changed>=3)break;
+                    if(Math.hypot(p.x-focus.x,p.z-focus.z)<260)continue;
+                    const block=candidates[
+                        (this.relocationCursor||0)%candidates.length
+                    ];
+                    this.relocationCursor=(this.relocationCursor||0)+1;
+                    const route=DriverPedestrianSidewalks.route(block);
+                    const edge=(this.relocationCursor+p.nextCorner)%4;
+                    const start=DriverPedestrianSidewalks.point(route,edge,.2);
+                    if(!DriverPedestrianSidewalks.permitted(this.city,
+                        start.x,start.z))continue;
+                    p.block=block;p.route=route;
+                    p.nextCorner=(edge+1)%4;
+                    p.x=start.x;p.z=start.z;
+                    p.waitTimer=.8;p.diveTimer=0;
+                    p.mesh.position.set(p.x,.35,p.z);
+                    p.mesh.visible=false;
+                    changed++;
+                }
+                return changed;
             }
 
             spawnPoliceRoadblocks(preset, options = {}) {
@@ -210,49 +278,47 @@
                 });
             }
 
-            update(dt, vehicles, audio, playerCar = vehicles[0], onBarrierImpact = null) {
+            update(dt, vehicles, audio, playerCar = vehicles[0],
+                onBarrierImpact = null, focusPosition = null) {
                 this.updateRoadblockOfficers(dt, playerCar);
-                // 1. Atualiza Pedestres e Salto de Esquiva (Dive/Dodge clássico do Driver 2)
-                for (let i = 0; i < this.pedestrians.length; i++) {
-                    const p = this.pedestrians[i];
-
-                    if (p.diveTimer > 0) {
-                        p.diveTimer -= dt;
-                        p.x += p.diveVx * dt;
-                        p.z += p.diveVz * dt;
-                        p.mesh.position.set(p.x, 0.35 + Math.sin((0.7 - p.diveTimer) * 4.5) * 0.6, p.z);
-                        p.mesh.rotation.z = 1.25; // Deitado no ar mergulhando!
-                        if (p.diveTimer <= 0) {
-                            p.mesh.rotation.z = 0;
-                            p.mesh.position.y = 0.35;
-                        }
+                // Pedestres percorrem o contorno das calçadas em vez de
+                // marchar em linhas retas cruzando vias sem observar tráfego.
+                // Fora do raio de renderização, pula atualizações frequentes.
+                const focus=focusPosition||
+                    (playerCar?{x:playerCar.x,z:playerCar.z}:
+                    vehicles?.[0]||{x:0,z:-20});
+                this.recycleDistantPedestrians(focus,dt);
+                for(const p of this.pedestrians){
+                    const dist=Math.hypot(p.x-focus.x,p.z-focus.z);
+                    p.mesh.visible=dist<235;
+                    if(!p.mesh.visible){
+                        p.sleepTick=(p.sleepTick||0)+dt;
+                        if(p.sleepTick<.5)continue;
+                        p.sleepTick=0;
                         continue;
                     }
-
-                    // Caminhada normal na calçada
-                    p.z += p.dir * 3.4 * dt;
-                    if (p.z > 180) p.dir = -1;
-                    if (p.z < -180) p.dir = 1;
-                    p.walkPhase += dt * 7;
-                    p.mesh.position.set(p.x, 0.35 + Math.abs(Math.sin(p.walkPhase)) * 0.12, p.z);
-                    p.mesh.rotation.y = p.dir > 0 ? 0 : Math.PI;
-
-                    // Verifica se algum veículo está vindo rápido na direção do pedestre
-                    for (let v = 0; v < vehicles.length; v++) {
-                        const car = vehicles[v];
-                        if (Math.abs(car.speed) < 6) continue;
-                        const dx = p.x - car.x;
-                        const dz = p.z - car.z;
-                        const distSq = dx * dx + dz * dz;
-                        if (distSq < 38) {
-                            const dist = Math.sqrt(distSq) || 1;
-                            p.diveTimer = 0.7;
-                            p.diveVx = (dx / dist) * 11;
-                            p.diveVz = (dz / dist) * 11;
-                            if (v === 0 && audio) audio.playPedestrianDodgeVoice();
-                            break;
+                    const state=typeof DriverPedestrianSidewalks!=='undefined'?
+                        DriverPedestrianSidewalks.step(p,dt,this.city,vehicles):
+                        {state:'walk',dx:0,dz:p.dir};
+                    if(state.newDodge && playerCar && audio)
+                        audio.playPedestrianDodgeVoice?.();
+                    if(state.state==='walk'){
+                        p.walkPhase+=dt*7.5;
+                        const swing=Math.sin(p.walkPhase)*.48;
+                        for(let i=0;i<2;i++){
+                            if(p.legs[i])p.legs[i].rotation.x=(i?1:-1)*swing;
+                            if(p.arms[i])p.arms[i].rotation.x=(i?-1:1)*swing*.8;
                         }
+                        if(state.dx||state.dz)
+                            p.mesh.rotation.y=Math.atan2(state.dx,state.dz);
+                    }else{
+                        for(const limb of [...(p.legs||[]),...(p.arms||[])])
+                            limb.rotation.x*=Math.max(0,1-dt*10);
                     }
+                    p.mesh.rotation.z=state.state==='dodge'?.55:0;
+                    p.mesh.position.set(p.x,
+                        .35+(state.state==='walk'?
+                        Math.abs(Math.sin(p.walkPhase))*.10:0),p.z);
                 }
 
                 // 2. Atualiza Barricadas Policiais Destrutíveis
