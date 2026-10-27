@@ -323,6 +323,8 @@
                     this.cityGroup.add(sidewalks);
                 }
 
+                this.buildParkAmenities();
+
                 this.districtLOD=new DriverDistrictLOD({
                     nearRadius:165,farRadius:230,maxSwitches:2
                 });
@@ -648,6 +650,75 @@
                     this.buildingBoxes[this.secretGateBoxIndex] = { minX: 9999, maxX: 9999, minZ: 9999, maxZ: 9999 };
                 }
                 return true;
+            }
+
+
+            // Mobiliário e pavimentação de todos os parques em somente dois
+            // batches globais. Preserva áreas de caminhada e bancos utilizáveis.
+            buildParkAmenities() {
+                if(!this.benches.length)return;
+                const city=this.preset.id,solid=[],accents=[];
+                const colors={
+                    chicago:[0x9ca3af,0x475569,0x16a34a,0xfacc15],
+                    havana:[0xf8d8b0,0x92400e,0x2f855a,0xfb7185],
+                    vegas:[0xd9c5a0,0x57534e,0x6b8e23,0xf59e0b],
+                    rio:[0xe7e5e4,0x4b5563,0x15803d,0xfbbf24]
+                }[city];
+                const [paving,metal,leaf,flower]=colors;
+                const put=(accent,x,y,z,w,h,d,color)=>{
+                    (accent?accents:solid).push({x,y,z,w,h,d,color});
+                };
+                for(const p of this.benches){
+                    const x=p.x,z=p.z;
+                    // Trilha em cruz ao nível do gramado; não cria colisores.
+                    put(false,x,.465,z,35,.075,2.6,paving);
+                    put(false,x,.47,z,2.6,.075,35,paving);
+                    // Ripas e encosto do banco que já existe no parque.
+                    put(false,x,1.38,z-.46,3.4,.78,.17,metal);
+                    for(const dx of [-1.35,1.35]){
+                        put(false,x+dx,.65,z+.38,.22,.65,.35,metal);
+                        put(false,x+dx,1.13,z-.14,.18,.18,1.1,metal);
+                    }
+                    // Jardim de canto sem fechar a trilha ou a rua.
+                    for(const dx of [-17,17])for(const dz of [-17,17]){
+                        put(false,x+dx,.49,z+dz,3.0,.18,1.7,paving);
+                        put(false,x+dx,.67,z+dz,2.6,.32,1.3,leaf);
+                        for(const fx of [-.7,0,.7])
+                            put(true,x+dx+fx,.87,z+dz,.22,.16,.28,flower);
+                    }
+                    if(city==='rio'||city==='havana'){
+                        // Caminho em losangos simplificados para o visual tropical.
+                        for(const dz of [-9,9])
+                            put(false,x,.51,z+dz,6,.09,1.3,metal);
+                    } else if(city==='vegas'){
+                        for(const dx of [-8,8])
+                            put(true,x+dx,.53,z,3,.07,.28,flower);
+                    } else {
+                        for(const dx of [-8,8])
+                            put(false,x+dx,.52,z,3,.08,.22,metal);
+                    }
+                }
+                const geometry=new THREE.BoxGeometry(1,1,1);
+                for(const [parts,isAccent] of [[solid,false],[accents,true]]){
+                    const mat=isAccent?
+                        new THREE.MeshBasicMaterial({color:0xffffff}):
+                        new THREE.MeshLambertMaterial({color:0xffffff});
+                    const mesh=new THREE.InstancedMesh(geometry,mat,parts.length);
+                    const dummy=new THREE.Object3D();
+                    parts.forEach((p,i)=>{
+                        dummy.position.set(p.x,p.y,p.z);
+                        dummy.rotation.set(0,0,0);
+                        dummy.scale.set(p.w,p.h,p.d);
+                        dummy.updateMatrix();
+                        mesh.setMatrixAt(i,dummy.matrix);
+                        mesh.setColorAt(i,new THREE.Color(p.color));
+                    });
+                    mesh.instanceMatrix.needsUpdate=true;
+                    if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+                    mesh.frustumCulled=false;
+                    mesh.name='park-amenities-'+city+(isAccent?'-flowers':'-paths');
+                    this.cityGroup.add(mesh);
+                }
             }
 
             buildParkBlock(cx, cz) {
