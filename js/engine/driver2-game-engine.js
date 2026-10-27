@@ -61,6 +61,7 @@
                 this.tannerGarage=new DriverTannerGarage(this.homeSave.storage);
                 this.garagePanelOpen=false;
                 this.navigationHome=false;
+                this.debugVehiclePhysics=false;
                 this.completedMissions=new Set();
                 this.chapterProgress=new DriverChapterProgress(this.homeSave.storage);
                 // Saves antigos de Chicago 08 também liberam a nova etapa.
@@ -2095,6 +2096,22 @@
 
                 this.updateGarageProximity();
                 this.updateCityNavigation();
+                if(this.playerCar&&this.debugVehiclePhysics &&
+                    typeof DriverVehicleWheelRig!=='undefined')
+                    DriverVehicleWheelRig.setDebug(this.playerCar,true);
+                const physicsBadge=document.getElementById('driver-physics-status');
+                if(physicsBadge){
+                    physicsBadge.classList.toggle('hidden',
+                        !this.debugVehiclePhysics);
+                    if(this.debugVehiclePhysics&&this.playerCar){
+                        const d=DriverVehicleCollisions.dimensions(this.playerCar);
+                        physicsBadge.textContent='EIXO VERDE = FRENTE • '+
+                            'COLISOR '+d.width.toFixed(2)+'×'+
+                            d.length.toFixed(2)+' • RODAS '+(
+                                this.playerCar.wheelRig?.independent?
+                                'INDEPENDENTES':'INTEGRADAS NA MALHA');
+                    }
+                }
                 this.drawRadar();
             }
 
@@ -2652,6 +2669,13 @@
                     if (code === 'KeyH') this.triggerHornOrSiren();
                     if (code === 'KeyR') this.toggleReplayDirector();
                     if (code === 'KeyB') this.city.toggleBridge();
+                    if(code==='KeyI'&&!e.repeat){
+                        this.debugVehiclePhysics=!this.debugVehiclePhysics;
+                        if(this.playerCar &&
+                            typeof DriverVehicleWheelRig!=='undefined')
+                            DriverVehicleWheelRig.setDebug(this.playerCar,
+                                this.debugVehiclePhysics);
+                    }
                     if(code==='KeyJ'&&!e.repeat)
                         this.activateNearbyMission();
                     if(code==='KeyT'&&!e.repeat)

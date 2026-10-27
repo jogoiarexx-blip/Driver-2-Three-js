@@ -571,3 +571,54 @@ de alinhamento das rodas, textura e FPS em uma sessão longa.
 A versão nova não altera a campanha, os saves de Tanner ou o
 conjunto de colisores de prédios. O modelo em si é compartilhado;
 sua pintura é individual por veículo.
+
+
+## REV colisores orientados + diagnóstico das rodas GLB (27/10/2026)
+
+Esta revisão preserva `FORWARD=+Z` da física (não inverte
+acelerador, marcha à ré, volante, câmera nem faróis) e a rotação
+visual do GLB de `+Math.PI/2` aprovada na revisão `fd99645`.
+
+### Problemas concretos corrigidos
+- O detector anterior representava cada veículo como **um círculo**.
+  Ônibus, caminhões e limusines usavam o mesmo raio 4,5m, o que
+  provocava colisões invisíveis entre veículos paralelos e não
+  representava a extensão longitudinal.
+- O novo `DriverVehicleCollisions.orientedContact()` compara quatro
+  eixos de caixas OBB em 2D (SAT) e usa largura/comprimento por
+  categoria: muscle 2,45×5,15m, caminhão 2,65×6,8m,
+  ônibus 2,72×8m, limusine 2,48×7,47m. A separação considera
+  massa e usa a normal de aproximação para atribuir dano por lado.
+- A detecção de alta velocidade usa agora `sweptOrientedContact()`,
+  SAT temporal contínuo no intervalo entre frames, preservando
+  proteção contra teleporte, interseção entre andares e barreiras
+  próximas. O método legado de raio continua presente para clientes
+  antigos, sem governar o contato real.
+- O GLB atual contém **um único nó/uma única malha**
+  `Carro_Driver2_Carroceria_E_Detalhes`, portanto suas quatro rodas
+  não podem ser esterçadas independentemente **sem separar a malha**.
+  O novo `DriverVehicleWheelRig` reconhece rodas por nome em GLBs
+  futuros que as exponham em quatro malhas e usa pivôs reais
+  (giro e esterçamento). Para o GLB atual **não desenha rodas extras**:
+  registra quatro pontos de contato como referência para diagnósticos.
+- O rig aceita calibração de posições `wheelRig.anchors` em
+  `new DriverVehicle(scene,{...,wheelRig:{anchors:[...]}})`.
+- Tecla **I** durante o jogo alterna diagnóstico de colisão:
+  contorno amarelo da caixa física, eixo de orientação, seta verde
+  (+Z frente) e quatro pontos azulados de rodas. O HUD informa
+  se as rodas são independentes ou integradas à malha.
+- A garagem e as campanhas seguem com chaves de save e lógica
+  anteriores. O modelo GLB e a pintura foram mantidos.
+
+### Verificação e escopo
+Novos testes cobrem OBB para sedan/ônibus/caminhão/limusine,
+trajetórias cruzadas e paralelas, choque rápido por varredura,
+altura das pistas, eixo frontal, validação dos dados do GLB,
+ausência de roda duplicada e atualização de pivô em malhas separadas.
+Testes Node são validações **lógicas**, não substituem testes
+interativos em navegador com mouse/teclado/gamepad.
+
+**Ainda pendente:** separar efetivamente a geometria da roda no GLB
+atual; testes jogados nas quatro cidades, rampas, água e garagem;
+avanços gerais de IA de pedestres, regiões inéditas e LOD. Não foram
+produzidas medições confiáveis de FPS ou draw calls antes/depois.

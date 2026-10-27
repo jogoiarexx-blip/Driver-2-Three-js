@@ -39,6 +39,8 @@ class VehicleVisuals {
                     Math.sin(time * (7 + speed * 0.5) + phase + axlePhase);
             });
         }
+        if(typeof DriverVehicleWheelRig!=='undefined')
+            DriverVehicleWheelRig.update(vehicle);
     }
 
     static setHeadlights(vehicle, on) {

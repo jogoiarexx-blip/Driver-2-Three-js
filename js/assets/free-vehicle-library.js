@@ -206,6 +206,8 @@ class FreeVehicleAssets {
         const applied=vehicle.applyCC0Model(wrapped,true);
         if(applied===false)return false;
         vehicle._userCustomModel=true;
+        if(typeof DriverVehicleWheelRig!=='undefined')
+            vehicle.wheelRig=DriverVehicleWheelRig.mount(vehicle,wrapped);
         this.importedCount++;
         return true;
     }
@@ -233,7 +235,10 @@ class FreeVehicleAssets {
         this.getScene(filename).then(template=>{
             if(!template || !this.enabled || vehicle._userCustomModel ||
                 !this.engine.vehicles.includes(vehicle) || !vehicle.root.parent)return;
-            vehicle.applyCC0Model(template.clone(true));
+            const scene=template.clone(true);
+            if(vehicle.applyCC0Model(scene)!==false &&
+                typeof DriverVehicleWheelRig!=='undefined')
+                vehicle.wheelRig=DriverVehicleWheelRig.mount(vehicle,scene);
             this.updateStatus();
         });
     }

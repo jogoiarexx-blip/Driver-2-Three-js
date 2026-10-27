@@ -48,6 +48,8 @@
                 this.hoodPivot = null;
                 this.trunkPivot = null;
                 this.wheels = [];
+                this.wheelRig=null;
+                this.wheelRigConfig=config.wheelRig||null;
                 this.wheelSpin = 0;
                 this.motionClock = 0;
                 this._suspensionBaseY = 0;
@@ -87,6 +89,7 @@
                     this.root.remove(w);
                 });
                 this.wheels = [];
+                this.wheelRig=null;
 
                 const bodyMat = new THREE.MeshLambertMaterial({ color: this.color });
                 this.bodyPaintMaterial = bodyMat;
@@ -278,6 +281,7 @@
                     this.root.remove(w);
                 });
                 this.wheels = [];
+                this.wheelRig=null;
                 this.frontBumperMesh=null;
                 this.rearBumperMesh=null;
                 this.chassisTilt.scale.set(1, 1, 1);

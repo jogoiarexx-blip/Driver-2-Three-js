@@ -54,3 +54,31 @@ Fonte: https://github.com/jogoiarexx-blip/Driver-2-Three-js/archive/3999ec766f5e
 3. Extraia o arquivo deste pacote na raiz dessa pasta, preservando assets/vehicles/carro_driver2_otimizado.glb.
 4. Compacte a pasta resultante em ZIP. Este é o pacote integral fonte + GLB.
 5. Para publicar no GitHub Pages, envie também assets/vehicles/carro_driver2_otimizado.glb para o repositório; caso contrário use o botão IMPORTAR GLB no jogo.
+
+
+---
+
+## REV OBB / rodas GLB / diagnóstico — 27/10/2026
+
+**Antes:** colisão por discos com raios 3,6/4,5m; veículos longos
+causavam impactos falsos. GLB monolítico, sem rodas independentes,
+nem visualização integrada da caixa de colisão.
+
+**Depois:** SAT para retângulos orientados e sweep contínuo com
+intervalos temporais; massas e danos preservados. Novo módulo
+`js/vehicles/vehicle-wheel-rig.js` para detectar quatro rodas
+independentes quando existirem. Para o modelo atual, mostra
+pontos de contato mas não sobrepõe pneus artificiais. Diagnóstico
+visual via tecla I.
+
+**Modificados:** `js/physics/vehicle-collisions.js`,
+`js/vehicles/vehicle-wheel-rig.js` (novo),
+`js/vehicles/driver-vehicle.js`, `js/render/vehicle-visuals.js`,
+`js/assets/free-vehicle-library.js`,
+`js/engine/driver2-game-engine.js`, `index.html`,
+`tests/obb-glb-wheel-diagnostics.test.cjs`, README.
+
+**A verificar em browser:** alinhamento gráfico do volume OBB,
+comportamento do ônibus no tráfego, travessias entre pistas,
+framerate, rodas e câmera no GLB. Campanhas não foram alteradas.
+**Pendente crítico:** wheel meshes do GLB original não são separadas.
