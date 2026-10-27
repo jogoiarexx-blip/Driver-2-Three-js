@@ -116,3 +116,9 @@
 @media (prefers-reduced-motion: reduce) {
     #impact-flash { display: none; }
 }
+
+#interior-banner.hidden{display:none;}
+@media(max-width:640px){
+    #interior-banner{max-width:92vw;padding:6px;font-size:11px;}
+    #interior-banner button{min-height:36px;}
+}

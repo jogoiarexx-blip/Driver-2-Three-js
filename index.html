@@ -94,6 +94,14 @@
                 <button id="btn-objective-toggle" type="button" aria-controls="objective-banner"
                     aria-expanded="false">Ver objetivo completo</button>
                 <div id="roadblock-warning" class="roadblock-warning hidden" aria-live="off"></div>
+                <div id="interior-banner" class="hidden pointer-events-auto mt-2 bg-slate-950/95 border border-emerald-500 text-white rounded-lg p-2 text-center text-xs max-w-xs">
+                    <div class="font-bold text-emerald-400 mb-1">INTERIOR · CASA / DEPÓSITO</div>
+                    <div id="home-save-status" class="mb-2">Entre na casa e aproxime-se da mesa verde para salvar.</div>
+                    <div class="flex gap-2 justify-center">
+                        <button id="btn-save-home" class="bg-emerald-600 px-3 py-2 rounded font-bold">SALVAR</button>
+                        <button id="btn-leave-interior" class="bg-slate-700 px-3 py-2 rounded">SAIR</button>
+                    </div>
+                </div>
                 <!-- Banner Modo Replay Film Director -->
                 <div id="director-banner" class="mt-2 hidden bg-red-600/95 text-white font-extrabold text-xs sm:text-sm px-4 py-1.5 rounded-lg shadow-lg border-2 border-white flex items-center gap-3 pointer-events-auto">
                     <span class="animate-pulse">🎬 FILM DIRECTOR REPLAY</span>
@@ -238,7 +246,24 @@
                 </div>
             </div>
 
-            <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">2. Escolha o Modo de Jogo / Missão:</div>
+            <div class="mb-4 flex items-center justify-between bg-slate-950 border border-emerald-500/30 rounded-lg p-3 gap-3">
+                <div>
+                    <div class="font-bold text-emerald-400 text-sm">CASA DE TANNER · SAVE REAL</div>
+                    <div class="text-xs text-slate-400">Entre na casa ao sudoeste, caminhe até a mesa verde e salve sua partida.</div>
+                </div>
+                <button id="btn-load-home" class="shrink-0 bg-emerald-600 rounded px-3 py-2 text-xs font-bold">CARREGAR</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                <button onclick="window.DriverGame.startMission('story_tipoff')" class="rounded-lg p-3 text-left bg-slate-950 border border-yellow-600 hover:bg-slate-800">
+                    <strong class="text-amber-400">CHICAGO 01 — SURVEILLANCE TIP OFF</strong>
+                    <div class="text-xs text-slate-300">Encontre Jones e entre no carro dele, como na missão de abertura.</div>
+                </button>
+                <button onclick="window.DriverGame.startMission('story_witness')" class="rounded-lg p-3 text-left bg-slate-950 border border-blue-600 hover:bg-slate-800">
+                    <strong class="text-sky-400">CHICAGO 02 — CHASE THE WITNESS</strong>
+                    <div class="text-xs text-slate-300">Persiga o sedã azul sem perdê-lo. Não é uma missão de destruir o carro.</div>
+                </button>
+            </div>
+            <div class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">2. Missões adicionais e modos:</div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-5">
                 <!-- Modo 1: Take a Ride -->
                 <div class="bg-slate-950 border border-slate-700 hover:border-emerald-400 rounded-xl p-4 flex flex-col justify-between transition cursor-pointer" onclick="window.DriverGame.startMission('freeroam')">
@@ -612,6 +637,7 @@ git push -u origin main</pre>
     <script src="./js/police/roadblock-director.js"></script>
     <script src="./js/gameplay/checkpoint-route.js"></script>
     <script src="./js/gameplay/pursuit-chapter.js"></script>
+    <script src="./js/gameplay/home-save.js"></script>
     <script src="./js/render/driver-camera-rig.js"></script>
     <script src="./js/render/impact-feedback.js"></script>
     <script src="./js/engine/driver2-game-engine.js"></script>

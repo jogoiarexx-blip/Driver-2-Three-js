@@ -86,14 +86,14 @@ test('faixas de pedestres são instanciadas em um lote',()=>{
     const city={preset:{id:'chicago'},cityGroup:new Element()};
     Street.build(city);
     assert.equal(city.cityGroup.children.length,3);
-    assert.equal(city.cityGroup.children[0].count,500);
+    assert.equal(city.cityGroup.children[0].count,1620);
     assert.equal(city.cityGroup.children[0].instanceMatrix.needsUpdate,true);
 });
 test('postes não criam fontes dinâmicas de luz',()=>{
     const city={preset:{id:'vegas'},cityGroup:new Element()};
     Street.build(city);
-    assert.equal(city.cityGroup.children[1].count,50);
-    assert.equal(city.cityGroup.children[2].count,50);
+    assert.equal(city.cityGroup.children[1].count,162);
+    assert.equal(city.cityGroup.children[2].count,162);
     assert.ok(city.cityGroup.children.every(m=>m.castShadow===false));
 });
 test('HTML carrega módulos antes dos consumidores',()=>{

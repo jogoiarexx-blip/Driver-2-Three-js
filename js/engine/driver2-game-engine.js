@@ -971,6 +971,39 @@
 
                 // Lógica de Tempo e Condições de Vitória/Derrota das Missões
                 if (this.missionActive) {
+                    if (this.missionType === 'story_tipoff' && this.targetCar) {
+                        const player=this.getPlayerPosition();
+                        const distance=Math.hypot(player.x-this.targetCar.x,
+                            player.z-this.targetCar.z);
+                        document.getElementById('mission-subcounter').textContent=
+                            'JONES: '+Math.round(distance)+'m • ENTRE NO CARRO DELE';
+                        if(this.playerCar===this.targetCar && this.mode==='driving'){
+                            this.triggerEndScreen('SURVEILLANCE TIP OFF CONCLUÍDA!',
+                                'Tanner encontrou Jones e a testemunha a tempo.');
+                            return;
+                        }
+                    } else if(this.missionType==='story_witness'&&this.targetCar){
+                        const player=this.getPlayerPosition();
+                        const distance=Math.hypot(player.x-this.targetCar.x,
+                            player.z-this.targetCar.z);
+                        if(distance<=85&&this.mode==='driving'){
+                            this.witnessCloseTime+=dt;
+                            this.tailOutOfRangeTimer=Math.max(0,this.tailOutOfRangeTimer-dt);
+                        }else this.tailOutOfRangeTimer+=dt;
+                        document.getElementById('mission-subcounter').textContent=
+                            'SEDÃ AZUL: '+Math.round(distance)+'m | CONTATO '+
+                            Math.floor(this.witnessCloseTime)+'/48s';
+                        if(this.tailOutOfRangeTimer>4){
+                            this.triggerEndScreen('TESTEMUNHA ESCAPOU!',
+                                'Você perdeu o sedã. Mantenha-se a menos de 85 metros.');
+                            return;
+                        }
+                        if(this.witnessCloseTime>=48){
+                            this.triggerEndScreen('CHASE THE WITNESS CONCLUÍDA!',
+                                'Você acompanhou a testemunha até a estação.');
+                            return;
+                        }
+                    }
                     if (this.missionType === 'pursuit') {
                         const result = this.pursuitChapter.update(dt, {
                             markersCollected: this.markersCollected,
@@ -1291,6 +1324,30 @@
                 }
 
                 this.drawRadar();
+            }
+
+            updateInteriorHUD() {
+                const prompt=document.getElementById('interaction-prompt');
+                const banner=document.getElementById('interior-banner');
+                if(banner)banner.classList.toggle('hidden',!this.interiorPlace);
+                if(this.mode!=='on_foot')return;
+                if(this.interiorPlace){
+                    const t=this.tanner.group.position;
+                    const exit=this.interiorPlace.exit;
+                    const atExit=Math.hypot(t.x-exit.x,t.z-exit.z)<4.2;
+                    prompt.textContent=this.nearSaveDesk()?
+                        'MESA VERDE: E ou F para salvar seu jogo':
+                        atExit?'Pressione E para SAIR do prédio':
+                        'Explore o prédio. Caminhe até a porta para sair.';
+                    prompt.classList.remove('hidden');
+                    return;
+                }
+                const pos=this.tanner.group.position;
+                const entry=this.city.interiorAt(pos.x,pos.z);
+                if(entry){
+                    prompt.textContent='E ou ENTER: ENTRAR EM '+entry.name.toUpperCase();
+                    prompt.classList.remove('hidden');
+                }
             }
 
             drawRadar() {
@@ -1763,6 +1820,7 @@
                 this.audio.update(dt, this.mode === 'driving', speedKmh, skidding, burnout, sirenOn);
 
                 this.updateHUD();
+                this.updateInteriorHUD();
                 this.renderer.render(this.scene, this.camera);
             }
         }
