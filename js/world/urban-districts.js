@@ -16,7 +16,12 @@ class UrbanDistricts {
         const loop=Math.max(0,1-Math.hypot(x-35,z+100)/245);
         return city === 'chicago' ?
             18+r*29 + loop*(28+63*r) :
-            city === 'havana' ? 12 + r * 18 :
+            city === 'havana' ? (
+                x<=-150 ? 12+r*15 :      // Habana Vieja: arquitetura baixa
+                z<=-155 && x<155 ? 20+r*30 : // Vedado: edifícios médios
+                x>=160 ? 13+r*18 :      // Porto: armazéns e quadras baixas
+                12+r*18                  // Centro Habana
+            ) :
             city === 'vegas' ? 22 + r * 42 :
             city === 'rio' ?
                 // Faixa de prédios mais altos na Zona Sul, centro com
