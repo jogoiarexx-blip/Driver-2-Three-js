@@ -1201,6 +1201,11 @@
                     badge.textContent = 'TANNER (A PÉ)';
                     badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold';
                 } else if (this.mode === 'on_foot') {
+                    if(typeof DriverChicagoGameplay!=='undefined' &&
+                        DriverChicagoGameplay.interact(this.city,this.tanner.group.position)){
+                        this.showGarageStatus('WRIGLEY FIELD • PORTÃO LIBERADO');
+                        return;
+                    }
                     if(this.interiorPlace){
                         const pos=this.tanner.group.position;
                         if(this.nearSaveDesk()){this.saveAtHome();return;}
