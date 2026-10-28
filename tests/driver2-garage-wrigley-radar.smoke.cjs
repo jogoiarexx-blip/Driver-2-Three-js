@@ -84,7 +84,8 @@ assert.equal(stadium.buildingBoxes.includes(stadium.chicagoStadium.box),false);
 assert.equal(stadium._spatialCollisions.boxes,null);
 
 const worldToRadar=(dx,dz,heading)=>{
-    const x=dx,z=-dz,a=-heading;
+    // Espelhamento X da câmera de perseguição + rotação do heading.
+    const x=-dx,z=-dz,a=heading;
     return {x:x*Math.cos(a)-z*Math.sin(a),
         y:x*Math.sin(a)+z*Math.cos(a)};
 };
@@ -93,8 +94,9 @@ for(const heading of [0,Math.PI/2,Math.PI,-Math.PI/2]){
     const front=worldToRadar(fx,fz,heading);
     assert(Math.abs(front.x)<1e-8 && front.y<0,
         'Frente deve ficar para cima no minimapa');
-    const right=worldToRadar(Math.cos(heading)*10,
-        -Math.sin(heading)*10,heading);
+    // A câmera vê a direita de Tanner na direção (-cos h, +sin h).
+    const right=worldToRadar(-Math.cos(heading)*10,
+        Math.sin(heading)*10,heading);
     assert(right.x>0 && Math.abs(right.y)<1e-8,
         'Direita deve ficar para a direita no minimapa');
 }
