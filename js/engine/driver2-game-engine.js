@@ -2393,17 +2393,17 @@
             }
             getNearbyMissionStart(){
                 const start=this.city?.missionStart;
-                if(!start || this.missionActive ||
+                if(!start||this.missionActive||
                     this.currentCityKey==='havana' &&
                     !this.chapterProgress.canTravelToHavana())return null;
                 const next=this.nextStoryMission();
-                // Completed chapters have no new checkpoint in this city.
-                // Replays remain available in Driving Games/Undercover menu.
                 if(this.storyCampaign&&!next)return null;
-                const marker=next?{...start,type:next}:start;
+                const type=next||start.type;
+                if(typeof DriverChicagoMissionHubs!=='undefined')
+                    DriverChicagoMissionHubs.sync(this.city,type,false);
                 const p=this.getPlayerPosition();
-                return Math.hypot(p.x-start.x,p.z-start.z)<9?
-                    marker:null;
+                return Math.hypot(p.x-start.x,p.z-start.z)<10?
+                    {...start,type}:null;
             }
             activateNearbyMission(){
                 const start=this.getNearbyMissionStart();
@@ -2416,28 +2416,68 @@
             updateCityNavigation(){
                 const start=this.city?.missionStart;
                 if(!start)return;
-                const missionType=this.nextStoryMission()||start.type;
+                const next=this.nextStoryMission();
+                const doneChapter=this.storyCampaign&&!next;
+                const missionType=next||start.type;
+                const spec=typeof DriverChicagoMissionHubs!=='undefined'?
+                    DriverChicagoMissionHubs.sync(
+                        this.city,missionType,this.missionActive||doneChapter):null;
                 const completed=missionType==='story_havana_lead'?
                     this.chapterProgress.hasCompletedHavanaLead():
                     this.completedMissions?.has(missionType);
                 const locked=missionType==='story_havana_lead'&&
                     !this.chapterProgress.canTravelToHavana();
-                const active=this.missionType===missionType &&
-                    this.missionActive;
-                const doneChapter=this.storyCampaign &&
-                    !this.nextStoryMission();
                 const color=locked?0x475569:
                     (completed||doneChapter)?0x94a3b8:
-                    active?0xfacc15:0x22c55e;
+                    this.missionActive?0xfacc15:0x22c55e;
                 start.ring.material.color.setHex(color);
                 start.arrow.material.color.setHex(color);
                 start.arrow.rotation.y+=.02;
-                const nav=document.getElementById('driver-mission-start-status');
-                if(nav){
-                    const near=this.getNearbyMissionStart();
-                    nav.textContent=near?'PRÓXIMA MISSÃO • J PARA INICIAR':'';
-                    nav.classList.toggle('hidden',!near);
+                if(!spec){
+                    start.ring.visible=!this.missionActive&&!doneChapter;
+                    start.arrow.visible=!this.missionActive&&!doneChapter;
                 }
+                const nav=document.getElementById('driver-mission-start-status');
+                const button=document.getElementById('btn-start-nearby-mission');
+                const near=this.getNearbyMissionStart();
+                const pos=this.getPlayerPosition();
+                const distance=Math.round(Math.hypot(
+                    pos.x-start.x,pos.z-start.z));
+                const show=!this.missionActive&&!doneChapter&&!locked;
+                if(nav){
+                    nav.textContent=show?(
+                        spec?spec.label+' • '+spec.place:
+                        missionType.replace(/_/g,' ').toUpperCase())+
+                        ' • '+distance+'m'+
+                        (near?' • J PARA INICIAR':' • SIGA O ! NO RADAR'):'';
+                    nav.classList.toggle('hidden',!show);
+                }
+                if(button){
+                    button.classList.toggle('hidden',!near);
+                    button.disabled=!near;
+                    if(near)button.textContent='▶ INICIAR '+(
+                        spec?spec.label:'MISSÃO');
+                }
+            }
+
+            // Pelo menu, escolha uma missão e viaje ao marcador no mundo.
+            // A sequência da campanha permanece em ordem, sem teleporte.
+            showStoryMissionOnMap(type){
+                this.storyCampaign=true;
+                const next=DriverCampaignFlow.next(this.currentCityKey,
+                    this.completedMissions);
+                if(next!==type){
+                    const label=DriverChicagoMissionHubs?.SPECS[next]?.label||
+                        'a próxima missão da campanha';
+                    this.missionToastText='Primeiro conclua: '+label;
+                    this.missionToastRemaining=5;
+                }else{
+                    this.missionToastText='VÁ ATÉ O MARCADOR VERDE NO MAPA • J PARA INICIAR';
+                    this.missionToastRemaining=5;
+                }
+                document.getElementById('missions-modal')?.classList.add('hidden');
+                this.updateCityNavigation();
+                return next===type;
             }
 
             garageDistance(){
@@ -2678,14 +2718,27 @@
                         -(parking.z-pos.z)*scale);
                 }
                 const starter=this.city.missionStart;
-                if(starter && !(this.currentCityKey==='havana' &&
+                if(starter && !this.missionActive &&
+                    !(this.storyCampaign&&!this.nextStoryMission()) &&
+                    !(this.currentCityKey==='havana' &&
                     !this.chapterProgress.canTravelToHavana())){
                     ctx.font='bold 15px sans-serif';
                     ctx.fillStyle=this.completedMissions?.has(starter.type)?
                         '#94a3b8':'#facc15';
-                    radarLabel('!',
-                        (starter.x-pos.x)*scale,
-                        -(starter.z-pos.z)*scale);
+                    const mx=(starter.x-pos.x)*scale;
+                    const mz=-(starter.z-pos.z)*scale;
+                    // Trajeto até a próxima missão, sem poluir o radar.
+                    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(mx,mz);
+                    ctx.strokeStyle='#eab308';ctx.lineWidth=1.8;
+                    ctx.setLineDash([3,5]);ctx.stroke();ctx.setLineDash([]);
+                    ctx.beginPath();ctx.arc(mx,mz,7,0,Math.PI*2);
+                    ctx.fillStyle='#1e293b';ctx.fill();
+                    ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.stroke();
+                    const index=this.currentCityKey==='chicago'?
+                        DriverCampaignFlow.CHICAGO.indexOf(starter.type):-1;
+                    ctx.fillStyle='#fef3c7';
+                    radarLabel(index>=0?String(index+1):'!',mx,mz+4);
+                    ctx.lineWidth=1;
                 }
 
                 // Garagem Secreta (Ponto Roxo Especial no Nordeste)
