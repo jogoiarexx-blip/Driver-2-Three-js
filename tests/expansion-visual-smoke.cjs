@@ -63,12 +63,14 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     ['vegas',['story_vegas_ambulance','story_vegas_c4','story_vegas_heist']],
     ['rio',['story_rio_barge','story_rio_jericho','story_rio_helicopter']]
   ]){
-    assert(await page.evaluate(id=>
-        window.DriverGame.requestCityChange(id),city));
+    // Start chapter directly from the previous city; this catches
+    // recursive restart bugs that a manual city switch would mask.
+    const first=await check(modes[0]);
+    assert.equal(first.city,city);
     await page.waitForFunction(id=>window.DriverGame.currentCityKey===id&&
        window.DriverGame.city.ready,city,{timeout:120000});
     for(const type of modes){
-        const data=await check(type);
+        const data=type===modes[0]?first:await check(type);
         assert.equal(data.city,city);
         assert(data.regional&&data.intro,'Undercover intro or director absent');
         if(type==='story_vegas_c4'){
