@@ -1393,7 +1393,7 @@
                 this.trafficAI.policeRoadblocks = this.pedManager.roadblocks;
                 // O carro secreto só deixa a garagem quando o jogador assume o volante.
                 for (const vehicle of this.vehicles) {
-                    if (vehicle === this.playerCar || vehicle.isSecret ||
+                    if (vehicle === this.playerCar || vehicle.missionParked || vehicle.isSecret ||
                         vehicle===this.policeDoorTransition?.vehicle) continue;
                     const controls = this.trafficAI.getInput(
                         vehicle, dt, this.vehicles, playerPos, this.felony
