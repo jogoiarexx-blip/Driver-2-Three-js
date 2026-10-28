@@ -138,6 +138,7 @@
                 this.chicagoOverhaulStats=null;
                 this.chicagoPS1Coastline=null;
                 this.chicagoPS1RiverBranches=null;
+                this.chicagoGooseIslandStreet=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -284,6 +285,14 @@
                         const blockX = bx + 40;
                         const blockZ = bz - 40;
                         if (Math.abs(blockZ - 50) < 28) return;
+                        // R4: retirar apenas a célula do parque (-200,200);
+                        // ela estava fisicamente dentro da rua da ilha.
+                        // O módulo substitui essa célula por uma avenida,
+                        // dois lotes industriais e colisores estreitos.
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoGooseIslandStreet!=='undefined' &&
+                            DriverChicagoGooseIslandStreet.isCarvedBlock(blockX,blockZ))
+                            return;
 
                         // Calçadas agrupadas em uma única draw call instanciada.
                         sidewalkPositions.push({x:blockX,z:blockZ});
@@ -369,6 +378,9 @@
                     // transversais, sem deslocar missões nem substituir IA.
                     if(typeof DriverChicagoPS1RiverBranches!=='undefined')
                         DriverChicagoPS1RiverBranches.build(this);
+                    // R4: primeira rua fora da grade, dentro de Goose Island.
+                    if(typeof DriverChicagoGooseIslandStreet!=='undefined')
+                        DriverChicagoGooseIslandStreet.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
