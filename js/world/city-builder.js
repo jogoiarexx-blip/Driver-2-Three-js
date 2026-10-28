@@ -137,6 +137,7 @@
                 this.chicagoLowerWacker=null;
                 this.chicagoOverhaulStats=null;
                 this.chicagoPS1Coastline=null;
+                this.chicagoPS1RiverBranches=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -364,6 +365,10 @@
                     // a leste da malha, sem mudar rotas de campanha.
                     if(typeof DriverChicagoPS1Coastline!=='undefined')
                         DriverChicagoPS1Coastline.build(this);
+                    // R2: rio Norte/Sul e Goose Island: travessias sobre ruas
+                    // transversais, sem deslocar missões nem substituir IA.
+                    if(typeof DriverChicagoPS1RiverBranches!=='undefined')
+                        DriverChicagoPS1RiverBranches.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
@@ -1675,6 +1680,9 @@
             }
 
             isWaterAt(x,z){
+                if(this.preset?.id==='chicago' &&
+                    typeof DriverChicagoPS1RiverBranches!=='undefined' &&
+                    DriverChicagoPS1RiverBranches.waterAt(x,z))return true;
                 if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1Coastline!=='undefined' &&
                     DriverChicagoPS1Coastline.waterAt(x,z))return true;
