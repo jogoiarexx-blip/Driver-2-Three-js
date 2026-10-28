@@ -49,6 +49,19 @@ class DriverChicagoGooseIslandNorthYard {
         return {ready:segments.every(s=>s.safe),
             segments,unsafe:segments.filter(s=>!s.safe).map(s=>s.name)};
     }
+    // R8: liberar o sentido sul apenas quando o caminhão puder cruzar
+    // todo o deck e virar para oeste sem atingir água nem galpões.
+    static testSouthbound(city){
+        if(!this.isChicago(city) ||
+            !city.chicagoGooseIslandNorthYard?.accessReady ||
+            typeof DriverRoadGeometry==='undefined')return false;
+        return !city.isWaterAt?.(-204,311) &&
+            !city.isPointBlocked?.(-204,311,1.65,0) &&
+            DriverRoadGeometry.segmentDrivable(
+                city,-204,311,-204,244,1.65) &&
+            DriverRoadGeometry.segmentDrivable(
+                city,-204,249,-240,244,1.65);
+    }
     static testCorridor(city){
         if(!this.isChicago(city))return false;
         for(let z=244;z<=316;z+=3){

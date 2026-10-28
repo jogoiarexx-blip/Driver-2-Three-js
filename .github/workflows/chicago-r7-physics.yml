@@ -1,0 +1,63 @@
+name: Driver 2 - R8 replay e tráfego bidirecional Goose Island
+on:
+  push:
+    paths:
+      - 'tests/chicago-r7-physics-replay.cjs'
+      - 'tests/chicago-r8-southbound-browser.cjs'
+      - 'tests/chicago-r8-southbound.test.cjs'
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/traffic/traffic-ai.js'
+      - 'js/world/chicago-goose-island-street.js'
+      - 'js/world/chicago-goose-island-north-yard.js'
+      - '.github/workflows/chicago-r7-physics.yml'
+  pull_request:
+    paths:
+      - 'tests/chicago-r7-physics-replay.cjs'
+      - 'js/traffic/traffic-ai.js'
+      - 'js/world/chicago-goose-island-street.js'
+      - 'js/world/chicago-goose-island-north-yard.js'
+      - '.github/workflows/chicago-r7-physics.yml'
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar navegador de replay
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Abrir servidor de testes
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/driver2-r7-http.log 2>&1 &
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/driver2-r7-http.log; exit 1
+      - name: Certificar faixa sul, ponte seca e isolamento de missões
+        run: node --test tests/chicago-r8-southbound.test.cjs
+      - name: Simular fisica por 60 segundos para os tres veiculos
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r7-physics-replay.cjs
+      - name: Simular caminhão de retorno por 60 segundos sem teleporte
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r8-southbound-browser.cjs
+      - name: Publicar telemetria e screenshot mesmo em erro
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: goose-island-r8-bidirectional-physics-trace
+          path: |
+            qa-artifacts/chicago-r7-replay.json
+            qa-artifacts/chicago-r7-traffic-replay.png
+            qa-artifacts/chicago-r8-southbound-physical-replay.json
+            qa-artifacts/chicago-r8-southbound-physical-replay.png
+          retention-days: 14

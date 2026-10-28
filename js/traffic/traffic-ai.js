@@ -37,6 +37,24 @@ class DriverTrafficAI {
     getRoute(car) {
         let route = this.routes.get(car);
         if (route) return route;
+        // R8: o caminhão vindo do extremo norte usa a pista oeste no
+        // sentido sul e depois sai pela ponte transversal de z=240.
+        if(this.city?.preset?.id==='chicago'&&!car.scriptedDrive &&
+            car.gooseIslandSouthbound &&
+            typeof DriverChicagoGooseIslandNorthYard!=='undefined' &&
+            DriverChicagoGooseIslandNorthYard.testSouthbound(this.city) &&
+            DriverChicagoGooseIslandNorthYard.onNorthernSpine(car.x,car.z) &&
+            Math.cos(car.heading)<-.6){
+            route={
+                axis:'z',sign:-1,
+                road:DriverChicagoGooseIslandNorthYard.AXIS_X,
+                target:{x:-204,z:240},
+                isNorthYardSouth:true,reverseTimer:0,stuckSeconds:0,
+                previousX:car.x,previousZ:car.z
+            };
+            this.routes.set(car,route);
+            return route;
+        }
         // R6: o furgão do pátio cruza o deck norte na faixa da ilha.
         if(this.city?.preset?.id==='chicago' && !car.scriptedDrive &&
             car.gooseIslandNorthYard &&
@@ -107,6 +125,29 @@ class DriverTrafficAI {
     }
 
     chooseNext(car, route, playerPos, wanted) {
+        // R8: curva de saída do eixo norte para a ponte oeste em z=240.
+        // A transição acontece depois de descer todo o deck no sentido
+        // contrário; nunca apontar uma diagonal através dos galpões.
+        if(route.isNorthYardSouth &&
+            this.city?.preset?.id==='chicago' &&
+            typeof DriverChicagoGooseIslandNorthYard!=='undefined' &&
+            DriverChicagoGooseIslandNorthYard.testSouthbound(this.city)){
+            const destination=this.positionInLane('x',-1,240,-240);
+            if(typeof DriverRoadGeometry!=='undefined' &&
+                !DriverRoadGeometry.segmentDrivable(this.city,
+                    car.x,car.z,destination.x,destination.z,1.65)){
+                route.reverseTimer=.85;
+                return;
+            }
+            route.axis='x';
+            route.sign=-1;
+            route.road=240;
+            route.target=destination;
+            route.isNorthYardSouth=false;
+            route.southYardCompleted=true;
+            route.reverseTimer=0;
+            return;
+        }
         // R6: a saída do norte usa o mesmo verificador de colisão.
         if(route.isNorthYard &&
             this.city?.preset?.id==='chicago' &&
@@ -441,6 +482,10 @@ class DriverTrafficAI {
         if(car.gooseIslandNorthYard &&
             this.city?.preset?.id==='chicago' &&
             (route.isNorthYard || !route.northYardCompleted))
+            maxSpeed=Math.min(maxSpeed,12);
+        if(car.gooseIslandSouthbound &&
+            this.city?.preset?.id==='chicago' &&
+            route.isNorthYardSouth)
             maxSpeed=Math.min(maxSpeed,12);
         if (maneuver) maxSpeed=Math.min(maxSpeed,maneuver.speedLimit);
         if (scripted) maxSpeed=scripted.done||missionRoute?.blocked?0:
