@@ -343,12 +343,11 @@
                     return;
                 }
                 const forwardThrottle = input.up ? 1 : (input.down ? -1 : 0);
-                // Correção A/D solicitada: o carro do jogador segue a
-                // percepção de direção da câmera. A IA mantém seu sinal
-                // original para não inverter as rotas dos veículos NPC.
-                const steerInput = isPlayer ?
-                    (input.left ? 1 : 0) - (input.right ? 1 : 0) :
-                    (input.right ? 1 : 0) - (input.left ? 1 : 0);
+                // +heading aponta para a DIREITA (+X com frente +Z).
+                // O jogador e a IA precisam da mesma convenção:
+                // [A] gira à esquerda, [D] gira à direita.
+                const steerInput=(input.right ? 1 : 0) -
+                    (input.left ? 1 : 0);
                 const handbrake = !!input.handbrake;
                 const burnoutKey = !!input.sprint; // Botão dedicado de Burnout (SHIFT / C)
 
