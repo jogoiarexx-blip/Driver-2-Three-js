@@ -47,7 +47,9 @@ jobs:
           if git diff --cached --quiet; then
             echo "Máscara já está atualizada."
           else
-            git commit -m "data(chicago): gerar mascara de solo da geometria original [skip ci]"
+            git commit -m "data(chicago): gerar mascara de solo da geometria original"
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
       - name: Publicar mapa para depuração
