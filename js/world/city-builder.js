@@ -281,6 +281,8 @@
                             this.buildChicagoStationBlock(blockX,blockZ);
                         } else if ((blockX===-280||blockX===280)&&blockZ===-280) {
                             this.buildRegionalLandmark(blockX,blockZ);
+                        } else if(this.preset.id==='chicago' && blockX===280 && blockZ===-120 && typeof DriverChicagoGameplay!=='undefined'){
+                            DriverChicagoGameplay.buildGrantPark(this,blockX,blockZ);
                         } else if(this.preset.id==='chicago' && blockX===-280 && blockZ===200 && typeof DriverChicagoGameplay!=='undefined'){
                             DriverChicagoGameplay.buildStadium(this,blockX,blockZ);
                         } else if (blockX === -120 && blockZ === -120) {
