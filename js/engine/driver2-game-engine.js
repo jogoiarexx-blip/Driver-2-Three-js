@@ -2050,7 +2050,10 @@
                         DriverCampaignFlow.chapterTitle(nextChapter)+
                         ' (selecionar no menu de cidades)':
                     notice.next;
-                this.missionToastText=notice.message+' • '+continueHint;
+                // Exibe o motivo específico quando a missão falha.
+                // Sem marcar capítulos perdidos como concluídos.
+                const reason=failed&&desc?' • '+String(desc).slice(0,160):'';
+                this.missionToastText=notice.message+reason+' • '+continueHint;
                 this.missionToastRemaining=nextChapter?10:6;
                 const toast=document.getElementById('driver-mission-toast');
                 if(toast){
@@ -2062,7 +2065,8 @@
                 const timer=document.getElementById('mission-timer');
                 if(timer)timer.classList.add('hidden');
                 const info=document.getElementById('objective-banner');
-                if(info)info.textContent=continueHint;
+                if(info)info.textContent=failed&&desc?
+                    String(desc)+' • '+continueHint:continueHint;
                 this.updateChapterMenu();
             }
 
