@@ -29,8 +29,26 @@ class DriverRegionalMissions {
         const obj=document.getElementById('objective-banner');
         if(type==='story_vegas_ambulance'){
             g.felony=72;
-            this.car(g,{name:'AMBULANCIA DE VEGAS',bodyStyle:'van',
+            const ambulance=this.car(g,{name:'AMBULANCIA DE VEGAS',bodyStyle:'van',
                 color:0xf0f0e7,isTarget:false,x:0,z:-81});
+            // Roof rescue beacon and red-cross body decals use geometry
+            // already available in Three.js; no downloaded textures.
+            if(ambulance.root){
+                const red=new THREE.MeshBasicMaterial({color:0xc52c38});
+                const white=new THREE.MeshBasicMaterial({color:0xffffff});
+                const beacon=new THREE.Mesh(new THREE.BoxGeometry(1.2,.3,.65),red);
+                beacon.position.set(0,2.2,.3);
+                ambulance.root.add(beacon);
+                for(const side of [-1,1]){
+                    const plate=new THREE.Mesh(new THREE.BoxGeometry(.09,1.3,1.35),white);
+                    plate.position.set(side*1.25,1.0,.25);
+                    const bar=new THREE.Mesh(new THREE.BoxGeometry(.12,1.15,.27),red);
+                    bar.position.set(side*1.34,1.0,.25);
+                    const across=new THREE.Mesh(new THREE.BoxGeometry(.12,.25,1.15),red);
+                    across.position.set(side*1.35,1.0,.25);
+                    ambulance.root.add(plate,bar,across);
+                }
+            }
             obj.textContent='Assuma a ambulancia com E e entregue o ferido no abrigo, sob pressão policial.';
         }else if(type==='story_vegas_c4'){
             s.sites=[{x:200,z:-160},{x:-200,z:-160},{x:280,z:160}];
@@ -151,13 +169,14 @@ class DriverRegionalMissions {
                     Math.hypot(p.x-v.x,p.z-v.z)));
                 sub.textContent='C4: '+s.countdown.toFixed(1)+'s • '+Math.round(distance)+'m';
                 if(s.countdown<=0){
-                    s.sites.forEach(v=>g.effects.spawnMassiveExplosion(v.x,0,v.z));
+                    s.sites.forEach(v=>g.effects.spawnMassiveExplosion(
+                        v.x,0,s.type==='story_rio_barge'?49:v.z));
+                    if(s.type==='story_rio_barge')s.sinking=5;
                     if(s.type==='story_vegas_c4')
                         s.props.forEach(prop=>{prop.visible=false;});
                     g.audio.playBigExplosion();
                     if(s.heli)s.heli.visible=false;
-                    if(s.type==='story_rio_barge'&&s.props[0])
-                        s.props[0].visible=false;
+                    // Vessel sinks visibly after the blast instead of vanishing.
                     return distance>=65?win('C4 CONCLUIDO!','Detonação em segurança.'):
                         fail('ATINGIDO PELA EXPLOSAO!','Saia pelo menos 65m do alvo.');
                 }
@@ -193,6 +212,17 @@ class DriverRegionalMissions {
                 return win('LENNY ALCANCADO!','Tanner chegou ao Corcovado.');
         }
         return null;
+    }
+    static animate(g,dt){
+        const s=g.regionalState;
+        if(s?.type!=='story_rio_barge'||!(s.sinking>0)||!s.props[0])
+            return;
+        const boat=s.props[0];
+        const t=Math.max(0,Math.min(.05,dt));
+        boat.position.y-=t*1.5;
+        boat.rotation.z+=t*.16;
+        s.sinking-=t;
+        if(s.sinking<=0)boat.visible=false;
     }
     static dispose(g){
         for(const prop of g.regionalState?.props||[]){
