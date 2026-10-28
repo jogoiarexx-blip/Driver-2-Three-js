@@ -4,10 +4,19 @@
  * usa materiais emissivos simples para não sobrecarregar celulares.
  */
 class VehicleVisuals {
-    static lightState(vehicle, input) {
-        const braking = !!(input.down && vehicle.speed > -1) ||
-            !!(input.handbrake && Math.abs(vehicle.speed) > 2);
-        return { headlamps: !!vehicle.headlightsOn, braking };
+    static lightState(vehicle, input={}) {
+        const speed=Number(vehicle?.speed)||0;
+        const braking=!!(input.down && speed > -1) ||
+            !!(input.handbrake && Math.abs(speed)>2) ||
+            (Number(vehicle?.longitudinalG)||0)<-7;
+        const reversing=speed<-.7;
+        const blink=!!vehicle.hazardLightsOn ||
+            !!(input.left || input.right);
+        return {
+            headlamps:!!vehicle.headlightsOn,braking,reversing,
+            left:blink && (!!vehicle.hazardLightsOn || !!input.left),
+            right:blink && (!!vehicle.hazardLightsOn || !!input.right)
+        };
     }
 
     static update(vehicle, dt, input) {
@@ -18,9 +27,27 @@ class VehicleVisuals {
             vehicle.headlightMaterial.color.setHex(state.headlamps ? 0xfff6bf : 0x605735);
         }
         if (vehicle.tailMaterial) {
-            vehicle.tailMaterial.color.setHex(state.braking ? 0xff2434 : 0x6b171d);
+            // Lanterna de posição no escuro + freio em vermelho intenso.
+            vehicle.tailMaterial.color.setHex(
+                state.braking?0xff293c:
+                state.headlamps?0xb3242d:0x52151a);
         }
-        if (vehicle.headlightBeams) vehicle.headlightBeams.visible = state.headlamps;
+        if(vehicle.reverseLightMaterial)
+            vehicle.reverseLightMaterial.color.setHex(
+                state.reversing?0xf8fafc:0x332d20);
+        const pulse=Math.floor(time*2.6)%2===0;
+        if(vehicle.turnSignalMaterials){
+            vehicle.turnSignalMaterials.left.color.setHex(
+                state.left && pulse?0xffaa23:0x59320d);
+            vehicle.turnSignalMaterials.right.color.setHex(
+                state.right && pulse?0xffaa23:0x59320d);
+        }
+        if (vehicle.headlightBeams){
+            vehicle.headlightBeams.visible=state.headlamps;
+            if(vehicle.headlightBeams.material)
+                vehicle.headlightBeams.material.opacity=
+                    state.headlamps?(vehicle.wetRoad?.20:.13):0;
+        }
         VehicleDamageFX.update(vehicle);
         const speed = Math.abs(vehicle.speed);
         const roadPulse = Math.sin(time * (6 + speed * 0.65));
