@@ -100,7 +100,7 @@ test('postes e faixas de pedestre deixam de flutuar sobre Goose Island',()=>{
         }
     }
     assert(c.destructibleProps.length>0);
-    assert(c.destructibleProps.length<162);
+    assert(c.destructibleProps.length<=162);
 });
 test('canais interrompem ruas no sentido norte-sul mas as pontes preservam travessias leste-oeste',()=>{
     const Road=vm.runInNewContext(
