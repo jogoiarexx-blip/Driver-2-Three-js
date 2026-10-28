@@ -5,6 +5,35 @@
  */
 class DriverChicagoGameplay {
     static STADIUM={x:-280,z:200};
+    static buildGrantPark(city,x,z){
+        if(city.preset.id!=='chicago')return;
+        const green=new THREE.MeshLambertMaterial({color:0x37794a});
+        const concrete=new THREE.MeshLambertMaterial({color:0x9da8a3});
+        const water=new THREE.MeshPhongMaterial({
+            color:0x37758c,shininess:75,transparent:true,opacity:.85});
+        const box=(px,py,pz,w,h,d,mat)=>{
+            const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+            mesh.position.set(px,py,pz);mesh.receiveShadow=true;
+            city.cityGroup.add(mesh);return mesh;
+        };
+        box(x,.06,z,38,.12,37,green);
+        box(x,.17,z,2,.1,36,concrete);
+        box(x,.17,z,36,.1,2,concrete);
+        box(x,.18,z,10,.2,10,concrete);
+        const fountain=new THREE.Mesh(new THREE.CylinderGeometry(4.2,4.2,.6,12),concrete);
+        fountain.position.set(x,.5,z);city.cityGroup.add(fountain);
+        const pool=new THREE.Mesh(new THREE.CylinderGeometry(3.7,3.7,.10,12),water);
+        pool.position.set(x,.84,z);city.cityGroup.add(pool);
+        const trunk=new THREE.MeshLambertMaterial({color:0x684b34});
+        const leaves=new THREE.MeshLambertMaterial({color:0x25633a});
+        for(const dx of [-14,-9,9,14])for(const dz of [-14,14]){
+            const stem=new THREE.Mesh(new THREE.CylinderGeometry(.28,.38,3,5),trunk);
+            stem.position.set(x+dx,1.55,z+dz);
+            const crown=new THREE.Mesh(new THREE.ConeGeometry(2.3,4.5,6),leaves);
+            crown.position.set(x+dx,5,z+dz);
+            city.cityGroup.add(stem,crown);
+        }
+    }
     static buildStadium(city,x,z){
         if(city.preset.id!=='chicago')return;
         const root=new THREE.Group();root.name='chicago-wrigley-interactive';
