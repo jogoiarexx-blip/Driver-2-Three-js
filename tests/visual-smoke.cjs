@@ -370,6 +370,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       const roadVisual=await page.evaluate(()=>{
         const g=window.DriverGame,c=g.city,s=c.roadSurfaceStats;
         return {regions:s?.regions||0,
+          removedWetTiles:s?.removedWetTiles||0,
           intersections:s?.intersectionCount||0,
           paintedInsideIntersections:s?.paintedInsideIntersections,
           collidersAdded:s?.collidersAdded,
@@ -377,9 +378,15 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
             o.name==='driver2-road-asphalt-'+c.preset.id),
           curbs:c.cityGroup.children.some(o=>
             o.name==='driver2-stone-curbs-'+c.preset.id),
-          zebra:c.cityGroup.children.some(o=>o.count===1600)};
+          zebra:c.cityGroup.children.some(o=>
+            o.name==='road-crosswalk-zebra'&&o.count>1000)};
       });
-      assert.equal(roadVisual.regions,261,'Ruas incompletas em '+city);
+      assert.equal(roadVisual.regions+roadVisual.removedWetTiles,261,
+        'Pistas faltando sem justificativa de inundação em '+city);
+      if(city==='chicago')assert(roadVisual.removedWetTiles>0,
+        'Rio Chicago R2 não removeu ruas submersas da renderização');
+      else assert.equal(roadVisual.removedWetTiles,0,
+        'A hidrografia de Chicago não pode mudar outra cidade');
       assert.equal(roadVisual.intersections,81);
       assert.equal(roadVisual.collidersAdded,0);
       assert.equal(roadVisual.paintedInsideIntersections,0);
