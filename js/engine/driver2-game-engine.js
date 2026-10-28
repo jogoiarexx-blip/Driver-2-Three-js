@@ -318,6 +318,19 @@
                     });
                     industrial.gooseIslandRoute=true;
                     this.vehicles.push(industrial);
+                    // R5: furgão entregador vindo da margem oeste. Só
+                    // aparece se as quatro conexões ponte→ilha→ponte
+                    // foram verificadas pela mesma física da campanha.
+                    if(this.city.chicagoGooseIslandStreet.accessReady){
+                        const visitor=new DriverVehicle(this.scene,{
+                            name:'ENTREGAS GOOSE ISLAND',
+                            color:0x8a6d52,bodyStyle:'truck',
+                            x:-284,z:156,heading:Math.PI/2,
+                            maxSpeed:32,accel:17
+                        });
+                        visitor.gooseIslandVisitor=true;
+                        this.vehicles.push(visitor);
+                    }
                 }
 
                 this.tanner.setVisible(false);

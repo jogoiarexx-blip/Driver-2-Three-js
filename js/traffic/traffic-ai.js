@@ -92,11 +92,37 @@ class DriverTrafficAI {
     }
 
     chooseNext(car, route, playerPos, wanted) {
+        // R5: visitante que chega da avenida oeste deve seguir pela
+        // ponte até a entrada da ilha, sem depender da escolha aleatória
+        // da grade de 80. Restringir aos visitantes, não às missões.
+        if(car.gooseIslandVisitor && !car.scriptedDrive &&
+           !route.islandVisitComplete && !route.isIslandSpine &&
+           route.axis==='x' && route.sign===1 &&
+           Math.abs(route.target.x+240)<9 &&
+           Math.abs(route.target.z-156)<9 &&
+           this.city?.chicagoGooseIslandStreet?.accessReady &&
+           typeof DriverRoadGeometry!=='undefined' &&
+           DriverRoadGeometry.segmentDrivable(this.city,
+               car.x,car.z,-160,156,1.55)){
+            route.target={x:-160,z:156};
+            route.road=160;
+            route.islandApproach=true;
+            return;
+        }
         // Saída do ramal R4 para as avenidas leste-oeste existentes
         // em z=160/240. Reutiliza as pontes certificadas da R2.
         if(route.isIslandSpine &&
             this.city?.preset?.id==='chicago' &&
             typeof DriverChicagoGooseIslandStreet!=='undefined'){
+            // A entrada exige uma conversão real para o norte. Primeiro
+            // completar a curva até z≈185; só depois mirar o cruzamento
+            // norte. Do contrário uma diagonal cortaria os galpões.
+            if(route.islandPhase==='entry'){
+                route.target=DriverChicagoGooseIslandStreet.lanePosition(
+                    route.sign,DriverChicagoGooseIslandStreet.NORTH_Z);
+                route.islandPhase='traverse';
+                return;
+            }
             const z=route.sign>0?
                 DriverChicagoGooseIslandStreet.NORTH_Z:
                 DriverChicagoGooseIslandStreet.SOUTH_Z;
@@ -111,6 +137,8 @@ class DriverTrafficAI {
                         car.x,car.z,target.x,target.z))continue;
                 route.axis='x';route.sign=sign;route.road=z;
                 route.target=target;route.isIslandSpine=false;
+                route.islandPhase='complete';
+                if(car.gooseIslandVisitor)route.islandVisitComplete=true;
                 route.reverseTimer=0;
                 return;
             }
@@ -286,6 +314,17 @@ class DriverTrafficAI {
         const pursuitTarget = wanted ?
             this.pursuitInformation(car,dt,playerPos,felony) :
             (hostile && playerPos ? playerPos : null);
+        // R5: entrada efetiva na malha local quando o visitante cruza
+        // a cabeceira oeste. A checagem valida o segmento completo na
+        // física, e nenhuma missão ou outra cidade é redirecionada.
+        if(!scripted && !route.islandVisitComplete &&
+           this.city?.preset?.id==='chicago' &&
+           typeof DriverChicagoGooseIslandStreet!=='undefined' &&
+           route.islandApproach){
+            const entry=DriverChicagoGooseIslandStreet.planVisitorEntry(
+                this.city,car);
+            if(entry)Object.assign(route,entry);
+        }
         const previousTarget = route.target;
         if (!scripted &&
             Math.hypot(car.x - previousTarget.x, car.z - previousTarget.z) < 10) {
