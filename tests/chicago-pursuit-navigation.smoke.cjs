@@ -43,6 +43,21 @@ for(let i=1;i<route.length;i++)
 assert.deepEqual([route[route.length-1].x,route[route.length-1].z],
     [goal.x,goal.z]);
 
+// Com a ponte central bloqueada por um obstáculo, o A*
+ // deve tentar a segunda ponte leste de Chicago, não atravessar o muro.
+const centralClosed={
+    ...city,
+    isPointBlocked(x,z,radius=1.45){
+        return Math.abs(x)<13+radius && z>34&&z<66;
+    }
+};
+const eastReroute=Nav.plan(centralClosed,start,goal);
+assert(eastReroute && eastReroute.some(p=>p.x===240),
+    'Sem desvio pela segunda ponte de Chicago');
+for(let i=1;i<eastReroute.length;i++)
+    assert(Nav.clear(centralClosed,eastReroute[i-1],eastReroute[i]),
+        'Desvio colidiu com ponte bloqueada');
+
 // O planejamento fica em cache enquanto o waypoint não muda.
 const navHolder={};
 Nav.follow(city,start,goal,navHolder,.016);
