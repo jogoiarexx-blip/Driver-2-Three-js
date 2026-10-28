@@ -1491,6 +1491,9 @@
                     const pos = this.getPlayerPosition();
                     const marker = this.missionType==='story_leaving' ||
                         this.missionMarkers.some(m=>m.manualInteract)?null:
+                        this.missionType==='gate_racing' &&
+                            typeof DriverClassicGames!=='undefined'?
+                            DriverClassicGames.findGateMarker(this,pos.x,pos.z):
                         DriverCheckpointRoute.findReached(
                             this.missionType, this.missionMarkers, pos.x, pos.z
                         );
