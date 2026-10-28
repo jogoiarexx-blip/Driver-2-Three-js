@@ -116,18 +116,18 @@ class DriverSpecialStructures {
     }
     static safeHouse(city,cx,cz){
         const t=this.palette(city.preset.id),p=[];
-        const x=cx-9,z=cz+26;
-        // Cobertura do abrigo: terças e calhas elevadas. Entrada z+5 livre.
-        for(const offset of [-4.3,4.3])
-            p.push([x+offset,4.25,z, .21,.30,10.8,t.trim,false]);
-        for(const dz of [-4.9,0,4.9])
-            p.push([x,4.37,z+dz,9.7,.25,.24,t.roof,false]);
+        const x=cx-9,z=cz+8;
+        // Detalhes internos da garagem integrada; a cobertura é a casa.
+        for(const offset of [-3.8,3.8])
+            p.push([x+offset,4.45,z, .21,.30,13.3,t.trim,false]);
+        for(const dz of [-5.5,0,5.5])
+            p.push([x,4.5,z+dz,7.5,.25,.24,t.roof,false]);
         for(const offset of [-3.8,3.8]){
-            p.push([x+offset,.095,z, .18,.025,7,t.trim,false]);
-            p.push([x+offset,3.85,z+5.17,.45,.35,.26,t.light,true]);
+            p.push([x+offset,.245,z, .18,.025,7,t.trim,false]);
+            p.push([x+offset,4.75,z+7.17,.45,.35,.26,t.light,true]);
         }
-        p.push([x,3.75,z+5.4,4.5,.25,.15,t.accent,true]);
-        p.push([x,3.18,z-4.79,5,.55,.18,t.steel,false]);
+        p.push([x,4.9,z+7.4,4.5,.25,.15,t.accent,true]);
+        p.push([x,3.18,z-6.7,5,.55,.18,t.steel,false]);
         this.pack(city.cityGroup,p,'home-garage');
     }
     static secretGarage(city,cx,cz){
