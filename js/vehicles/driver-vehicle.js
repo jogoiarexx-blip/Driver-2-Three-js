@@ -84,6 +84,8 @@
                 this.sirenAssembly = null;
                 this.headlightMaterial = null;
                 this.tailMaterial = null;
+                this.reverseLightMaterial=null;
+                this.turnSignalMaterials=null;
                 this.damageGroup = null;
                 this.damageParts = null;
                 this.frontBumperMesh=null;
@@ -217,7 +219,27 @@
                 tlLeft.position.set(-0.75, 0.78, -2.55);
                 const tlRight = tlLeft.clone();
                 tlRight.position.x = 0.75;
-                this.lightsGroup.add(hlLeft, hlRight, tlLeft, tlRight);
+                // Lanternas auxiliares independentes: ré e piscas.
+                // Funcionam também com um GLB customizado, pois lightsGroup
+                // é preservado ao substituir a carroceria.
+                const reverseMat=new THREE.MeshBasicMaterial({color:0x332d20});
+                this.reverseLightMaterial=reverseMat;
+                const revL=new THREE.Mesh(new THREE.BoxGeometry(.22,.14,.11),reverseMat);
+                revL.position.set(-.33,.78,-2.60);
+                const revR=revL.clone();revR.position.x=.33;
+                const leftBlink=new THREE.MeshBasicMaterial({color:0x59320d});
+                const rightBlink=new THREE.MeshBasicMaterial({color:0x59320d});
+                this.turnSignalMaterials={left:leftBlink,right:rightBlink};
+                for(const side of [-1,1]){
+                    const mat=side<0?leftBlink:rightBlink;
+                    for(const z of [-2.60,2.60]){
+                        const turn=new THREE.Mesh(
+                            new THREE.BoxGeometry(.20,.16,.12),mat);
+                        turn.position.set(side*.99,.77,z);
+                        this.lightsGroup.add(turn);
+                    }
+                }
+                this.lightsGroup.add(hlLeft, hlRight, tlLeft, tlRight,revL,revR);
                 this.chassisTilt.add(this.lightsGroup);
 
                 // Giroflex Policial
