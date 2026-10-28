@@ -70,6 +70,8 @@
                 this.missionToastRemaining=0;
                 this.missionToastText='';
                 this.chapterProgress=new DriverChapterProgress(this.homeSave.storage);
+                for(const mission of this.chapterProgress.regionalCompleted)
+                    this.completedMissions.add(mission);
                 // Saves antigos de Chicago 08 também liberam a nova etapa.
                 const legacySave=this.homeSave.read();
                 if(legacySave?.completed?.includes('story_leaving') ||
@@ -306,6 +308,8 @@
                     VehicleVisuals.setHeadlights(v, lowLight);
                 });
                 if (this.freeVehicleAssets) this.freeVehicleAssets.decorateFleet();
+                if(typeof DriverSecretCars!=='undefined')
+                    DriverSecretCars.apply(this.secretCar,this.currentCityKey);
             }
 
             setWeather(mode) {
@@ -1978,7 +1982,12 @@
                 if(typeof DriverClassicGames!=='undefined' &&
                     DriverClassicGames.isClassic(finishedType))
                     DriverClassicGames.dispose(this);
-                if(!failed)this.completedMissions.add(finishedType);
+                if(!failed){
+                    this.completedMissions.add(finishedType);
+                    if(typeof DriverRegionalMissions!=='undefined' &&
+                        DriverRegionalMissions.isRegional(finishedType))
+                        this.chapterProgress.completeRegional(finishedType);
+                }
                 // O checkpoint de capítulo só nasce após vitória real do diretor.
                 if(this.missionType==='story_leaving' &&
                     this.leavingDirector.completed && /CONCLUÍDA/.test(title)){
