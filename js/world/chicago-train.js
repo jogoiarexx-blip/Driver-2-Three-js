@@ -22,26 +22,47 @@ class DriverChicagoTrain {
             rail.position.set(x,11.61,0);
             city.cityGroup.add(rail);
         }
-        const sleepers=new THREE.InstancedMesh(new THREE.BoxGeometry(6,0.22,0.7),
-            sleeperMat,188);
-        const columns=new THREE.InstancedMesh(new THREE.BoxGeometry(1,11,1),
-            concrete,18);
+        const sleepers=new THREE.InstancedMesh(
+            new THREE.BoxGeometry(6,.22,.7),sleeperMat,188);
+        // O suporte antigo era uma coluna em x=0, no meio da pista,
+        // logo à frente do carro. Pórticos com pernas em x±13.6
+        // ficam entre a borda da via (±12) e a calçada (início ±15).
+        const spans=[];
+        for(let i=0;i<18;i++){
+            const z=-272+i*32;
+            if(z>31 && z<69)continue; // nenhum pilar dentro do canal
+            spans.push(z);
+        }
+        const columns=new THREE.InstancedMesh(
+            new THREE.BoxGeometry(.8,10.4,.8),concrete,spans.length*2);
+        const beams=new THREE.InstancedMesh(
+            new THREE.BoxGeometry(28,.8,1.2),railMat,spans.length);
         const dummy=new THREE.Object3D();
         for(let i=0;i<188;i++){
             dummy.position.set(0,11.50,-281+i*3);
             dummy.rotation.set(0,0,0);
             dummy.scale.set(1,1,1);
-            dummy.updateMatrix();sleepers.setMatrixAt(i,dummy.matrix);
+            dummy.updateMatrix();
+            sleepers.setMatrixAt(i,dummy.matrix);
         }
-        for(let i=0;i<18;i++){
-            dummy.position.set(0,5.5,-272+i*32);
-            dummy.updateMatrix();columns.setMatrixAt(i,dummy.matrix);
+        for(const [i,z] of spans.entries()){
+            for(const [sideIndex,side] of [-1,1].entries()){
+                dummy.position.set(side*13.6,5.2,z);
+                dummy.rotation.set(0,0,0);
+                dummy.scale.set(1,1,1);
+                dummy.updateMatrix();
+                columns.setMatrixAt(i*2+sideIndex,dummy.matrix);
+            }
+            dummy.position.set(0,10.55,z);
+            dummy.updateMatrix();
+            beams.setMatrixAt(i,dummy.matrix);
         }
-        sleepers.instanceMatrix.needsUpdate=true;
-        columns.instanceMatrix.needsUpdate=true;
-        sleepers.frustumCulled=false;
-        columns.frustumCulled=false;
-        city.cityGroup.add(sleepers,columns);
+        for(const mesh of [sleepers,columns,beams]){
+            mesh.instanceMatrix.needsUpdate=true;
+            mesh.frustumCulled=false;
+            mesh.castShadow=false;
+            city.cityGroup.add(mesh);
+        }
     }
 
     constructor(scene,city) {
