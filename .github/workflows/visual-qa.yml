@@ -27,6 +27,7 @@ on:
       - 'tests/structure-smoke.cjs'
       - 'tests/female-walker-smoke.cjs'
       - 'tests/male-pedestrian-glb.test.cjs'
+      - 'tests/male-pedestrian-visual.cjs'
       - 'js/assets/driver-male-pedestrian.js'
       - 'tests/pedestrian-curb-smoke.cjs'
       - 'js/entities/pedestrian-sidewalk-nav.js'
@@ -84,6 +85,10 @@ jobs:
           done
           cat /tmp/driver-http.log
           exit 1
+      - name: Inspecionar visualmente novo pedestre masculino em Chicago e Havana
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/male-pedestrian-visual.cjs
       - name: Jogar e testar os 10 modos da expansão no Chromium
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
