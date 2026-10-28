@@ -68,7 +68,7 @@ test('CityBuilder usa margem nova apenas em Chicago e mantém rios e pontes',()=
     const source=read('js/world/city-builder.js');
     const match=/isWaterAt\(x,z\)\s*\{([\s\S]*?)\n\s*\}/.exec(source);
     assert(match);
-    assert.match(match[1],/this\.preset\.id==='chicago'/);
+    assert.match(match[1],/this\.preset\?\.id==='chicago'/);
     assert.match(match[1],/DriverChicagoPS1Coastline\.waterAt\(x,z\)/);
     assert.match(match[1],/DriverChicagoEastBridge\.isDeckLocation/);
     assert.match(match[1],/z>34\.85&&z<65\.15/);
