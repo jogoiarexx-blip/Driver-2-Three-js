@@ -22,11 +22,20 @@ class DriverStreetFurniture {
         // Cruzamentos da malha base, sem colocar marcas no canal.
         for (let x=-320; x<=320; x+=80) {
             for (let z=-320; z<=320; z+=80) {
-                for (const sign of [-1, 1]) {
-                    for (let line=0;line<5;line++) {
-                        const offset = (line - 2) * 1.6;
-                        crosswalks.push({x:x+offset,z:z+sign*12,alongX:true});
-                        crosswalks.push({x:x+sign*12,z:z+offset,alongX:false});
+                // Travessia completa: 10 barras ao longo dos 22m de
+                // pista. A versão anterior tinha apenas cinco barras no
+                // meio da rua, parecendo um risco branco desconectado.
+                for(const sign of [-1,1]) {
+                    for(let line=0;line<10;line++) {
+                        const offset=(line-4.5)*2.12;
+                        const crossZ=z+sign*16.5;
+                        // Nunca pintar sobre o canal (z=34..66).
+                        if(!(crossZ>31&&crossZ<69))
+                            crosswalks.push({x:x+offset,z:crossZ,
+                                alongX:true});
+                        if(!(z>31&&z<69))
+                            crosswalks.push({x:x+sign*16.5,
+                                z:z+offset,alongX:false});
                     }
                 }
                 // Postes nos cantos externos sem invadir a via.
@@ -41,16 +50,18 @@ class DriverStreetFurniture {
             }
         }
         const stripe = new THREE.InstancedMesh(
-            new THREE.PlaneGeometry(0.85, 3.5),
+            new THREE.PlaneGeometry(1.18,3.5),
             new THREE.MeshBasicMaterial({
                 color: 0xe5e7eb, side: THREE.DoubleSide,
                 depthWrite: false, polygonOffset:true, polygonOffsetFactor:-2
             }),crosswalks.length
         );
         const obj = new THREE.Object3D();
+        // Plano em XZ; rotacionar ao redor de Y para cruzamentos leste/oeste.
+        stripe.geometry.rotateX(-Math.PI/2);
         crosswalks.forEach((p,i)=>{
-            obj.position.set(p.x,0.081,p.z);
-            obj.rotation.set(-Math.PI/2,0,p.alongX?Math.PI/2:0);
+            obj.position.set(p.x,.081,p.z);
+            obj.rotation.set(0,p.alongX?0:Math.PI/2,0);
             obj.scale.set(1,1,1);
             obj.updateMatrix();
             stripe.setMatrixAt(i,obj.matrix);
