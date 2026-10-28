@@ -101,13 +101,13 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         const car=window.DriverGame.playerCar;
         if(!car.hoodPivot)return {supported:false};
         car.damage=78;car.damageZones.front=82;
-        window.VehicleDamageFX.update(car);
+        VehicleDamageFX.update(car);
         const hood=car.hoodPivot.children[0];
         const record={supported:true,scaleZ:hood.scale.z,
           hingeX:car.hoodPivot.rotation.x,
           hubcaps:car.hubcaps};
         car.damage=0;car.damageZones.front=0;
-        window.VehicleDamageFX.update(car);
+        VehicleDamageFX.update(car);
         return record;
       });
       if(visualDamage.supported){
