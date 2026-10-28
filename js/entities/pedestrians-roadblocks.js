@@ -10,6 +10,8 @@
                 this.pedestrians = [];
                 this.femalePedestrian = typeof DriverFemalePedestrian==='function'?
                     new DriverFemalePedestrian(this):null;
+                this.malePedestrian=typeof DriverMalePedestrian==='function'?
+                    new DriverMalePedestrian(this):null;
                 this.roadblocks = [];
                 this.roadblockOfficers = [];
                 this.officerTime = 0;
@@ -22,6 +24,7 @@
                 // exigindo esqueleto/CPU em personagens distantes.
                 // Preserva o rig GLB antes da limpeza dos objetos da cidade anterior.
                 this.femalePedestrian?.release();
+                this.malePedestrian?.release();
                 GPUResourceUtils.disposeSubtree(this.group);
                 while(this.group.children.length>0)
                     this.group.remove(this.group.children[0]);
@@ -103,6 +106,10 @@
                 // Mesma rota, semáforos, colisões, reciclagem e esquiva.
                 this.femalePedestrian?.attachToFirst();
                 this.femalePedestrian?.load();
+                // Segunda vaga: GLB masculino real com Walking/Running,
+                // sem adicionar pedestres nem alterar a IA de calçada.
+                this.malePedestrian?.attachToPedestrian();
+                this.malePedestrian?.load();
             }
 
             recycleDistantPedestrians(focus,dt){
@@ -327,7 +334,7 @@
                     p.visualClock=(p.visualClock||0)+dt;
                     const swing=Math.sin(p.walkPhase)*
                         (crossing?.66:moving?.47:.07);
-                    if(!p.glbFemale)for(let i=0;i<2;i++){
+                    if(!p.glbFemale&&!p.glbMale)for(let i=0;i<2;i++){
                         if(p.legs[i])p.legs[i].rotation.x=(i?1:-1)*swing;
                         if(p.arms[i])p.arms[i].rotation.x=
                             (i?-1:1)*(swing*.82+
@@ -337,6 +344,8 @@
                         p.mesh.rotation.y=Math.atan2(state.dx,state.dz);
                     if(p.glbFemale)
                         this.femalePedestrian?.update(p,dt,moving,crossing);
+                    if(p.glbMale)
+                        this.malePedestrian?.update(p,dt,moving,crossing);
                     // Antecipação na passada, leve inclinação ao correr.
                     // A esquiva não altera a posição ou a colisão.
                     p.mesh.rotation.z=state.state==='dodge'?
@@ -350,7 +359,7 @@
                     // descem para y=0 durante a travessia. O rig GLB
                     // já traz o balanço de caminhada: sem bob artificial.
                     const pavement=this.city?.getSidewalkHeightAt?.(p.x,p.z) ?? .35;
-                    const bob=p.glbFemale?0:(moving?
+                    const bob=(p.glbFemale||p.glbMale)?0:(moving?
                         Math.abs(Math.sin(p.walkPhase))*
                         (crossing?.10:.07):0);
                     p.mesh.position.set(p.x,pavement+bob,p.z);
