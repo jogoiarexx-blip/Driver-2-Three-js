@@ -1026,3 +1026,17 @@ A R2 transformou corredores da grade procedural em braços do Rio Chicago e crio
 Isso confirma que simplesmente esticar a grade de 80 unidades em dois eixos **não** reproduziria Chicago: distorceria ruas, edifícios e circulação. A etapa seguinte deve migrar a topologia viária real do PS1 por setores, com mapeamento dos nós de missão e validação da rede antes de substituir as ruas da campanha.
 
 Reproduzir os números: `node tools/chicago-r3-footprint.cjs --check`. O CSV/JSON não certifica braços do rio, vias, pontes, nem percentual de fidelidade do Undercover. Esta é uma correção incremental de consistência e uma base de referência.
+
+
+## Chicago R4 — primeira rua real fora da grade de 80 no Undercover
+
+A R4 começa a alterar a **topologia** da Chicago procedural, não apenas a decoração:
+
+- `js/world/chicago-goose-island-street.js` cria uma rua norte–sul de **80 unidades** em **x≈−200, z=160–240**, no interior de Goose Island, entre os dois canais da R2. Não é uma cópia georreferenciada certificada da ROM; é o primeiro setor local de reconstrução inspirado no mapa original, mantendo coordenadas compatíveis com a campanha.
+- O quarteirão de parque em `(-200,200)` é removido com critério exclusivo de Chicago. A célula deixa de receber a placa de calçada elevada e obstáculos do parque. Em seu lugar entram duas faixas de asfalto, curbs e **dois galpões industriais com colisores AABB reais**, deixando um corredor desobstruído para carros.
+- `DriverChicagoGooseIslandStreet.testCorridor` verifica colisões e água ao longo das duas faixas antes de posicionar um veículo.
+- `DriverTrafficAI` reconhece automaticamente um carro no novo eixo local e, ao chegar a z=160/240, cria uma saída transversal para uma das pontes já presentes na R2. **Não altera rotas de missão** e não modifica a IA nas outras três cidades.
+- Um **FURGÃO GOOSE ISLAND** começa na faixa leste do novo corredor para demonstrar navegação no trecho; só é criado quando a geometria e o corredor físico foram construídos e a checagem de saída está segura.
+- Os testes `tests/chicago-r4-island-spine.test.cjs` validam geometria, carregamento, colisores, rota, preservação das missões e isolamento regional. `tests/chicago-r4-island-browser.cjs` abre o Undercover no Chromium, valida o furgão, a nova via, as dez pontes e captura a cena.
+
+**Fidelidade:** a rua foi posicionada em coordenadas do clone, e não inferida como uma rua exata a partir dos GLBs. A origem 3D permanece evidência da distribuição irregular de quarteirões; para aproximar integralmente o mapa PS1, as próximas ruas deverão ser identificadas no solo original e remapeadas contra objetivos, garagens, margens e pontos de missão. A campanha antiga continua acessível.
