@@ -86,6 +86,20 @@ class DriverClassicGames {
         DriverCheckpointRoute.refresh(type,g.missionMarkers);
         return s;
     }
+    static findGateMarker(g,x,z){
+        const s=g.classicState;
+        if(!s||s.type!=='gate_racing'||g.mode!=='driving')return null;
+        const marker=DriverCheckpointRoute.current(g.missionMarkers);
+        if(!marker)return null;
+        const index=g.missionMarkers.indexOf(marker);
+        const gate=s.gates[index];
+        if(!gate)return null;
+        // Passing between cones is required: approaching a ring from
+        // outside the narrow gate must not award the checkpoint.
+        const lateral=gate.axis==='x'?Math.abs(x-gate.x):Math.abs(z-gate.z);
+        const forward=gate.axis==='x'?Math.abs(z-gate.z):Math.abs(x-gate.x);
+        return lateral<3.2&&forward<3.1?marker:null;
+    }
     static marker(g,marker){
         const s=g.classicState;
         if(!s)return;
@@ -103,6 +117,7 @@ class DriverClassicGames {
     static update(g,dt){
         const s=g.classicState;
         if(!s || !g.missionActive)return null;
+        s.elapsed=(s.elapsed||0)+dt;
         const sub=document.getElementById('mission-subcounter');
         const pos=g.getPlayerPosition();
         if(s.type==='arcade_getaway'){
@@ -114,7 +129,7 @@ class DriverClassicGames {
             s.clearSeconds=visible?0:s.clearSeconds+dt;
             sub.textContent='FORA DO RADAR: '+s.clearSeconds.toFixed(1)+'/8.0s';
             if(s.clearSeconds>=8)return {success:true,
-                title:'GETAWAY CONCLUÍDO!',message:'Você despistou as viaturas.'};
+                title:'GETAWAY CONCLUÍDO!',message:'Você despistou as viaturas em '+s.elapsed.toFixed(1)+'s.'};
         }
         if(s.type==='gate_racing'){
             // Cones são decorativos mas possuem penalidade real.
