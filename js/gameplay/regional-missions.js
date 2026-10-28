@@ -32,6 +32,17 @@ class DriverRegionalMissions {
             obj.textContent='Assuma a ambulancia com E e entregue o ferido no abrigo, sob pressão policial.';
         }else if(type==='story_vegas_c4'){
             s.sites=[{x:200,z:-160},{x:-200,z:-160},{x:280,z:160}];
+            // Trucks and electrical generators are visible, low-poly
+            // objectives. These are scene props, not collision volumes.
+            for(const [i,site] of s.sites.entries()){
+                const vehicle=new THREE.Mesh(
+                    new THREE.BoxGeometry(i===0?7:5,3.5,i===0?11:6),
+                    new THREE.MeshLambertMaterial({
+                        color:i===0?0x657380:0x827d69}));
+                vehicle.position.set(site.x,1.75,site.z);
+                vehicle.name='caine-depot-target-'+i;
+                g.scene.add(vehicle);s.props.push(vehicle);
+            }
             this.nextSite(g,s);
             obj.textContent='Plante o C4 em 3 geradores. Saia do carro e use E em cada zona.';
         }else if(type==='story_vegas_heist'){
@@ -80,6 +91,7 @@ class DriverRegionalMissions {
     static nextSite(g,s){
         const target=s.sites[s.phase];
         g.clearMissionMarkers();
+        document.getElementById('mission-subcounter')?.classList.remove('hidden');
         if(target){
             g.spawnMarkerRing(target.x,target.z,0xf97316);
             g.missionMarkers[0].manualInteract=true;
@@ -91,10 +103,13 @@ class DriverRegionalMissions {
             !['story_vegas_c4','story_rio_barge'].includes(s.type))return false;
         const t=s.sites[s.phase],p=g.getPlayerPosition();
         if(!t || Math.hypot(t.x-p.x,t.z-p.z)>9)return false;
+        if(s.type==='story_vegas_c4'&&s.props[s.phase])
+            s.props[s.phase].visible=false;
         s.planted++;s.phase++;
         g.audio.playC4Beep(true);
         if(s.phase<s.sites.length)this.nextSite(g,s);
         else{s.countdown=13;g.clearMissionMarkers();
+            document.getElementById('mission-subcounter')?.classList.remove('hidden');
             g.felony=Math.max(75,g.felony);}
         return true;
     }
