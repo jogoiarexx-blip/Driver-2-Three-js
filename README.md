@@ -1090,3 +1090,19 @@ A R7 já corrigia as curvas visuais e validava percursos físicos de caminhões.
 - O workflow `chicago-r7-physics.yml` agora compara os **três percursos da revisão anterior** com o novo trajeto de retorno e publica os relatórios e as capturas de tela como artefatos.
 
 **Limite:** é uma segunda direção de tráfego verificada na **geografia procedural aproximada** de Goose Island; não equivale a um novo trecho de ruas homologado a partir dos GLBs originais do PS1. Os 54 setores originais continuam separados na pasta `chicago/`.
+
+
+## Chicago R9 — quatro veículos simultâneos e auditoria de rotas industriais
+
+As revisões R7 e R8 já reproduziam o trajeto físico dos caminhões isoladamente. A R9 adiciona um teste **conjunto** com os quatro veículos de Goose Island (furgão local, entregas vindo do oeste, carga norte e retorno sul), todos dirigidos pela **mesma IA e a mesma física de chassis/colisões** do jogo. A simulação determinista usa 60 segundos virtuais, registra posições, fases de rota, paradas, danos, contatos entre carros, água e interseções com prédios. Um relatório JSON e screenshot são preservados pelo GitHub Actions.
+
+A R9 também introduz `js/world/chicago-local-road-network.js`: em vez de cada recurso auditar apenas suas próprias coordenadas, o módulo **consolida 10 segmentos físicos dirigidos em três fluxos**:
+- continente oeste → ilha → saída leste (R5, quatro segmentos);
+- ilha → pátio norte → ponte superior → saída leste (R6, quatro segmentos);
+- avenida norte → ponte no sentido sul → saída oeste (R8, dois segmentos).
+
+Cada segmento é conferido por `DriverRoadGeometry.segmentDrivable`. O relatório de `city.chicagoLocalRoadNetwork` diferencia segmentos livres de bloqueios e identifica quais dos três fluxos ainda podem ser usados. **Não altera automaticamente IA, missão, bloqueios ou a física**: é uma certificação diagnóstica e uma base para migrar a malha procedural com segurança, sem apontar um veículo para uma rua cujo trecho esteja bloqueado.
+
+Teste de lógica: `node --test tests/chicago-r9-local-network.test.cjs`. Teste conjunto: `node tests/chicago-r9-concurrent-browser.cjs` em um servidor HTTP local com Playwright/Chromium. Workflow dedicado: `chicago-r9-traffic.yml`.
+
+**Limites:** o primeiro cenário conjunto mantém sinais de trânsito verdes para comparar especificamente a interação entre veículos; não prova comportamento em todos os ciclos de semáforo, tráfego aleatório, pedestres ou 100% das missões. Todas as coordenadas ainda são da Chicago **procedural**, não da rede viária certificada dos 54 GLBs originais do PS1.

@@ -1,0 +1,53 @@
+name: Driver 2 - Chicago R9 - Quatro veículos simultâneos
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tests/chicago-r9-concurrent-browser.cjs'
+      - 'tests/chicago-r9-local-network.test.cjs'
+      - 'js/world/chicago-local-road-network.js'
+      - 'js/traffic/traffic-ai.js'
+      - '.github/workflows/chicago-r9-traffic.yml'
+  pull_request:
+    paths:
+      - 'tests/chicago-r9-concurrent-browser.cjs'
+      - 'js/traffic/traffic-ai.js'
+      - '.github/workflows/chicago-r9-traffic.yml'
+permissions:
+  contents: read
+jobs:
+  mixed-traffic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Certificar os dez segmentos industriais dirigidos
+        run: node --test tests/chicago-r9-local-network.test.cjs
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir o clone de Driver 2
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/driver2-r9-http.log 2>&1 &
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/driver2-r9-http.log; exit 1
+      - name: Reproduzir colisões, filas e progresso dos quatro veículos
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r9-concurrent-browser.cjs
+      - name: Publicar relatório de movimento e screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver2-chicago-r9-traffic-analysis
+          path: |
+            qa-artifacts/chicago-r9-concurrent-traffic.json
+            qa-artifacts/chicago-r9-concurrent-traffic.png
+          retention-days: 14

@@ -141,6 +141,7 @@
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
                 this.chicagoGooseIslandJunctions=null;
+                this.chicagoLocalRoadNetwork=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -396,6 +397,10 @@
                         DriverChicagoGooseIslandNorthYard.build(this);
                     if(typeof DriverChicagoGooseIslandJunctions!=='undefined')
                         DriverChicagoGooseIslandJunctions.build(this);
+                    // R9: auditoria dirigida dos 10 trechos industriais já
+                    // existentes. Apenas observação: sem alterar missões.
+                    if(typeof DriverChicagoLocalRoadNetwork!=='undefined')
+                        DriverChicagoLocalRoadNetwork.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
