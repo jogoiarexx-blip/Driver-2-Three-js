@@ -35,7 +35,9 @@ class DriverCampaignFlow {
             vegas:'LAS VEGAS',rio:'RIO DE JANEIRO'})[chapter]||chapter;
     }
     static isFailure(title){
-        return /FALH|ESGOTAD|DESTRUÍDO|ESCAPOU|ATINGIDO|PONTE FECHOU|FIM DO SURVIVAL|TEMPO ESGOTADO/i.test(String(title));
+        // Algumas derrotas de Chicago eram tratadas como vitória:
+        // "O SUSPEITO VIU VOCÊ!" e "TREM PERDIDO" não coincidiam.
+        return /FALH|ESGOTAD|DESTRUÍD[OA]|ESCAPOU|ATINGID[OA]|PONTE FECHOU|FIM DO SURVIVAL|TEMPO ESGOTADO|VIU VOCÊ|TREM PERDIDO|ALVO PERDIDO|VOCÊ FOI DESCOBERTO/i.test(String(title));
     }
     static summarize(title,description,failed,next){
         return {
