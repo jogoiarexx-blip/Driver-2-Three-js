@@ -1628,11 +1628,15 @@
 
             buildMissionStartMarker(){
                 const city=this.preset.id;
-                if(city!=='chicago'&&city!=='havana')return;
-                // Pontos reais na calçada, fora das caixas dos prédios.
-                const place=city==='chicago'?
-                    {x:-64,z:-144,type:'story_tipoff'}:
-                    {x:16,z:-224,type:'story_havana_lead'};
+                // Marcadores de campanha por cidade, inclusive Vegas e Rio.
+                const places={
+                    chicago:{x:-64,z:-144,type:'story_tipoff'},
+                    havana:{x:16,z:-224,type:'story_havana_lead'},
+                    vegas:{x:-64,z:-144,type:'story_vegas_ambulance'},
+                    rio:{x:16,z:-224,type:'story_rio_barge'}
+                };
+                const place=places[city];
+                if(!place)return;
                 const mat=new THREE.MeshBasicMaterial({
                     color:0x22c55e,transparent:true,opacity:.78,
                     depthWrite:false
