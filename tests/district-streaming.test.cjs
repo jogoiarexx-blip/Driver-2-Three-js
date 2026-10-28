@@ -97,7 +97,8 @@ test('cidade mantém caixas de colisão independentemente de LOD',()=>{
     assert.match(city,/this\.districtBuildings\.push\(building\)/);
     assert.match(city,/this\.buildingBoxes\.push\(\{/);
     assert.match(city,/buildDistrictRepresentations\(sidewalkPositions,sidewalkMat\)/);
-    assert.match(city,/new THREE\.InstancedMesh\(this\.districtBoxGeometry/);
+    assert.match(city,/new THREE\.InstancedMesh\(chunk\.geometry/);
+    assert.match(city,/DriverDistrictVisibility\.makeGeometry\(chunk\.buildings\)/);
     assert.match(city,/this\.districtLOD=new DriverDistrictLOD/);
     assert.match(city,/this\.districtLOD\.update\(focus,\{force\}\)/);
 });
