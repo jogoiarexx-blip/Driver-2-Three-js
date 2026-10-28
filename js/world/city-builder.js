@@ -878,6 +878,8 @@
                 if(this.homeGarageDoorOpen&&idx>=0)boxes.splice(idx,1);
                 if(!this.homeGarageDoorOpen&&idx<0)
                     boxes.push(this.homeGarageDoorClosedBox);
+                // Invalida o índice espacial quando a barreira muda.
+                if(this._spatialCollisions)this._spatialCollisions.boxes=null;
                 return this.homeGarageDoorOpen;
             }
 
@@ -898,7 +900,7 @@
                 wall(cx-15,7.2,cz,.7,14,30);
                 wall(cx+15,7.2,cz,.7,14,30);
                 // Abertura para garagem com 8m de largura na fachada sul.
-                wall(cx-13,7.2,cz+15,4,14,.65);
+                wall(cx-14,7.2,cz+15,2,14,.65);
                 wall(cx+5,7.2,cz+15,20,14,.65);
                 wall(cx-9,10.5,cz+15,8,7,.65);
                 wall(cx,14.7,cz,32,1.2,32,trim,false);
