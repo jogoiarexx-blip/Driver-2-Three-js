@@ -347,6 +347,20 @@
                     });
                     northTruck.gooseIslandNorthYard=true;
                     this.vehicles.push(northTruck);
+                    // R8: o sentido oposto da ponte norte só abre após
+                    // verificar toda a faixa -204 e a saída pela ponte
+                    // oeste da ilha. Não altera tráfego de missão.
+                    if(DriverChicagoGooseIslandNorthYard.testSouthbound(
+                        this.city)){
+                        const returnTruck=new DriverVehicle(this.scene,{
+                            name:'RETORNO SUL GOOSE ISLAND',
+                            color:0xb1845d,bodyStyle:'truck',
+                            x:-204,z:311,heading:Math.PI,
+                            maxSpeed:29,accel:17
+                        });
+                        returnTruck.gooseIslandSouthbound=true;
+                        this.vehicles.push(returnTruck);
+                    }
                 }
 
                 this.tanner.setVisible(false);
