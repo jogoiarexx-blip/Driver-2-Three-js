@@ -91,6 +91,16 @@ class DriverTannerHomeInterior {
         for(const dx of [-10.0,-9.3])for(const dz of [-1.25,-.75])
             add(dx,2.34,dz,.16,.06,.16,0x1e293b);
 
+        // Quarto lateral: cama baixa, cobertor, travesseiros e criado-mudo.
+        // Evita a entrada central, permitindo explorar a casa a pé.
+        add(7.0,.43,-7.5,4.8,.65,3.5,wood,false,true);
+        add(7.0,.85,-7.5,4.5,.31,3.15,cream);
+        add(7.0,1.04,-8.0,4.3,.12,2.1,0x536e78);
+        for(const dx of [6.05,7.95])
+            add(dx,1.05,-6.22,1.45,.22,.62,0xece1ce);
+        add(9.9,.64,-5.35,1.3,1.15,1.2,mahogany,false,true);
+        add(9.9,1.33,-5.35,.7,.13,.65,lamp,true);
+
         // Mesa de jantar e cadeiras junto à parede, afastadas do save.
         add(-6.9,1.05,5.8,4.4,.15,2.7,wood,false,true);
         for(const dz of [4.1,7.55]){
@@ -119,9 +129,13 @@ class DriverTannerHomeInterior {
         }
         if(typeof DriverSpecialStructures!=='undefined')
             DriverSpecialStructures.pack(city.cityGroup,parts,'tanner-home-rev2');
+        // A mesa original de save ocupa o corredor em z+4:
+        // o jogador encosta nela para usar E, mas não a atravessa.
+        solid.push({minX:x-2.05,maxX:x+2.05,
+            minZ:z+2.9,maxZ:z+5.1});
         city.tannerHomeFurnitureBoxes=solid;
         city.tannerHomeInteriorStats={
-            pieces:parts.length,colliders:solid.length,rooms:3};
+            pieces:parts.length,colliders:solid.length,rooms:4};
         return city.tannerHomeInteriorStats;
     }
     static blocked(city,x,z,radius=0.55){
