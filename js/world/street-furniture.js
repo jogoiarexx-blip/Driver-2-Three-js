@@ -19,6 +19,12 @@ class DriverStreetFurniture {
     static build(city) {
         const positions = [];
         const crosswalks = [];
+        // R3: postes e faixas não ficam suspensos nos braços do Rio Chicago.
+        // Não altera posições de Havana, Vegas, Rio ou da Chicago clássica
+        // caso o módulo geográfico não tenha sido carregado.
+        const dry=(x,z)=>city?.preset?.id!=='chicago' ||
+            typeof DriverChicagoPS1RiverBranches==='undefined' ||
+            !city.isWaterAt?.(x,z);
         // Cruzamentos da malha base, sem colocar marcas no canal.
         for (let x=-320; x<=320; x+=80) {
             for (let z=-320; z<=320; z+=80) {
@@ -32,10 +38,12 @@ class DriverStreetFurniture {
                         const offset=(line-4.5)*2.12;
                         const crossZ=z+sign*16.5;
                         // Nunca pintar sobre o canal (z=34..66).
-                        if(!(crossZ>31&&crossZ<69))
+                        if(!(crossZ>31&&crossZ<69) &&
+                            dry(x+offset,crossZ))
                             crosswalks.push({x:x+offset,z:crossZ,
                                 alongX:true});
-                        if(!(z>31&&z<69))
+                        if(!(z>31&&z<69) &&
+                            dry(x+sign*16.5,z+offset))
                             crosswalks.push({x:x+sign*16.5,
                                 z:z+offset,alongX:false});
                     }
@@ -45,10 +53,10 @@ class DriverStreetFurniture {
                 // de afastamento). Não posicionar postes no canal.
                 const south=z-16;
                 const north=z+16;
-                positions.push([x-16,
-                    south>31&&south<69?north:south]);
-                positions.push([x+16,
-                    north>31&&north<69?south:north]);
+                const leftZ=south>31&&south<69?north:south;
+                const rightZ=north>31&&north<69?south:north;
+                if(dry(x-16,leftZ))positions.push([x-16,leftZ]);
+                if(dry(x+16,rightZ))positions.push([x+16,rightZ]);
             }
         }
         const stripe = new THREE.InstancedMesh(
