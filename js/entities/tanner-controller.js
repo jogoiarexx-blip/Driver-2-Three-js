@@ -167,9 +167,9 @@
                 }
 
                 const turnSpeed = 3.2;
-                // Mesma orientação usada pelo carro e pelo minimapa.
-                if (input.left) this.heading -= turnSpeed * dt;
-                if (input.right) this.heading += turnSpeed * dt;
+                // +X aparece à esquerda na câmera de perseguição Three.js.
+                if (input.left) this.heading += turnSpeed * dt;
+                if (input.right) this.heading -= turnSpeed * dt;
                 this.group.rotation.y = this.heading;
 
                 let moveDir = 0;
