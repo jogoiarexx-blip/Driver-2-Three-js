@@ -19,6 +19,16 @@ class DriverRoadSurface {
         })[id]||this.palette('chicago');
     }
 
+    // A água R2 é consultada antes de construir a malha: não renderizar
+    // asfalto/linhas nos trechos transformados em canais. Os decks reais
+    // continuam secos por DriverChicagoPS1RiverBranches.isBridge().
+    static dryStreetPoint(city,x,z){
+        if(city?.preset?.id!=='chicago' ||
+           typeof DriverChicagoPS1RiverBranches==='undefined')
+            return true;
+        return !city.isWaterAt?.(x,z);
+    }
+
     static laneClear(x,z){
         // Marks never cross the 24m intersection box, and painted
         // lines stop before river/canal (z=34..66).
@@ -28,8 +38,15 @@ class DriverRoadSurface {
     }
 
     static buildAsphalt(city){
-        const tiles=[],add=(x,z,w,d,angle=0)=>
+        const tiles=[];
+        let removedWetTiles=0;
+        const add=(x,z,w,d,angle=0)=>{
+            if(!this.dryStreetPoint(city,x,z)){
+                removedWetTiles++;
+                return;
+            }
             tiles.push({x,y:.020,z,w,d,angle});
+        };
         const axes=[];
         for(let n=-320;n<=320;n+=80)axes.push(n);
         // Intersections are ONE square. Road segments end at its edges;
@@ -72,7 +89,8 @@ class DriverRoadSurface {
         mesh.name='driver2-road-asphalt-'+city.preset.id;
         city.cityGroup.add(mesh);
         city.roadSurfaceStats={regions:tiles.length,intersectionCount:81,
-            paintedInsideIntersections:0,collidersAdded:0,materials:1};
+            paintedInsideIntersections:0,collidersAdded:0,materials:1,
+            removedWetTiles};
         return mesh;
     }
 
@@ -85,22 +103,30 @@ class DriverRoadSurface {
             for(let along=-409;along<=409;along+=11){
                 // Dashes only between junctions (no yellow bars across
                 // intersections or the water).
-                if(!this.laneClear(road,along))continue;
+                const vertical=this.laneClear(road,along) &&
+                    this.dryStreetPoint(city,road,along);
+                const horizontal=this.laneClear(along,road) &&
+                    this.dryStreetPoint(city,along,road);
+                if(!vertical&&!horizontal)continue;
                 const centerLen=4.35;
-                for(const offset of [-.23,.23])
-                    add(yellow,road+offset,along,.13,centerLen);
-                if(this.laneClear(along,road)){
-                    for(const offset of [-.23,.23])
+                if(vertical)for(const offset of [-.23,.23]){
+                    if(this.dryStreetPoint(city,road+offset,along))
+                        add(yellow,road+offset,along,.13,centerLen);
+                }
+                if(horizontal)for(const offset of [-.23,.23]){
+                    if(this.dryStreetPoint(city,along,road+offset))
                         add(yellow,along,road+offset,.13,
                             centerLen,Math.PI/2);
                 }
                 // Worn white roadside paint, separated from curb.
                 if(Math.floor(along/11)%3!==0){
                     for(const side of [-1,1]){
-                        add(white,road+side*10.85,along,.13,3.6);
-                        if(this.laneClear(along,road))
-                            add(white,along,road+side*10.85,
-                                .13,3.6,Math.PI/2);
+                        const vx=road+side*10.85;
+                        if(vertical&&this.dryStreetPoint(city,vx,along))
+                            add(white,vx,along,.13,3.6);
+                        const hz=road+side*10.85;
+                        if(horizontal&&this.dryStreetPoint(city,along,hz))
+                            add(white,along,hz,.13,3.6,Math.PI/2);
                     }
                 }
             }
@@ -108,11 +134,13 @@ class DriverRoadSurface {
             for(let cross=-320;cross<=320;cross+=80){
                 for(const sign of [-1,1]){
                     const z=cross+sign*20.8;
-                    if(!(z>31&&z<69))
+                    if(!(z>31&&z<69) &&
+                       this.dryStreetPoint(city,road,z))
                         add(white,road,z,21.3,.30,0,.071);
                     const x=cross+sign*20.8;
                     // The same strip across the perpendicular roadway.
-                    if(!(road>31&&road<69))
+                    if(!(road>31&&road<69) &&
+                       this.dryStreetPoint(city,x,road))
                         add(white,x,road,.30,21.3,0,.071);
                 }
             }

@@ -1009,3 +1009,20 @@ O Undercover preserva as missões da versão anterior e acrescenta a **primeira 
 **Limitação importante:** este é um traçado *inspirado* pela configuração de Chicago no Driver 2 original, NÃO coordenadas exatas certificadas contra o OBJ PS1. Para preservar missões, as faixas de água reaproveitam corredores da grade procedural; a IA deixa de usar os antigos eixos norte-sul transformados em canal, mas mantém ligações através das ruas transversais. A reconstrução de curvas reais, pontes elevadas, deslocamento de quarteirões e ajustes da campanha ainda é incremental.
 
 Reproduzir: `node --test tests/chicago-ps1-river-branches.test.cjs`. O próximo trabalho estrutural é medir os trechos de rio e vias no `chicago/manifest.json`/GLBs e substituir a grade por segmentos homologados, já com remapeamento explícito de cada missão.
+
+## Chicago PS1 R3 — ruas secas ao redor dos braços do rio e medição do mapa original
+
+A R2 transformou corredores da grade procedural em braços do Rio Chicago e criou 10 pontes, mas deixou trechos de **asfalto, faixas e zebras desenhados sobre a água**. A R3 corrige o defeito com o mesmo `isWaterAt` utilizado pela física:
+
+- `js/world/road-surface.js` deixa de instanciar pedaços de asfalto que passaram a ser água; também elimina linhas amarelas, bordas brancas e linhas de parada submersas.
+- `js/world/street-furniture.js` filtra faixas de pedestres e postes em posições inundadas, sem modificar o posicionamento seco do mobiliário.
+- Pontes que a R2 declarou trafegáveis continuam com decks e pistas; a IA continua usando `DriverRoadGeometry.segmentDrivable` para não entrar no leito. **Não foram alteradas missões, física, polícia, veículos, interiores, saves, LOD e as outras três cidades.**
+- `roadSurfaceStats.removedWetTiles` quantifica o número real de partes de asfalto removidas na construção. `tests/chicago-r3-streets-water.test.cjs` e o teste de Chromium `tests/chicago-r3-streets-browser.cjs` verificam que não restam polígonos de pista nem zebras com centro na água.
+
+### Medição do original para orientar as próximas ruas
+
+`tools/chicago-r3-footprint.cjs` usa `chicago/manifest.json` (54 setores derivados do OBJ PS1 fornecido) para produzir `chicago/ps1-footprint-calibration-r3.json`. Os limites medidos do modelo têm aproximadamente **102,22 unidades OBJ no eixo X e 191,49 no Z**, proporção X/Z **0,534**. Na escala atual de visualização 5,1, isso corresponde a ~521 × 977 unidades de mundo, enquanto a grade do Undercover ainda mede 640 × 640. A comparação é de **caixas delimitadoras**, não de extensão transitável ou área completa do jogo.
+
+Isso confirma que simplesmente esticar a grade de 80 unidades em dois eixos **não** reproduziria Chicago: distorceria ruas, edifícios e circulação. A etapa seguinte deve migrar a topologia viária real do PS1 por setores, com mapeamento dos nós de missão e validação da rede antes de substituir as ruas da campanha.
+
+Reproduzir os números: `node tools/chicago-r3-footprint.cjs --check`. O CSV/JSON não certifica braços do rio, vias, pontes, nem percentual de fidelidade do Undercover. Esta é uma correção incremental de consistência e uma base de referência.

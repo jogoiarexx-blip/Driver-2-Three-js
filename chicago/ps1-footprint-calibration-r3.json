@@ -1,0 +1,35 @@
+{
+  "format": "Driver2ChicagoOriginalFootprintCalibrationR3",
+  "evidence": "chicago/manifest.json from supplied original PS1 GLB geometry",
+  "geometryTiles": 54,
+  "originalOBJ": {
+    "minX": -111.975,
+    "maxX": -9.7521,
+    "minZ": 32.0196,
+    "maxZ": 223.507,
+    "extentX": 102.2229,
+    "extentZ": 191.4874,
+    "aspectXtoZ": 0.533836
+  },
+  "visualWorldScale": 5.1,
+  "projectedWorldAtCurrentScale": {
+    "extentX": 521.337,
+    "extentZ": 976.586
+  },
+  "undercoverCurrentRoadGrid": {
+    "widthX": 640,
+    "lengthZ": 640,
+    "step": 80
+  },
+  "ratioOriginalToProcedural": {
+    "axisX": 0.8146,
+    "axisZ": 1.5259
+  },
+  "safeFloorPixels": 49387,
+  "safeFloorOnly": true,
+  "streetsCertified": false,
+  "shorelineCertified": false,
+  "missionsMigrated": false,
+  "recommendedNextStep": "Trace traversable streets and waterways from original PS1 geometry, then remap story nodes without nonuniformly scaling all assets.",
+  "warning": "A caixa do modelo inclui extensões e recortes não dirigíveis. Não equivale à área jogável, nem comprova a fidelidade do rio."
+}
