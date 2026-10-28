@@ -92,6 +92,35 @@ assert(traffic.getRoute(pursued).missionNavigation.path.length>3);
 assert(typeof input.left==='boolean');
 assert(typeof input.right==='boolean');
 
+// Simulação simplificada de acompanhamento de waypoints.
+// Não é integração com a física Three.js, mas verifica que o
+// planejador e o controle percorrem a rota até o fim, sem água.
+const follower={
+    x:84,z:80,y:0,heading:Math.PI,speed:10,bodyStyle:'sedan',
+    scriptedDrive:{waypoints:[goal],index:0,done:false,maxSpeed:23}
+};
+const bot=new Traffic(city);
+let waterHits=0;
+for(let frame=0;frame<240 && !follower.scriptedDrive.done;frame++){
+    bot.getInput(follower,.05,[follower],null,0);
+    const nav=bot.getRoute(follower).missionNavigation;
+    const destination=nav?.path?.[nav.index];
+    if(!destination)break;
+    const distance=Nav.distance(follower,destination);
+    if(distance<.001)continue;
+    const step=Math.min(distance,3);
+    follower.heading=Math.atan2(destination.x-follower.x,
+        destination.z-follower.z);
+    const nx=follower.x+(destination.x-follower.x)*step/distance;
+    const nz=follower.z+(destination.z-follower.z)*step/distance;
+    if(city.isWaterAt(nx,nz))waterHits++;
+    follower.x=nx;follower.z=nz;
+}
+assert.equal(waterHits,0);
+assert.equal(follower.scriptedDrive.done,true,
+    'Suspeito não chegou ao último waypoint');
+assert(Nav.distance(follower,goal)<11);
+
 // Sem visão direta de Tanner do outro lado do rio, a polícia
 // utiliza a memória/radio e uma rota de ruas válida.
 const cop={x:84,z:80,y:0,heading:Math.PI,
@@ -123,4 +152,4 @@ assert.equal(stuck.x,84);
 // Veículos em níveis diferentes não fazem o trânsito congelar.
 const ahead={x:84,z:-70,y:11};
 assert.equal(stuckAI.vehicleAhead(stuck,[stuck,ahead]),Infinity);
-console.log('PASS: duas pontes, rotas de missão, A*, memória policial, ré e níveis');
+console.log('PASS: pontes, rotas de missão, convergência, A*, polícia, ré e níveis');
