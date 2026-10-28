@@ -13,6 +13,8 @@ on:
       - 'tests/chicago-r3-streets-browser.cjs'
       - 'tests/chicago-r4-island-browser.cjs'
       - 'tests/chicago-r5-visitor-browser.cjs'
+      - 'tests/chicago-r6-north-yard-browser.cjs'
+      - 'js/world/chicago-goose-island-north-yard.js'
       - 'js/world/chicago-goose-island-street.js'
       - 'js/world/chicago-ps1-coastline.js'
       - 'chicago/**'
@@ -110,6 +112,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-root-preview-visual.cjs
+      - name: R6 validar galpões norte, ponte sobre o canal e saída segura
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r6-north-yard-browser.cjs
       - name: R5 verificar acesso de veículo vindo do continente e saída norte da ilha
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
