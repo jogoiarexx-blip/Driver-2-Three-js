@@ -139,6 +139,7 @@
                 this.chicagoPS1Coastline=null;
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoGooseIslandStreet=null;
+                this.chicagoGooseIslandNorthYard=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -293,6 +294,13 @@
                             typeof DriverChicagoGooseIslandStreet!=='undefined' &&
                             DriverChicagoGooseIslandStreet.isCarvedBlock(blockX,blockZ))
                             return;
+                        // R6: liberar a célula industrial (-200,280)
+                        // para estender a via da ilha ao norte. Não toca
+                        // o estádio (-280,200) nem missões ou garagens.
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoGooseIslandNorthYard!=='undefined' &&
+                            DriverChicagoGooseIslandNorthYard.isCarvedBlock(blockX,blockZ))
+                            return;
 
                         // Calçadas agrupadas em uma única draw call instanciada.
                         sidewalkPositions.push({x:blockX,z:blockZ});
@@ -381,6 +389,10 @@
                     // R4: primeira rua fora da grade, dentro de Goose Island.
                     if(typeof DriverChicagoGooseIslandStreet!=='undefined')
                         DriverChicagoGooseIslandStreet.build(this);
+                    // R6: prolongamento industrial e ponte seca no canal
+                    // transversal ao norte de Goose Island.
+                    if(typeof DriverChicagoGooseIslandNorthYard!=='undefined')
+                        DriverChicagoGooseIslandNorthYard.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
@@ -1692,6 +1704,13 @@
             }
 
             isWaterAt(x,z){
+                // O canal z≈306,3 corta a nova avenida da ilha.
+                // A ponte física do R6 é um deck SECO, como as do R2,
+                // e tem prioridade sobre a máscara hídrica antiga.
+                if(this.preset?.id==='chicago' &&
+                    typeof DriverChicagoGooseIslandNorthYard!=='undefined' &&
+                    DriverChicagoGooseIslandNorthYard.isBridgeDeck(x,z))
+                    return false;
                 if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1RiverBranches!=='undefined' &&
                     DriverChicagoPS1RiverBranches.waterAt(x,z))return true;
