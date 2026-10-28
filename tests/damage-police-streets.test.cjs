@@ -86,7 +86,7 @@ test('faixas de pedestres são instanciadas em um lote',()=>{
     const city={preset:{id:'chicago'},cityGroup:new Element()};
     Street.build(city);
     assert.equal(city.cityGroup.children.length,5);
-    const crosswalk=city.cityGroup.children.find(mesh=>mesh.count===1620);
+    const crosswalk=city.cityGroup.children.find(mesh=>mesh.count===3150);
     assert.ok(crosswalk,'faixas ausentes');
     assert.equal(crosswalk.instanceMatrix.needsUpdate,true);
 });
