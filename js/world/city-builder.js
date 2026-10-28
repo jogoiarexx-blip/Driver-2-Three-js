@@ -136,6 +136,7 @@
                 this.bridgeBellPending=false;
                 this.chicagoLowerWacker=null;
                 this.chicagoOverhaulStats=null;
+                this.chicagoPS1Coastline=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -359,6 +360,10 @@
                     // Bairros, placas e Navy Pier: render exclusivo, sem AABB.
                     if(typeof DriverChicagoNeighborhoods!=='undefined')
                         DriverChicagoNeighborhoods.build(this);
+                    // Lago Michigan: primeira correção estrutural procedural
+                    // a leste da malha, sem mudar rotas de campanha.
+                    if(typeof DriverChicagoPS1Coastline!=='undefined')
+                        DriverChicagoPS1Coastline.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
@@ -1670,6 +1675,9 @@
             }
 
             isWaterAt(x,z){
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoPS1Coastline!=='undefined' &&
+                    DriverChicagoPS1Coastline.waterAt(x,z))return true;
                 // O segundo tabuleiro impede que a pista seja tratada como água.
                 if(typeof DriverChicagoEastBridge!=='undefined' &&
                     DriverChicagoEastBridge.isDeckLocation(this,x,z))return false;
