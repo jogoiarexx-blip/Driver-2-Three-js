@@ -136,6 +136,8 @@
                 this.bridgeBellPending=false;
                 this.chicagoLowerWacker=null;
                 this.chicagoOverhaulStats=null;
+                this.tannerHomeFurnitureBoxes=[];
+                this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
                 this.rioOverhaulStats=null;
                 this.havanaParks=[];
@@ -1429,7 +1431,9 @@
                     }
                     place.exit={x,z:z-8.8};
                     if(typeof DriverSpecialStructures!=='undefined')
-                    DriverSpecialStructures.interior(this,place);
+                        DriverSpecialStructures.interior(this,place);
+                    if(home&&typeof DriverTannerHomeInterior!=='undefined')
+                        DriverTannerHomeInterior.build(this,place);
                 }
             }
 
@@ -1774,7 +1778,12 @@
             }
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
-                if (this.interiorArea(x,z,radius))return false;
+                if (this.interiorArea(x,z,radius)){
+                    // Dentro de casa, testar somente os móveis sólidos.
+                    // As paredes exteriores pertencem ao mundo externo.
+                    return typeof DriverTannerHomeInterior!=='undefined' &&
+                        DriverTannerHomeInterior.blocked(this,x,z,radius);
+                }
                 if(typeof DriverChicagoEastBridge!=='undefined' &&
                     DriverChicagoEastBridge.railBlocked(this,x,z,radius,y))
                     return true;
