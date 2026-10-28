@@ -133,6 +133,7 @@
                 this.chicagoBridgeClock=0;
                 this.chicagoBridgeLamps=null;
                 this.chicagoEastBridge=null;
+                this.bridgeBellPending=false;
                 this.chicagoLowerWacker=null;
                 this.chicagoOverhaulStats=null;
                 this.rioParks=[];
@@ -1526,6 +1527,9 @@
 
             toggleBridge() {
                 this.bridgeRaised = !this.bridgeRaised;
+                // Uma notificação por acionamento, seja tecla B ou ciclo de 90s.
+                if(this.preset.id==='chicago')
+                    this.bridgeBellPending=true;
                 return this.bridgeRaised;
             }
 
