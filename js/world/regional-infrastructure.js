@@ -15,6 +15,41 @@ class DriverRegionalInfrastructure {
         rio:{metal:0x617d81,trim:0xe0dfd1,accent:0x209e83,
             lamp:0xffd58d,type:'coastal',secret:0x10b981}
     };
+    // One actual, low-poly, driveable stunt-ramp per city. These lie
+    // inside clear 80m road segments near the map edge, outside the
+    // campaign routes, bridges, parking and garage approaches.
+    static RAMP_ZONES={
+        chicago:{x:320,z:-306,height:1.8,length:18},
+        havana:{x:-320,z:-306,height:1.55,length:18},
+        vegas:{x:320,z:181,height:1.75,length:18},
+        rio:{x:-320,z:181,height:1.70,length:18}
+    };
+    static rampHeight(city,x,z){
+        const r=this.RAMP_ZONES[city?.preset?.id];
+        if(!r || !Number.isFinite(x)||!Number.isFinite(z))
+            return 0;
+        if(Math.abs(x-r.x)>=5||z<r.z||z>r.z+r.length)
+            return 0;
+        const lateral=Math.max(0,Math.min(1,
+            (5-Math.abs(x-r.x))/.7));
+        return (z-r.z)/r.length*r.height*lateral;
+    }
+    static buildRamp(city,theme){
+        const r=this.RAMP_ZONES[city?.preset?.id];
+        if(!r||typeof THREE==='undefined')return null;
+        // A mesma inclinação também alimenta getGroundHeightAt,
+        // evitando rampas visuais com rodas atravessando o asfalto.
+        const slope=Math.atan2(r.height,r.length);
+        const ramp=new THREE.Mesh(
+            new THREE.BoxGeometry(8,.15,r.length),
+            new THREE.MeshLambertMaterial({color:theme.metal}));
+        ramp.rotation.x=-slope;
+        ramp.position.set(r.x,r.height/2+.075,r.z+r.length/2);
+        ramp.name='driver2-driveable-ramp-'+city.preset.id;
+        ramp.castShadow=false;
+        city.cityGroup.add(ramp);
+        return ramp;
+    }
     static build(city){
         const theme=this.THEMES[city?.preset?.id];
         if(!theme||!city.bridgeSouthLeaf||!city.bridgeNorthLeaf)
@@ -76,6 +111,8 @@ class DriverRegionalInfrastructure {
         DriverSpecialStructures.pack(city.cityGroup,approaches,
             'regional-bridge-approach-'+city.preset.id);
         info.approachParts=approaches.length;
+        this.buildRamp(city,theme);
+        info.ramp={...this.RAMP_ZONES[city.preset.id]};
         // The secret gate and secret vehicle are intentionally not moved:
         // they are mission-critical, but their presentation is now local.
         city.regionalInfrastructureStats=info;
