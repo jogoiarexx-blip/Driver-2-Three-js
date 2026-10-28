@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - 'index.html'
+      - 'tests/chicago-ps1-undercover-visual.cjs'
+      - 'js/world/chicago-ps1-coastline.js'
       - 'chicago/**'
       - 'chicago-original-preview.html'
       - 'tests/chicago-root-preview-visual.cjs'
@@ -100,6 +102,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-root-preview-visual.cjs
+      - name: Certificar Undercover com Lago Michigan sem quebrar pontes e missão
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-ps1-undercover-visual.cjs
       - name: Inspecionar visualmente novo pedestre masculino em Chicago e Havana
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/

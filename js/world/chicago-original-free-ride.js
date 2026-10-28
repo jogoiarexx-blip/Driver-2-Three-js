@@ -4,14 +4,18 @@
  * NÃO habilita missão, polícia/tráfego em grade procedural ou saves antigos.
  */
 class DriverChicagoOriginalFreeRide {
+    // A geometria extraída mede ~102×191 unidades OBJ; a escala anterior
+    // 3.4 fazia o carro ocupar uma fração excessiva das ruas e fachadas.
+    // Usar 5.1 (1,5×) melhora a proporção sem mudar collider, física ou carro.
+    static WORLD_SCALE=5.1;
     constructor({root=document.getElementById('chicago-ride-root'),
         status=document.getElementById('chicago-ride-status')}={}) {
         this.root=root;this.status=status;
         this.world=new DriverChicagoOriginalDriveMap();
         this.scene=new THREE.Scene();
         this.scene.background=new THREE.Color(0x9db1b9);
-        this.scene.fog=new THREE.Fog(0x9db1b9,175,540);
-        this.camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.15,720);
+        this.scene.fog=new THREE.Fog(0x9db1b9,250,850);
+        this.camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.15,980);
         this.scene.add(new THREE.HemisphereLight(0xc6e4ff,0x525861,1.18));
         const sun=new THREE.DirectionalLight(0xffebc4,.82);
         sun.position.set(-90,140,-70);
@@ -23,6 +27,7 @@ class DriverChicagoOriginalFreeRide {
         root.appendChild(this.renderer.domElement);
         this.stream=new DriverChicagoOriginalTileStream({
             scene:this.scene,THREE,baseUrl:'./chicago/',
+            scale:DriverChicagoOriginalFreeRide.WORLD_SCALE,
             maxLoaded:22,loadRadius:55,unloadRadius:75,maxParallel:3,
             onError:e=>this.show('Setor 3D: '+String(e?.message||e)),
             onChange:stats=>{this.stats=stats;}
@@ -70,6 +75,7 @@ class DriverChicagoOriginalFreeRide {
     async start() {
         this.show('Lendo solo e colisões da Chicago original...');
         await this.world.load('./chicago/drive-mask.json');
+        this.world.rescaleWorld(DriverChicagoOriginalFreeRide.WORLD_SCALE);
         this.show('Preparando os 54 setores do mapa PS1...');
         await this.stream.start();
         // O plano quase horizontal do original é Y=0; seu menor vértice

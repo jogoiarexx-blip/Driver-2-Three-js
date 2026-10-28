@@ -33,6 +33,22 @@ class DriverChicagoOriginalDriveMap {
         this.spawn={...data.spawn};
         return this;
     }
+    // A escala visual deve ser igual à escala física da máscara. Ao ampliar
+    // o mundo, preservamos a carroceria e os colisores existentes: o carro
+    // fica proporcionalmente menor SEM adulterar a física de direção.
+    rescaleWorld(scale) {
+        if(!this.ready || !Number.isFinite(scale) || scale<2 || scale>9)
+            throw Error('Escala da Chicago original inválida');
+        const ratio=scale/this.mask.scale;
+        this.mask.scale=scale;
+        this.spawn={
+            x:this.spawn.x*ratio,z:this.spawn.z*ratio,
+            heading:this.spawn.heading
+        };
+        if(this.isPointBlocked(this.spawn.x,this.spawn.z,0))
+            throw Error('Reprojeção tirou o carro da região transitável');
+        return this.spawn;
+    }
     async load(url='./chicago/drive-mask.json'){
         const response=await fetch(url);
         if(!response.ok)throw Error('Mapa de colisão HTTP '+response.status);
