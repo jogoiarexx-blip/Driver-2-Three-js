@@ -85,6 +85,9 @@ const marker={
     type:'story_tipoff',x:-64,z:-144,
     ring:{position:position()},arrow:{position:position()}
 };
+// Simula as posições que CityBuilder.buildMissionStartMarker já atribui.
+marker.ring.position.set(-64,.55,-144);
+marker.arrow.position.set(-64,3.3,-144);
 const navCity={preset:{id:'chicago'},missionStart:marker};
 const completed=new Set();
 assert.equal(Flow.next('chicago',completed),'story_tipoff');
