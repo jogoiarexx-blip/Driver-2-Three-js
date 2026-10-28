@@ -1743,6 +1743,14 @@
                     }
                 }
 
+                // Exact AABB queries within the current 80m grid,
+                // including neighboring blocks, without removing colliders.
+                if(typeof DriverSpatialCollisionGrid!=='undefined'){
+                    if(!this._spatialCollisions)
+                        this._spatialCollisions=new DriverSpatialCollisionGrid();
+                    return this._spatialCollisions.blocked(
+                        this.buildingBoxes,x,z,radius);
+                }
                 for (let i = 0; i < this.buildingBoxes.length; i++) {
                     const b = this.buildingBoxes[i];
                     if (x + radius > b.minX && x - radius < b.maxX &&
