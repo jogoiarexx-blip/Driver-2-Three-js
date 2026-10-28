@@ -2376,6 +2376,9 @@
                     this.currentCityKey==='havana' &&
                     !this.chapterProgress.canTravelToHavana())return null;
                 const next=this.nextStoryMission();
+                // Completed chapters have no new checkpoint in this city.
+                // Replays remain available in Driving Games/Undercover menu.
+                if(this.storyCampaign&&!next)return null;
                 const marker=next?{...start,type:next}:start;
                 const p=this.getPlayerPosition();
                 return Math.hypot(p.x-start.x,p.z-start.z)<9?
@@ -2400,7 +2403,10 @@
                     !this.chapterProgress.canTravelToHavana();
                 const active=this.missionType===missionType &&
                     this.missionActive;
-                const color=locked?0x475569:completed?0x94a3b8:
+                const doneChapter=this.storyCampaign &&
+                    !this.nextStoryMission();
+                const color=locked?0x475569:
+                    (completed||doneChapter)?0x94a3b8:
                     active?0xfacc15:0x22c55e;
                 start.ring.material.color.setHex(color);
                 start.arrow.material.color.setHex(color);
