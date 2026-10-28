@@ -1077,3 +1077,16 @@ A revisão R7 prioriza provar a jogabilidade das ruas industriais **sem teleport
 - As versões R2–R6 continuam preservadas, inclusive pontes móveis, dois canais de Goose Island, os veículos de carga, a campanha original, as outras cidades e o passeio livre com os GLBs originais.
 
 **Limitações:** os entroncamentos R7 são uma melhoria visual de continuidade, **não** ruas PS1 homologadas. O mapa procedural ainda usa coordenadas adaptadas; a malha original continua em `chicago/`. A bateria de tráfego usa luz verde e ausência de outros carros para tornar reproduzíveis os resultados de dirigibilidade; ainda é necessário testar congestionamento e travessias com perseguição.
+
+
+## Chicago R8 — tráfego em ambos os sentidos na ponte norte de Goose Island
+
+A R7 já corrigia as curvas visuais e validava percursos físicos de caminhões. A R8 amplia o tráfego real da ilha no **sentido contrário**: `RETORNO SUL GOOSE ISLAND` surge ao norte em **x≈−204, z≈311**, cruza o canal transversal pelo lado oeste do deck da R6 e segue para a ponte oeste em z≈240. A nova rota é exclusiva desse veículo, sem mudar a física do jogo, os veículos de missão ou a polícia.
+
+- A autorização depende de `DriverChicagoGooseIslandNorthYard.testSouthbound(city)`: verifica o caminho completo **(-204,311) → (-204,244)** e a conversão **(-204,249) → (-240,244)** com `DriverRoadGeometry.segmentDrivable`, água e colisores.
+- `DriverTrafficAI` utiliza uma rota norte–sul própria e, no cruzamento, muda para a avenida leste–oeste através de uma curva física. O caminhão reduz velocidade no trecho e não se teleporta entre destinos.
+- `tests/chicago-r8-southbound.test.cjs` certifica a faixa, o deck e a rejeição de trajetos bloqueados ou inundados.
+- `tests/chicago-r8-southbound-browser.cjs` executa **60 segundos simulados**, usando `DriverTrafficAI.getInput` e `DriverVehicle.updatePhysics` reais, registrando amostras da trajetória, colisões e água em `qa-artifacts/chicago-r8-southbound-physical-replay.json`.
+- O workflow `chicago-r7-physics.yml` agora compara os **três percursos da revisão anterior** com o novo trajeto de retorno e publica os relatórios e as capturas de tela como artefatos.
+
+**Limite:** é uma segunda direção de tráfego verificada na **geografia procedural aproximada** de Goose Island; não equivale a um novo trecho de ruas homologado a partir dos GLBs originais do PS1. Os 54 setores originais continuam separados na pasta `chicago/`.
