@@ -1405,8 +1405,8 @@
                     make(x+6.7,3.3,z-10.8,10,6.6,0.6,home?0xd6c5a5:0x64748b);
                     make(x,6.4,z,24,0.35,22,home?0x9a8667:0x1e293b);
                     if (home) {
-                        make(x-6.8,0.8,z+2,6,1.6,3.2,0x854d0e);
-                        make(x+6,1,z+5.4,6,2,2,0x334155);
+                        // Mesa de save mantida no local original, sem
+                        // móveis antigos sobrepondo os cômodos aprimorados.
                         make(x,0.8,z+4,4,1.6,2.2,0x92400e);
                         make(x,1.65,z+4,2.2,0.25,1.0,0x166534);
                         place.savePoint={x,z:z+4};
