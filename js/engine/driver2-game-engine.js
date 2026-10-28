@@ -2606,9 +2606,16 @@
                 // podem vazar para cima do HUD ao ampliar o minimapa.
                 ctx.beginPath();ctx.rect(2,2,w-4,h-4);ctx.clip();
                 ctx.translate(cx, cy);
-                // Mundo usa +Z como frente; canvas usa Y negativo para cima.
-                // Rotação inversa mantém a frente do veículo no topo.
-                ctx.rotate(-pos.heading);
+                // Câmera Three.js: +X aparece à ESQUERDA quando o jogador
+                // aponta para +Z. Espelhar X e aplicar heading preserva a
+                // frente do carro em cima e esquerda/direita como no mundo.
+                ctx.rotate(pos.heading);
+                ctx.scale(-1,1);
+                // O espelhamento é só dos pontos; textos não devem espelhar.
+                const radarLabel=(label,x,y)=>{
+                    ctx.save();ctx.translate(x,y);ctx.scale(-1,1);
+                    ctx.fillText(label,0,0);ctx.restore();
+                };
 
                 // Canal no radar
                 if(this.currentCityKey==='chicago'){
@@ -2661,12 +2668,12 @@
                     ctx.lineWidth=2;ctx.stroke();
                 }
                 ctx.fillStyle='#86efac';
-                ctx.fillText('⌂',homeX,homeZ+5);
+                radarLabel('⌂',homeX,homeZ+5);
                 const parking=this.city.garageParking;
                 if(parking){
                     ctx.font='bold 12px sans-serif';
                     ctx.fillStyle='#a7f3d0';
-                    ctx.fillText('P',
+                    radarLabel('P',
                         (parking.x-pos.x)*scale,
                         -(parking.z-pos.z)*scale);
                 }
@@ -2676,7 +2683,7 @@
                     ctx.font='bold 15px sans-serif';
                     ctx.fillStyle=this.completedMissions?.has(starter.type)?
                         '#94a3b8':'#facc15';
-                    ctx.fillText('!',
+                    radarLabel('!',
                         (starter.x-pos.x)*scale,
                         -(starter.z-pos.z)*scale);
                 }
