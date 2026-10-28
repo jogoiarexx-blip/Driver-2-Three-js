@@ -5,7 +5,8 @@
 class DriverCheckpointRoute {
     static ordered(type) {
         return type === 'checkpoints' || type === 'trailblazer' ||
-            type === 'mountainpass' || type === 'evidence' || type === 'pursuit';
+            type === 'mountainpass' || type === 'evidence' || type === 'pursuit' ||
+            type==='gate_racing' || type==='arcade_checkpoint';
     }
     static current(markers) {
         return markers.find(marker => !marker.collected) || null;
