@@ -2255,6 +2255,18 @@
                         Math.hypot(this.tanner.group.position.x - this.c4State.x, this.tanner.group.position.z - this.c4State.z) < 6.5) {
                         promptEl.textContent = '💣 Pressione [E] para PLANTAR O EXPLOSIVO C4!';
                         promptEl.classList.remove('hidden');
+                    } else if(this.missionActive &&
+                        ['story_vegas_c4','story_rio_barge'].includes(this.missionType) &&
+                        this.regionalState?.sites?.[this.regionalState.phase] &&
+                        !(this.regionalState.countdown>0) &&
+                        Math.hypot(
+                            this.tanner.group.position.x-
+                                this.regionalState.sites[this.regionalState.phase].x,
+                            this.tanner.group.position.z-
+                                this.regionalState.sites[this.regionalState.phase].z
+                        )<9){
+                        promptEl.textContent='Pressione [E] para PLANTAR O C4';
+                        promptEl.classList.remove('hidden');
                     } else {
                         let nearBench = false;
                         for (const b of this.city.benches) {
