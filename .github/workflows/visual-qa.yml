@@ -32,6 +32,9 @@ on:
       - 'tests/pedestrian-curb-smoke.cjs'
       - 'js/entities/pedestrian-sidewalk-nav.js'
       - 'js/vehicles/driver-vehicle.js'
+      - 'js/vehicles/police-door-rig.js'
+      - 'js/engine/gpu-resources.js'
+      - 'tests/gpu-resource-lifecycle.test.cjs'
       - 'js/assets/driver-female-pedestrian.js'
       - 'js/entities/pedestrians-roadblocks.js'
       - 'assets/pedestrians/**'
@@ -63,6 +66,8 @@ jobs:
         run: node --test tests/arcade-regional-expansion.test.cjs
       - name: Certificar pavimentação Driver 2 e cruzamentos nos 4 mapas
         run: node --test tests/road-surface-style.test.cjs
+      - name: Testar integridade da GPU em trocas de veículos GLB
+        run: node --test tests/gpu-resource-lifecycle.test.cjs
       - name: Instalar Chromium e Playwright
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1
