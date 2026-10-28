@@ -80,14 +80,14 @@ jobs:
           done
           cat /tmp/driver-http.log
           exit 1
-      - name: Abrir e testar todos os mapas no navegador
-        env:
-          DRIVER_QA_URL: http://127.0.0.1:4173/
-        run: node tests/visual-smoke.cjs
       - name: Jogar e testar os 10 modos da expansão no Chromium
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/expansion-visual-smoke.cjs
+      - name: Abrir e testar todos os mapas no navegador
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/visual-smoke.cjs
       - name: Publicar screenshots e FPS de diagnóstico
         uses: actions/upload-artifact@v4
         if: always()
