@@ -28,6 +28,8 @@
 
                 this.currentCityKey = 'chicago';
                 this.audio = new RetroSynthAudio();
+                this.briefingDirector=typeof DriverMissionBriefing!=='undefined'?
+                    new DriverMissionBriefing():null;
                 this.effects = new EffectsManager(this.scene);
                 this.impactFeedback = new DriverImpactFeedback();
                 this.impactFlash = document.getElementById('impact-flash');
@@ -410,6 +412,7 @@
                     GPUResourceUtils.disposeSubtree(this.stationJones);
                     this.scene.remove(this.stationJones);this.stationJones=null;
                 }
+                this.briefingDirector?.cancel();
                 if(typeof DriverClassicGames!=='undefined')
                     DriverClassicGames.dispose(this);
                 if(typeof DriverRegionalMissions!=='undefined')
@@ -933,6 +936,8 @@
                     this.vehicles.push(this.targetCar);
                 }
                 DriverCheckpointRoute.refresh(this.missionType, this.missionMarkers);
+                // Undercover title card + five-second street establishing shot.
+                this.briefingDirector?.begin(this,type);
                 if (this.freeVehicleAssets) this.freeVehicleAssets.decorateFleet();
             }
 
@@ -3092,6 +3097,13 @@
                     this.renderer.render(this.scene,this.camera);
                     return;
                 }
+                if(this.briefingDirector?.active){
+                    // Do not advance game physics or mission timer in intro.
+                    this.briefingDirector.tick(dt);
+                    this.updateCamera(dt);
+                    this.renderer.render(this.scene,this.camera);
+                    return;
+                }
 
                 if (this.inReplayMode) {
                     this.updateReplayPlayback(dt);
@@ -3168,7 +3180,13 @@
                 const skidding = (this.mode === 'driving' && this.playerCar) ? this.playerCar.isDrifting : false;
                 const burnout = (this.mode === 'driving' && this.playerCar) ? this.playerCar.isBurnout : false;
                 const sirenOn = (this.felony > 25) || (this.mode === 'driving' && this.playerCar && this.playerCar.isPolice && this.playerCar.sirenActive);
-                this.audio.update(dt, this.mode === 'driving', speedKmh, skidding, burnout, sirenOn);
+                // True slip angle = lateral velocity versus forward speed;
+                // continuous tire squeal instead of a binary skid click.
+                const slip=this.mode==='driving'&&this.playerCar?
+                    Math.atan2(Math.abs(this.playerCar.lateralVelocity||0),
+                        Math.max(1,Math.abs(this.playerCar.speed||0))):0;
+                this.audio.update(dt, this.mode === 'driving',
+                    speedKmh, skidding, burnout, sirenOn, slip);
 
                 const toast=document.getElementById('driver-mission-toast');
                 if(this.missionToastRemaining>0){
