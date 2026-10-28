@@ -137,8 +137,13 @@ class DriverTrafficAI {
         const dz = target.z - car.z;
         const distance = Math.hypot(dx, dz);
         if (distance > 75 || distance < 0.01) return false;
-        for (let p = 0.2; p < 1; p += 0.2) {
-            if (this.city.isPointBlocked(car.x + dx * p, car.z + dz * p, 2)) return false;
+        // Obstáculos e rio devem interromper a perseguição direta.
+        // Amostragem curta com retorno antecipado (sem raycast WebGL).
+        const samples=Math.max(2,Math.ceil(distance/6));
+        for(let i=1;i<samples;i++){
+            const p=i/samples,x=car.x+dx*p,z=car.z+dz*p;
+            if(this.city.isPointBlocked(x,z,2) ||
+                this.city.isWaterAt?.(x,z))return false;
         }
         return true;
     }
@@ -194,7 +199,8 @@ class DriverTrafficAI {
     vehicleAhead(car, vehicles) {
         const dirX = Math.sin(car.heading), dirZ = Math.cos(car.heading);
         for (const other of vehicles) {
-            if (other === car) continue;
+            if (other === car ||
+                Math.abs((other.y||0)-(car.y||0))>3.2) continue;
             const dx = other.x - car.x, dz = other.z - car.z;
             const forward = dx * dirX + dz * dirZ;
             const side = Math.abs(dx * dirZ - dz * dirX);
@@ -221,6 +227,12 @@ class DriverTrafficAI {
         }
         const waypoint = scripted ?
             DriverTailingDropMission.advanceRoute(car) : null;
+        // Missões seguem o waypoint original, mas o volante recebe
+        // uma sub-rota segura (pontes, cruzamentos e caixas AABB).
+        const missionRoute=scripted && waypoint &&
+            typeof DriverPursuitNavigation!=='undefined'?
+            DriverPursuitNavigation.follow(
+                this.city,car,waypoint,route,dt):null;
         const wanted = car.isPolice && felony > 25;
         const hostile = !!car.isMafia;
         // Mafiosos seguem Tanner sem sirene nem depender de felony.
@@ -237,10 +249,9 @@ class DriverTrafficAI {
         }
 
         let target = scripted ?
-            (waypoint || {
-                x:car.x+Math.sin(car.heading)*10,
-                z:car.z+Math.cos(car.heading)*10
-            }) : route.target;
+            (missionRoute?
+                (missionRoute.target || {x:car.x,z:car.z}):
+                (waypoint || {x:car.x,z:car.z})) : route.target;
         const distanceToPlayer = playerPos ?
             Math.hypot(car.x - playerPos.x, car.z - playerPos.z) : Infinity;
         let maneuver=null;
@@ -284,7 +295,7 @@ class DriverTrafficAI {
         let maxSpeed = hostile ? 38 : wanted ? 40 : car.isTarget ? 34 :
             (car.bodyStyle === 'bus' || car.bodyStyle === 'truck' ? 17 : 23);
         if (maneuver) maxSpeed=Math.min(maxSpeed,maneuver.speedLimit);
-        if (scripted) maxSpeed=scripted.done?0:
+        if (scripted) maxSpeed=scripted.done||missionRoute?.blocked?0:
             Math.min(maxSpeed,scripted.maxSpeed||23);
         car.policeManeuver = maneuver ? maneuver.mode : null;
         // A velocidade recomendada cai progressivamente quando a curva
@@ -341,17 +352,21 @@ class DriverTrafficAI {
         } else {
             route.stuckSeconds = 0;
         }
-        if (!scripted && route.stuckSeconds > 2.2) {
-            route.reverseTimer = 0.85;
-            route.stuckSeconds = 0;
+        if(route.stuckSeconds>(scripted?1.75:2.2)){
+            // Mesmo os suspeitos de missões podem dar ré e tentar
+            // outro percurso, sem teleportar ou avançar waypoint.
+            route.reverseTimer=scripted?.65:.85;
+            route.stuckSeconds=0;
+            if(scripted)route.missionNavigation=null;
         }
         if (route.reverseTimer > 0) {
             route.reverseTimer -= dt;
             input.up = false;
             input.down = true;
             input.handbrake = false;
-            input.left = route.sign > 0;
-            input.right = !input.left;
+            // Virar o volante no sentido oposto durante a ré.
+            input.left=angle>=0;
+            input.right=!input.left;
         } else if (car.speed > maxSpeed + 1.5) {
             input.down = true;
         } else if (maxSpeed > 0 && car.speed < maxSpeed) {
