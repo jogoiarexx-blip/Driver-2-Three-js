@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'tests/chicago-r9-concurrent-browser.cjs'
+      - 'tests/chicago-r9-local-network.test.cjs'
+      - 'js/world/chicago-local-road-network.js'
       - 'js/traffic/traffic-ai.js'
       - '.github/workflows/chicago-r9-traffic.yml'
   pull_request:
@@ -22,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Certificar os dez segmentos industriais dirigidos
+        run: node --test tests/chicago-r9-local-network.test.cjs
       - name: Instalar Chromium
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1
