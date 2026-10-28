@@ -25,11 +25,17 @@ class DriverChicagoMissionGuidance {
         switch(type){
         case 'story_tipoff':
             if(game.mode==='on_foot' && game.playerCar!==game.targetCar){
+                const nearJones=pos && target && Math.hypot(
+                    pos.x-target.x,pos.z-target.z)<10;
                 const own=game.playerCar && !game.playerCar.isTarget?
                     this.point(game.playerCar):null;
                 const nearOwn=own && Math.hypot(
                     pos.x-own.x,pos.z-own.z)<8;
-                if(!nearOwn && target){
+                if(nearJones){
+                    id='jones';label='ENTRE NO CARRO DE JONES';
+                    hint='Pressione E próximo ao carro de Jones.';
+                    destination=target;
+                }else if(!nearOwn && target){
                     id='drive';label='ENCONTRE O CARRO DE JONES';
                     hint='Siga até o carro destacado no radar e saia a pé.';
                     destination=target;
