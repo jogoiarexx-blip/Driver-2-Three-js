@@ -2015,8 +2015,16 @@
                 const upcoming=this.nextStoryMission();
                 const notice=DriverCampaignFlow.summarize(
                     title,desc,failed,upcoming);
-                this.missionToastText=notice.message+' • '+notice.next;
-                this.missionToastRemaining=6;
+                const nextChapter=!failed && finishedType.startsWith('story_')?
+                    DriverCampaignFlow.nextChapter(this.currentCityKey,
+                        this.completedMissions):null;
+                const continueHint=nextChapter?
+                    'CAPÍTULO CONCLUÍDO • Próxima cidade: '+
+                        DriverCampaignFlow.chapterTitle(nextChapter)+
+                        ' (selecionar no menu de cidades)':
+                    notice.next;
+                this.missionToastText=notice.message+' • '+continueHint;
+                this.missionToastRemaining=nextChapter?10:6;
                 const toast=document.getElementById('driver-mission-toast');
                 if(toast){
                     toast.textContent=this.missionToastText;
@@ -2027,7 +2035,7 @@
                 const timer=document.getElementById('mission-timer');
                 if(timer)timer.classList.add('hidden');
                 const info=document.getElementById('objective-banner');
-                if(info)info.textContent=notice.next;
+                if(info)info.textContent=continueHint;
                 this.updateChapterMenu();
             }
 
