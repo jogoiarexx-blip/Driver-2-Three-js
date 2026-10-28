@@ -54,54 +54,70 @@
             }
 
             loadPlayerModel() {
-                // O modelo da pasta player substitui o personagem procedural.
-                // Mantém o fallback apenas quando o GLB não estiver disponível.
-                if (!THREE.GLTFLoader) return;
-                // Caminho canônico: assets/player/Tanner.glb (arquivo GLB real, não placeholder).
-                // Não executar várias tentativas 404 a cada carregamento.
-                const candidates = [window.DRIVER_TANNER_MODEL_URL || './assets/player/Tanner.glb'];
+                if (!THREE.GLTFLoader) {
+                    console.error('Tanner: GLTFLoader indisponível.');
+                    return;
+                }
+                const url = window.DRIVER_TANNER_MODEL_URL ||
+                    './assets/player/Tanner.glb';
                 const loader = new THREE.GLTFLoader();
-                const tryNext = index => {
-                    if (index >= candidates.length) {
-                        console.warn('Modelo do Tanner ausente: publique player/tanner.glb no GitHub Pages ou defina DRIVER_TANNER_MODEL_URL. Fallback preservado.');
+                loader.load(url, gltf => {
+                    const model = gltf.scene;
+                    model.updateMatrixWorld(true);
+                    const bounds = new THREE.Box3().setFromObject(model);
+                    const size = bounds.getSize(new THREE.Vector3());
+                    if (!Number.isFinite(size.y) || size.y < .001) {
+                        console.error('Tanner: GLB sem geometria visível.', url);
                         return;
                     }
-                    loader.load(encodeURI(candidates[index]), gltf => {
-                        const model = gltf.scene;
-                        const bounds = new THREE.Box3().setFromObject(model);
-                        const size = bounds.getSize(new THREE.Vector3());
-                        if (size.y <= 0.001) return tryNext(index + 1);
-                        model.scale.multiplyScalar(1.9 / size.y);
-                        model.updateMatrixWorld(true);
-                        const b = new THREE.Box3().setFromObject(model);
-                        model.position.y -= b.min.y;
-                        model.position.x -= (b.min.x + b.max.x) / 2;
-                        model.position.z -= (b.min.z + b.max.z) / 2;
-                        model.traverse(obj => {
-                            if (obj.isMesh) { obj.castShadow = true; obj.receiveShadow = true; }
-                        });
-                        for (const part of [this.torso, this.head, this.leftArm,
-                            this.rightArm, this.leftLeg, this.rightLeg]) part.visible = false;
-                        this.group.add(model);
-                        this.playerModel = model;
-                        if (gltf.animations && gltf.animations.length) {
-                            this.animationMixer = new THREE.AnimationMixer(model);
-                            this.animations = gltf.animations;
-                            this.playModelAnimation('idle');
+                    model.scale.multiplyScalar(1.9 / size.y);
+                    model.updateMatrixWorld(true);
+                    const b = new THREE.Box3().setFromObject(model);
+                    model.position.y -= b.min.y;
+                    model.position.x -= (b.min.x + b.max.x) / 2;
+                    model.position.z -= (b.min.z + b.max.z) / 2;
+                    model.traverse(obj => {
+                        if (obj.isMesh || obj.isSkinnedMesh) {
+                            obj.castShadow = true;
+                            obj.receiveShadow = true;
+                            obj.frustumCulled = false;
                         }
-                    }, undefined, () => tryNext(index + 1));
-                };
-                tryNext(0);
+                    });
+                    this.group.add(model);
+                    this.playerModel = model;
+                    for (const part of [this.torso, this.head, this.leftArm,
+                        this.rightArm, this.leftLeg, this.rightLeg]) {
+                        part.visible = false;
+                    }
+                    this.animations = gltf.animations || [];
+                    if (this.animations.length) {
+                        this.animationMixer = new THREE.AnimationMixer(model);
+                        this.playModelAnimation('idle');
+                    }
+                    console.info('Tanner GLB aplicado:', url,
+                        'animações:', this.animations.map(a => a.name));
+                }, undefined, error => {
+                    console.error('Tanner GLB não carregou:', url,
+                        error?.message || error);
+                });
             }
 
             playModelAnimation(name) {
                 if (!this.animationMixer || !this.animations) return;
-                const clip = this.animations.find(a =>
-                    a.name.toLowerCase().includes(name)) ||
-                    (name === 'walk'
-                        ? this.animations.find(a => /run|move/i.test(a.name))
-                        : this.animations[0]);
-                if (!clip || this.activeClip === clip) return;
+                const clips = this.animations;
+                const clip = name === 'idle'
+                    ? clips.find(a => /^(idle|stand|breathing)/i.test(a.name))
+                    : clips.find(a => /^walk/i.test(a.name)) ||
+                      clips.find(a => /^run/i.test(a.name));
+                if (!clip) {
+                    if (this.activeAction) {
+                        this.activeAction.fadeOut(.15);
+                        this.activeAction = null;
+                        this.activeClip = null;
+                    }
+                    return;
+                }
+                if (this.activeClip === clip) return;
                 if (this.activeAction) this.activeAction.fadeOut(.15);
                 this.activeAction = this.animationMixer.clipAction(clip);
                 this.activeAction.reset().fadeIn(.15).play();
