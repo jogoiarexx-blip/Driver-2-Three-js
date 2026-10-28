@@ -140,12 +140,14 @@ test('Vegas C4 requires on-foot E at each generator, then safe retreat',()=>{
         g.tannerX=site.x;g.tannerZ=site.z;
         assert(Regional.interact(g));
         assert.equal(g.regionalState.planted,i+1);
-        assert.equal(g.regionalState.props[i].visible,false);
+        assert.notEqual(g.regionalState.props[i].visible,false,
+            'The generator must not vanish before detonation');
     }
     g.tannerX=0;g.tannerZ=-320;
     const done=Regional.update(g,14);
     assert(done?.success);
     assert.equal(g.effects.explosions.length,3);
+    assert(g.regionalState.props.every(m=>m.visible===false));
 });
 test('Vegas heist requires two separate vehicles delivered',()=>{
     const g=game('vegas');Regional.begin(g,'story_vegas_heist');
