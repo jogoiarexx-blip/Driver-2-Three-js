@@ -234,6 +234,8 @@
                 this.cityGroup.add(this.bridgeSouthLeaf, this.bridgeNorthLeaf);
                 if(typeof DriverSpecialStructures!=='undefined')
                     DriverSpecialStructures.bridge(this);
+                if(typeof DriverRegionalInfrastructure!=='undefined')
+                    DriverRegionalInfrastructure.build(this);
                 yield 'Canal, pontes e vias de acesso';
 
                 // 4. Monumentos Exclusivos por Cidade (Rio de Janeiro: Morro do Corcovado + Cristo Redentor + Praia)
