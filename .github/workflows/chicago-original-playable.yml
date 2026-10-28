@@ -1,0 +1,56 @@
+name: Driver 2 - Chicago PS1 - Dirigir mapa original no Chromium
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'chicago/drive-mask.json'
+      - 'chicago-original-drive.html'
+      - 'js/world/chicago-original-free-ride.js'
+      - 'js/world/chicago-original-drive-map.js'
+      - 'tests/chicago-original-ride-visual.cjs'
+      - '.github/workflows/chicago-original-playable.yml'
+  pull_request:
+    paths:
+      - 'chicago/drive-mask.json'
+      - 'chicago-original-drive.html'
+      - 'js/world/chicago-original-free-ride.js'
+      - 'js/world/chicago-original-drive-map.js'
+      - 'tests/chicago-original-ride-visual.cjs'
+      - '.github/workflows/chicago-original-playable.yml'
+permissions:
+  contents: read
+jobs:
+  play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Certificar geometria, colisão e física existentes
+        run: node --test tests/chicago-original-free-ride.test.cjs
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir arquivos do projeto
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/chicago-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-http.log
+          exit 1
+      - name: Entrar na Chicago original, acelerar, validar colisão e reposicionar
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-original-ride-visual.cjs
+      - name: Publicar screenshot do passeio livre PS1
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-original-playable-browser
+          path: qa-artifacts/chicago-original-free-ride.png
+          retention-days: 14
