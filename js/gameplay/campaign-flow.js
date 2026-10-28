@@ -25,6 +25,15 @@ class DriverCampaignFlow {
             if(!completed?.has(type))return type;
         return null;
     }
+    static nextChapter(chapter,completed){
+        if(this.next(chapter,completed))return null;
+        return ({chicago:'havana',havana:'vegas',
+            vegas:'rio'})[chapter]||null;
+    }
+    static chapterTitle(chapter){
+        return ({chicago:'CHICAGO',havana:'HAVANA',
+            vegas:'LAS VEGAS',rio:'RIO DE JANEIRO'})[chapter]||chapter;
+    }
     static isFailure(title){
         return /FALH|ESGOTAD|DESTRUÍDO|ESCAPOU|ATINGIDO|PONTE FECHOU|FIM DO SURVIVAL|TEMPO ESGOTADO/i.test(String(title));
     }
