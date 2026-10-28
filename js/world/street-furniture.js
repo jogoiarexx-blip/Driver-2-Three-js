@@ -25,7 +25,9 @@ class DriverStreetFurniture {
                 // Travessia completa: 10 barras ao longo dos 22m de
                 // pista. A versão anterior tinha apenas cinco barras no
                 // meio da rua, parecendo um risco branco desconectado.
-                for(const sign of [-1,1]) {
+                // Alternar cruzamentos com zebra: evita um tabuleiro
+                // branco repetido a cada 80m, como nas capturas antigas.
+                if(((x+z)/80)%2===0)for(const sign of [-1,1]) {
                     for(let line=0;line<10;line++) {
                         const offset=(line-4.5)*2.12;
                         const crossZ=z+sign*16.5;
@@ -50,9 +52,10 @@ class DriverStreetFurniture {
             }
         }
         const stripe = new THREE.InstancedMesh(
-            new THREE.PlaneGeometry(1.18,3.5),
+            new THREE.PlaneGeometry(.95,2.65),
             new THREE.MeshBasicMaterial({
-                color: 0xe5e7eb, side: THREE.DoubleSide,
+                color: 0xd6d5c9, side: THREE.DoubleSide,
+                transparent:true,opacity:.76,
                 depthWrite: false, polygonOffset:true, polygonOffsetFactor:-2
             }),crosswalks.length
         );
@@ -69,6 +72,7 @@ class DriverStreetFurniture {
         });
         stripe.instanceMatrix.needsUpdate=true;
         stripe.frustumCulled=false;
+        stripe.name='road-crosswalk-zebra';
 
         const pole = new THREE.InstancedMesh(
             new THREE.CylinderGeometry(0.12,0.15,5.8,6),
