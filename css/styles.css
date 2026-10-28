@@ -591,3 +591,17 @@
     .speedometer-siren{animation:none;}
     #rpm-bar{transition:none;}
 }
+
+/* Transição de etapas de Chicago: uma animação CSS, sem custo no loop 3D. */
+@keyframes driver-chicago-stage-enter {
+    from {opacity:.62;transform:translateY(-5px);}
+    to {opacity:1;transform:translateY(0);}
+}
+#chicago-mission-guidance.driver-stage-enter {
+    animation:driver-chicago-stage-enter .38s ease-out both;
+}
+@media (prefers-reduced-motion:reduce) {
+    #chicago-mission-guidance.driver-stage-enter {
+        animation:none;
+    }
+}
