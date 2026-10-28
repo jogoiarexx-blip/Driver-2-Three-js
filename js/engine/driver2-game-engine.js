@@ -1476,11 +1476,22 @@
 
                 if (this.mode === 'driving' && this.playerCar) {
                     const kmh = Math.abs(this.playerCar.speed) * 3.4;
-                    if (this.isPoliceNearPlayer(65)) {
+                    // Policiais do lado de fora do Lower Wacker não enxergam
+                    // o veículo sob a cobertura. Os que entram continuam
+                    // perseguindo normalmente, sem imunidade artificial.
+                    const position=this.getPlayerPosition();
+                    const covered=typeof DriverChicagoLowerWacker!=='undefined' &&
+                        DriverChicagoLowerWacker.isCovered(this.city,position);
+                    const seenNearby=covered ?
+                        this.vehicles.some(v=>v.isPolice && v!==this.playerCar &&
+                            Math.hypot(v.x-position.x,v.z-position.z)<65 &&
+                            this.trafficAI.unobstructed(v,position)) :
+                        this.isPoliceNearPlayer(65);
+                    if (seenNearby) {
                         if (this.playerCar.isDrifting || this.playerCar.isBurnout) this.felony = Math.min(100, this.felony + 9 * dt);
                         if (kmh > 130) this.felony = Math.min(100, this.felony + 6 * dt);
                     } else if (this.felony > 0 && this.missionType !== 'survival') {
-                        this.felony = Math.max(0, this.felony - 3.5 * dt);
+                        this.felony = Math.max(0, this.felony - (covered ? 6.5 : 3.5) * dt);
                     }
 
                     if (this.playerCar.damage >= 100) {
