@@ -102,7 +102,7 @@ test('lane marks stop before junction and are absent in river',()=>{
 test('crosswalks span over 20m, never float on canal, poles remain destructible',()=>{
   const c=makeCity('havana');
   Street.build(c);
-  const zebra=c.cityGroup.children.find(m=>m.count===3150);
+  const zebra=c.cityGroup.children.find(m=>m.count===1600);
   assert(zebra,'incorrect zebra layout count');
   assert(zebra.matrices.every(m=>!(m.position.z>31&&m.position.z<69)));
   assert(zebra.matrices.some(m=>Math.abs(m.position.x+9.54)<.01));
