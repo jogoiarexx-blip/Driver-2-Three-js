@@ -46,6 +46,10 @@ class DriverPoliceDoorRig {
             return g;
         };
         mesh.geometry=createGeom(body);
+        // Geometria privada da instância; atributos de vértices seguem
+        // compartilhados, mas índices e objeto BufferGeometry são novos.
+        mesh.userData=mesh.userData||{};
+        mesh.userData.driverOwnedGeometry=true;
         // As novas geometrias compartilham atributos e texturas originais:
         // só os índices são separados, sem duplicar milhares de vértices.
         for(let side=0;side<2;side++){
@@ -59,6 +63,7 @@ class DriverPoliceDoorRig {
             part.castShadow=false;
             part.userData=part.userData||{};
             part.userData.cc0SharedAsset=true;
+            part.userData.driverOwnedGeometry=true;
             hinge.add(part);mesh.add(hinge);
         }
         return mesh;
