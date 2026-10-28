@@ -37,6 +37,21 @@ class DriverTrafficAI {
     getRoute(car) {
         let route = this.routes.get(car);
         if (route) return route;
+        // R6: o furgão do pátio cruza o deck norte na faixa da ilha.
+        if(this.city?.preset?.id==='chicago' && !car.scriptedDrive &&
+            car.gooseIslandNorthYard &&
+            this.city?.chicagoGooseIslandNorthYard?.accessReady &&
+            typeof DriverChicagoGooseIslandNorthYard!=='undefined' &&
+            DriverChicagoGooseIslandNorthYard.onNorthernSpine(car.x,car.z) &&
+            Math.cos(car.heading)>.6){
+            route={axis:'z',sign:1,
+                road:DriverChicagoGooseIslandNorthYard.AXIS_X,
+                target:{x:-196,z:DriverChicagoGooseIslandNorthYard.END_Z},
+                isNorthYard:true,reverseTimer:0,stuckSeconds:0,
+                previousX:car.x,previousZ:car.z};
+            this.routes.set(car,route);
+            return route;
+        }
         // R4: primeiro corredor local fora da grade de 80. Não afeta
         // veículos de missão nem o tráfego das outras três cidades.
         if(this.city?.preset?.id==='chicago'&&!car.scriptedDrive &&
@@ -92,6 +107,32 @@ class DriverTrafficAI {
     }
 
     chooseNext(car, route, playerPos, wanted) {
+        // R6: a saída do norte usa o mesmo verificador de colisão.
+        if(route.isNorthYard &&
+            this.city?.preset?.id==='chicago' &&
+            typeof DriverChicagoGooseIslandNorthYard!=='undefined' &&
+            this.city?.chicagoGooseIslandNorthYard?.accessReady){
+            const options=[
+                this.positionInLane('x',1,320,-160),
+                this.positionInLane('x',-1,320,-240)
+            ];
+            for(const candidate of options){
+                if(typeof DriverRoadGeometry!=='undefined' &&
+                    !DriverRoadGeometry.segmentDrivable(this.city,
+                        car.x,car.z,candidate.x,candidate.z,1.55))
+                    continue;
+                route.axis='x';
+                route.sign=candidate.x>car.x?1:-1;
+                route.road=320;
+                route.target=candidate;
+                route.isNorthYard=false;
+                route.northYardCompleted=true;
+                route.reverseTimer=0;
+                return;
+            }
+            route.reverseTimer=.85;
+            return;
+        }
         // R5: visitante que chega da avenida oeste deve seguir pela
         // ponte até a entrada da ilha, sem depender da escolha aleatória
         // da grade de 80. Restringir aos visitantes, não às missões.
@@ -396,6 +437,11 @@ class DriverTrafficAI {
 
         let maxSpeed = hostile ? 38 : wanted ? 40 : car.isTarget ? 34 :
             (car.bodyStyle === 'bus' || car.bodyStyle === 'truck' ? 17 : 23);
+        // Deck R6: reduzir velocidade só para o caminhão do pátio.
+        if(car.gooseIslandNorthYard &&
+            this.city?.preset?.id==='chicago' &&
+            (route.isNorthYard || !route.northYardCompleted))
+            maxSpeed=Math.min(maxSpeed,12);
         if (maneuver) maxSpeed=Math.min(maxSpeed,maneuver.speedLimit);
         if (scripted) maxSpeed=scripted.done||missionRoute?.blocked?0:
             Math.min(maxSpeed,scripted.maxSpeed||23);
