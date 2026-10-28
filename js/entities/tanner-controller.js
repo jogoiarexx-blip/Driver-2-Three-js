@@ -167,8 +167,9 @@
                 }
 
                 const turnSpeed = 3.2;
-                if (input.left) this.heading += turnSpeed * dt;
-                if (input.right) this.heading -= turnSpeed * dt;
+                // Mesma orientação usada pelo carro e pelo minimapa.
+                if (input.left) this.heading -= turnSpeed * dt;
+                if (input.right) this.heading += turnSpeed * dt;
                 this.group.rotation.y = this.heading;
 
                 let moveDir = 0;
