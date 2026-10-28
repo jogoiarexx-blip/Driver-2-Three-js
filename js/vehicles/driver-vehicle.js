@@ -40,6 +40,9 @@
                 this.breakawayFlags={front:false,rear:false,left:false,right:false};
                 this.lastImpactZone = null;
                 this.hubcaps = 4;
+                this.hubcapMeshes=[];
+                this.nextHubcapIndex=0;
+                this.engineSmokeClock=0;
                 this.isDrifting = false;
                 this.isBurnout = false;
                 this.sirenActive = false;
@@ -95,6 +98,7 @@
                     this.root.remove(w);
                 });
                 this.wheels = [];
+                this.hubcapMeshes=[];
                 this.wheelRig=null;
 
                 const bodyMat = new THREE.MeshLambertMaterial({ color: this.color });
@@ -242,6 +246,9 @@
                 const wheelGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.36, 12);
                 wheelGeo.rotateZ(Math.PI / 2);
                 const tireMat = new THREE.MeshLambertMaterial({ color: 0x111827 });
+                const capMat=new THREE.MeshLambertMaterial({color:0xc9cacc});
+                const capGeo=new THREE.CylinderGeometry(.27,.27,.05,12);
+                capGeo.rotateZ(Math.PI/2);
 
                 const wheelPositions = [
                     { x: -1.18, y: 0.44, z: 1.55 },
@@ -250,9 +257,14 @@
                     { x: 1.18, y: 0.44, z: -1.55 }
                 ];
 
-                wheelPositions.forEach(pos => {
+                wheelPositions.forEach((pos,index) => {
                     const wMesh = new THREE.Mesh(wheelGeo, tireMat);
                     wMesh.position.set(pos.x, pos.y, pos.z);
+                    const cap=new THREE.Mesh(capGeo,capMat);
+                    cap.position.x=pos.x<0?-.205:.205;
+                    cap.name='detachable-hubcap-'+index;
+                    wMesh.add(cap);
+                    this.hubcapMeshes.push(cap);
                     this.root.add(wMesh);
                     this.wheels.push(wMesh);
                 });
@@ -287,6 +299,7 @@
                     this.root.remove(w);
                 });
                 this.wheels = [];
+                this.hubcapMeshes=[];
                 this.wheelRig=null;
                 this.frontBumperMesh=null;
                 this.rearBumperMesh=null;
@@ -361,16 +374,15 @@
                     }
                 }
 
-                // 4. Ejeção de Calotas (Easter egg clássico do Driver 2 em curvas fortes!)
-                if (this.isDrifting && this.hubcaps > 0 && Math.abs(centrifugal) > 0.68 && Math.random() < 0.028) {
-                    this.hubcaps--;
-                    effects.ejectHubcap(
-                        this.x, this.y, this.z,
-                        Math.cos(this.heading) * 9 * steerInput,
-                        -Math.sin(this.heading) * 9 * steerInput,
-                        isPlayer ? audio : null
-                    );
-                }
+                // Curvas extremas também podem arrancar uma calota real,
+                // deixando a roda sem seu disco cromado.
+                if(this.isDrifting&&this.hubcaps>0 &&
+                    Math.abs(centrifugal)>.68&&
+                    Math.random()<Math.min(.4,dt*.9))
+                    this.loseHubcap(effects,
+                        Math.cos(this.heading)*9*steerInput,
+                        -Math.sin(this.heading)*9*steerInput,
+                        isPlayer?audio:null);
 
                 // 5. Deslocamento no mundo + Rampa da Ponte Levadiça
                 const vx = Math.sin(this.heading) * this.speed + Math.cos(this.heading) * this.lateralVelocity;
@@ -466,10 +478,9 @@
                                 effects.spawnCarBreakaway(this,zone,impactSpeed);
                         }
                         if (audio && isPlayer) audio.playCrash(Math.min(1, impactSpeed / 35));
-                        if (this.hubcaps > 0 && impactSpeed > 24) {
-                            this.hubcaps--;
-                            effects.ejectHubcap(this.x, this.y, this.z, -vx * 0.3, -vz * 0.3, isPlayer ? audio : null);
-                        }
+                        if(this.hubcaps>0&&impactSpeed>24)
+                            this.loseHubcap(effects,-vx*.3,-vz*.3,
+                                isPlayer?audio:null);
                     }
                     // Dissipa a energia contra a superfície, sem quicar para trás
                     // repetidamente a cada frame.
@@ -503,18 +514,25 @@
                     }
                 }
 
-                // Fumaça preta espessa no capô quando o carro tem mais de 65% de dano
-                // Probabilidade dependente de dt: preserva densidade de fumaça
-                // semelhante em 30/60 FPS, sem dezenas de partículas por frame.
-                if (this.damage > 65 &&
-                    Math.random() < Math.min(0.75, dt * (4 + this.damage * 0.09))) {
-                    effects.spawnTireSmoke(
-                        this.x + Math.sin(this.heading) * 1.9,
-                        this.y + 0.9,
-                        this.z + Math.cos(this.heading) * 1.9,
-                        true
-                    );
-                }
+                // Fumaça progressiva: vapor cinza a partir de 35%,
+                // cinza escuro acima de 60%, preta em dano crítico.
+                // Acumulador temporal para consistência entre 30/60FPS.
+                const smokeRatio=Math.max(0,Math.min(1,
+                    (this.damage-35)/65));
+                if(smokeRatio>0){
+                    this.engineSmokeClock+=Math.max(0,dt)*
+                        (1+smokeRatio*5);
+                    if(this.engineSmokeClock>=1){
+                        this.engineSmokeClock%=1;
+                        effects?.spawnTireSmoke?.(
+                            this.x+Math.sin(this.heading)*1.9,
+                            this.y+1.0,
+                            this.z+Math.cos(this.heading)*1.9,
+                            this.damage>=75,
+                            this.damage<75?0x868686:null
+                        );
+                    }
+                }else this.engineSmokeClock=0;
 
                 // Giroflex da polícia piscando
                 if (this.isPolice && this.sirenRed && this.sirenBlue) {
@@ -536,6 +554,17 @@
 
                 VehicleVisuals.update(this, dt, input);
                 this.updateTransform();
+            }
+
+            loseHubcap(effects,vx=0,vz=0,audio=null){
+                if(this.hubcaps<=0)return false;
+                const index=this.nextHubcapIndex%4;
+                this.nextHubcapIndex++;
+                this.hubcaps--;
+                if(this.hubcapMeshes[index])
+                    this.hubcapMeshes[index].visible=false;
+                effects?.ejectHubcap?.(this.x,this.y,this.z,vx,vz,audio);
+                return true;
             }
 
             setPaintColor(hex) {
