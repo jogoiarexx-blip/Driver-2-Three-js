@@ -105,8 +105,8 @@ class DriverRegionalMissions {
             !['story_vegas_c4','story_rio_barge'].includes(s.type))return false;
         const t=s.sites[s.phase],p=g.getPlayerPosition();
         if(!t || Math.hypot(t.x-p.x,t.z-p.z)>9)return false;
-        if(s.type==='story_vegas_c4'&&s.props[s.phase])
-            s.props[s.phase].visible=false;
+        // The generators remain visible while charges arm; only the
+        // actual detonation should destroy their geometry.
         s.planted++;s.phase++;
         g.audio.playC4Beep(true);
         if(s.phase<s.sites.length)this.nextSite(g,s);
@@ -152,6 +152,8 @@ class DriverRegionalMissions {
                 sub.textContent='C4: '+s.countdown.toFixed(1)+'s • '+Math.round(distance)+'m';
                 if(s.countdown<=0){
                     s.sites.forEach(v=>g.effects.spawnMassiveExplosion(v.x,0,v.z));
+                    if(s.type==='story_vegas_c4')
+                        s.props.forEach(prop=>{prop.visible=false;});
                     g.audio.playBigExplosion();
                     if(s.heli)s.heli.visible=false;
                     if(s.type==='story_rio_barge'&&s.props[0])
