@@ -1,0 +1,55 @@
+name: Driver 2 - Chicago R7 - Replay fisica de 50 segundos
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tests/chicago-r7-live-physics-browser.cjs'
+      - 'js/traffic/traffic-ai.js'
+      - 'js/world/chicago-goose-island-street.js'
+      - 'js/world/chicago-goose-island-north-yard.js'
+      - '.github/workflows/chicago-r7-live-replay.yml'
+  pull_request:
+    paths:
+      - 'tests/chicago-r7-live-physics-browser.cjs'
+      - 'js/traffic/traffic-ai.js'
+      - 'js/world/chicago-goose-island-street.js'
+      - 'js/world/chicago-goose-island-north-yard.js'
+      - '.github/workflows/chicago-r7-live-replay.yml'
+
+permissions:
+  contents: read
+jobs:
+  physics-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar a malha viaria R5-R6 e a logica original
+        run: node --test tests/chicago-r5-island-visitor.test.cjs tests/chicago-r6-north-yard.test.cjs
+      - name: Instalar Chromium e Playwright
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir jogo local em modo de testes
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/chicago-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-http.log
+          exit 1
+      - name: Replay real de fisica e IA sem teleportes
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r7-live-physics-browser.cjs
+      - name: Guardar a captura do replay
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r7-physics-replay
+          path: qa-artifacts/chicago-r7-live-replay.png
+          retention-days: 14
