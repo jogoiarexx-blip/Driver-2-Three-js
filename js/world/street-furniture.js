@@ -58,7 +58,7 @@ class DriverStreetFurniture {
         );
         const obj = new THREE.Object3D();
         // Plano em XZ; rotacionar ao redor de Y para cruzamentos leste/oeste.
-        if(typeof stripe.geometry.rotateX==='function')
+        if(stripe.geometry && typeof stripe.geometry.rotateX==='function')
             stripe.geometry.rotateX(-Math.PI/2);
         crosswalks.forEach((p,i)=>{
             obj.position.set(p.x,.081,p.z);
