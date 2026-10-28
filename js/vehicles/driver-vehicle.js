@@ -365,11 +365,12 @@
                     return;
                 }
                 const forwardThrottle = input.up ? 1 : (input.down ? -1 : 0);
-                // +heading aponta para a DIREITA (+X com frente +Z).
-                // O jogador e a IA precisam da mesma convenção:
-                // [A] gira à esquerda, [D] gira à direita.
-                const steerInput=(input.right ? 1 : 0) -
-                    (input.left ? 1 : 0);
+                // Câmera Three.js atrás do carro: quando ele aponta para +Z,
+                // +X fica à ESQUERDA da tela. Preservar a sensação original
+                // de A/D; a IA usa o sentido matemático da via.
+                const steerInput = isPlayer ?
+                    (input.left ? 1 : 0) - (input.right ? 1 : 0) :
+                    (input.right ? 1 : 0) - (input.left ? 1 : 0);
                 const handbrake = !!input.handbrake;
                 const burnoutKey = !!input.sprint; // Botão dedicado de Burnout (SHIFT / C)
 
