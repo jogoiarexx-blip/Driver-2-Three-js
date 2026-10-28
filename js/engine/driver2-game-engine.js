@@ -2463,6 +2463,12 @@
             // Pelo menu, escolha uma missão e viaje ao marcador no mundo.
             // A sequência da campanha permanece em ordem, sem teleporte.
             showStoryMissionOnMap(type){
+                // Modo de teste mantém o atalho antigo das 8 missões.
+                // Por padrão, o menu apenas marca o começo no mundo.
+                if(document.getElementById('mission-direct-start-mode')?.checked){
+                    this.startMission(type);
+                    return true;
+                }
                 if(this.currentCityKey!=='chicago'){
                     this.missionToastText='Escolha CHICAGO no seletor de cidades antes de marcar a missão.';
                     this.missionToastRemaining=6;
