@@ -106,7 +106,7 @@ test('gate racing checks the passage between cones and applies time penalties',(
     const g=game();Arcade.begin(g,'gate_racing');
     assert.equal(Arcade.findGateMarker(g,5,-80),null);
     assert(Arcade.findGateMarker(g,0,-80));
-    g.playerCar.x=3.9;g.playerCar.z=-80;
+    g.playerCar.x=3.9;g.playerCar.z=-80;g.playerCar.speed=18;
     const before=g.missionTimeLeft;
     Arcade.update(g,.016);
     assert(g.missionTimeLeft<=before-2.9);
