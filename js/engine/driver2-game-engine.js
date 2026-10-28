@@ -225,6 +225,7 @@
                     this.scene.remove(v.root);
                 });
                 this.vehicles = [];
+                this.wrigleyCar=null;
                 if (this.trafficAI) this.trafficAI.reset();
                 if (this.collisionSystem) this.collisionSystem.reset();
                 this.targetCar = null;
@@ -1269,6 +1270,10 @@
                     let minDist = 6.2;
 
                     for (const v of this.vehicles) {
+                        // O V8 de Wrigley só pode ser dirigido após acionar
+                        // o interruptor da bilheteria.
+                        if(v.isWrigleySecret && !this.city.chicagoStadium?.open)
+                            continue;
                         const d = Math.hypot(v.x - this.tanner.group.position.x, v.z - this.tanner.group.position.z);
                         if (d < minDist) {
                             minDist = d;
@@ -3221,6 +3226,10 @@
                     }
                 }
 
+                // O carro do estádio nasce depois do carregamento progressivo.
+                if(typeof DriverChicagoGameplay!=='undefined')
+                    DriverChicagoGameplay.ensureWrigleyCar(this);
+                
                 // Transição de detalhes em orçamento limitado por quadro.
                 // Não altera as caixas de colisão nem regras das missões.
                 const lod=this.city.updateDistrictLOD(dt,this.getPlayerPosition());
