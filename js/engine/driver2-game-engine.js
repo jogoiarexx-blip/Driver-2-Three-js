@@ -90,6 +90,8 @@
                 this.felony = 0;
                 this.roadblocksSpawned = false;
                 this.missionType = 'freeroam';
+                this.classicState=null;
+                this.regionalState=null;
                 this.missionTimeLeft = 0;
                 this.survivalElapsed = 0;
                 this.tailOutOfRangeTimer = 0;
@@ -383,6 +385,12 @@
 
             startMission(type) {
                 if(type.startsWith('story_'))this.storyCampaign=true;
+                if(typeof DriverRegionalMissions!=='undefined' &&
+                    DriverRegionalMissions.isRegional(type)){
+                    const requiredCity=DriverRegionalMissions.SPECS[type][0];
+                    if(this.currentCityKey!==requiredCity)
+                        this.changeCity(requiredCity);
+                }
                 this.missionToastRemaining=0;
                 if(type==='story_havana_lead' && this.currentCityKey!=='havana'){
                     this.startHavanaLead();
@@ -402,6 +410,10 @@
                     GPUResourceUtils.disposeSubtree(this.stationJones);
                     this.scene.remove(this.stationJones);this.stationJones=null;
                 }
+                if(typeof DriverClassicGames!=='undefined')
+                    DriverClassicGames.dispose(this);
+                if(typeof DriverRegionalMissions!=='undefined')
+                    DriverRegionalMissions.dispose(this);
                 this.clearMissionMarkers();
                 this.spawnAllVehicles();
                 if(this.trainLine)this.trainLine.reset(type==='story_train');
@@ -466,7 +478,13 @@
                 const subEl = document.getElementById('mission-subcounter');
                 const objEl = document.getElementById('objective-banner');
 
-                if (type === 'freeroam') {
+                if(typeof DriverClassicGames!=='undefined' &&
+                    DriverClassicGames.isClassic(type)){
+                    DriverClassicGames.begin(this,type);
+                }else if(typeof DriverRegionalMissions!=='undefined' &&
+                    DriverRegionalMissions.isRegional(type)){
+                    DriverRegionalMissions.begin(this,type);
+                }else if (type === 'freeroam') {
                     this.missionActive = false;
                     titleEl.textContent = `TAKE A RIDE: ${cityTitle}`;
                     timerEl.classList.add('hidden');
@@ -1197,6 +1215,10 @@
                         }
                     }
 
+                    // Missões com C4 exigem E a pé junto ao gerador/cais.
+                    if(typeof DriverRegionalMissions!=='undefined' &&
+                        DriverRegionalMissions.interact(this))return;
+
                     // 0.5. Verifica se Tanner quer sentar ou levantar de um Banco de Praça (Easter Egg Clássico do Driver 2!)
                     for (const b of this.city.benches) {
                         const dBench = Math.hypot(this.tanner.group.position.x - b.x, this.tanner.group.position.z - b.z);
@@ -1462,7 +1484,8 @@
                 // Somente o próximo portão da rota pode ser coletado.
                 if (this.missionMarkers.length > 0) {
                     const pos = this.getPlayerPosition();
-                    const marker = this.missionType==='story_leaving'?null:
+                    const marker = this.missionType==='story_leaving' ||
+                        this.missionMarkers.some(m=>m.manualInteract)?null:
                         DriverCheckpointRoute.findReached(
                             this.missionType, this.missionMarkers, pos.x, pos.z
                         );
@@ -1474,6 +1497,9 @@
                         marker.mesh.visible = false;
                         this.markersCollected++;
                         this.audio.playHubcapPing();
+                        if(typeof DriverClassicGames!=='undefined' &&
+                            DriverClassicGames.isClassic(this.missionType))
+                            DriverClassicGames.marker(this,marker);
                         if (this.missionType === 'trailblazer') {
                             this.missionTimeLeft += 4.0;
                             document.getElementById('mission-subcounter').textContent =
@@ -1487,6 +1513,20 @@
                     }
                 }
 
+                // All new modes share the existing timer, HUD and damage physics.
+                if(this.missionActive){
+                    const result=typeof DriverClassicGames!=='undefined' &&
+                        DriverClassicGames.isClassic(this.missionType)?
+                        DriverClassicGames.update(this,dt):
+                        typeof DriverRegionalMissions!=='undefined' &&
+                        DriverRegionalMissions.isRegional(this.missionType)?
+                        DriverRegionalMissions.update(this,dt):null;
+                    if(result?.success||result?.failure){
+                        this.triggerEndScreen(result.title,
+                            result.description||result.message||'');
+                        return;
+                    }
+                }
                 // Lógica de Tempo e Condições de Vitória/Derrota das Missões
                 if (this.missionActive) {
                     if (this.missionType === 'story_tipoff' && this.targetCar) {
