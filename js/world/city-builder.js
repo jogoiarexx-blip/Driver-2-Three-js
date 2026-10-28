@@ -132,6 +132,7 @@
                 this.chicagoStadium=null;
                 this.chicagoBridgeClock=0;
                 this.chicagoBridgeLamps=null;
+                this.chicagoLowerWacker=null;
                 this.chicagoOverhaulStats=null;
                 this.rioParks=[];
                 this.rioOverhaulStats=null;
@@ -344,6 +345,9 @@
                     // novos colliders e com LOD preservado.
                     if(typeof DriverChicagoOverhaul!=='undefined')
                         DriverChicagoOverhaul.buildCity(this);
+                    // Corredor Lower Wacker com pilares AABB reais.
+                    if(typeof DriverChicagoLowerWacker!=='undefined')
+                        DriverChicagoLowerWacker.build(this);
                 }
                 if(this.preset.id==='rio' &&
                     typeof DriverRioOverhaul!=='undefined')
