@@ -1053,3 +1053,16 @@ A R4 criou um eixo industrial interno em Goose Island, com dois galpões físico
 - **Testes:** `tests/chicago-r5-island-visitor.test.cjs` verifica o caminho inteiro, a rejeição de ligação alagada e a ausência de alterações nas missões; `tests/chicago-r5-visitor-browser.cjs` inspeciona a entrada e cada fase da rota no Chromium e gera captura.
 
 **Observação:** esta é uma conexão operacional da geografia *procedural* da Chicago atual, ainda não uma cópia exata das ruas originais do PS1. A malha GLB original permanece na pasta `chicago/` como referência para reconstrução por setores. Os quatro pontos do corredor são coordenadas do clone, não coordenadas extraídas literalmente da ROM.
+
+## Chicago R6 — extensão industrial norte e ponte adicional em Goose Island
+
+Esta revisão amplia a **topologia dirigível** do Undercover, sem mudar a campanha e sem alegar correspondência geométrica exata com a ROM PS1.
+
+- `js/world/chicago-goose-island-north-yard.js`: adiciona uma segunda via industrial no eixo **x≈−200, z=240–320** (80 unidades), conectada à rua da R4. O quarteirão antigo de **(-200,280)** é substituído por dois galpões com colisores AABB, mantendo livre a faixa para os veículos.
+- **Ponte norte nova:** um deck sobre o canal transversal de **z≈306,3** (R2). O teste de água do `CityBuilder` deixa o **deck seco** antes de avaliar a água da R2; nas bordas fora da ponte, o canal continua sendo água com física.
+- **Acesso auditado:** quatro segmentos da via norte são checados continuamente com `DriverRoadGeometry.segmentDrivable`, incluindo o deck e a saída na avenida de **z≈320**. Se a passagem ficar alagada ou bloqueada, a nova rota não recebe tráfego.
+- `CARGA NORTE GOOSE ISLAND`: novo caminhão local que sai do pátio industrial, passa pela ponte e alcança a avenida superior. Recebe limite de velocidade específico próximo do deck; o sistema de direção, motor, colisão e danos continua sendo o mesmo do restante do jogo.
+- **Sem regressão de campanha:** a IA usa o desvio somente quando o veículo possui `gooseIslandNorthYard`; o roteiro das missões não é reescrito, e as pontes fixas e levadiças anteriores, o furgão da R4, o entregador da R5 e Havana/Vegas/Rio permanecem disponíveis.
+- Teste Node: `node --test tests/chicago-r6-north-yard.test.cjs`. Smoke em Chromium: `node tests/chicago-r6-north-yard-browser.cjs`. O navegador verifica a ponte seca, a água adjacente, os galpões, o caminhão e os caminhos até a avenida.
+
+**Limitação de fidelidade:** a extensão é **procedural**. O `chicago/manifest.json` e os 54 GLBs originais seguem como referência para calibrar as próximas vias reais, os acessos às missões e a escala da rede. A R6 não transforma a grade inteira em mapa PS1.
