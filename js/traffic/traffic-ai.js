@@ -128,6 +128,10 @@ class DriverTrafficAI {
     }
 
     unobstructed(car, target) {
+        // O teto do Lower Wacker interrompe rastreamento de policiais externos.
+        if(typeof DriverChicagoLowerWacker!=='undefined' &&
+            DriverChicagoLowerWacker.blocksPoliceSight(this.city,car,target))
+            return false;
         // Predição curta ao invés de atravessar prédios em perseguição direta.
         const dx = target.x - car.x;
         const dz = target.z - car.z;
