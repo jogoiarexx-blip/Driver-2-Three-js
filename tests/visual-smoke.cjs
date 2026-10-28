@@ -334,6 +334,38 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         await page.screenshot({path:path.join(DIR,'vegas-casino-driving.png')});
         vegasVisual={...sceneInfo,walkingDistance:Number(walkDistance.toFixed(3))};
       }
+      // Comparação visual de pavimento: abrir o cruzamento central
+      // dirigindo nos quatro mapas e certificar a geometria de ruas.
+      const roadVisual=await page.evaluate(()=>{
+        const g=window.DriverGame,c=g.city,s=c.roadSurfaceStats;
+        return {regions:s?.regions||0,
+          intersections:s?.intersectionCount||0,
+          paintedInsideIntersections:s?.paintedInsideIntersections,
+          collidersAdded:s?.collidersAdded,
+          roadMesh:c.cityGroup.children.some(o=>
+            o.name==='driver2-road-asphalt-'+c.preset.id),
+          curbs:c.cityGroup.children.some(o=>
+            o.name==='driver2-stone-curbs-'+c.preset.id),
+          zebra:c.cityGroup.children.some(o=>o.count===3150)};
+      });
+      assert.equal(roadVisual.regions,261,'Ruas incompletas em '+city);
+      assert.equal(roadVisual.intersections,81);
+      assert.equal(roadVisual.collidersAdded,0);
+      assert.equal(roadVisual.paintedInsideIntersections,0);
+      assert(roadVisual.roadMesh&&roadVisual.curbs&&roadVisual.zebra,
+        'Asfalto, meios-fios ou faixas ausentes em '+city);
+      await page.evaluate(()=>{
+        const g=window.DriverGame,p=g.playerCar;
+        g.mode='driving';g.interiorPlace=null;
+        g.tanner.setVisible(false);
+        p.x=0;p.y=0;p.z=-123;p.heading=0;p.speed=0;
+        p.prevX=p.x;p.prevZ=p.z;
+        p.root.position.set(p.x,p.y,p.z);
+        p.root.rotation.y=p.heading;
+        g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+      });
+      await sleep(1000);
+      await page.screenshot({path:path.join(DIR,city+'-road-intersection.png')});
       // Amostra de frames do navegador headless: não representa FPS do usuário.
       const perf=await page.evaluate(async()=>{
         const frames=[];
@@ -354,7 +386,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       report.maps.push({...initial,driving,walking:{
         from:beforeWalk,to:afterWalk,distance:Math.hypot(
           afterWalk.x-beforeWalk.x,afterWalk.z-beforeWalk.z)},
-        interior:inner,gate,perf,rioVisual,havanaVisual,vegasVisual});
+        interior:inner,gate,perf,rioVisual,havanaVisual,vegasVisual,roadVisual});
       fs.writeFileSync(path.join(DIR,'report.json'),JSON.stringify(report,null,2));
     }
     assert.equal(report.runtimeErrors.length,0,'Exceções no navegador');
