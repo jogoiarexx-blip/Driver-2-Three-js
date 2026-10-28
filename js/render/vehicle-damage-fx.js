@@ -172,14 +172,35 @@ class VehicleDamageFX {
             right.rotation.z=z.right*.24;
             right.position.x=-z.right*.13;
         }
-        if(car.hoodPivot && z.front>.1){
-            car.hoodPivot.rotation.x=Math.min(-.06,
-                -z.frontBend*.75);
+        // Real, persistent low-poly crumple on the hood and trunk,
+        // driven by zoned impacts. Does not change physics AABB.
+        // Own the hinge rotations here to avoid the previous conflict
+        // between the vehicle update and the damage renderer.
+        if(car.hoodPivot){
+            const deformation=Math.max(z.front,stage.intensity*.34);
+            const flutter=deformation>.4?
+                Math.sin((car.motionClock||0)*13)*
+                    Math.min(.045,Math.abs(car.speed||0)*.0015):0;
+            car.hoodPivot.rotation.x=-
+                Math.min(.58,deformation*.46+Math.max(0,flutter));
             car.hoodPivot.rotation.z=z.sideLean*.35;
+            const hood=car.hoodPivot.children?.[0];
+            if(hood?.scale && hood?.position){
+                hood.scale.z=1-deformation*.26;
+                hood.scale.y=1-deformation*.29;
+                hood.position.z=.8-deformation*.18;
+                hood.position.y=-deformation*.095;
+            }
         }
-        if(car.trunkPivot && z.rear>.1){
-            car.trunkPivot.rotation.x=z.rearBend*.82;
+        if(car.trunkPivot){
+            const deformation=Math.max(z.rear,stage.intensity*.25);
+            car.trunkPivot.rotation.x=Math.min(.48,deformation*.40);
             car.trunkPivot.rotation.z=-z.sideLean*.25;
+            const trunk=car.trunkPivot.children?.[0];
+            if(trunk?.scale&&trunk?.position){
+                trunk.scale.z=1-deformation*.19;
+                trunk.position.z=-.8+deformation*.14;
+            }
         }
         if(car.frontBumperMesh)
             car.frontBumperMesh.visible=!car.breakawayFlags?.front;
