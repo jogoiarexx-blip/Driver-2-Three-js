@@ -1,0 +1,28 @@
+name: Driver 2 — regressão de recursos GLB
+on:
+  push:
+    paths:
+      - 'js/engine/gpu-resources.js'
+      - 'js/vehicles/police-door-rig.js'
+      - 'tests/gpu-resource-lifecycle.test.cjs'
+      - '.github/workflows/gpu-regression.yml'
+  pull_request:
+    paths:
+      - 'js/engine/gpu-resources.js'
+      - 'js/vehicles/police-door-rig.js'
+      - 'tests/gpu-resource-lifecycle.test.cjs'
+      - '.github/workflows/gpu-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  gpu-lifecycle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar posse e descarte de recursos GLB
+        run: node --test tests/gpu-resource-lifecycle.test.cjs
