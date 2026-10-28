@@ -2585,7 +2585,9 @@
                 // podem vazar para cima do HUD ao ampliar o minimapa.
                 ctx.beginPath();ctx.rect(2,2,w-4,h-4);ctx.clip();
                 ctx.translate(cx, cy);
-                ctx.rotate(pos.heading);
+                // Mundo usa +Z como frente; canvas usa Y negativo para cima.
+                // Rotação inversa mantém a frente do veículo no topo.
+                ctx.rotate(-pos.heading);
 
                 // Canal no radar
                 if(this.currentCityKey==='chicago'){
