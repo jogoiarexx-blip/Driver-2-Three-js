@@ -37,6 +37,26 @@ class DriverTrafficAI {
     getRoute(car) {
         let route = this.routes.get(car);
         if (route) return route;
+        // R4: primeiro corredor local fora da grade de 80. Não afeta
+        // veículos de missão nem o tráfego das outras três cidades.
+        if(this.city?.preset?.id==='chicago'&&!car.scriptedDrive &&
+            typeof DriverChicagoGooseIslandStreet!=='undefined' &&
+            DriverChicagoGooseIslandStreet.isOnSpine(car.x,car.z) &&
+            Math.abs(Math.cos(car.heading))>=.65){
+            const sign=Math.cos(car.heading)>=0?1:-1;
+            const destination=sign>0?
+                DriverChicagoGooseIslandStreet.NORTH_Z:
+                DriverChicagoGooseIslandStreet.SOUTH_Z;
+            route={
+                axis:'z',sign,
+                road:DriverChicagoGooseIslandStreet.AXIS_X,
+                target:DriverChicagoGooseIslandStreet.lanePosition(sign,destination),
+                isIslandSpine:true,reverseTimer:0,stuckSeconds:0,
+                previousX:car.x,previousZ:car.z
+            };
+            this.routes.set(car,route);
+            return route;
+        }
         const headingX = Math.sin(car.heading);
         const headingZ = Math.cos(car.heading);
         const axis = Math.abs(headingX) > Math.abs(headingZ) ? 'x' : 'z';
@@ -72,6 +92,31 @@ class DriverTrafficAI {
     }
 
     chooseNext(car, route, playerPos, wanted) {
+        // Saída do ramal R4 para as avenidas leste-oeste existentes
+        // em z=160/240. Reutiliza as pontes certificadas da R2.
+        if(route.isIslandSpine &&
+            this.city?.preset?.id==='chicago' &&
+            typeof DriverChicagoGooseIslandStreet!=='undefined'){
+            const z=route.sign>0?
+                DriverChicagoGooseIslandStreet.NORTH_Z:
+                DriverChicagoGooseIslandStreet.SOUTH_Z;
+            const preferred=playerPos&&wanted?
+                (playerPos.x>DriverChicagoGooseIslandStreet.AXIS_X?1:-1):
+                (Math.random()<.5?1:-1);
+            for(const sign of [preferred,-preferred]){
+                const endpoint=sign>0?-160:-240;
+                const target=this.positionInLane('x',sign,z,endpoint);
+                if(typeof DriverRoadGeometry!=='undefined' &&
+                    !DriverRoadGeometry.segmentDrivable(this.city,
+                        car.x,car.z,target.x,target.z))continue;
+                route.axis='x';route.sign=sign;route.road=z;
+                route.target=target;route.isIslandSpine=false;
+                route.reverseTimer=0;
+                return;
+            }
+            route.reverseTimer=.8;
+            return;
+        }
         const crossX = this.nearestGrid(route.target.x);
         const crossZ = this.nearestGrid(route.target.z);
         const possible = [];
