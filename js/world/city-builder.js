@@ -129,6 +129,9 @@
                 this.poleDebrisGeometry=null;
                 this.benches = [];
                 this.chicagoParks=[];
+                this.chicagoStadium=null;
+                this.chicagoBridgeClock=0;
+                this.chicagoBridgeLamps=null;
                 this.chicagoOverhaulStats=null;
                 this.rioParks=[];
                 this.rioOverhaulStats=null;
@@ -278,6 +281,8 @@
                             this.buildChicagoStationBlock(blockX,blockZ);
                         } else if ((blockX===-280||blockX===280)&&blockZ===-280) {
                             this.buildRegionalLandmark(blockX,blockZ);
+                        } else if(this.preset.id==='chicago' && blockX===-280 && blockZ===200 && typeof DriverChicagoGameplay!=='undefined'){
+                            DriverChicagoGameplay.buildStadium(this,blockX,blockZ);
                         } else if (blockX === -120 && blockZ === -120) {
                             this.buildSafeHouseBlock(blockX, blockZ);
                         } else if (blockX === 120 && blockZ === 120) {
@@ -1515,6 +1520,10 @@
 
             update(dt, vehicles, onPropHitCallback, focusPosition=null) {
                 this.signalClock += dt;
+                if(typeof DriverChicagoGameplay!=='undefined'){
+                    DriverChicagoGameplay.updateBridge(this,dt);
+                    DriverChicagoGameplay.update(this,dt);
+                }
                 this.refreshTrafficLights();
                 if(typeof DriverCoastalVisuals!=='undefined')
                     DriverCoastalVisuals.update(this,dt,focusPosition);
