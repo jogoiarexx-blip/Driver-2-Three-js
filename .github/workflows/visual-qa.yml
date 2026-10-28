@@ -12,6 +12,7 @@ on:
       - 'js/world/street-furniture.js'
       - 'tests/chicago-r3-streets-browser.cjs'
       - 'tests/chicago-r4-island-browser.cjs'
+      - 'tests/chicago-r5-visitor-browser.cjs'
       - 'js/world/chicago-goose-island-street.js'
       - 'js/world/chicago-ps1-coastline.js'
       - 'chicago/**'
@@ -109,6 +110,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-root-preview-visual.cjs
+      - name: R5 verificar acesso de veículo vindo do continente e saída norte da ilha
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r5-visitor-browser.cjs
       - name: R4 testar primeira rua fora da grade, tráfego da ilha e saída pelas pontes
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
