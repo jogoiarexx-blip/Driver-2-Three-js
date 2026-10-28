@@ -2445,18 +2445,22 @@
                     pos.x-start.x,pos.z-start.z));
                 const show=!this.missionActive&&!doneChapter&&!locked;
                 if(nav){
-                    nav.textContent=show?(
-                        spec?spec.label+' • '+spec.place:
-                        missionType.replace(/_/g,' ').toUpperCase())+
-                        ' • '+distance+'m'+
-                        (near?' • J PARA INICIAR':' • SIGA O ! NO RADAR'):'';
+                    const label=spec?spec.label+' • '+spec.place:
+                        missionType.replace(/_/g,' ').toUpperCase();
+                    const message=show?label+' • '+distance+'m'+
+                        (near?' • '+(spec?.hint||'')+' • J OU BOTÃO PARA INICIAR':
+                            ' • SIGA O NÚMERO NO RADAR'):'';
+                    // Evita escrita DOM a cada frame no orçamento dos 60 FPS.
+                    if(nav.textContent!==message)nav.textContent=message;
                     nav.classList.toggle('hidden',!show);
                 }
                 if(button){
                     button.classList.toggle('hidden',!near);
                     button.disabled=!near;
-                    if(near)button.textContent='▶ INICIAR '+(
-                        spec?spec.label:'MISSÃO');
+                    if(near){
+                        const label='▶ INICIAR '+(spec?spec.label:'MISSÃO');
+                        if(button.textContent!==label)button.textContent=label;
+                    }
                 }
             }
 
