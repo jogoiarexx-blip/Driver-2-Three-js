@@ -390,8 +390,13 @@
                 if(typeof DriverRegionalMissions!=='undefined' &&
                     DriverRegionalMissions.isRegional(type)){
                     const requiredCity=DriverRegionalMissions.SPECS[type][0];
-                    if(this.currentCityKey!==requiredCity)
+                    if(this.currentCityKey!==requiredCity){
+                        // activateCityPreset normally restarts the previous
+                        // mission; avoid recursive cross-city restarts when
+                        // switching from one chapter straight into another.
+                        this.missionType='freeroam';
                         this.changeCity(requiredCity);
+                    }
                 }
                 this.missionToastRemaining=0;
                 if(type==='story_havana_lead' && this.currentCityKey!=='havana'){
