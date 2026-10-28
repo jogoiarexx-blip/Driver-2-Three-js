@@ -134,6 +134,27 @@
                 }
             }
 
+            playBridgeBell() {
+                // Duas badaladas sintetizadas, sem áudio externo ou samples.
+                if(!this.initialized || !this.enabled || !this.ctx)return;
+                try {
+                    const t=this.ctx.currentTime;
+                    for(let i=0;i<2;i++){
+                        const start=t+i*.34;
+                        const osc=this.ctx.createOscillator();
+                        const gain=this.ctx.createGain();
+                        osc.type='triangle';
+                        osc.frequency.setValueAtTime(880,start);
+                        osc.frequency.exponentialRampToValueAtTime(680,start+.25);
+                        gain.gain.setValueAtTime(.001,start);
+                        gain.gain.linearRampToValueAtTime(.065,start+.02);
+                        gain.gain.exponentialRampToValueAtTime(.001,start+.29);
+                        osc.connect(gain);gain.connect(this.ctx.destination);
+                        osc.start(start);osc.stop(start+.30);
+                    }
+                } catch(e) {}
+            }
+
             playHorn() {
                 if (!this.initialized || !this.enabled || !this.ctx) return;
                 try {
