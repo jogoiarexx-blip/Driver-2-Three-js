@@ -11,8 +11,15 @@ class DriverPursuitNavigation {
     static node(x,z){return {x,z};}
     static nearest(n){return Math.round(n/this.STEP)*this.STEP;}
     static distance(a,b){return Math.hypot(a.x-b.x,a.z-b.z);}
+    static closedDrawbridge(city,a,b){
+        if(city?.preset?.id!=='chicago'||!city.bridgeRaised)return false;
+        // Enquanto as folhas estão levantadas a IA não atravessa a
+        // faixa completa do rio. O jogador ainda pode usar rampas.
+        const south=Math.min(a.z,b.z),north=Math.max(a.z,b.z);
+        return south<34 && north>66;
+    }
     static clear(city,a,b){
-        if(!a||!b)return false;
+        if(!a||!b||this.closedDrawbridge(city,a,b))return false;
         if(typeof DriverRoadGeometry!=='undefined')
             return DriverRoadGeometry.segmentDrivable(
                 city,a.x,a.z,b.x,b.z,1.45);
@@ -26,7 +33,8 @@ class DriverPursuitNavigation {
         return true;
     }
     static edge(city,a,b){
-        if(!a||!b||this.distance(a,b)>this.STEP+.01)return false;
+        if(!a||!b||this.distance(a,b)>this.STEP+.01||
+            this.closedDrawbridge(city,a,b))return false;
         if(a.x!==b.x&&a.z!==b.z)return false;
         const axis=a.x===b.x?'z':'x';
         const sign=axis==='z'?Math.sign(b.z-a.z):Math.sign(b.x-a.x);
