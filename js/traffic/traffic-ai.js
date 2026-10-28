@@ -230,6 +230,7 @@ class DriverTrafficAI {
         // Missões seguem o waypoint original, mas o volante recebe
         // uma sub-rota segura (pontes, cruzamentos e caixas AABB).
         const missionRoute=scripted && waypoint &&
+            this.city?.preset?.id==='chicago' &&
             typeof DriverPursuitNavigation!=='undefined'?
             DriverPursuitNavigation.follow(
                 this.city,car,waypoint,route,dt):null;
@@ -282,6 +283,7 @@ class DriverTrafficAI {
         }
 
         if(wanted && pursuitTarget &&
+            this.city?.preset?.id==='chicago' &&
             !this.policeMemory.get(car)?.visible &&
             typeof DriverPursuitNavigation!=='undefined'){
             // Sem enxergar Tanner, a viatura vai até o último cruzamento
