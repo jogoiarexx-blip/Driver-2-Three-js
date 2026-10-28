@@ -346,7 +346,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
             o.name==='driver2-road-asphalt-'+c.preset.id),
           curbs:c.cityGroup.children.some(o=>
             o.name==='driver2-stone-curbs-'+c.preset.id),
-          zebra:c.cityGroup.children.some(o=>o.count===3150)};
+          zebra:c.cityGroup.children.some(o=>o.count===1600)};
       });
       assert.equal(roadVisual.regions,261,'Ruas incompletas em '+city);
       assert.equal(roadVisual.intersections,81);
