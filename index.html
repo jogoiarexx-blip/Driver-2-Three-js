@@ -135,6 +135,11 @@
             <div id="hud-player-panel" class="flex flex-col gap-2 w-52 sm:w-68 bg-slate-950/85 p-3 rounded-lg border border-slate-700/80 backdrop-blur-sm pointer-events-auto">
                 <div id="driver-route-status" class="hidden text-[11px] text-emerald-300 font-bold"></div>
                 <div id="driver-mission-start-status" class="hidden text-[11px] text-amber-300 font-bold"></div>
+                <button id="btn-start-nearby-mission" type="button"
+                    onclick="window.DriverGame.activateNearbyMission()"
+                    class="hidden w-full bg-amber-400 hover:bg-amber-300 text-slate-950 border border-amber-200 rounded px-2 py-2 text-[11px] font-extrabold">
+                    ▶ INICIAR MISSÃO (J)
+                </button>
                 <div id="driver-physics-status" class="hidden text-[11px] text-cyan-300 font-bold"></div>
                 <div class="flex items-center justify-between text-xs sm:text-sm font-bold tracking-wider text-amber-400">
                     <span>DANO (DAMAGE)</span>
@@ -501,6 +506,7 @@
                 <div>
                     <div class="font-bold text-sky-300 text-sm">CAMPANHA • CHICAGO → HAVANA</div>
                     <div id="chicago-chapter-status" class="text-xs text-slate-400">CHICAGO 08 PENDENTE • HAVANA DISPONÍVEL EM PASSEIO LIVRE</div>
+                    <div class="text-[11px] text-amber-300 mt-1">Selecione a missão para marcar o local no mapa; dirija até lá e pressione J ou INICIAR. Os capítulos seguem em sequência.</div>
                 </div>
                 <button id="btn-resume-havana" onclick="window.DriverGame.beginHavanaChapter()"
                     class="hidden bg-sky-700 hover:bg-sky-600 border border-sky-400 rounded-lg px-4 py-2 text-xs font-extrabold text-white">
@@ -508,24 +514,24 @@
                 </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                <button onclick="window.DriverGame.startMission('story_tipoff')" class="rounded-lg p-3 text-left bg-slate-950 border border-yellow-600 hover:bg-slate-800">
+                <button onclick="window.DriverGame.showStoryMissionOnMap('story_tipoff')" class="rounded-lg p-3 text-left bg-slate-950 border border-yellow-600 hover:bg-slate-800">
                     <strong class="text-amber-400">CHICAGO 01 — SURVEILLANCE TIP OFF</strong>
                     <div class="text-xs text-slate-300">Encontre Jones e entre no carro dele, como na missão de abertura.</div>
                 </button>
-                <button onclick="window.DriverGame.startMission('story_witness')" class="rounded-lg p-3 text-left bg-slate-950 border border-blue-600 hover:bg-slate-800">
+                <button onclick="window.DriverGame.showStoryMissionOnMap('story_witness')" class="rounded-lg p-3 text-left bg-slate-950 border border-blue-600 hover:bg-slate-800">
                     <strong class="text-sky-400">CHICAGO 02 — CHASE THE WITNESS</strong>
                     <div class="text-xs text-slate-300">Persiga o sedã azul sem perdê-lo. Não é uma missão de destruir o carro.</div>
                 </button>
             </div>
-            <button onclick="window.DriverGame.startMission('story_train')" class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-red-700 hover:bg-slate-800">
+            <button onclick="window.DriverGame.showStoryMissionOnMap('story_train')" class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-red-700 hover:bg-slate-800">
                 <strong class="text-red-400">CHICAGO 03 — TRAIN PURSUIT</strong>
                 <div class="text-xs text-slate-300 mt-1">Persiga o trem elevado, alcance a estação, saia do carro e suba a rampa até a plataforma.</div>
             </button>
-            <button onclick="window.DriverGame.startMission('story_drop')" class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-red-500 hover:bg-slate-800">
+            <button onclick="window.DriverGame.showStoryMissionOnMap('story_drop')" class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-red-500 hover:bg-slate-800">
                 <strong class="text-orange-400">CHICAGO 04 — TAILING THE DROP</strong>
                 <div class="text-xs text-slate-300 mt-1">Siga discretamente o sedã vermelho até o depósito. A barra de proximidade deve permanecer verde.</div>
             </button>
-            <button onclick="window.DriverGame.startMission('story_safehouse')"
+            <button onclick="window.DriverGame.showStoryMissionOnMap('story_safehouse')"
                 class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-emerald-500 hover:bg-slate-800">
                 <strong class="text-emerald-400">CHICAGO 05 — ESCAPE TO THE SAFE HOUSE</strong>
                 <div class="text-xs text-slate-300 mt-1">
@@ -533,21 +539,21 @@
                     Depois entre a pé para salvar a campanha na mesa verde.
                 </div>
             </button>
-            <button onclick="window.DriverGame.startMission('story_intruder')"
+            <button onclick="window.DriverGame.showStoryMissionOnMap('story_intruder')"
                 class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-amber-600 hover:bg-slate-800">
                 <strong class="text-amber-400">CHICAGO 06 — CHASE THE INTRUDER</strong>
                 <div class="text-xs text-slate-300 mt-1">
                     Pegue o esportivo preto, persiga o invasor até os depósitos e enfrente uma emboscada com van amarela.
                 </div>
             </button>
-            <button onclick="window.DriverGame.startMission('story_caine')"
+            <button onclick="window.DriverGame.showStoryMissionOnMap('story_caine')"
                 class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-rose-600 hover:bg-slate-800">
                 <strong class="text-rose-400">CHICAGO 07 — CAINE'S COMPOUND</strong>
                 <div class="text-xs text-slate-300 mt-1">
                     Saia do depósito, entre no carro de fuga, despiste as vans e atravesse a ponte antes de fechar.
                 </div>
             </button>
-            <button onclick="window.DriverGame.startMission('story_leaving')"
+            <button onclick="window.DriverGame.showStoryMissionOnMap('story_leaving')"
                 class="w-full mb-4 rounded-lg p-3 text-left bg-slate-950 border border-sky-600 hover:bg-slate-800">
                 <strong class="text-sky-400">CHICAGO 08 — LEAVING CHICAGO</strong>
                 <div class="text-xs text-slate-300 mt-1">
@@ -981,7 +987,8 @@ git push -u origin main</pre>
     <script src="./js/world/road-surface.js"></script>
     <script src="./js/world/street-furniture.js"></script>
     <script src="./js/world/chicago-train.js"></script>
-    <script src="./js/world/city-builder.js?v=driver2-fix-20261028-09"></script>
+    <script src="./js/world/tanner-home-interior.js?v=chicago-chapters-rev1"></script>
+    <script src="./js/world/city-builder.js?v=chicago-chapters-rev1"></script>
     <script src="./js/police/pursuit-tactics.js"></script>
     <script src="./js/gameplay/tailing-drop.js"></script>
     <script src="./js/gameplay/safehouse-escape.js"></script>
@@ -991,6 +998,7 @@ git push -u origin main</pre>
     <script src="./js/gameplay/havana-lead.js"></script>
     <script src="./js/gameplay/chapter-progress.js"></script>
     <script src="./js/gameplay/campaign-flow.js"></script>
+    <script src="./js/gameplay/chicago-mission-hubs.js?v=chicago-chapters-rev1"></script>
     <script src="./js/traffic/traffic-ai.js?v=chicago-wacker-rev1"></script>
     <script src="./js/police/roadblock-director.js"></script>
     <script src="./js/gameplay/checkpoint-route.js"></script>
@@ -1004,6 +1012,6 @@ git push -u origin main</pre>
     <script src="./js/render/impact-feedback.js"></script>
     <script src="./js/ui/driver-load-scheduler.js"></script>
     <script src="./js/ui/driver-boot-flow.js"></script>
-    <script src="./js/engine/driver2-game-engine.js?v=driver2-fix-20261028-09"></script>
+    <script src="./js/engine/driver2-game-engine.js?v=chicago-chapters-rev1"></script>
 </body>
 </html>
