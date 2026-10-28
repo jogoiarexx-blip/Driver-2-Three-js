@@ -11,7 +11,7 @@ class Geometry{constructor(){this.attributes={};}setAttribute(k,v){this.attribut
     computeVertexNormals(){this.normals=true;}}
 class Attr{constructor(array,size){this.array=array;this.size=size;}}
 class Mesh{constructor(geom,mat){this.geometry=geom;this.material=mat;
-    this.userData={};this.position={set(x,y,z){this.x=x;this.y=y;this.z=z;}};}
+    this.userData={};this.position={set(x,y,z){this.x=x;this.y=y;this.z=z;}};}}
 class Material{constructor(cfg){this.config=cfg;}}
 const THREE={Group,BufferGeometry:Geometry,Float32BufferAttribute:Attr,
     Mesh,BoxGeometry:Geometry,MeshLambertMaterial:Material,
