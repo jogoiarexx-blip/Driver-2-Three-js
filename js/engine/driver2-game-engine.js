@@ -1973,6 +1973,11 @@
                 this.gameEnded=false;
                 this.missionActive=false;
                 this.missionTimeLeft=0;
+                // Restore passive police and remove temporary gate cones
+                // when leaving Driving Games; free roam must be unchanged.
+                if(typeof DriverClassicGames!=='undefined' &&
+                    DriverClassicGames.isClassic(finishedType))
+                    DriverClassicGames.dispose(this);
                 if(!failed)this.completedMissions.add(finishedType);
                 // O checkpoint de capítulo só nasce após vitória real do diretor.
                 if(this.missionType==='story_leaving' &&
