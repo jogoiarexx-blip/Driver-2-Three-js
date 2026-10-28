@@ -866,29 +866,56 @@
                 this.benches.push({ x: cx, z: cz });
             }
 
-            buildSafeHouseBlock(cx, cz) {
-                const garage = new THREE.Mesh(
-                    new THREE.BoxGeometry(30, 14, 30),
-                    new THREE.MeshLambertMaterial({ color: 0x3f3f46 })
-                );
-                garage.position.set(cx, 7.2, cz);
-                this.cityGroup.add(garage);
-                // Telhado e janelas reais no lugar do antigo bloco cinza.
-                const roof=new THREE.Mesh(new THREE.BoxGeometry(32,1.2,32),
-                    new THREE.MeshLambertMaterial({color:0x7c2d12}));
-                roof.position.set(cx,14.7,cz);this.cityGroup.add(roof);
-                for(const sign of [-1,1]) {
-                    const windowPane=new THREE.Mesh(
-                        new THREE.BoxGeometry(3.8,2.7,0.25),
-                        new THREE.MeshBasicMaterial({color:0x93c5fd}));
-                    windowPane.position.set(cx+sign*8.2,7,cz+15.15);
-                    this.cityGroup.add(windowPane);
-                }
+            toggleHomeGarageDoor(){
+                if(!this.homeGarageDoor)return false;
+                this.homeGarageDoorOpen=!this.homeGarageDoorOpen;
+                const boxes=this.buildingBoxes;
+                const idx=boxes.indexOf(this.homeGarageDoorClosedBox);
+                if(this.homeGarageDoorOpen&&idx>=0)boxes.splice(idx,1);
+                if(!this.homeGarageDoorOpen&&idx<0)
+                    boxes.push(this.homeGarageDoorClosedBox);
+                return this.homeGarageDoorOpen;
+            }
 
-                this.buildingBoxes.push({
-                    minX: cx - 15, maxX: cx + 15,
-                    minZ: cz - 15, maxZ: cz + 15
-                });
+            buildSafeHouseBlock(cx, cz) {
+                // A garagem ocupa a ala esquerda do próprio imóvel.
+                // Substitui o antigo bloco maciço por paredes com abertura frontal.
+                const masonry=new THREE.MeshLambertMaterial({color:0x57534e});
+                const trim=new THREE.MeshLambertMaterial({color:0x7c2d12});
+                const wall=(x,y,z,w,h,d,mat=masonry,collide=true)=>{
+                    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+                    mesh.position.set(x,y,z);mesh.receiveShadow=true;
+                    this.cityGroup.add(mesh);
+                    if(collide)this.buildingBoxes.push({
+                        minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2});
+                    return mesh;
+                };
+                wall(cx,7.2,cz-15,30,14,.7);
+                wall(cx-15,7.2,cz,.7,14,30);
+                wall(cx+15,7.2,cz,.7,14,30);
+                // Abertura para garagem com 8m de largura na fachada sul.
+                wall(cx-13,7.2,cz+15,4,14,.65);
+                wall(cx+5,7.2,cz+15,20,14,.65);
+                wall(cx-9,10.5,cz+15,8,7,.65);
+                wall(cx,14.7,cz,32,1.2,32,trim,false);
+                // Divisória entre garagem e parte residencial.
+                wall(cx-4.7,3.3,cz+7.5,.5,6.6,14);
+                wall(cx-9,3.1,cz+.45,8,6.2,.45);
+                wall(cx-9,.11,cz+8,8,.2,13.5,
+                    new THREE.MeshLambertMaterial({color:0x64748b}),false);
+                for(const dz of [3,8,12]){
+                    const stripe=wall(cx-9,.235,cz+dz,5,.02,.17,
+                        new THREE.MeshBasicMaterial({color:0xfde68a}),false);
+                }
+                // Iluminação e estrutura de interiores com custo baixo.
+                for(const dz of [3.5,10.5]){
+                    wall(cx-9,5.9,cz+dz,4,.12,.3,
+                        new THREE.MeshBasicMaterial({color:0xfff3bd}),false);
+                }
+                for(const sign of [-1,1]){
+                    wall(cx+sign*8.2,7,cz+15.4,3.8,2.7,.12,
+                        new THREE.MeshBasicMaterial({color:0x93c5fd}),false);
+                }
 
                 const zoneGeo = new THREE.CylinderGeometry(4.5, 4.5, 0.3, 16);
                 const zoneMat = new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.75 });
@@ -896,54 +923,21 @@
                 this.safeHouseBeacon.position.set(cx, 0.4, cz + 19);
                 this.cityGroup.add(this.safeHouseBeacon);
                 this.safeHouseZone = { x: cx, z: cz + 19, radius: 5.5 };
-                this.garageParking={x:cx-9,z:cz+26,heading:0};
-                this.garageExit={x:cx-9,z:cz+31,heading:0};
-                // Vaga externa acessível sem atravessar o collider da casa.
-                const garagePad=new THREE.Mesh(
-                    new THREE.PlaneGeometry(6.5,7.2),
-                    new THREE.MeshBasicMaterial({
-                        color:0x16a34a,transparent:true,opacity:.4,
-                        side:THREE.DoubleSide,depthWrite:false,
-                        polygonOffset:true,polygonOffsetFactor:-2
-                    })
-                );
-                garagePad.rotation.x=-Math.PI/2;
-                garagePad.position.set(cx-9,.075,cz+26);
-                this.cityGroup.add(garagePad);
-                // Abrigo de garagem com frente aberta para a rua,
-                // separado da casa. Nunca registrar todo o volume como
-                // prédio sólido: o veículo deve entrar pela abertura.
-                const shelterX=cx-9,shelterZ=cz+26;
-                const shelterMaterial=new THREE.MeshLambertMaterial({
-                    color:0x475569
-                });
-                const roofPanel=new THREE.Mesh(
-                    new THREE.BoxGeometry(9.6,.45,10.6),shelterMaterial);
-                roofPanel.position.set(shelterX,4.05,shelterZ);
-                this.cityGroup.add(roofPanel);
-                const garageWalls=[
-                    {x:shelterX-4.6,z:shelterZ,w:.3,d:10.1},
-                    {x:shelterX+4.6,z:shelterZ,w:.3,d:10.1},
-                    {x:shelterX,z:shelterZ-5.0,w:9.5,d:.35}
-                ];
-                for(const part of garageWalls){
-                    const wall=new THREE.Mesh(
-                        new THREE.BoxGeometry(part.w,3.85,part.d),
-                        shelterMaterial);
-                    wall.position.set(part.x,1.93,part.z);
-                    this.cityGroup.add(wall);
-                    this.buildingBoxes.push({
-                        minX:part.x-part.w*.5,
-                        maxX:part.x+part.w*.5,
-                        minZ:part.z-part.d*.5,
-                        maxZ:part.z+part.d*.5
-                    });
-                }
-                const openSign=new THREE.Mesh(
-                    new THREE.BoxGeometry(5.0,.62,.12),
-                    new THREE.MeshBasicMaterial({color:0x34d399}));
-                openSign.position.set(shelterX,3.55,shelterZ+5.3);
-                this.cityGroup.add(openSign);
+                this.garageParking={x:cx-9,z:cz+9,heading:0};
+                this.garageExit={x:cx-9,z:cz+22,heading:0};
+                this.homeGarageDoorOpen=false;
+                this.homeGarageDoorHeight=0;
+                this.homeGarageDoor=wall(cx-9,2.25,cz+15.15,7.8,4.5,.24,
+                    new THREE.MeshLambertMaterial({color:0x475569}),false);
+                this.homeGarageDoorClosedBox={
+                    minX:cx-13,maxX:cx-5,minZ:cz+14.9,maxZ:cz+15.5
+                };
+                this.buildingBoxes.push(this.homeGarageDoorClosedBox);
+                // Trilhos verticais e luminária da porta basculante.
+                for(const dx of [-13,-5])
+                    wall(cx+dx+9,2.35,cz+15.25,.23,4.7,.4,trim,false);
+                wall(cx-9,4.85,cz+15.4,5,.22,.18,
+                    new THREE.MeshBasicMaterial({color:0x34d399}),false);
                 const door=new THREE.Mesh(new THREE.BoxGeometry(3.3,4.1,0.4),
                     new THREE.MeshLambertMaterial({color:0x16a34a}));
                 door.position.set(cx,2.2,cz+15.2);
@@ -1527,6 +1521,13 @@
                     this.bridgeNorthLeaf.rotation.x = this.bridgeAngle;
                 }
 
+                // Elevação da porta da garagem residencial.
+                if(this.homeGarageDoor){
+                    const height=this.homeGarageDoorOpen?4.65:0;
+                    this.homeGarageDoorHeight=THREE.MathUtils.damp(
+                        this.homeGarageDoorHeight||0,height,7,dt);
+                    this.homeGarageDoor.position.y=2.25+this.homeGarageDoorHeight;
+                }
                 // Anima abertura do portão da Garagem Secreta
                 if (this.secretGateOpen && this.secretGateMesh && this.secretGateMesh.position.y > -4.5) {
                     this.secretGateMesh.position.y -= 6.5 * dt;
