@@ -8,6 +8,9 @@ on:
       - 'tests/chicago-ps1-undercover-visual.cjs'
       - 'tests/chicago-ps1-undercover-river-r2-visual.cjs'
       - 'js/world/chicago-ps1-river-branches.js'
+      - 'js/world/road-surface.js'
+      - 'js/world/street-furniture.js'
+      - 'tests/chicago-r3-streets-browser.cjs'
       - 'js/world/chicago-ps1-coastline.js'
       - 'chicago/**'
       - 'chicago-original-preview.html'
@@ -104,6 +107,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-root-preview-visual.cjs
+      - name: R3 validar ausência de asfalto, faixas e zebras sobre canais
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r3-streets-browser.cjs
       - name: Certificar Goose Island, os dois braços do Rio Chicago e pontes no Undercover
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
