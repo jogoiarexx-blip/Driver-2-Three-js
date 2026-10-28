@@ -59,6 +59,9 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
             (/special|bridge-|home-garage|warehouse-exterior|secret-garage|store-|interior-|chicago-station|caine-compound/
               .test(o.name))).length,
           lod:g.city.lodStats,
+          regionalBridge:g.city.regionalInfrastructureStats,
+          secretVariant:g.secretCar?.secretVariant||null,
+          secretLivery:!!g.secretCar?.secretCityStyle,
           geometries:g.renderer.info.memory.geometries,
           textures:g.renderer.info.memory.textures
         };
@@ -68,6 +71,12 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       assert(initial.bridgeLeaves,'Ponte não criada em '+city);
       assert(initial.garageGate,'Garagem secreta ausente em '+city);
       assert(initial.structureMeshes>8,'Estruturas especiais ausentes em '+city);
+      assert(initial.regionalBridge?.movingLeaves===2,
+        'Ponte regional não associada às duas folhas móveis em '+city);
+      assert(initial.regionalBridge?.collidersAdded===0,
+        'A ponte regional alterou os colisores em '+city);
+      assert(initial.secretLivery && initial.secretVariant,
+        'Carro secreto regional ausente em '+city);
       await page.evaluate(()=>{
         const g=window.DriverGame,p=g.playerCar;
         g.mode='driving';g.interiorPlace=null;
@@ -86,6 +95,25 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           triangles:g.renderer.info.render.triangles};
       });
       assert.equal(driving.mode,'driving');
+      // Damage test in the real browser. Deform the mesh without adding
+      // physics colliders; then restore the car before navigation tests.
+      const visualDamage=await page.evaluate(()=>{
+        const car=window.DriverGame.playerCar;
+        if(!car.hoodPivot)return {supported:false};
+        car.damage=78;car.damageZones.front=82;
+        window.VehicleDamageFX.update(car);
+        const hood=car.hoodPivot.children[0];
+        const record={supported:true,scaleZ:hood.scale.z,
+          hingeX:car.hoodPivot.rotation.x,
+          hubcaps:car.hubcaps};
+        car.damage=0;car.damageZones.front=0;
+        window.VehicleDamageFX.update(car);
+        return record;
+      });
+      if(visualDamage.supported){
+        assert(visualDamage.scaleZ<.9,'Capô não amassou em '+city);
+        assert(visualDamage.hingeX<-.1,'Capô não dobrou em '+city);
+      }
       await page.evaluate(()=>{
         const g=window.DriverGame;
         g.playerCar.speed=0;
@@ -389,7 +417,8 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       report.maps.push({...initial,driving,walking:{
         from:beforeWalk,to:afterWalk,distance:Math.hypot(
           afterWalk.x-beforeWalk.x,afterWalk.z-beforeWalk.z)},
-        interior:inner,gate,perf,rioVisual,havanaVisual,vegasVisual,roadVisual});
+        interior:inner,gate,perf,rioVisual,havanaVisual,vegasVisual,
+        roadVisual,visualDamage});
       fs.writeFileSync(path.join(DIR,'report.json'),JSON.stringify(report,null,2));
     }
     assert.equal(report.runtimeErrors.length,0,'Exceções no navegador');
