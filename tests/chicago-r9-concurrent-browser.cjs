@@ -109,6 +109,12 @@ const url=(process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/').replace(/\/?$/,'
          delete r.last;
        }
        return {city:game.currentCityKey,
+          localNetwork:city.chicagoLocalRoadNetwork&&{
+             flowsAvailable:city.chicagoLocalRoadNetwork.flowsAvailable,
+             segmentsChecked:city.chicagoLocalRoadNetwork.segmentsChecked,
+             all:city.chicagoLocalRoadNetwork.allFlowRoutesAvailable,
+             originalCertified:city.chicagoLocalRoadNetwork.originalPS1RoadsCertified
+          },
           missions:city.missionStart?.type,
           northAccess:city.chicagoGooseIslandNorthYard?.accessReady,
           southAccess:city.chicagoGooseIslandStreet?.accessReady,
@@ -129,6 +135,10 @@ const url=(process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/').replace(/\/?$/,'
     assert.equal(result.city,'chicago');
     assert.equal(result.missions,'story_tipoff');
     assert(result.northAccess&&result.southAccess);
+    assert.equal(result.localNetwork?.flowsAvailable,3);
+    assert.equal(result.localNetwork?.segmentsChecked,10);
+    assert.equal(result.localNetwork?.all,true);
+    assert.equal(result.localNetwork?.originalCertified,false);
     for(const report of result.reports){
        assert.equal(report.wet,0,report.name+' entrou na água');
        assert.equal(report.blocked,0,report.name+' atravessou obstáculo');
