@@ -13,6 +13,7 @@ on:
       - 'tests/vegas-overhaul.test.cjs'
       - 'tests/district-visibility.test.cjs'
       - 'tests/arcade-regional-expansion.test.cjs'
+      - 'tests/expansion-visual-smoke.cjs'
       - 'js/gameplay/driving-games-classic.js'
       - 'js/gameplay/regional-missions.js'
       - 'js/gameplay/mission-briefing.js'
@@ -83,6 +84,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/visual-smoke.cjs
+      - name: Jogar e testar os 10 modos da expansão no Chromium
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/expansion-visual-smoke.cjs
       - name: Publicar screenshots e FPS de diagnóstico
         uses: actions/upload-artifact@v4
         if: always()
