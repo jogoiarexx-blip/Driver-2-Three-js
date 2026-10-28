@@ -1,0 +1,61 @@
+{
+  "format": "Driver2ChicagoGroundSurveyV1",
+  "source": "54 original PS1 Chicago visual GLB tiles",
+  "sourceFormat": "Driver2ChicagoVisualTilesV1",
+  "tilesRead": 54,
+  "trianglesScanned": 1544872,
+  "bounds": {
+    "min": [
+      -111.975,
+      -0.1543,
+      32.0196
+    ],
+    "max": [
+      -9.7521,
+      1.92,
+      223.507
+    ]
+  },
+  "pixelSizeOBJ": 0.25,
+  "widthPixels": 411,
+  "heightPixels": 768,
+  "groundDefinition": {
+    "maxTriangleHeightSpan": 0.008,
+    "maxAbsMeanY": 0.028,
+    "minProjectedArea": 0.006
+  },
+  "groundTriangleCount": 269865,
+  "groundProjectedAreaSumOBJ2": 4008.5,
+  "raisedTriangleCount": 36203,
+  "raisedProjectedAreaSumOBJ2": 372.4,
+  "groundRasterPixels": 79395,
+  "rasterGroundFillFraction": 0.25153,
+  "surfaceRasterComponents": 20,
+  "largestSurfaceComponentsPixels": [
+    78262,
+    181,
+    168,
+    138,
+    130,
+    81,
+    77,
+    75,
+    54,
+    49,
+    41,
+    37,
+    36,
+    25,
+    24,
+    4,
+    4,
+    3,
+    3,
+    3
+  ],
+  "laneNetworkCertified": false,
+  "vehicleCollisionCertified": false,
+  "roadLengthMeters": null,
+  "playableCoveragePercent": null,
+  "warning": "A máscara também contém calçadas, pátios, telhados baixos e outros pisos: não é rede viária dirigível."
+}

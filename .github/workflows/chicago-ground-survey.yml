@@ -1,0 +1,58 @@
+name: Driver 2 - Auditoria de superfícies Chicago PS1
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/chicago-ground-survey.py'
+      - 'tests/chicago-original-ground-survey.test.cjs'
+      - 'chicago/manifest.json'
+      - 'chicago/chunks/**'
+      - 'chicago/ground-survey.json'
+      - '.github/workflows/chicago-ground-survey.yml'
+  pull_request:
+    paths:
+      - 'tools/chicago-ground-survey.py'
+      - 'tests/chicago-original-ground-survey.test.cjs'
+      - 'chicago/manifest.json'
+      - 'chicago/chunks/**'
+      - 'chicago/ground-survey.json'
+      - '.github/workflows/chicago-ground-survey.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ps1-ground:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar evidências e evitar falsos percentuais de ruas
+        run: node --test tests/chicago-original-ground-survey.test.cjs
+      - name: Preparar processamento geográfico offline
+        run: python3 -m pip install --disable-pip-version-check numpy opencv-python-headless Pillow
+      - name: Extrair triângulos horizontais dos 54 GLBs do PS1
+        run: python3 tools/chicago-ground-survey.py --root chicago --output qa-artifacts/chicago-original-ground
+      - name: Comparar extração real com baseline versionada
+        run: |
+          python3 - <<'PY'
+          import json
+          baseline=json.load(open('chicago/ground-survey.json'))
+          fresh=json.load(open('qa-artifacts/chicago-original-ground/ground-survey.json'))
+          for key in ('tilesRead','trianglesScanned','groundTriangleCount','raisedTriangleCount',
+                      'groundRasterPixels','surfaceRasterComponents','largestSurfaceComponentsPixels'):
+              assert fresh[key]==baseline[key], (key,fresh[key],baseline[key])
+          assert fresh['laneNetworkCertified'] is False
+          assert fresh['playableCoveragePercent'] is None
+          print('PASS: mapa de superfícies PS1 reproduzido sem alegar malha dirigível.')
+          PY
+      - name: Disponibilizar mapa superior e diagnóstico detalhado
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: driver2-chicago-ground-survey
+          path: qa-artifacts/chicago-original-ground/
+          retention-days: 14

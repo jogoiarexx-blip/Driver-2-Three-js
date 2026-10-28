@@ -9,7 +9,7 @@ small{color:#a8b7c6}button{background:#1e4571;border:1px solid #3f7295;color:whi
 </style></head><body><div id="view"></div>
 <section id="panel"><b>CHICAGO • ORIGINAL PS1</b><div>Pré-visualização geográfica da geometria enviada pelo usuário. Não é a cidade jogável nem altera as missões e a física do clone.</div>
 <small>Arraste para orbitar • Roda para zoom • WASD/setas para mover • Tecla 1: centro • Tecla 2: vista superior.</small>
-<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button></div><div id="status">Carregando manifest...</div></section>
+<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button></div><div id="status">Carregando manifest...</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
 <div id="footer">OBJ dividido em 54 setores • carregamento sob demanda • material faltante em roxo</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -33,6 +33,17 @@ const stream=new DriverChicagoOriginalTileStream({scene,THREE,
   onChange:s=>{if(!s.error)status.textContent='Setores carregados: '+s.tilesLoaded+' / '+s.tilesTotal+' · Em carregamento: '+s.loading+' · Triângulos visíveis: '+s.trianglesLoaded.toLocaleString('pt-BR');}
 });
 try{await stream.start();}catch(e){status.textContent='Não foi possível abrir chicago/manifest.json na raiz do repositório. Confira se os arquivos de Chicago foram publicados. '+e.message;return;}
+fetch('./chicago/ground-survey.json').then(r=>{
+ if(!r.ok)throw Error('sem dados');return r.json();
+}).then(data=>{
+ document.getElementById('ground-audit').textContent=
+  'Geometria PS1: '+data.groundTriangleCount.toLocaleString('pt-BR')+
+  ' triângulos próximos ao solo • '+data.surfaceRasterComponents+
+  ' componentes de superfície • NÃO são ruas dirigíveis certificadas.';
+}).catch(()=>{
+ document.getElementById('ground-audit').textContent=
+  'Auditoria de solo não disponível; geometria 3D independente.';
+});
 let drag=false,px=0,py=0;
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);
