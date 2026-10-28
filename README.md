@@ -1040,3 +1040,16 @@ A R4 começa a alterar a **topologia** da Chicago procedural, não apenas a deco
 - Os testes `tests/chicago-r4-island-spine.test.cjs` validam geometria, carregamento, colisores, rota, preservação das missões e isolamento regional. `tests/chicago-r4-island-browser.cjs` abre o Undercover no Chromium, valida o furgão, a nova via, as dez pontes e captura a cena.
 
 **Fidelidade:** a rua foi posicionada em coordenadas do clone, e não inferida como uma rua exata a partir dos GLBs. A origem 3D permanece evidência da distribuição irregular de quarteirões; para aproximar integralmente o mapa PS1, as próximas ruas deverão ser identificadas no solo original e remapeadas contra objetivos, garagens, margens e pontos de missão. A campanha antiga continua acessível.
+
+
+## Chicago R5 — veículos agora entram na ilha pela ponte oeste
+
+A R4 criou um eixo industrial interno em Goose Island, com dois galpões físicos e um furgão que nascia lá dentro. A R5 conecta esse eixo ao trânsito externo:
+
+- **Quatro conexões físicas auditadas** em `DriverChicagoGooseIslandStreet.accessSegments()`, cada uma testada por `DriverRoadGeometry.segmentDrivable`: avenida oeste → ponte oeste em z≈156 → entrada do eixo local em x≈−200 → saída norte por z≈236 → ponte leste em x≈−160. O acesso é bloqueado se qualquer um dos segmentos passar por água ou colisão.
+- **Novo veículo de entregas:** `ENTREGAS GOOSE ISLAND` aparece na margem continental oeste (x≈−284, z≈156) somente quando as quatro conexões estão seguras. Percorre a ponte, desacelera para a conversão e segue o eixo industrial.
+- **IA em etapas:** primeiro segue a ponte oeste; ao alcançar o cruzamento de x≈−200 entra com um alvo curto em z≈185, depois atravessa a via até z≈240 e sai por uma ponte existente. Esta divisão evita a diagonal que cortava os galpões.
+- **Isolamento:** a rota especial só vale para o furgão com `gooseIslandVisitor=true`; não redireciona caminhões de missão, perseguições da polícia, carros de outras cidades, nem salva posição de missão.
+- **Testes:** `tests/chicago-r5-island-visitor.test.cjs` verifica o caminho inteiro, a rejeição de ligação alagada e a ausência de alterações nas missões; `tests/chicago-r5-visitor-browser.cjs` inspeciona a entrada e cada fase da rota no Chromium e gera captura.
+
+**Observação:** esta é uma conexão operacional da geografia *procedural* da Chicago atual, ainda não uma cópia exata das ruas originais do PS1. A malha GLB original permanece na pasta `chicago/` como referência para reconstrução por setores. Os quatro pontos do corredor são coordenadas do clone, não coordenadas extraídas literalmente da ROM.
