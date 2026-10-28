@@ -64,16 +64,45 @@ class DriverChicagoGameplay {
         city.buildingBoxes.push(box);
         const booth=add(x+30,1.9,z+23,3.5,3.8,3.5,brick);
         add(x+30,4,z+23,4.5,.35,4.5,gateMaterial);
-        // Carro secreto visível como marcador até integração com spawner real.
-        const car=add(x,0.95,z,3,1.35,6,
-            new THREE.MeshLambertMaterial({color:0x0d1016}));
-        for(const stripe of [-.62,.62])
-            add(x+stripe,1.64,z,.28,.04,5.7,
-                new THREE.MeshBasicMaterial({color:0xfacc15}));
+        // A entidade física verdadeira é criada pelo Driver2GameEngine;
+        // não desenhar carro falso para não sobrepor o chassi dirigível.
+        const parking=add(x,.16,z,4,.055,7,
+            new THREE.MeshBasicMaterial({color:0x3e4e3c}));
         city.chicagoStadium={
             x,z,gate,box,open:false,progress:0,
-            switch:{x:x+30,z:z+23},secretDisplay:car
+            switch:{x:x+30,z:z+23},parking
         };
+    }
+    static ensureWrigleyCar(game){
+        // Cria só uma vez por frota, inclusive quando a cidade carrega
+        // progressivamente. A IA já preserva veículos isSecret parados.
+        const site=game?.city?.chicagoStadium;
+        if(game?.currentCityKey!=='chicago'||!site ||
+            !Array.isArray(game.vehicles)||game.wrigleyCar)
+            return game?.wrigleyCar||null;
+        const car=new DriverVehicle(game.scene,{
+            name:'WRIGLEY • SUPERCHARGED V8',
+            color:0x0b0e14,bodyStyle:'muscle',isSecret:true,
+            x:site.x,z:site.z,heading:Math.PI,
+            maxSpeed:72,accel:43
+        });
+        car.isWrigleySecret=true;
+        car.driftMultiplier=1.28; // permite drift mais amplo, sem alterar outros carros
+        // As faixas acompanham capô/porta-malas e o rig do chassi.
+        const yellow=new THREE.MeshBasicMaterial({color:0xfacc15});
+        const stripe=(parent,x,y,z,w,h,d)=>{
+            const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),yellow);
+            m.position.set(x,y,z);parent.add(m);
+        };
+        for(const x of [-.52,.52]){
+            stripe(car.chassisTilt,x,1.72,-.2,.20,.025,2.12);
+            if(car.hoodPivot)stripe(car.hoodPivot,x,.365,.8,.20,.025,1.5);
+            if(car.trunkPivot)stripe(car.trunkPivot,x,.365,-.8,.20,.025,1.5);
+        }
+        site.secretCar=car;
+        game.wrigleyCar=car;
+        game.vehicles.push(car);
+        return car;
     }
     static interact(city,pos){
         const site=city?.chicagoStadium;
