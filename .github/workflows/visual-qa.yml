@@ -8,6 +8,7 @@ on:
       - 'js/world/**'
       - 'tests/visual-smoke.cjs'
       - 'tests/chicago-overhaul.test.cjs'
+      - 'tests/chicago-neighborhoods.test.cjs'
       - 'tests/rio-overhaul.test.cjs'
       - 'tests/havana-overhaul.test.cjs'
       - 'tests/vegas-overhaul.test.cjs'
