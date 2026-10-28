@@ -132,6 +132,7 @@
                 this.chicagoStadium=null;
                 this.chicagoBridgeClock=0;
                 this.chicagoBridgeLamps=null;
+                this.chicagoEastBridge=null;
                 this.chicagoLowerWacker=null;
                 this.chicagoOverhaulStats=null;
                 this.rioParks=[];
@@ -244,6 +245,10 @@
                     DriverSpecialStructures.bridge(this);
                 if(typeof DriverRegionalInfrastructure!=='undefined')
                     DriverRegionalInfrastructure.build(this);
+                // A segunda ponte ocupa o vão leste já previsto nas muretas.
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoEastBridge!=='undefined')
+                    DriverChicagoEastBridge.build(this);
                 yield 'Canal, pontes e vias de acesso';
 
                 // 4. Monumentos Exclusivos por Cidade (Rio de Janeiro: Morro do Corcovado + Cristo Redentor + Praia)
@@ -1541,6 +1546,8 @@
                     this.bridgeSouthLeaf.rotation.x = -this.bridgeAngle;
                     this.bridgeNorthLeaf.rotation.x = this.bridgeAngle;
                 }
+                if(typeof DriverChicagoEastBridge!=='undefined')
+                    DriverChicagoEastBridge.update(this,dt);
 
                 // Elevação da porta da garagem residencial.
                 if(this.homeGarageDoor){
@@ -1647,6 +1654,9 @@
             }
 
             isWaterAt(x,z){
+                // O segundo tabuleiro impede que a pista seja tratada como água.
+                if(typeof DriverChicagoEastBridge!=='undefined' &&
+                    DriverChicagoEastBridge.isDeckLocation(this,x,z))return false;
                 return z>34.85&&z<65.15&&Math.abs(x)>12.25;
             }
 
@@ -1735,6 +1745,11 @@
                         this,x,z);
                     if(regionalRamp>0)return regionalRamp;
                 }
+                // Mesmo ângulo de pivô visual e físico da nova ponte.
+                if(typeof DriverChicagoEastBridge!=='undefined'){
+                    const deck=DriverChicagoEastBridge.deckHeight(this,x,z);
+                    if(deck!==null)return deck;
+                }
                 if(Math.abs(x)<11.2&&z>=34&&z<=66){
                     const distFromEdge=Math.min(z-34,66-z);
                     return .15+Math.sin(this.bridgeAngle)*distFromEdge;
@@ -1751,6 +1766,9 @@
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
                 if (this.interiorArea(x,z,radius))return false;
+                if(typeof DriverChicagoEastBridge!=='undefined' &&
+                    DriverChicagoEastBridge.railBlocked(this,x,z,radius,y))
+                    return true;
                 if(this.caineBridgeClosed && Math.abs(x)<11+radius &&
                     z+radius>49.5 && z-radius<52.5)return true;
                 if (Math.abs(x)>this.worldLimit || Math.abs(z)>this.worldLimit)return true;
