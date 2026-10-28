@@ -5,7 +5,7 @@
  */
 class DriverChicagoOriginalTileStream {
     static FORMAT='Driver2ChicagoVisualTilesV1';
-    constructor({scene,THREE:T,baseUrl='./assets/chicago/',
+    constructor({scene,THREE:T,baseUrl='./chicago/',
         maxLoaded=16,loadRadius=37,unloadRadius=55,maxParallel=2,
         scale=3.4,onError=null,onChange=null}={}) {
         if(!scene||!T)throw Error('Chicago original precisa de scene e THREE');
