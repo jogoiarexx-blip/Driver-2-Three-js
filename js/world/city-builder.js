@@ -1708,6 +1708,11 @@
                         return p.height;
                     }
                 }
+                if(typeof DriverRegionalInfrastructure!=='undefined'){
+                    const regionalRamp=DriverRegionalInfrastructure.rampHeight(
+                        this,x,z);
+                    if(regionalRamp>0)return regionalRamp;
+                }
                 if(Math.abs(x)<11.2&&z>=34&&z<=66){
                     const distFromEdge=Math.min(z-34,66-z);
                     return .15+Math.sin(this.bridgeAngle)*distFromEdge;
