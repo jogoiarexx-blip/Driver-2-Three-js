@@ -26,6 +26,8 @@ on:
       - 'js/world/chicago-train.js'
       - 'tests/structure-smoke.cjs'
       - 'tests/female-walker-smoke.cjs'
+      - 'tests/male-pedestrian-glb.test.cjs'
+      - 'js/assets/driver-male-pedestrian.js'
       - 'tests/pedestrian-curb-smoke.cjs'
       - 'js/entities/pedestrian-sidewalk-nav.js'
       - 'js/vehicles/driver-vehicle.js'
@@ -70,6 +72,8 @@ jobs:
         run: node tests/pedestrian-curb-smoke.cjs
       - name: Testar pedestre feminina, animação e GLB
         run: node tests/female-walker-smoke.cjs
+      - name: Validar o GLB masculino original, caminhada, corrida e troca de mapa
+        run: node --test tests/male-pedestrian-glb.test.cjs
       - name: Servir a versão atual do jogo
         run: |
           python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-http.log 2>&1 &
