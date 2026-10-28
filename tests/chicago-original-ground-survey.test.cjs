@@ -49,3 +49,10 @@ test('a extração reprodutível não modifica física nem inventa ruas',()=>{
     assert.match(program,/triangle|triangles/i);
     assert.doesNotMatch(program,/buildingBoxes\.push|roadExtent\s*=|isPointBlocked\(/);
 });
+
+test('visualizador oferece evidência sem confundir superfície com estrada',()=>{
+    const html=read('chicago-original-preview.html');
+    assert.match(html,/chicago\/ground-survey\.json/);
+    assert.match(html,/NÃO são ruas dirigíveis certificadas/);
+    assert.match(html,/chicago-original-tile-stream\.js/);
+});
