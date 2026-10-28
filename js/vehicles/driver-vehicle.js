@@ -465,7 +465,17 @@
                         (freeX || freeZ ? 0.48 : 1);
                     if (impactSpeed > 8 && impactNow - (this.lastWallImpactAt || 0) > 450) {
                         this.lastWallImpactAt = impactNow;
-                        this.damage = Math.min(100, this.damage + impactSpeed * 0.30 * armorFactor);
+                        // Pilares de aço do Lower Wacker causam dano superior
+                        // às paredes comuns, com faíscas sob demanda.
+                        const steelImpact=typeof DriverChicagoLowerWacker!=='undefined' &&
+                            DriverChicagoLowerWacker.isPillarContact(
+                                cityBuilder,nextX,nextZ,1.55);
+                        this.damage = Math.min(100, this.damage +
+                            impactSpeed * (steelImpact ? 0.56 : 0.30) * armorFactor);
+                        if(steelImpact && effects?.spawnImpactSparks)
+                            effects.spawnImpactSparks(
+                                this.x,this.y+0.8,this.z,
+                                Math.min(1,impactSpeed/38));
                         // Localiza o choque na lataria sem deslocar os colliders.
                         const collisionX = freeX ? 0 : vx;
                         const collisionZ = freeZ ? 0 : vz;
