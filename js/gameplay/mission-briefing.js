@@ -29,6 +29,10 @@ class DriverMissionBriefing {
         const title=document.getElementById('mission-title')?.textContent||
             type.replace(/_/g,' ').toUpperCase();
         this.seconds=0;this.active=true;
+        // A vinheta usa a primeira etapa REAL, sem reescrever diretores.
+        // A cena e os controles permanecem pausados durante a abertura.
+        this.stageIntro=typeof DriverChicagoMissionGuidance!=='undefined'?
+            (DriverChicagoMissionGuidance.snapshot(game)?.label||''):'';
         this.startedAt=typeof performance!=='undefined'?performance.now():null;
         this.element.textContent=title;
         this.element.style.display='flex';
@@ -56,8 +60,11 @@ class DriverMissionBriefing {
                 this.element.style.opacity=String(Math.min(.82,
                     Math.max(0,(5-this.seconds)/2)));
                 // Keep the title briefly, then show street scene.
+                // Mostra o primeiro objetivo por menos de 1 segundo
+                // antes de liberar a cena, mantendo os 5s originais.
                 this.element.textContent=this.seconds<3?
-                    this.element.dataset.originalTitle||this.element.textContent:'';
+                    (this.stageIntro||this.element.dataset.originalTitle||
+                        this.element.textContent):'';
             }else{
                 this.element.style.background='#000';
                 this.element.style.opacity='1';
