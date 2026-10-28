@@ -2581,18 +2581,25 @@
                 }
 
                 ctx.save();
+                // Corte explícito: edifícios e marcadores fora da área não
+                // podem vazar para cima do HUD ao ampliar o minimapa.
+                ctx.beginPath();ctx.rect(2,2,w-4,h-4);ctx.clip();
                 ctx.translate(cx, cy);
                 ctx.rotate(pos.heading);
 
                 // Canal no radar
-                const riverY = -(50 - pos.z) * scale;
-                ctx.fillStyle = '#0369a1';
-                ctx.fillRect(-200, riverY - 9, 400, 18);
+                if(this.currentCityKey==='chicago'){
+                    const riverY=-(50-pos.z)*scale;
+                    ctx.fillStyle='#0369a1';
+                    ctx.fillRect(-w,riverY-9,w*2,18);
+                }
 
                 // Prédios no radar
                 ctx.fillStyle = '#334155';
                 for (const b of this.city.buildingBoxes) {
-                    if (b.minX > 1000) continue;
+                    if (b.minX > 1000 || b.maxX < -1000) continue;
+                    if (b.maxX < pos.x-w/scale || b.minX > pos.x+w/scale ||
+                        b.maxZ < pos.z-h/scale || b.minZ > pos.z+h/scale) continue;
                     const bx = (b.minX - pos.x) * scale;
                     const bz = -(b.maxZ - pos.z) * scale;
                     const bw = (b.maxX - b.minX) * scale;
@@ -2908,6 +2915,13 @@
                     if (code === 'KeyQ') this.lookBackActive = true;
                     if (code === 'KeyN') this.cycleWeather();
                     if (code === 'KeyG'&&!e.repeat) this.toggleRadarZoom();
+                    if(code === 'KeyU'&&!e.repeat&&this.city?.homeGarageDoor){
+                        const p=this.getPlayerPosition(), g=this.city.garageParking;
+                        if(g&&Math.hypot(p.x-g.x,p.z-(g.z+6))<18){
+                            const open=this.city.toggleHomeGarageDoor();
+                            this.showGarageStatus(open?'PORTA DA GARAGEM ABRINDO':'PORTA DA GARAGEM FECHANDO');
+                        }
+                    }
                     if (code === 'KeyM' && !e.repeat) this.freeVehicleAssets.toggle();
                     if (code === 'KeyL' && !e.repeat) this.togglePlayerHeadlights();
                     if (code === 'KeyH') this.triggerHornOrSiren();
