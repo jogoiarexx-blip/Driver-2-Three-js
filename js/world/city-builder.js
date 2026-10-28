@@ -368,7 +368,13 @@
                 });
                 const dummy=new THREE.Object3D();
                 for(const chunk of this.districtChunks.values()){
-                    const far=new THREE.InstancedMesh(this.districtBoxGeometry,
+                    // Cada chunk possui uma esfera conservadora de todos
+                    // os prédios, cobrindo varandas e telhados; o cubo base
+                    // compartilhado não pode representar todas as instâncias.
+                    chunk.geometry=(typeof DriverDistrictVisibility!=='undefined')?
+                        DriverDistrictVisibility.makeGeometry(chunk.buildings):
+                        this.districtBoxGeometry;
+                    const far=new THREE.InstancedMesh(chunk.geometry,
                         this.districtFarMaterial,chunk.buildings.length);
                     for(const [i,b] of chunk.buildings.entries()){
                         dummy.position.set(b.x,b.height/2+.35,b.z);
@@ -381,7 +387,7 @@
                     }
                     far.instanceMatrix.needsUpdate=true;
                     if(far.instanceColor)far.instanceColor.needsUpdate=true;
-                    far.frustumCulled=false;
+                    far.frustumCulled=!!chunk.geometry.boundingSphere;
                     far.name='district-far-'+chunk.id;
                     // LOD de Vegas mantém janelas mesmo com torres
                     // distantes, escondendo-as junto com o pai far.
@@ -419,7 +425,7 @@
                             new THREE.MeshLambertMaterial({map:texture}));
                     }
                     const mesh=new THREE.InstancedMesh(
-                        this.districtBoxGeometry,
+                        chunk.geometry||this.districtBoxGeometry,
                         this.districtMaterialCache.get(palette),
                         buildings.length);
                     buildings.forEach((b,i)=>{
@@ -430,7 +436,7 @@
                         mesh.setMatrixAt(i,dummy.matrix);
                     });
                     mesh.instanceMatrix.needsUpdate=true;
-                    mesh.frustumCulled=false;
+                    mesh.frustumCulled=!!(chunk.geometry?.boundingSphere);
                     group.add(mesh);
                 }
                 UrbanDistricts.decorate(this,chunk.buildings,group);
