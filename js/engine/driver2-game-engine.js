@@ -304,6 +304,22 @@
                     this.vehicles.push(civ);
                 });
 
+                // R4: tráfego de teste exclusivo do novo corredor da ilha.
+                // Começa dentro da faixa x=-196, sem atravessar água/casas.
+                if(this.currentCityKey==='chicago' &&
+                    typeof DriverChicagoGooseIslandStreet!=='undefined' &&
+                    this.city?.chicagoGooseIslandStreet &&
+                    DriverChicagoGooseIslandStreet.testCorridor(this.city)){
+                    const industrial=new DriverVehicle(this.scene,{
+                        name:'FURGÃO GOOSE ISLAND',
+                        color:0x6b8a90,bodyStyle:'truck',
+                        x:-196,z:184,heading:0,
+                        maxSpeed:35,accel:18
+                    });
+                    industrial.gooseIslandRoute=true;
+                    this.vehicles.push(industrial);
+                }
+
                 this.tanner.setVisible(false);
                 const lowLight = this.weatherMode === 'night' || this.weatherMode === 'rain';
                 this.vehicles.forEach(v => {

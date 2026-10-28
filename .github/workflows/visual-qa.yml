@@ -11,6 +11,8 @@ on:
       - 'js/world/road-surface.js'
       - 'js/world/street-furniture.js'
       - 'tests/chicago-r3-streets-browser.cjs'
+      - 'tests/chicago-r4-island-browser.cjs'
+      - 'js/world/chicago-goose-island-street.js'
       - 'js/world/chicago-ps1-coastline.js'
       - 'chicago/**'
       - 'chicago-original-preview.html'
@@ -107,6 +109,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-root-preview-visual.cjs
+      - name: R4 testar primeira rua fora da grade, tráfego da ilha e saída pelas pontes
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r4-island-browser.cjs
       - name: R3 validar ausência de asfalto, faixas e zebras sobre canais
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
