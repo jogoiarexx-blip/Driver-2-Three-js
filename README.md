@@ -993,3 +993,19 @@ O workflow `chicago-original-drive.yml` gera a máscara diretamente do repositó
 **Fidelidade:** a nova margem é uma **aproximação procedural, não uma conversão exata da geometria da ROM**. As ruas do Undercover ainda são a grade antiga de 80 unidades; Wicker Park, Ukrainian Village, Goose Island, braços do rio, pontes adicionais e conexões PS1 ainda precisam ser reconstruídos e auditados contra o mapa original. Não considerar esta revisão como Chicago integralmente portada.
 
 **Próximas etapas em ordem:** extrair e homologar topologia viária do OBJ, marcar zonas dirigíveis e pontes; adaptar o `CityBuilder` por corredores mantendo missões navegáveis; migrar rotas de IA, spawns, garagens, trem, polícia e pontos de campanha; só então eliminar a malha genérica. Os testes de regressão de `tests/chicago-ps1-scale-coastline.test.cjs` cobrem o tamanho coerente do veículo, lago fora das avenidas, passagem pelo Navy Pier e isolamento de Havana, Vegas e Rio.
+
+
+## Chicago PS1 — R2: braços do Rio Chicago, Goose Island e novas pontes
+
+O Undercover preserva as missões da versão anterior e acrescenta a **primeira estrutura hidrográfica dirigível em malha procedural**:
+
+- **Ramo Norte:** canal principal sobre o corredor **x≈−240** entre o Rio Chicago, em z≈50, e a região norte até z≈306.
+- **Ramo Sul:** o mesmo corredor segue da confluência para z≈−324.
+- **Goose Island:** segundo canal em **x≈−160**, entre z≈94 e z≈306, conectado nas extremidades ao corredor oeste; a região de terra entre eles mantém acesso por pontes.
+- **10 travessias fixas:** oito cruzamentos de x≈−240 com z=−320,−240,−160,−80,0,80,160,240; e duas travessias do canal leste em z=160 e 240. Não substituem as duas pontes levadiças existentes.
+- **Física:** `CityBuilder.isWaterAt` distingue água e tabuleiros secos; o mesmo sistema de `getGroundHeightAt` cria a queda e recuperação na água; `DriverRoadGeometry.segmentDrivable` impede que a IA tente navegar pelo leito do canal e aceita as travessias.
+- **Renderização:** canais com geometria compartilhada simples, decks e guarda-corpos; margens em batch quando `DriverSpecialStructures` está disponível. As construções, interiores, spawns, destinos da campanha, estádios, trem e garagens continuam nas posições anteriores.
+
+**Limitação importante:** este é um traçado *inspirado* pela configuração de Chicago no Driver 2 original, NÃO coordenadas exatas certificadas contra o OBJ PS1. Para preservar missões, as faixas de água reaproveitam corredores da grade procedural; a IA deixa de usar os antigos eixos norte-sul transformados em canal, mas mantém ligações através das ruas transversais. A reconstrução de curvas reais, pontes elevadas, deslocamento de quarteirões e ajustes da campanha ainda é incremental.
+
+Reproduzir: `node --test tests/chicago-ps1-river-branches.test.cjs`. O próximo trabalho estrutural é medir os trechos de rio e vias no `chicago/manifest.json`/GLBs e substituir a grade por segmentos homologados, já com remapeamento explícito de cada missão.
