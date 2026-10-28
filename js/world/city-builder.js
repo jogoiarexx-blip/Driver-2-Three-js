@@ -1675,7 +1675,7 @@
             }
 
             isWaterAt(x,z){
-                if(this.preset.id==='chicago' &&
+                if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1Coastline!=='undefined' &&
                     DriverChicagoPS1Coastline.waterAt(x,z))return true;
                 // O segundo tabuleiro impede que a pista seja tratada como água.
