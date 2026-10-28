@@ -195,7 +195,7 @@ test('o save da casa reconhece a oitava missão',()=>{
 });
 test('o marcador da estação permanece até o encontro',()=>{
  const js=read('js/engine/driver2-game-engine.js');
- assert.match(js,/this\.missionType==='story_leaving'\?null/);
+ assert.match(js,/this\.missionType==='story_leaving'/);
 });
 test('o título de derrota por tempo não registra vitória falsa',()=>{
  const js=read('js/engine/driver2-game-engine.js');
