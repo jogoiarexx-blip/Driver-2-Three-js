@@ -156,6 +156,9 @@
                 this.homeGarageDoorClosedBox=null;
                 this.homeGarageDoorOpen=false;
                 this.homeGarageDoorHeight=0;
+                // Ao trocar de cidade, nenhum estado de ponte é herdado.
+                this.bridgeRaised=false;
+                this.bridgeAngle=.08;
                 this.signalClock = 0;
                 this.lastSignalPhase = -1;
 
