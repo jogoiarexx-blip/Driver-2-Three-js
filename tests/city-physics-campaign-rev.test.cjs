@@ -28,9 +28,9 @@ const Special={pack(parent,parts,name){
     packs.push({parent,parts,name});
     return [{name,parts}];
 }};
-const Infra=new Function('DriverSpecialStructures',
+const Infra=new Function('DriverSpecialStructures','THREE',
     read('js/world/regional-infrastructure.js')+
-    ';return DriverRegionalInfrastructure;')(Special);
+    ';return DriverRegionalInfrastructure;')(Special,THREE);
 const Secret=new Function('THREE',
     read('js/vehicles/driver-secret-cars.js')+
     ';return DriverSecretCars;')(THREE);
@@ -58,6 +58,15 @@ test('4 regional moving bridges follow real leaves, no new physics colliders',()
         assert(stat.approachParts>=14);
         assert.equal(stat.collidersAdded,0);
         assert.equal(JSON.stringify(city.buildingBoxes),original);
+        const r=stat.ramp;
+        assert(r && r.height>1.5 && r.length===18);
+        assert.equal(Infra.rampHeight(city,r.x,r.z),0);
+        assert(Infra.rampHeight(city,r.x,r.z+9)>.5);
+        assert(Infra.rampHeight(city,r.x,r.z+r.length)>1.4);
+        assert.equal(Infra.rampHeight(city,r.x+7,r.z+9),0);
+        assert(city.cityGroup.children.some(item=>
+            item.name==='driver2-driveable-ramp-'+id),
+            'Driveable ramp geometry missing');
         const leafPacks=packs.filter(x=>x.name.startsWith('regional-bridge-'+id+'-leaf'));
         assert.equal(leafPacks.length,2);
         assert.equal(leafPacks[0].parent,city.bridgeSouthLeaf);
@@ -156,6 +165,7 @@ test('regional chapter save migrates v1 and stores all six mission checkpoints',
 test('previous Chicago/Havana progression and ten Driving Games remain wired',()=>{
     const engine=read('js/engine/driver2-game-engine.js');
     assert(engine.includes('completeRegional(finishedType)'));
+    assert(read('js/world/city-builder.js').includes('DriverRegionalInfrastructure.rampHeight('));
     assert(engine.includes('DriverSecretCars.apply(this.secretCar,this.currentCityKey)'));
     assert(engine.includes('chapterProgress.regionalCompleted'));
     const html=read('index.html');
