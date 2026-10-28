@@ -57,9 +57,9 @@
                 // O modelo da pasta player substitui o personagem procedural.
                 // Mantém o fallback apenas quando o GLB não estiver disponível.
                 if (!THREE.GLTFLoader) return;
-                // Caminho canônico: faça upload do GLB em player/tanner.glb.
+                // Caminho canônico: faça upload do GLB em player/Tanner.glb.
                 // Não executar várias tentativas 404 a cada carregamento.
-                const candidates = [window.DRIVER_TANNER_MODEL_URL || './player/tanner.glb'];
+                const candidates = [window.DRIVER_TANNER_MODEL_URL || './player/Tanner.glb'];
                 const loader = new THREE.GLTFLoader();
                 const tryNext = index => {
                     if (index >= candidates.length) {
