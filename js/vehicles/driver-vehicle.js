@@ -393,6 +393,22 @@
                 const nextX = this.x + vx * dt;
                 const nextZ = this.z + vz * dt;
 
+                // A inclinação de 10°..30° lança o carro somente quando ele
+                // cruza a ponta das folhas, em velocidade suficiente.
+                // Cooldown por veículo evita múltiplos impulsos no mesmo salto.
+                this.chicagoBridgeJumpCooldown=Math.max(0,
+                    (this.chicagoBridgeJumpCooldown||0)-dt);
+                if(this.chicagoBridgeJumpCooldown<=0 &&
+                    typeof DriverChicagoEastBridge!=='undefined'){
+                    const impulse=DriverChicagoEastBridge.jumpVelocity(
+                        cityBuilder,this.x,this.z,nextX,nextZ,
+                        this.speed,this.y);
+                    if(impulse>0){
+                        this.vy=Math.max(this.vy||0,impulse);
+                        this.chicagoBridgeJumpCooldown=1.25;
+                    }
+                }
+
                 // Referência de altura evita teleporte de carros sob a
                 // plataforma da ferrovia para o piso 11m acima.
                 const groundBefore=cityBuilder.getGroundHeightAt(
