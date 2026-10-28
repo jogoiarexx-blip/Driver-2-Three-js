@@ -2463,6 +2463,18 @@
             // Pelo menu, escolha uma missão e viaje ao marcador no mundo.
             // A sequência da campanha permanece em ordem, sem teleporte.
             showStoryMissionOnMap(type){
+                if(this.currentCityKey!=='chicago'){
+                    this.missionToastText='Escolha CHICAGO no seletor de cidades antes de marcar a missão.';
+                    this.missionToastRemaining=6;
+                    document.getElementById('missions-modal')?.classList.add('hidden');
+                    return false;
+                }
+                if(this.missionActive){
+                    this.missionToastText='Conclua ou abandone a missão atual antes de escolher outra.';
+                    this.missionToastRemaining=6;
+                    document.getElementById('missions-modal')?.classList.add('hidden');
+                    return false;
+                }
                 this.storyCampaign=true;
                 const next=DriverCampaignFlow.next(this.currentCityKey,
                     this.completedMissions);
