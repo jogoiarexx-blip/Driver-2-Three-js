@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-br"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>DRIVER 2 — Passeio Livre Chicago Original PS1</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07101b;color:#e5edf5;font:14px Arial,Helvetica,sans-serif;overflow:hidden}
+#chicago-ride-root{position:fixed;inset:0}canvas{display:block}
+#hud{position:fixed;top:14px;left:14px;max-width:min(410px,92vw);
+background:#081524e8;padding:16px;border:1px solid #5f7696;border-radius:12px;
+box-shadow:0 8px 30px #0008}
+h1{font-size:17px;margin:0 0 3px;color:#ffd57f}p{line-height:1.5;margin:5px 0}
+small{color:#b6c8da}a{color:#9ad9ff}
+#speedbox{position:fixed;right:16px;bottom:14px;background:#071321d9;border:1px solid #667a92;
+border-radius:12px;padding:12px 18px;text-align:center;min-width:125px}
+#chicago-ride-speed{font-family:monospace;font-size:38px;font-weight:bold;letter-spacing:2px}
+#footer{position:fixed;left:16px;bottom:18px;background:#081524db;border-radius:8px;padding:9px;font-size:12px}
+button{background:#1f4b78;color:#f2f8ff;border:1px solid #4a7399;border-radius:6px;
+padding:8px 10px;margin:6px 4px 0 0;cursor:pointer}
+#chicago-ride-status{font-size:12px;color:#b1e3e8;max-width:340px;overflow-wrap:break-word}
+#chicago-ride-notice{color:#ffdc92;font-size:12px;font-weight:bold;margin-top:8px}
+@media (max-width:680px){#footer{display:none}#hud{font-size:12px;padding:10px}
+h1{font-size:14px}#speedbox{padding:7px;min-width:88px}#chicago-ride-speed{font-size:26px}}
+</style></head><body>
+<div id="chicago-ride-root"></div>
+<div id="hud"><h1>DRIVER 2 • CHICAGO ORIGINAL PS1</h1>
+<p>Modo experimental dirigível usando a geometria original do mapa e a física arcade do clone.</p>
+<div id="chicago-ride-status" role="status">Iniciando...</div>
+<div id="chicago-ride-notice">PASSEIO LIVRE</div>
+<p><small>Setores GLB <b id="chicago-ride-sectors">0/54</b> • Dano <b id="chicago-ride-damage">0%</b></small></p>
+<div><button id="chicago-ride-reset" type="button">R • Reposicionar</button>
+<button id="chicago-ride-camera" type="button">C • Câmera</button>
+<button id="chicago-ride-pause" type="button">P • Pausar</button>
+<button id="chicago-ride-quality" type="button">Q • Qualidade</button></div>
+<p><a href="./index.html">Voltar ao Driver 2</a> · <a href="./chicago-original-preview.html">Visualizar mapa</a></p>
+<small>WASD/setas: dirigir • Espaço: freio de mão • Shift: burnout.<br>
+Não inclui ainda missões e tráfego nas ruas originais; a física não foi alterada.</small>
+</div>
+<div id="speedbox"><span id="chicago-ride-speed">000</span><div><small>KM/H</small></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="./js/engine/gpu-resources.js"></script>
+<script src="./js/physics/arcade-dynamics.js"></script>
+<script src="./js/physics/vehicle-collisions.js"></script>
+<script src="./js/render/vehicle-damage-fx.js"></script>
+<script src="./js/render/vehicle-visuals.js"></script>
+<script src="./js/vehicles/driver-vehicle.js"></script>
+<script src="./js/world/chicago-original-tile-stream.js"></script>
+<script src="./js/world/chicago-original-drive-map.js"></script>
+<script src="./js/world/chicago-original-free-ride.js"></script>
+<script>
+(async()=>{
+ const label=document.getElementById('chicago-ride-status');
+ try{
+   if(!window.THREE?.WebGLRenderer||!THREE.GLTFLoader)
+     throw Error('Three.js não carregou. Verifique sua conexão.');
+   const game=new DriverChicagoOriginalFreeRide();
+   await game.start();
+ }catch(error){
+   label.textContent='Falha no carregamento do mapa original: '+(error.message||error)+
+   '. A Chicago procedural continua disponível no jogo principal.';
+   console.error(error);
+ }
+})();
+</script></body></html>
