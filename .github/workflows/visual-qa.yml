@@ -5,6 +5,9 @@ on:
   push:
     paths:
       - 'index.html'
+      - 'chicago/**'
+      - 'chicago-original-preview.html'
+      - 'tests/chicago-root-preview-visual.cjs'
       - 'js/world/**'
       - 'tests/visual-smoke.cjs'
       - 'tests/chicago-overhaul.test.cjs'
@@ -93,6 +96,10 @@ jobs:
           done
           cat /tmp/driver-http.log
           exit 1
+      - name: Validar carregamento do mapa original de Chicago na raiz
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-root-preview-visual.cjs
       - name: Inspecionar visualmente novo pedestre masculino em Chicago e Havana
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/

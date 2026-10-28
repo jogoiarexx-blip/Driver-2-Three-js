@@ -28,11 +28,11 @@ document.getElementById('view').appendChild(renderer.domElement);
 const grid=new THREE.GridHelper(720,36,0x32475c,0x24394a);grid.position.y=-.05;scene.add(grid);
 const target=new THREE.Vector3(0,2,0);let yaw=.6,pitch=1.2,distance=490;
 const stream=new DriverChicagoOriginalTileStream({scene,THREE,
-  baseUrl:'./assets/chicago/',maxLoaded:20,loadRadius:42,unloadRadius:62,maxParallel:2,
+  baseUrl:'./chicago/',maxLoaded:20,loadRadius:42,unloadRadius:62,maxParallel:2,
   onError:e=>{status.textContent='Falha em setor ou textura: '+(e.message||e);},
   onChange:s=>{if(!s.error)status.textContent='Setores carregados: '+s.tilesLoaded+' / '+s.tilesTotal+' · Em carregamento: '+s.loading+' · Triângulos visíveis: '+s.trianglesLoaded.toLocaleString('pt-BR');}
 });
-try{await stream.start();}catch(e){status.textContent='Não foi possível abrir assets/chicago/manifest.json. Extraia a pasta assets do pacote ao lado deste HTML. '+e.message;return;}
+try{await stream.start();}catch(e){status.textContent='Não foi possível abrir chicago/manifest.json na raiz do repositório. Confira se os arquivos de Chicago foram publicados. '+e.message;return;}
 let drag=false,px=0,py=0;
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);

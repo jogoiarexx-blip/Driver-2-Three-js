@@ -960,7 +960,7 @@ O pacote externo \`Chicago_Original_PS1_Setores_GLTF_Texturas_Visualizador.zip\`
 - **Visualizador independente:** \`chicago-original-preview.html\`; disponibiliza controle orbital, vista superior e navegação de câmera.
 - **Sem alterações na jogabilidade:** nenhuma alteração nas pistas, física, missões, IA, spawns, câmeras ou colisores do mapa atual.
 
-**IMPORTANTE:** os arquivos GLB/atlas/manifest gerados são grandes (aproximadamente 103 MiB no conjunto) e **não estão incluídos neste commit GitHub**. A página de preview vai informar que o manifest está ausente até que você copie a pasta \`chicago/\` do pacote gerado para o repositório. No Windows, extraia o ZIP e execute \`INICIAR_VISUALIZADOR_WINDOWS.bat\` para testar o mapa localmente, com Python 3 e conexão às bibliotecas Three.js.
+**PUBLICAÇÃO:** o repositório já inclui os 54 setores GLB, `chicago/manifest.json` e `chicago/chicago_atlas.webp` diretamente na raiz, fora de `assets/`. Acesse `chicago-original-preview.html` para verificar o carregamento progressivo. A visualização depende das bibliotecas Three.js e GLTFLoader externas; o modo dirigível continua com o mapa procedural até que a malha de ruas e colisões seja integrada e validada.
 
 Essa é uma **integração visual inicial**. O OBJ, sozinho, não garante vias trafegáveis, limites de água, colisão e sequências de missão. Antes da troca definitiva de cidade, precisamos calibrar escala/orientação do PS1, reconstruir malha navegável e testar trajetos reais. O fator de visualização 3,4 é **provisório**, não uma equivalência geográfica validada.
 
@@ -968,4 +968,4 @@ Testes lógicos sem WebGL: \`node --test tests/chicago-original-stream.test.cjs\
 
 ### Organização da Chicago original na raiz
 
-A geometria PS1 é publicada em `chicago/` diretamente na **raiz**, separada da pasta `assets/`. O visualizador `chicago-original-preview.html` já aponta para `./chicago/manifest.json`, `./chicago/chicago_atlas.webp` e `./chicago/chunks/*.glb`. Para visualizar a cidade no site, publique a pasta `chicago/` do arquivo `Chicago_Original_PS1_RAIZ_CHICAGO.zip` mantendo sua estrutura. Não substitui as ruas e colisões do modo jogável.
+A geometria PS1 é publicada em `chicago/` diretamente na **raiz**, separada da pasta `assets/`. O visualizador `chicago-original-preview.html` já aponta para `./chicago/manifest.json`, `./chicago/chicago_atlas.webp` e `./chicago/chunks/*.glb`. Para visualizar a cidade no site, confira que a pasta `chicago/` esteja publicada com o manifesto, atlas e os 54 GLBs. Não substitui as ruas e colisões do modo jogável.
