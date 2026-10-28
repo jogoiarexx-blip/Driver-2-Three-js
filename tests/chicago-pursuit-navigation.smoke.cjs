@@ -152,4 +152,15 @@ assert.equal(stuck.x,84);
 // Veículos em níveis diferentes não fazem o trânsito congelar.
 const ahead={x:84,z:-70,y:11};
 assert.equal(stuckAI.vehicleAhead(stuck,[stuck,ahead]),Infinity);
+// Havana, Vegas e Rio preservam a IA e os roteiros anteriores.
+const havana={...city,preset:{id:'havana'},
+    isWaterAt(){return false;}};
+const foreignCar={
+    x:4,z:0,y:0,heading:0,speed:8,bodyStyle:'sedan',
+    scriptedDrive:{waypoints:[{x:4,z:80}],index:0,
+        done:false,maxSpeed:23}
+};
+const foreignAI=new Traffic(havana);
+foreignAI.getInput(foreignCar,.016,[foreignCar],null,0);
+assert.equal(foreignAI.getRoute(foreignCar).missionNavigation,undefined);
 console.log('PASS: pontes, rotas de missão, convergência, A*, polícia, ré e níveis');
