@@ -1066,3 +1066,14 @@ Esta revisão amplia a **topologia dirigível** do Undercover, sem mudar a campa
 - Teste Node: `node --test tests/chicago-r6-north-yard.test.cjs`. Smoke em Chromium: `node tests/chicago-r6-north-yard-browser.cjs`. O navegador verifica a ponte seca, a água adjacente, os galpões, o caminhão e os caminhos até a avenida.
 
 **Limitação de fidelidade:** a extensão é **procedural**. O `chicago/manifest.json` e os 54 GLBs originais seguem como referência para calibrar as próximas vias reais, os acessos às missões e a escala da rede. A R6 não transforma a grade inteira em mapa PS1.
+
+## Chicago R7 — replays de física e curvas seguras em Goose Island
+
+A revisão R7 prioriza provar a jogabilidade das ruas industriais **sem teleportar automóveis entre cruzamentos**.
+
+- `tests/chicago-r7-real-driving-replay.cjs` inicializa a cidade real no Chromium e usa os métodos de produção `DriverTrafficAI.getInput` e `DriverVehicle.updatePhysics` (passos de 1/30 s), para reproduzir 35–80 segundos simulados por veículo. Examina três trajetos: o caminhão da R6 no deck norte, o entregador da R5 chegando pelo oeste e o furgão interno da R4. Registra extremos das coordenadas, velocidade, dano, água, obstruções, paradas e conclusão da rota em `qa-artifacts/chicago-r7-physical-traffic-replay.json`. Durante a auditoria, os semáforos permanecem verdes para separar bloqueio físico de esperas normais de tráfego, e não há interação com outros carros; isso **não** substitui um teste de trânsito congestionado em tempo real.
+- `js/world/chicago-goose-island-junctions.js` cria três conexões visuais com cantos arredondados no **sul (x≈−200, z≈160)**, **centro industrial (z≈240)** e **norte (z≈320)**, usando uma geometria de triângulos com aproximadamente 20 vértices de perímetro para cada placa. As marcações só surgem sobre solo seco; nenhum colisor físico, eixo de missão ou rua de outra cidade é reescrito.
+- `tests/chicago-r7-junctions.test.cjs` e `tests/chicago-r7-junctions-browser.cjs` conferem os três locais, suas bordas secas, a ausência de colliders adicionais e a integração no Undercover. Uma curva parcial não é publicada se o setor passar a estar inundado.
+- As versões R2–R6 continuam preservadas, inclusive pontes móveis, dois canais de Goose Island, os veículos de carga, a campanha original, as outras cidades e o passeio livre com os GLBs originais.
+
+**Limitações:** os entroncamentos R7 são uma melhoria visual de continuidade, **não** ruas PS1 homologadas. O mapa procedural ainda usa coordenadas adaptadas; a malha original continua em `chicago/`. A bateria de tráfego usa luz verde e ausência de outros carros para tornar reproduzíveis os resultados de dirigibilidade; ainda é necessário testar congestionamento e travessias com perseguição.

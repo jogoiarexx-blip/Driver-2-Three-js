@@ -140,6 +140,7 @@
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
+                this.chicagoGooseIslandJunctions=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -393,6 +394,8 @@
                     // transversal ao norte de Goose Island.
                     if(typeof DriverChicagoGooseIslandNorthYard!=='undefined')
                         DriverChicagoGooseIslandNorthYard.build(this);
+                    if(typeof DriverChicagoGooseIslandJunctions!=='undefined')
+                        DriverChicagoGooseIslandJunctions.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
