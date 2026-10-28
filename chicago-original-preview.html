@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-br"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Chicago original do Driver 2 — visualização técnica</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07101c;color:#e5ebf3;font-family:Arial,sans-serif;overflow:hidden}
+#view{position:fixed;inset:0}#panel{position:fixed;top:16px;left:16px;background:#101a29ed;border:1px solid #56718866;padding:14px;max-width:min(430px,95vw);border-radius:9px;line-height:1.5}
+b{color:#95d8ff}small{color:#b0c8dc}button{background:#1e4571;border:1px solid #3f7295;color:white;padding:8px 12px;cursor:pointer;border-radius:5px;margin:7px 6px 0 0}
+#status{color:#9dc5d8;margin-top:9px}#footer{position:fixed;right:12px;bottom:12px;background:#091827cf;padding:7px;border-radius:6px;font-size:12px}
+</style></head><body><div id="view"></div>
+<section id="panel"><b>CHICAGO • ORIGINAL PS1</b>
+<div>Visualizador experimental da geometria extraída do Driver 2. Não é mapa jogável nem modifica a cidade procedural, os colisores ou as missões.</div>
+<small>Arrastar: orbitar · Scroll: zoom · WASD/setas: mover · 1: centralizar · 2: vista superior.</small>
+<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button></div>
+<div id="status">Carregando o manifest...</div></section>
+<div id="footer">54 setores GLB · carregamento progressivo · textura provisória em roxo</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="./js/world/chicago-original-tile-stream.js"></script>
+<script>
+(async function(){
+'use strict';
+const status=document.getElementById('status');
+if(typeof THREE==='undefined'||!THREE.GLTFLoader){
+    status.textContent='Three.js indisponível; confira a conexão à internet.';return;
+}
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x172b3b);
+const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,2400);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight);
+renderer.outputEncoding=THREE.sRGBEncoding;
+document.getElementById('view').appendChild(renderer.domElement);
+const grid=new THREE.GridHelper(720,36,0x32475c,0x24394a);grid.position.y=-.05;scene.add(grid);
+const target=new THREE.Vector3(0,2,0);let yaw=.6,pitch=1.2,distance=490;
+const stream=new DriverChicagoOriginalTileStream({
+    scene,THREE,baseUrl:'./assets/chicago/',maxLoaded:20,loadRadius:42,
+    unloadRadius:62,maxParallel:2,
+    onError:e=>{status.textContent='Falha em setor/textura: '+(e.message||e);},
+    onChange:s=>{
+        if(!s.error)status.textContent='Setores: '+s.tilesLoaded+'/'+s.tilesTotal+
+            ' · Carregando: '+s.loading+' · Triângulos ativos: '+
+            s.trianglesLoaded.toLocaleString('pt-BR');
+    }
+});
+try{await stream.start();}
+catch(e){
+    status.textContent='Arquivos de geometria não publicados: copie a pasta assets/chicago do pacote de conversão para o repositório. '+e.message;
+    return;
+}
+let drag=false,px=0,py=0;
+renderer.domElement.addEventListener('pointerdown',e=>{
+    drag=true;px=e.clientX;py=e.clientY;
+    renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener('pointerup',()=>drag=false);
+renderer.domElement.addEventListener('pointermove',e=>{
+    if(!drag)return;
+    const dx=e.clientX-px,dy=e.clientY-py;px=e.clientX;py=e.clientY;
+    yaw-=dx*.006;pitch=Math.max(.04,Math.min(Math.PI/2,pitch+dy*.006));
+});
+renderer.domElement.addEventListener('wheel',e=>{
+    distance=Math.max(25,Math.min(1150,distance*Math.exp(e.deltaY*.001)));
+    e.preventDefault();
+},{passive:false});
+const keys=new Set();
+addEventListener('keydown',e=>{
+    keys.add(e.key.toLowerCase());if(e.key==='1')reset();if(e.key==='2')top();
+});
+addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+function reset(){target.set(0,2,0);yaw=.6;pitch=1.2;distance=490;}
+function top(){yaw=0;pitch=.018;distance=650;}
+document.getElementById('center').onclick=reset;
+document.getElementById('top').onclick=top;
+document.getElementById('more').onclick=()=>{
+    stream.maxLoaded=36;stream.loadRadius=65;stream.unloadRadius=85;
+};
+let then=performance.now();
+function frame(now){
+    requestAnimationFrame(frame);
+    const dt=Math.min(.06,(now-then)/1000);then=now;
+    const speed=Math.max(28,distance*.25)*dt;
+    if(keys.has('w')||keys.has('arrowup'))target.z-=speed;
+    if(keys.has('s')||keys.has('arrowdown'))target.z+=speed;
+    if(keys.has('a')||keys.has('arrowleft'))target.x-=speed;
+    if(keys.has('d')||keys.has('arrowright'))target.x+=speed;
+    camera.position.set(
+        target.x+distance*Math.sin(pitch)*Math.sin(yaw),
+        target.y+distance*Math.cos(pitch),
+        target.z+distance*Math.sin(pitch)*Math.cos(yaw)
+    );
+    camera.lookAt(target);stream.update(target);
+    renderer.render(scene,camera);
+}
+requestAnimationFrame(frame);
+addEventListener('resize',()=>{
+    camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+});
+addEventListener('pagehide',()=>{stream.dispose();renderer.dispose();});
+})();
+</script></body></html>
