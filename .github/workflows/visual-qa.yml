@@ -60,6 +60,8 @@ jobs:
         run: node --test tests/havana-overhaul.test.cjs
       - name: Certificar Vegas 2.0, Strip, cassinos e isolamento
         run: node --test tests/vegas-overhaul.test.cjs
+      - name: Certificar bairros, placas e píer visual de Chicago
+        run: node --test tests/chicago-neighborhoods.test.cjs
       - name: Certificar desempenho e descarte de chunks
         run: node --test tests/district-visibility.test.cjs
       - name: Certificar Driving Games, missões de Vegas e Rio e spatial hash
