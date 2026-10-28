@@ -69,6 +69,15 @@ class DriverCameraRig {
     }
     update(camera, pos, car, mode, cameraMode, lookBack, city, dt) {
         const spec=DriverCameraRig.targetPosition(pos, car, mode, cameraMode, lookBack);
+        // Enquadramento cinematográfico temporário no salto da ponte.
+        // Conserva os modos de câmera escolhidos pelo jogador.
+        if(mode==='driving' && cameraMode===0 && !lookBack &&
+            typeof DriverChicagoEastBridge!=='undefined' &&
+            DriverChicagoEastBridge.isJumpCamera(city,pos,car)){
+            spec.location.y+=3.5;
+            spec.fov=Math.max(spec.fov,76);
+            spec.focus.y+=.7;
+        }
         const occlusionMode=!spec.instant && cameraMode!==2;
         if (occlusionMode) {
             const ratio=DriverCameraRig.visibleDistance(city,
