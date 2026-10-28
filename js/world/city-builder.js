@@ -356,6 +356,9 @@
                     // novos colliders e com LOD preservado.
                     if(typeof DriverChicagoOverhaul!=='undefined')
                         DriverChicagoOverhaul.buildCity(this);
+                    // Bairros, placas e Navy Pier: render exclusivo, sem AABB.
+                    if(typeof DriverChicagoNeighborhoods!=='undefined')
+                        DriverChicagoNeighborhoods.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);

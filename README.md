@@ -937,3 +937,13 @@ conclui a partir do teste de arquivos.
 integração DOM; ainda é necessário jogar no navegador para
 avaliar visualmente o acabamento das portas no GLB e o layout
 do painel em resoluções menores. Nenhum FPS foi medido.
+
+## Chicago — bairros sinalizados (camada visual)
+
+A revisão adiciona placas 3D, marcadores coloridos e a localização aproximada de **Wrigleyville, Lincoln Park, Gold Coast, Downtown / Loop, Grant Park, Navy Pier, Greektown, Chinatown, Prairie Ave e Meigs Field**, inspirados no mapa do Driver 2 original. Também reforça visualmente as margens do Rio Chicago, acrescenta acabamentos ao Wrigley Field **já existente** e monta um Navy Pier com roda-gigante low-poly.
+
+**Como ativar:** basta abrir o jogo, selecionar **Chicago** e iniciar **Take a Ride** ou **Undercover**. A camada é construída automaticamente ao carregar a cidade; não precisa instalar mods nem acionar botão. As placas são objetos visuais no cenário, não ícones extras do minimapa. Em Chicago, a área do estádio pode ser encontrada ao norte, perto de Wrigleyville; o Navy Pier fica na borda leste do mapa.
+
+Implementação: `js/world/chicago-neighborhoods.js`, integrado ao `CityBuilder` após o `DriverChicagoOverhaul`, sem alterar tráfego, geometria das vias, física, colisores, portões, tarefas ou salvamentos. Há **dez** sinais de bairro e o píer é visual (não dirigível): o mapa continua sendo uma adaptação procedural, não uma reprodução 1:1 da cidade do PS1. Geometrias, materiais e texturas são liberados com `cityGroup` nas trocas de cidade.
+
+Regressão: `node --test tests/chicago-neighborhoods.test.cjs`; conjunto completo: `node --test tests/*.test.cjs`. Testes lógicos não substituem inspeção visual da renderização.
