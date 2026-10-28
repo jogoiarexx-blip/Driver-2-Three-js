@@ -94,6 +94,8 @@
                 this.felony = 0;
                 this.roadblocksSpawned = false;
                 this.missionType = 'freeroam';
+                this.chicagoGuidance=null;
+                this.chicagoGuidanceStage=null;
                 this.classicState=null;
                 this.regionalState=null;
                 this.missionTimeLeft = 0;
@@ -417,6 +419,8 @@
                 document.getElementById('director-banner').classList.add('hidden');
 
                 this.missionType = type;
+                this.chicagoGuidance=null;
+                this.chicagoGuidanceStage=null;
                 this.gameEnded = false;
                 if(this.stationJones){
                     GPUResourceUtils.disposeSubtree(this.stationJones);
@@ -2032,6 +2036,8 @@
                     !(this.missionType==='story_leaving' &&
                         this.leavingDirector.completed && /CONCLUÍDA/.test(title)));
                 this.missionType='freeroam';
+                this.chicagoGuidance=null;
+                this.chicagoGuidanceStage=null;
                 this.clearMissionMarkers();
                 const upcoming=this.nextStoryMission();
                 const notice=DriverCampaignFlow.summarize(
@@ -2822,6 +2828,12 @@
                     ctx.fill();
                 }
 
+                // Alvo atual da etapa (veículo, estação ou saída);
+                // mesma matriz do radar para não espelhar os marcadores.
+                if(typeof DriverChicagoMissionGuidance!=='undefined')
+                    DriverChicagoMissionGuidance.drawRadar(
+                        ctx,this,pos,scale);
+
                 // Outros veículos e Polícia no radar
                 for (const v of this.vehicles) {
                     if (v === this.playerCar && this.mode === 'driving') continue;
@@ -3385,6 +3397,8 @@
                             this.missionToastRemaining<=0);
                     }
                 }else if(toast)toast.classList.add('hidden');
+                if(typeof DriverChicagoMissionGuidance!=='undefined')
+                    DriverChicagoMissionGuidance.render(this);
                 this.updateHUD();
                 const context=document.getElementById('driver-mission-context');
                 if(context){
