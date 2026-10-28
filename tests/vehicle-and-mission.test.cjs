@@ -54,10 +54,10 @@ test('frear acende luzes de freio de modo dinâmico',()=>{
   const v=vehicle(24);
   Visual.update(v,1/60,{down:true,handbrake:false});
   assert.equal(v.brakeLightsOn,true);
-  assert.equal(v.rearColor,0xff2434);
+  assert.equal(v.rearColor,0xff293c);
   Visual.update(v,1/60,{down:false,handbrake:false});
   assert.equal(v.brakeLightsOn,false);
-  assert.equal(v.rearColor,0x6b171d);
+  assert.equal(v.rearColor,0x52151a);
 });
 test('freio de mão em movimento acende as lanternas',()=>{
   const v=vehicle(25);

@@ -12,7 +12,7 @@ test('UNDERCOVER passa pelo mapa e só ativa a primeira missão no marcador',()=
     assert.doesNotMatch(boot,/game\.missionType=mode==='story'\?'story_tipoff'/);
     assert.match(game,/activateNearbyMission\(\)/);
     assert.match(game,/nextStoryMission\(\)/);
-    assert.match(game,/this\.missionActive \|\|/);
+    assert.match(game,/this\.missionActive\s*\|\|/);
 });
 test('campanha percorre as oito missões Chicago em ordem, sem pular capítulos',()=>{
     const completed=new Set();

@@ -202,7 +202,9 @@ test('UI inclui medidor e missão de história no menu',()=>{
     const html=read('index.html'),game=read('js/engine/driver2-game-engine.js');
     assert.match(html,/id="tail-proximity"/);
     assert.match(html,/id="tail-needle"/);
-    assert.match(html,/startMission\('story_drop'\)/);
+    assert.match(html,/id="d2-start-story"/);
+    assert.match(read('js/gameplay/campaign-flow.js'), /'story_drop'/);
+    assert.match(read('js/engine/driver2-game-engine.js'), /activateNearbyMission\(\)/);
     assert.match(game,/new DriverTailingDropMission\(\)/);
     assert.match(game,/this\.dropDirector\.update\(/);
 });
@@ -221,7 +223,7 @@ test('lanchonete e oficina são reservadas com interiores independentes',()=>{
 
 test('módulo furtivo vem antes da inteligência de tráfego',()=>{
     const html=read('index.html');
-    const scripts=[...html.matchAll(/src="\.\/(js\/[^"]+\.js)"/g)]
+    const scripts=[...html.matchAll(/src="\.\/(js\/[^"?]+\.js)(?:\?[^"]*)?"/g)]
         .map(m=>m[1]);
     assert.ok(scripts.indexOf('js/gameplay/tailing-drop.js') <
         scripts.indexOf('js/traffic/traffic-ai.js'));

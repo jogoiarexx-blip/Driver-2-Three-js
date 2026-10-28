@@ -168,12 +168,14 @@ test('plataforma só pertence à estação de Chicago',()=>{
 });
 test('módulo Train Pursuit carrega antes de montar a cidade e iniciar engine',()=>{
     const html=read('index.html');
-    const scripts=[...html.matchAll(/src="\.\/(js\/[^"]+\.js)"/g)].map(x=>x[1]);
+    const scripts=[...html.matchAll(/src="\.\/(js\/[^"?]+\.js)(?:\?[^"]*)?"/g)].map(x=>x[1]);
     const train=scripts.indexOf('js/world/chicago-train.js');
     const city=scripts.indexOf('js/world/city-builder.js');
     const engine=scripts.indexOf('js/engine/driver2-game-engine.js');
     assert.ok(train>=0 && city>train && engine>city);
-    assert.match(html,/startMission\('story_train'\)/);
+    assert.match(html,/id="d2-start-story"/);
+    assert.match(read('js/gameplay/campaign-flow.js'), /'story_train'/);
+    assert.match(read('js/engine/driver2-game-engine.js'), /activateNearbyMission\(\)/);
 });
 test('Train Pursuit verifica distância, estação e entrada na plataforma',()=>{
     const engine=read('js/engine/driver2-game-engine.js');

@@ -190,13 +190,15 @@ test('o modelo do carro deixa a pintura preta controlável',()=>{
 test('UI e motor apresentam a sexta missão após a quinta',()=>{
  const html=read('index.html'),engine=read('js/engine/driver2-game-engine.js');
  assert.ok(html.indexOf('CHICAGO 06')>html.indexOf('CHICAGO 05'));
- assert.match(html,/startMission\('story_intruder'\)/);
+ assert.match(html,/id="d2-start-story"/);
+    assert.match(read('js/gameplay/campaign-flow.js'), /'story_intruder'/);
+    assert.match(read('js/engine/driver2-game-engine.js'), /activateNearbyMission\(\)/);
  assert.match(engine,/this\.intruderDirector\.update\(/);
  assert.match(engine,/this\.spawnIntruderBlocker\(\)/);
 });
 test('scripts do perseguidor carregam antes da IA e da engine',()=>{
  const html=read('index.html');
- const scripts=[...html.matchAll(/src="\.\/(js\/[^"]+\.js)"/g)].map(x=>x[1]);
+ const scripts=[...html.matchAll(/src="\.\/(js\/[^"?]+\.js)(?:\?[^"]*)?"/g)].map(x=>x[1]);
  assert.ok(scripts.indexOf('js/gameplay/chicago-intruder.js')>0);
  assert.ok(scripts.indexOf('js/gameplay/chicago-intruder.js')<
    scripts.indexOf('js/traffic/traffic-ai.js'));
