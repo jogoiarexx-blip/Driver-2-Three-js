@@ -7,6 +7,9 @@ const North=require('../js/world/chicago-goose-island-north-yard.js');
 const River=require('../js/world/chicago-ps1-river-branches.js');
 const Road=vm.runInNewContext(read('js/world/road-geometry.js')+
     '\nDriverRoadGeometry',{Math,Number,Map,Set});
+// O módulo usa a dependência global via script tag no navegador.
+// No ambiente Node, expor a mesma classe para reproduzir o runtime.
+global.DriverRoadGeometry=Road;
 const AI=vm.runInNewContext(read('js/traffic/traffic-ai.js')+
     '\nDriverTrafficAI',{
       Math,Number,Map,Set,WeakMap,
