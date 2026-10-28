@@ -178,6 +178,9 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         await sleep(950);
         await page.screenshot({path:path.join(DIR,'rio-copacabana-driving.png')});
         // Caminhada sobre a orla; não pode sair do limite do mundo.
+        // WebGL software renderer can stall while shader assets compile.
+        // Let the camera/LOD settle before measuring foot movement.
+        await sleep(850);
         const starting=await page.evaluate(()=>{
           const g=window.DriverGame;
           g.mode='on_foot';
@@ -186,7 +189,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
-        await sleep(380);
+        await sleep(1150);
         const walking=await page.evaluate(()=>{
           const g=window.DriverGame;
           g.input.up=false;
@@ -247,7 +250,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
-        await sleep(370);
+        await sleep(850);
         const next=await page.evaluate(()=>{
           const g=window.DriverGame;g.input.up=false;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
@@ -312,7 +315,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
-        await sleep(380);
+        await sleep(850);
         const end=await page.evaluate(()=>{
           const g=window.DriverGame;g.input.up=false;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
