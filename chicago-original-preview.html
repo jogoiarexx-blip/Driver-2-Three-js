@@ -32,7 +32,7 @@ document.getElementById('view').appendChild(renderer.domElement);
 const grid=new THREE.GridHelper(720,36,0x32475c,0x24394a);grid.position.y=-.05;scene.add(grid);
 const target=new THREE.Vector3(0,2,0);let yaw=.6,pitch=1.2,distance=490;
 const stream=new DriverChicagoOriginalTileStream({
-    scene,THREE,baseUrl:'./assets/chicago/',maxLoaded:20,loadRadius:42,
+    scene,THREE,baseUrl:'./chicago/',maxLoaded:20,loadRadius:42,
     unloadRadius:62,maxParallel:2,
     onError:e=>{status.textContent='Falha em setor/textura: '+(e.message||e);},
     onChange:s=>{
@@ -43,7 +43,7 @@ const stream=new DriverChicagoOriginalTileStream({
 });
 try{await stream.start();}
 catch(e){
-    status.textContent='Arquivos de geometria não publicados: copie a pasta assets/chicago do pacote de conversão para o repositório. '+e.message;
+    status.textContent='Arquivos de geometria não publicados: copie a pasta chicago/ do pacote de conversão para a raiz do repositório. '+e.message;
     return;
 }
 let drag=false,px=0,py=0;
