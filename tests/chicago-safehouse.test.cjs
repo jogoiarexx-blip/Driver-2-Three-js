@@ -140,11 +140,13 @@ test('a UI inicia missão em Chicago e aponta entrada da casa',()=>{
  assert.match(engine,/ESCAPE TO THE SAFE HOUSE/);
  assert.match(engine,/this\.city\.safeHouseZone/);
  assert.match(engine,/this\.safeHouseEscape\.update/);
- assert.match(html,/startMission\('story_safehouse'\)/);
+ assert.match(html,/id="d2-start-story"/);
+    assert.match(read('js/gameplay/campaign-flow.js'), /'story_safehouse'/);
+    assert.match(read('js/engine/driver2-game-engine.js'), /activateNearbyMission\(\)/);
 });
 test('módulo da missão está carregado antes da engine',()=>{
  const html=read('index.html');
- const scripts=[...html.matchAll(/src="\.\/(js\/[^"]+\.js)"/g)].map(x=>x[1]);
+ const scripts=[...html.matchAll(/src="\.\/(js\/[^"?]+\.js)(?:\?[^"]*)?"/g)].map(x=>x[1]);
  assert.ok(scripts.indexOf('js/gameplay/safehouse-escape.js')>=0);
  assert.ok(scripts.indexOf('js/gameplay/safehouse-escape.js')<
    scripts.indexOf('js/engine/driver2-game-engine.js'));

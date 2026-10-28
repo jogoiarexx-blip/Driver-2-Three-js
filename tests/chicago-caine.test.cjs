@@ -155,8 +155,10 @@ test('acesso ao depósito e carro permanecem fora das paredes novas',()=>{
 });
 test('capítulo está no menu e script vem antes da engine',()=>{
     const html=read('index.html');
-    const scripts=[...html.matchAll(/src="\.\/(js\/[^"]+\.js)"/g)].map(x=>x[1]);
-    assert.match(html,/startMission\('story_caine'\)/);
+    const scripts=[...html.matchAll(/src="\.\/(js\/[^"?]+\.js)(?:\?[^"]*)?"/g)].map(x=>x[1]);
+    assert.match(html,/id="d2-start-story"/);
+    assert.match(read('js/gameplay/campaign-flow.js'), /'story_caine'/);
+    assert.match(read('js/engine/driver2-game-engine.js'), /activateNearbyMission\(\)/);
     assert.ok(scripts.indexOf('js/gameplay/caine-compound.js')>=0);
     assert.ok(scripts.indexOf('js/gameplay/caine-compound.js')<
         scripts.indexOf('js/engine/driver2-game-engine.js'));

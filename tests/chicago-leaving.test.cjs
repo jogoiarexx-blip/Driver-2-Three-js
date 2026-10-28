@@ -211,7 +211,7 @@ test('motor inclui chuva e alvo verde na oitava missão',()=>{
 });
 test('script e tela do capítulo final carregam corretamente',()=>{
  const html=read('index.html');
- const deps=[...html.matchAll(/src="\.\/(js\/[^"]+\.js)"/g)].map(m=>m[1]);
+ const deps=[...html.matchAll(/src="\.\/(js\/[^"?]+\.js)(?:\?[^"]*)?"/g)].map(m=>m[1]);
  assert.ok(deps.indexOf('js/gameplay/leaving-chicago.js')<
   deps.indexOf('js/engine/driver2-game-engine.js'));
  for(const id of ['leaving-chicago-progress','leaving-chicago-title',

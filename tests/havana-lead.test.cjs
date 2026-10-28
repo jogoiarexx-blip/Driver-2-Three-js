@@ -101,7 +101,7 @@ test('save restaura progresso, índice de rota e contadores limitados',()=>{
 test('rotas guiadas da IA reutilizam os waypoints da missão 09',()=>{
     const ai=read('js/traffic/traffic-ai.js');
     assert.match(ai,/DriverTailingDropMission\.advanceRoute\(car\)/);
-    assert.match(ai,/scripted\.done\?0:/);
+    assert.match(ai,/scripted\.done\|\|missionRoute\?\.blocked\?0:/);
     const Drop=vm.runInNewContext(
         read('js/gameplay/tailing-drop.js')+'\nDriverTailingDropMission',
         {Math,Number,Infinity}

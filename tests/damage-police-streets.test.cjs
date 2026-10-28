@@ -99,7 +99,7 @@ test('postes não criam fontes dinâmicas de luz',()=>{
 });
 test('HTML carrega módulos antes dos consumidores',()=>{
     const html=read('index.html');
-    const scripts=[...html.matchAll(/src="\.\/js\/([^"]+\.js)"/g)].map(m=>m[1]);
+    const scripts=[...html.matchAll(/src="\.\/js\/([^"?]+\.js)(?:\?[^"]*)?"/g)].map(m=>m[1]);
     function ordered(a,b) {
         assert.ok(scripts.indexOf(a)!==-1);
         assert.ok(scripts.indexOf(b)!==-1);

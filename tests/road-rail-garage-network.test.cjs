@@ -133,15 +133,20 @@ test('abrigos de Tanner têm entrada realmente aberta e saída livre',()=>{
     City.prototype.buildSafeHouseBlock.call(c,-120,-120);
     const p=c.garageParking,out=c.garageExit;
     assert.equal(p.x,-129);
-    assert.equal(p.z,-94);
-    assert.equal(out.z,-89);
+    assert.equal(p.z,-111);
+    assert.equal(out.z,-98);
     assert.equal(c.isPointBlocked(p.x,p.z,1.8),false);
     assert.equal(c.isPointBlocked(out.x,out.z,1.8),false);
     assert.equal(Road.validGarageExit(out.x,out.z,c,[]),true);
     assert.equal(Road.validGarageExit(out.x,out.z,c,
         [{x:out.x+2,z:out.z}]),false);
-    assert.equal(c.isPointBlocked(-133.6,-94,.3),true);
-    assert.equal(c.isPointBlocked(-129,-99,.3),true);
+    assert.equal(c.isPointBlocked(-135,-120,.3),true);
+    assert.equal(c.isPointBlocked(-129,-135,.3),true);
+    assert.equal(c.isPointBlocked(-129,-104.85,.3),true);
+    assert.equal(City.prototype.toggleHomeGarageDoor.call(c),true);
+    assert.equal(c.isPointBlocked(-129,-104.85,.3),false);
+    assert.equal(City.prototype.toggleHomeGarageDoor.call(c),false);
+    assert.equal(c.isPointBlocked(-129,-104.85,.3),true);
     assert.ok(c.cityGroup.children.length>15);
 });
 test('carros e Tanner usam altura corrente como referência na ferrovia',()=>{

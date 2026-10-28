@@ -143,7 +143,7 @@ test('portões da missão cinematográfica obedecem ordem',()=>{
 });
 test('nova missão e colisões têm referências carregadas corretamente',()=>{
     const html=read('index.html'),engine=read('js/engine/driver2-game-engine.js');
-    const scripts=[...html.matchAll(/src="\.\/js\/([^"]+\.js)"/g)].map(m=>m[1]);
+    const scripts=[...html.matchAll(/src="\.\/js\/([^"?]+\.js)(?:\?[^"]*)?"/g)].map(m=>m[1]);
     assert.ok(scripts.indexOf('physics/vehicle-collisions.js')<
         scripts.indexOf('engine/driver2-game-engine.js'));
     assert.ok(scripts.indexOf('gameplay/pursuit-chapter.js')<
