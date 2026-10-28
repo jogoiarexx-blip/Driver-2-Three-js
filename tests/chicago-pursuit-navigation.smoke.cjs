@@ -67,6 +67,14 @@ const closed={
     isWaterAt(x,z){return z>34.85&&z<65.15;}
 };
 assert.equal(Nav.plan(closed,start,goal),null);
+// Folhas levantadas: os colliders de água deixam de ser suficientes,
+// mas o plano não pode atravessar a ponte vertical.
+const raised={...city,bridgeRaised:true};
+assert.equal(Nav.plan(raised,start,goal),null);
+const opening={...city,bridgeRaised:false};
+assert(Nav.plan(opening,start,goal));
+assert.equal(Nav.closedDrawbridge(raised,{x:0,z:0},{x:0,z:80}),true);
+assert.equal(Nav.closedDrawbridge(opening,{x:0,z:0},{x:0,z:80}),false);
 const halt=Nav.follow(closed,start,goal,{},.016);
 assert.equal(halt.blocked,true);
 assert.equal(halt.target,null);
