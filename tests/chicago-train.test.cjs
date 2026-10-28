@@ -16,7 +16,8 @@ class Node {
     }
     add(...nodes){for(const node of nodes){this.children.push(node);node.parent=this;}}
     remove(node){this.children=this.children.filter(n=>n!==node);node.parent=null;}
-    updateMatrix(){}
+    updateMatrix(){this.matrix={position:{...this.position},
+        rotation:{...this.rotation},scale:{...this.scale}};}
     clear(){this.children.length=0;}
 }
 class Mesh extends Node{
@@ -24,8 +25,10 @@ class Mesh extends Node{
 }
 class InstancedMesh extends Mesh{
     constructor(geometry,material,count){super(geometry,material);this.count=count;
-        this.indices=[];this.instanceMatrix={needsUpdate:false};}
-    setMatrixAt(i){this.indices.push(i);}
+        this.indices=[];this.matrices=[];
+        this.instanceMatrix={needsUpdate:false};}
+    setMatrixAt(i,m){this.indices.push(i);
+        this.matrices[i]=m?JSON.parse(JSON.stringify(m)):null;}
 }
 class Geometry {constructor(...args){this.args=args;}}
 class Material {constructor(opts){this.opts=opts;}}
@@ -98,13 +101,25 @@ test('troca para Havana desativa o trem exclusivo de Chicago',()=>{
     assert.equal(train.active,false);
     assert.equal(train.group.visible,false);
 });
-test('linha elevada usa poucos lotes para 188 dormentes e 18 pilares',()=>{
+test('linha elevada tem pórticos fora da pista e sem pilares no canal',()=>{
     const city={preset:{id:'chicago'},cityGroup:scene()};
     Train.buildInfrastructure(city);
-    assert.equal(city.cityGroup.children.length,5);
-    assert.equal(city.cityGroup.children[3].count,188);
-    assert.equal(city.cityGroup.children[4].count,18);
-    assert.equal(city.cityGroup.children[3].instanceMatrix.needsUpdate,true);
+    assert.equal(city.cityGroup.children.length,6);
+    const sleepers=city.cityGroup.children[3],
+        supports=city.cityGroup.children[4],
+        beams=city.cityGroup.children[5];
+    assert.equal(sleepers.count,188);
+    assert.equal(supports.count,34);
+    assert.equal(beams.count,17);
+    assert.equal(sleepers.instanceMatrix.needsUpdate,true);
+    assert.equal(supports.matrices.length,34);
+    for(const mat of supports.matrices){
+        assert(Math.abs(mat.position.x)>13&&Math.abs(mat.position.x)<15,
+            'Pilar invadiu a avenida');
+        assert(!(mat.position.z>31&&mat.position.z<69),
+            'Pilar no leito do canal');
+    }
+    assert(beams.matrices.every(m=>Math.abs(m.position.x)<.01));
 });
 test('linha férrea não existe em Havana, Las Vegas ou Rio',()=>{
     for(const id of ['havana','vegas','rio']){
