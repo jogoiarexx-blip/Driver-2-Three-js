@@ -22,6 +22,51 @@ class DriverChicagoGooseIslandStreet {
     static lanePosition(sign,z){
         return {x:this.AXIS_X+(sign>=0?4:-4),z};
     }
+
+    // R5: conexões auditáveis, da avenida oeste à via industrial e à
+    // ponte norte leste. São corredores reais da física do clone, não
+    // marcadores soltos nem alegação de ruas certificadas na ROM.
+    static accessSegments(){
+        return [
+            {id:'bridge-west',from:{x:-276,z:156},to:{x:-200,z:156}},
+            {id:'turn-island',from:{x:-200,z:156},to:{x:-196,z:185}},
+            {id:'spine-north',from:{x:-196,z:185},to:{x:-196,z:236}},
+            {id:'bridge-east-north',from:{x:-196,z:236},to:{x:-160,z:236}}
+        ];
+    }
+    static auditAccess(city){
+        if(!this.isChicago(city) ||
+           typeof DriverRoadGeometry==='undefined')return {
+            ready:false,links:[],unsafe:['sem geometria viária']
+        };
+        const links=this.accessSegments().map(segment=>({
+            ...segment,
+            safe:DriverRoadGeometry.segmentDrivable(city,
+                segment.from.x,segment.from.z,
+                segment.to.x,segment.to.z,1.55)
+        }));
+        return {ready:links.every(link=>link.safe),
+            links,unsafe:links.filter(link=>!link.safe).map(link=>link.id)};
+    }
+    static planVisitorEntry(city,car){
+        if(!this.isChicago(city) || !car?.gooseIslandVisitor ||
+           car.scriptedDrive || !city?.chicagoGooseIslandStreet ||
+           !Number.isFinite(car.x) || !Number.isFinite(car.z) ||
+           !Number.isFinite(car.heading))return null;
+        // Um visitante chega do oeste pela ponte de z=160. Converter
+        // apenas quando estiver fisicamente próximo ao cruzamento.
+        if(Math.abs(car.x-this.AXIS_X)>10 ||
+           Math.abs(car.z-(this.SOUTH_Z-4))>8 ||
+           Math.sin(car.heading)<.55)return null;
+        if(!city.chicagoGooseIslandStreet.access?.ready)return null;
+        const destination={x:-196,z:185};
+        if(!DriverRoadGeometry.segmentDrivable(city,car.x,car.z,
+            destination.x,destination.z,1.55))return null;
+        return {axis:'z',sign:1,road:this.AXIS_X,
+            target:destination,isIslandSpine:true,
+            islandPhase:'entry',islandApproach:false,
+            islandVisitComplete:false};
+    }
     static testCorridor(city){
         if(!this.isChicago(city))return false;
         for(let z=this.SOUTH_Z+4;z<=this.NORTH_Z-4;z+=4){
@@ -91,9 +136,12 @@ class DriverChicagoGooseIslandStreet {
             length:this.NORTH_Z-this.SOUTH_Z,
             asphalt:road,meshCount:group.children.length,
             buildings,collidersAdded:buildings.length,
-            betweenCanals:true,aiRouting:true,group
+            betweenCanals:true,aiRouting:true,group,
+            access:null
         };
         city.chicagoGooseIslandStreet=result;
+        result.access=this.auditAccess(city);
+        result.accessReady=result.access.ready;
         return result;
     }
 }
