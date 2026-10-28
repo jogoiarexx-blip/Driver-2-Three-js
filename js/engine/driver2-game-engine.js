@@ -2610,6 +2610,16 @@
                     const riverY=-(50-pos.z)*scale;
                     ctx.fillStyle='#0369a1';
                     ctx.fillRect(-w,riverY-9,w*2,18);
+                    // As duas travessias são marcadas nas coordenadas reais
+                    // da cidade, inclusive com a câmera girando no minimapa.
+                    for(const bridgeX of [0,240]){
+                        const px=(bridgeX-pos.x)*scale;
+                        const top=-(66-pos.z)*scale;
+                        ctx.fillStyle=this.city.bridgeRaised?'#f59e0b':'#aebbc6';
+                        ctx.fillRect(px-10*scale,top,20*scale,32*scale);
+                        ctx.strokeStyle='#475569';
+                        ctx.strokeRect(px-10*scale,top,20*scale,32*scale);
+                    }
                 }
 
                 // Prédios no radar
@@ -3237,6 +3247,10 @@
                     if(this.isPoliceNearPlayer(65))
                         this.felony=Math.min(100,this.felony+5);
                 },this.getPlayerPosition());
+                if(this.city.bridgeBellPending){
+                    this.city.bridgeBellPending=false;
+                    this.audio.playBridgeBell?.();
+                }
                 this.pedManager.update(dt, this.vehicles, this.audio,
                     this.mode === 'driving' ? this.playerCar : null,
                     (car, barrier, speed) => {
