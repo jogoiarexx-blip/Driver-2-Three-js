@@ -22,7 +22,8 @@ class DriverClassicGames {
         ];
     }
     static begin(g,type){
-        const s={type,clearSeconds:0,gates:[],coneMeshes:[],penalized:new Set()};
+        const s={type,clearSeconds:0,gates:[],coneMeshes:[],penalized:new Set(),
+            passiveCops:[]};
         g.classicState=s;
         const title=document.getElementById('mission-title');
         const obj=document.getElementById('objective-banner');
@@ -38,6 +39,13 @@ class DriverClassicGames {
         }[type]+' • '+g.currentCityKey.toUpperCase();
         document.getElementById('mission-timer').classList.remove('hidden');
         sub.classList.remove('hidden');
+        if(type!=='arcade_getaway'){
+            // No police pursuit in pure racing/chase arcade trials.
+            for(const cop of g.vehicles.filter(v=>v.isPolice)){
+                s.passiveCops.push(cop);
+                cop.isPolice=false;cop.sirenActive=false;
+            }
+        }
         if(type==='arcade_getaway'){
             g.felony=98;
             // Policial no encalço desde o início.
@@ -128,8 +136,21 @@ class DriverClassicGames {
                     g.trafficAI.unobstructed(v,pos)));
             s.clearSeconds=visible?0:s.clearSeconds+dt;
             sub.textContent='FORA DO RADAR: '+s.clearSeconds.toFixed(1)+'/8.0s';
-            if(s.clearSeconds>=8)return {success:true,
-                title:'GETAWAY CONCLUÍDO!',message:'Você despistou as viaturas em '+s.elapsed.toFixed(1)+'s.'};
+            if(s.clearSeconds>=8){
+                const key='driver2.getaway.best.'+g.currentCityKey;
+                let best=null;
+                try{
+                    const store=g.homeSave?.storage;
+                    best=Number(store?.getItem(key))||Infinity;
+                    if(s.elapsed<best){
+                        best=s.elapsed;
+                        store?.setItem(key,s.elapsed.toFixed(2));
+                    }
+                }catch(_){best=s.elapsed;}
+                return {success:true,title:'GETAWAY CONCLUÍDO!',
+                    message:'Fuga: '+s.elapsed.toFixed(1)+'s • Recorde: '+
+                        (Number.isFinite(best)?best.toFixed(1):s.elapsed.toFixed(1))+'s'};
+            }
         }
         if(s.type==='gate_racing'){
             // Cones são decorativos mas possuem penalidade real.
@@ -140,7 +161,8 @@ class DriverClassicGames {
                     for(const side of [-1,1]){
                         const x=gate.x+(axis?side*3.9:0);
                         const z=gate.z+(axis?0:side*3.9);
-                        if(Math.hypot(pos.x-x,pos.z-z)<1.55){
+                        if(Math.abs(g.playerCar.speed||0)>2 &&
+                            Math.hypot(pos.x-x,pos.z-z)<1.55){
                             s.penalized.add(i);
                             g.missionTimeLeft=Math.max(.1,g.missionTimeLeft-3);
                             g.audio.playCrash(.4);
@@ -167,6 +189,8 @@ class DriverClassicGames {
         return null;
     }
     static dispose(g){
+        for(const cop of g.classicState?.passiveCops||[])
+            cop.isPolice=true;
         for(const mesh of g.classicState?.coneMeshes||[]){
             g.scene.remove(mesh);
             GPUResourceUtils.disposeSubtree(mesh);
