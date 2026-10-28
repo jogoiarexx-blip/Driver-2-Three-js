@@ -82,15 +82,35 @@ class DriverArcadePhysics {
             (handbrake && absSpeed > 10) || fastCorner ||
             (Math.abs(centrifugal) > 0.55 && absSpeed > 22);
 
-        const targetPitch = forwardThrottle > 0 ? (burnoutKey ? -0.09 : -0.06) :
-            (forwardThrottle < 0 || handbrake ? 0.085 : 0);
-        const targetRoll = -centrifugal * (slide ? 0.20 : 0.14);
-        vehicle.pitchAngle += (targetPitch - vehicle.pitchAngle) * this.response(8, dt);
-        vehicle.rollAngle += (targetRoll - vehicle.rollAngle) * this.response(7, dt);
-        vehicle.chassisTilt.rotation.x = vehicle.pitchAngle;
-        vehicle.chassisTilt.rotation.z = vehicle.rollAngle;
+        // Real transfer of weight follows acceleration and curve radius,
+        // not merely input buttons. Spring/damper settles after steering.
+        const acceleration=this.clamp(
+            (vehicle.speed-prevSpeed)/Math.max(dt,.0001),-40,40);
+        const lateralForce=this.clamp(
+            steerInput*absSpeed*Math.abs(yawRate)/(Math.max(1,vehicle.maxSpeed)),
+            -.95,.95);
+        const targetPitch=this.clamp(-acceleration*.0027+
+            (handbrake?.026:0),-.115,.115);
+        const targetRoll=this.clamp(-lateralForce*
+            (slide?.235:.18),-.235,.235);
+        const spring=(axis,target,stiffness,damping)=>{
+            const vKey=axis+'SpringVelocity';
+            const previous=Number(vehicle[vKey])||0;
+            const position=Number(vehicle[axis])||0;
+            const v=(previous+(target-position)*stiffness*dt)/
+                (1+damping*dt);
+            vehicle[vKey]=v;
+            return position+v*dt;
+        };
+        vehicle.pitchAngle=spring('pitchAngle',targetPitch,130,18);
+        vehicle.rollAngle=spring('rollAngle',targetRoll,120,17);
+        vehicle.chassisTilt.rotation.x=vehicle.pitchAngle;
+        vehicle.chassisTilt.rotation.z=vehicle.rollAngle;
+        vehicle.suspensionLateralLoad=lateralForce;
+        vehicle.suspensionLongitudinalLoad=this.clamp(
+            acceleration/40,-1,1);
 
-        vehicle.longitudinalG = (vehicle.speed - prevSpeed) / Math.max(dt, 0.0001);
+        vehicle.longitudinalG=(vehicle.speed-prevSpeed)/Math.max(dt,.0001);
         return centrifugal;
     }
 }
