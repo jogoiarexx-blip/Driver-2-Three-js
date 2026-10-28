@@ -15,6 +15,10 @@
                 this.sirenOsc = null;
                 this.sirenGain = null;
                 this.sirenPhase = 0;
+                this.musicClock=0;
+                this.musicBeat=0;
+                this.dispatcherCooldown=0;
+                this.lastSiren=false;
             }
 
             init() {
@@ -86,7 +90,7 @@
                 }
             }
 
-            update(dt, inVehicle, speedKmh, isSkidding, isBurnout, sirenPlaying) {
+            update(dt, inVehicle, speedKmh, isSkidding, isBurnout, sirenPlaying, slipAngle=0) {
                 if (!this.initialized || !this.enabled || !this.ctx) return;
                 if (this.ctx.state === 'suspended') this.ctx.resume();
 
@@ -101,9 +105,25 @@
                     this.engineGain.gain.setTargetAtTime(0.0, this.ctx.currentTime, 0.1);
                 }
 
-                const targetSkid = (inVehicle && (isSkidding || isBurnout)) ? 0.13 : 0.0;
+                // Continuous tire sound proportional to actual slip,
+                // not just a binary drifting flag.
+                const slip=Math.max(0,Math.min(1,Math.abs(Number(slipAngle)||0)/.52));
+                const targetSkid=inVehicle?
+                    Math.min(.17,Math.max((isSkidding||isBurnout)? .13:0,
+                        slip*.15)*(Math.min(1,Math.abs(speedKmh)/25))):0;
                 this.skidGain.gain.setTargetAtTime(targetSkid, this.ctx.currentTime, 0.05);
 
+                // Original procedural funk/jazz: bass + drum one-shots,
+                // with higher BPM under pursuit. No external recordings.
+                this.updateRetroScore(dt,inVehicle,sirenPlaying);
+                this.dispatcherCooldown=Math.max(0,
+                    this.dispatcherCooldown-Math.max(0,dt));
+                if(sirenPlaying&&!this.lastSiren&&
+                    this.dispatcherCooldown<=0){
+                    this.playPoliceDispatcher();
+                    this.dispatcherCooldown=18;
+                }
+                this.lastSiren=!!sirenPlaying;
                 if (sirenPlaying) {
                     this.sirenPhase += dt * 4.8;
                     const freq = 690 + Math.sin(this.sirenPhase) * 250;
@@ -221,6 +241,84 @@
                     osc.start();
                     osc.stop(this.ctx.currentTime + 1.15);
                 } catch (e) {}
+            }
+
+            playRetroNote(freq,duration=.19,volume=.04,type='triangle'){
+                if(!this.enabled||!this.initialized||!this.ctx)return;
+                const t=this.ctx.currentTime;
+                const osc=this.ctx.createOscillator(),gain=this.ctx.createGain();
+                osc.type=type;
+                osc.frequency.setValueAtTime(freq,t);
+                gain.gain.setValueAtTime(Math.max(.0001,volume),t);
+                gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+                osc.connect(gain);gain.connect(this.ctx.destination);
+                osc.start(t);osc.stop(t+duration+.01);
+            }
+
+            updateRetroScore(dt,inVehicle,pursuit){
+                if(!inVehicle||!this.enabled||!this.ctx)return;
+                const bpm=pursuit?128:86;
+                const beat=60/bpm/2;
+                this.musicClock+=Math.min(.05,Math.max(0,dt));
+                if(this.musicClock<beat)return;
+                this.musicClock%=beat;
+                const step=this.musicBeat++%16;
+                // New composition: minor pentatonic, syncopated bass.
+                const notes=[55,0,82.41,0,65.41,0,73.42,82.41,
+                    55,0,65.41,0,73.42,0,82.41,65.41];
+                if(notes[step]){
+                    this.playRetroNote(notes[step],pursuit?.24:.33,
+                        pursuit?.046:.027,'triangle');
+                }
+                // Kick and metallic snare as short synthetic envelopes.
+                if(step%4===0)this.playRetroNote(pursuit?65:58,
+                    .10,pursuit?.08:.047,'sine');
+                if(pursuit&&step%4===2)this.playRetroNote(170,
+                    .068,.028,'square');
+                if(pursuit&&step%2===1)this.playRetroNote(940,
+                    .021,.007,'square');
+            }
+
+            playPoliceDispatcher(){
+                if(!this.initialized||!this.enabled||!this.ctx)return;
+                // Two-tone 10-31 dispatch chirp, passed through bandpass,
+                // accompanied by a short, noise-based static burst.
+                try{
+                    const ctx=this.ctx,t=ctx.currentTime;
+                    const band=ctx.createBiquadFilter();
+                    band.type='bandpass';band.frequency.value=1650;
+                    band.Q.value=1.2;
+                    const gain=ctx.createGain();
+                    gain.gain.setValueAtTime(.0001,t);
+                    gain.gain.linearRampToValueAtTime(.046,t+.03);
+                    gain.gain.setValueAtTime(.032,t+.12);
+                    gain.gain.exponentialRampToValueAtTime(.0001,t+.35);
+                    band.connect(gain);gain.connect(ctx.destination);
+                    const chirp=ctx.createOscillator();
+                    chirp.type='square';
+                    chirp.frequency.setValueAtTime(780,t);
+                    chirp.frequency.setValueAtTime(1110,t+.13);
+                    chirp.connect(band);chirp.start(t);chirp.stop(t+.35);
+                    const noise=ctx.createBuffer(1,
+                        Math.max(1,Math.floor(ctx.sampleRate*.17)),
+                        ctx.sampleRate);
+                    const channel=noise.getChannelData(0);
+                    for(let i=0;i<channel.length;i++)
+                        channel[i]=(Math.random()*2-1)*.3;
+                    const burst=ctx.createBufferSource();
+                    burst.buffer=noise;
+                    burst.connect(band);burst.start(t);burst.stop(t+.16);
+                    // TTS is optional (browser/locale dependent); do not
+                    // autoplay spoken audio when speech synthesis is absent.
+                    if(typeof speechSynthesis!=='undefined' &&
+                        typeof SpeechSynthesisUtterance!=='undefined' &&
+                        !speechSynthesis.speaking){
+                        const line=new SpeechSynthesisUtterance(
+                            'All units, ten thirty one in progress.');
+                        line.lang='en-US';line.rate=1.1;line.volume=.35;
+                        speechSynthesis.speak(line);
+                    }
+                }catch(_){}
             }
 
             toggleMute() {
