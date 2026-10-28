@@ -3180,6 +3180,8 @@
                     },this.getPlayerPosition());
                 this.effects.update(dt);
                 this.effects.updateRain(dt, this.getPlayerPosition());
+                if(typeof DriverRegionalMissions!=='undefined')
+                    DriverRegionalMissions.animate(this,dt);
                 this.updateFelonyAndMissions(dt);
                 this.updateCamera(dt);
                 this.recordReplayFrame();
