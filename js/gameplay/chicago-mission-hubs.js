@@ -6,7 +6,8 @@
 class DriverChicagoMissionHubs {
     static SPECS={
         story_tipoff:{x:-64,z:-144,label:'01 • SURVEILLANCE TIP OFF',
-            place:'Greektown',hint:'Encontre Jones e comece a investigação.'},
+            place:'Gold Coast (setor adaptado)',
+            hint:'Entre no veículo e encontre o carro de Jones.'},
         story_witness:{x:12,z:-112,label:'02 • CHASE THE WITNESS',
             place:'Avenidas centrais',hint:'Intercepte e siga a testemunha.'},
         story_train:{x:-16,z:-224,label:'03 • TRAIN PURSUIT',
