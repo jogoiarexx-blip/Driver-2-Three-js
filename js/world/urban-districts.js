@@ -112,7 +112,11 @@ class UrbanDistricts {
         for(const mesh of [front,accent]){
             mesh.instanceMatrix.needsUpdate=true;
             if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-            mesh.frustumCulled=false;
+            // Culling conservador do setor: nenhuma fachada some quando
+            // a câmera gira; fora da câmera, reduz draw calls reais.
+            if(typeof DriverDistrictVisibility!=='undefined')
+                DriverDistrictVisibility.cull(mesh,buildings,18);
+            else mesh.frustumCulled=false;
             mesh.userData.regionalStyle=profile.style;
             parent.add(mesh);
         }
@@ -159,7 +163,11 @@ class UrbanDistricts {
         [roofs,signs,ornaments].forEach(mesh=>{
             mesh.instanceMatrix.needsUpdate=true;
             if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-            mesh.frustumCulled=false;
+            // Culling conservador do setor: nenhuma fachada some quando
+            // a câmera gira; fora da câmera, reduz draw calls reais.
+            if(typeof DriverDistrictVisibility!=='undefined')
+                DriverDistrictVisibility.cull(mesh,buildings,18);
+            else mesh.frustumCulled=false;
             parent.add(mesh);
         });
         this.addRegionalFacades(builder,buildings,parent);
@@ -309,7 +317,11 @@ class UrbanDistricts {
             }
             mesh.instanceMatrix.needsUpdate=true;
             if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-            mesh.frustumCulled=false;
+            // Culling conservador do setor: nenhuma fachada some quando
+            // a câmera gira; fora da câmera, reduz draw calls reais.
+            if(typeof DriverDistrictVisibility!=='undefined')
+                DriverDistrictVisibility.cull(mesh,buildings,18);
+            else mesh.frustumCulled=false;
             mesh.castShadow=false;
             mesh.receiveShadow=false;
             mesh.name='regional-architecture-'+city+(glow?'-windows':'-solid');
