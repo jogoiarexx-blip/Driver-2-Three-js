@@ -12,6 +12,7 @@
                 this.isSitting = false;
 
                 this.buildTannerMesh();
+                this.loadPlayerModel();
                 this.scene.add(this.group);
                 this.setVisible(false);
             }
@@ -52,6 +53,62 @@
                 this.group.add(this.leftLeg, this.rightLeg);
             }
 
+            loadPlayerModel() {
+                // O modelo da pasta player substitui o personagem procedural.
+                // Mantém o fallback apenas quando o GLB não estiver disponível.
+                if (!THREE.GLTFLoader) return;
+                const candidates = [
+                    './player/tanner.glb', './player/Tanner.glb',
+                    './player/tanner (1).glb', './player/Tanner (1).glb'
+                ];
+                const loader = new THREE.GLTFLoader();
+                const tryNext = index => {
+                    if (index >= candidates.length) {
+                        console.warn('Tanner GLB não encontrado em player; mantendo fallback.');
+                        return;
+                    }
+                    loader.load(encodeURI(candidates[index]), gltf => {
+                        const model = gltf.scene;
+                        const bounds = new THREE.Box3().setFromObject(model);
+                        const size = bounds.getSize(new THREE.Vector3());
+                        if (size.y <= 0.001) return tryNext(index + 1);
+                        model.scale.multiplyScalar(1.9 / size.y);
+                        model.updateMatrixWorld(true);
+                        const b = new THREE.Box3().setFromObject(model);
+                        model.position.y -= b.min.y;
+                        model.position.x -= (b.min.x + b.max.x) / 2;
+                        model.position.z -= (b.min.z + b.max.z) / 2;
+                        model.traverse(obj => {
+                            if (obj.isMesh) { obj.castShadow = true; obj.receiveShadow = true; }
+                        });
+                        for (const part of [this.torso, this.head, this.leftArm,
+                            this.rightArm, this.leftLeg, this.rightLeg]) part.visible = false;
+                        this.group.add(model);
+                        this.playerModel = model;
+                        if (gltf.animations && gltf.animations.length) {
+                            this.animationMixer = new THREE.AnimationMixer(model);
+                            this.animations = gltf.animations;
+                            this.playModelAnimation('idle');
+                        }
+                    }, undefined, () => tryNext(index + 1));
+                };
+                tryNext(0);
+            }
+
+            playModelAnimation(name) {
+                if (!this.animationMixer || !this.animations) return;
+                const clip = this.animations.find(a =>
+                    a.name.toLowerCase().includes(name)) ||
+                    (name === 'walk'
+                        ? this.animations.find(a => /run|move/i.test(a.name))
+                        : this.animations[0]);
+                if (!clip || this.activeClip === clip) return;
+                if (this.activeAction) this.activeAction.fadeOut(.15);
+                this.activeAction = this.animationMixer.clipAction(clip);
+                this.activeAction.reset().fadeIn(.15).play();
+                this.activeClip = clip;
+            }
+
             setVisible(visible) {
                 this.group.visible = visible;
             }
@@ -83,6 +140,7 @@
 
             update(dt, input, cityBuilder) {
                 if (!this.group.visible) return;
+                if (this.animationMixer) this.animationMixer.update(Math.min(dt, 0.08));
 
                 // Se Tanner estiver sentado no banco e o jogador tentar andar, levanta automaticamente
                 if (this.isSitting) {
@@ -104,6 +162,7 @@
 
                 const walkSpeed = (input.sprint ? 12.5 : 8.5) * moveDir;
 
+                if (this.playerModel) this.playModelAnimation(Math.abs(moveDir)>0.01 ? 'walk' : 'idle');
                 if (Math.abs(moveDir) > 0) {
                     const nextX = this.group.position.x + Math.sin(this.heading) * walkSpeed * dt;
                     const nextZ = this.group.position.z + Math.cos(this.heading) * walkSpeed * dt;
