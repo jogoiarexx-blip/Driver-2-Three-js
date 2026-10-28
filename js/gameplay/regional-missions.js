@@ -208,13 +208,23 @@ class DriverRegionalMissions {
             s.lost=d>165?s.lost+dt:Math.max(0,s.lost-dt*2);
             sub.textContent='HELICOPTERO '+Math.round(d)+'m • '+(s.heliIndex+1)+'/5';
             if(s.lost>12)return fail('LENNY ESCAPOU!','Helicoptero perdido.');
-            if(s.heliIndex>=4&&Math.hypot(p.x,p.z+366)<80)
+            if(s.heliIndex>=4&&Math.hypot(p.x,p.z+366)<80){
+                s.heliRetreat=7;
                 return win('LENNY ALCANCADO!','Tanner chegou ao Corcovado.');
+            }
         }
         return null;
     }
     static animate(g,dt){
         const s=g.regionalState;
+        if(s?.type==='story_rio_helicopter'&&s.heliRetreat>0&&s.heli){
+            const t=Math.max(0,Math.min(.05,dt));
+            s.heliRetreat-=t;
+            s.heli.position.y+=t*8;
+            s.heli.position.x+=t*9;
+            s.heli.userData.rotor.rotation.y+=t*25;
+            if(s.heliRetreat<=0)s.heli.visible=false;
+        }
         if(s?.type!=='story_rio_barge'||!(s.sinking>0)||!s.props[0])
             return;
         const boat=s.props[0];
