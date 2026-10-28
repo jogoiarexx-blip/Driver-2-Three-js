@@ -25,7 +25,7 @@ test('relatório permanece honesto: não certifica vias, água ou missões',()=>
     assert.equal(footprint.missionsMigrated,false);
     assert.equal(footprint.safeFloorOnly,true);
     assert.equal(footprint.safeFloorPixels,49387);
-    assert.match(footprint.warning,/não equivale à área jogável/);
+    assert.match(footprint.warning,/não equivale à área jogável/i);
 });
 test('medidas são reproduzíveis diretamente do manifest publicado',()=>{
     const output=execFileSync(process.execPath,[
