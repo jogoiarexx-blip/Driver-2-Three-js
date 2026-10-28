@@ -78,11 +78,30 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
             await sleep(450);
             await page.screenshot({path:path.join(DIR,
                 'undercover-vegas-c4-intro.png')});
+            // Reveal real generator/truck after the 5s introduction.
+            await page.evaluate(()=>{
+                const g=window.DriverGame,p=g.playerCar;
+                p.x=160;p.z=-160;p.y=0;p.heading=Math.PI/2;p.speed=0;
+                p.root.position.set(p.x,0,p.z);p.root.rotation.y=p.heading;
+                g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+            });
+            await sleep(5550);
+            await page.screenshot({path:path.join(DIR,
+                'undercover-vegas-depot-gameplay.png')});
         }
         if(type==='story_rio_helicopter'){
             await sleep(450);
             await page.screenshot({path:path.join(DIR,
                 'undercover-rio-helicopter-intro.png')});
+            await page.evaluate(()=>{
+                const g=window.DriverGame,p=g.playerCar;
+                p.x=0;p.z=-160;p.y=0;p.heading=0;p.speed=0;
+                p.root.position.set(0,0,-160);p.root.rotation.y=0;
+                g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
+            });
+            await sleep(5550);
+            await page.screenshot({path:path.join(DIR,
+                'undercover-rio-helicopter-gameplay.png')});
         }
     }
   }
