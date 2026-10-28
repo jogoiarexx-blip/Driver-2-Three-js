@@ -969,3 +969,16 @@ Testes lógicos sem WebGL: \`node --test tests/chicago-original-stream.test.cjs\
 ### Organização da Chicago original na raiz
 
 A geometria PS1 é publicada em `chicago/` diretamente na **raiz**, separada da pasta `assets/`. O visualizador `chicago-original-preview.html` já aponta para `./chicago/manifest.json`, `./chicago/chicago_atlas.webp` e `./chicago/chunks/*.glb`. Para visualizar a cidade no site, confira que a pasta `chicago/` esteja publicada com o manifesto, atlas e os 54 GLBs. Não substitui as ruas e colisões do modo jogável.
+
+
+## Chicago original PS1 — Passeio Livre dirigível (experimental)
+
+O menu principal agora possui **CHICAGO ORIGINAL — Passeio Livre • mapa real**, com uma entrada independente em `chicago-original-drive.html`. Este modo utiliza os **54 GLBs originais de Chicago** que foram enviados pelo usuário e publicados em `chicago/chunks/`, atlas compartilhado e carregamento/descarte de setores por distância.
+
+O carro é uma instância do **mesmo `DriverVehicle`** do jogo principal e chama `DriverVehicle.updatePhysics` e `DriverArcadePhysics` existentes: aceleração, marcha à ré, colisão de parede, freio de mão, burnout, suspensão e dano não foram reinventados. A câmera acompanha o veículo. Comandos: **WASD/setas** dirigir; **Espaço** freio de mão; **Shift** burnout; **R** recuperar o veículo; **C** alterar câmera; **P/Esc** pausar; **Q** qualidade/LOD. Há controles visíveis e link para voltar ao menu.
+
+**Colisão provisória baseada no mapa PS1, não nos prédios procedurais:** `tools/chicago-drive-mask.py` extrai dos 54 GLBs a máscara 2D das superfícies planas próximas ao solo e plataformas baixas, expande microfrestas de rasterização e preserva uma margem de segurança de aproximadamente 2,2 pixels. A máscara é serializada em `chicago/drive-mask.json` (bitset MSB, compactado com gzip/base64). Fora da superfície conservadora o veículo não atravessa. O spawn é calculado em uma área de piso conectado, com direção inicialmente livre. A coordenada Y do original é alinhada a Y=0 para impedir que o carro fique sob a rua.
+
+**Limitações declaradas:** a máscara 2D identifica piso, e não uma topologia PS1 de ruas certificada. Algumas passagens estreitas e pontes elevadas ainda podem não ser dirigíveis; a geometria 3D ainda não possui colisões verticais precisas para todas as paredes, rampas e viadutos. Tráfego, perseguições, pedestres, campanha, garagens e save state **continuam na Chicago procedural** até que as rotas e os pontos de missão sejam migrados e validados. Esta separação impede que a campanha existente perca acesso a suas ruas e objetivos.
+
+O workflow `chicago-original-drive.yml` gera a máscara diretamente do repositório e a publica na pasta `chicago/`. O workflow `chicago-original-playable.yml` testa no Chromium: abre o modo, carrega GLBs, acelera, confere colisão e reposiciona. Testes estáticos: `node --test tests/chicago-original-free-ride.test.cjs`. Se o navegador não oferecer `DecompressionStream('gzip')`, o modo experimental mostrará uma mensagem e o jogo clássico continua acessível.

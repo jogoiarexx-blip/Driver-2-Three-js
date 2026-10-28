@@ -1,0 +1,60 @@
+name: Driver 2 - Chicago PS1 - Gerar solo dirigivel experimental
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/chicago-drive-mask.py'
+      - '.github/workflows/chicago-original-drive.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-original-chicago:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar extrator de geometria PS1
+        run: python3 -m pip install --disable-pip-version-check numpy opencv-python-headless
+      - name: Gerar grade experimental de colisão a partir dos 54 setores PS1
+        run: python3 tools/chicago-drive-mask.py --root chicago --output chicago/drive-mask.json
+      - name: Validar que o passeio utiliza a física existente
+        run: node --test tests/chicago-original-free-ride.test.cjs
+      - name: Conferir conteúdo gerado
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,json
+          v=json.load(open('chicago/drive-mask.json'))
+          cells=v['width']*v['height']
+          decoded=gzip.decompress(base64.b64decode(v['gzipBitsetBase64']))
+          assert len(decoded)==(cells+7)//8
+          assert v['tiles']==54 and v['triangles']==1544872
+          assert v['groundCertified'] is False and v['roadCertified'] is False
+          assert v['safePixels']>10000
+          print('CHICAGO PS1 DIRIGIVEL EXPERIMENTAL:',v['safePixels'],'pixels seguros')
+          PY
+      - name: Versionar mapa gerado na mesma branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add chicago/drive-mask.json
+          if git diff --cached --quiet; then
+            echo "Máscara já está atualizada."
+          else
+            git commit -m "data(chicago): gerar mascara de solo da geometria original"
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+      - name: Publicar mapa para depuração
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-original-drive-mask
+          path: chicago/drive-mask.json
+          retention-days: 14
