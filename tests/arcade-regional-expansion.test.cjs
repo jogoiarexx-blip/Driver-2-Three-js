@@ -178,6 +178,32 @@ test('Rio barge supports manual C4 and helicopter tracks Corcovado',()=>{
     }
     assert(finished?.success,'helicopter cannot be intercepted');
 });
+test('Vegas ambulance completes only after driving stolen rescue van to refuge',()=>{
+    const g=game('vegas');Regional.begin(g,'story_vegas_ambulance');
+    assert(g.targetCar?.missionParked);
+    assert(!Regional.update(g,.016)?.success);
+    g.playerCar=g.targetCar;g.playerCar.x=-120;g.playerCar.z=-120;
+    assert.equal(Regional.update(g,.016).success,true);
+});
+test('Rio Jericho pursuit requires 100% damage to the actual target',()=>{
+    const g=game('rio');Regional.begin(g,'story_rio_jericho');
+    g.targetCar.damage=99;
+    assert(!Regional.update(g,.05)?.success);
+    g.targetCar.damage=100;
+    assert.equal(Regional.update(g,.05).success,true);
+});
+test('arcade checkpoint and gate racing both have reachable final victories',()=>{
+    const check=game('vegas');
+    Arcade.begin(check,'arcade_checkpoint');
+    check.markersCollected=4;
+    assert(!Arcade.update(check,.05)?.success);
+    check.markersCollected=5;
+    assert(Arcade.update(check,.05)?.success);
+    const gate=game('chicago');
+    Arcade.begin(gate,'gate_racing');
+    gate.markersCollected=8;
+    assert(Arcade.update(gate,.05)?.success);
+});
 test('spatial hash preserves exact AABB collision including neighbor cells',()=>{
     const hash=new Spatial(80);
     const boxes=[
