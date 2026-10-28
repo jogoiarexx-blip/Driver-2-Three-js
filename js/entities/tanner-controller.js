@@ -57,14 +57,13 @@
                 // O modelo da pasta player substitui o personagem procedural.
                 // Mantém o fallback apenas quando o GLB não estiver disponível.
                 if (!THREE.GLTFLoader) return;
-                const candidates = [
-                    './player/tanner.glb', './player/Tanner.glb',
-                    './player/tanner (1).glb', './player/Tanner (1).glb'
-                ];
+                // Caminho canônico: faça upload do GLB em player/tanner.glb.
+                // Não executar várias tentativas 404 a cada carregamento.
+                const candidates = [window.DRIVER_TANNER_MODEL_URL || './player/tanner.glb'];
                 const loader = new THREE.GLTFLoader();
                 const tryNext = index => {
                     if (index >= candidates.length) {
-                        console.warn('Tanner GLB não encontrado em player; mantendo fallback.');
+                        console.warn('Modelo do Tanner ausente: publique player/tanner.glb no GitHub Pages ou defina DRIVER_TANNER_MODEL_URL. Fallback preservado.');
                         return;
                     }
                     loader.load(encodeURI(candidates[index]), gltf => {
