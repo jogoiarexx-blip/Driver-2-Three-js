@@ -947,3 +947,21 @@ A revisão adiciona placas 3D, marcadores coloridos e a localização aproximada
 Implementação: `js/world/chicago-neighborhoods.js`, integrado ao `CityBuilder` após o `DriverChicagoOverhaul`, sem alterar tráfego, geometria das vias, física, colisores, portões, tarefas ou salvamentos. Há **dez** sinais de bairro e o píer é visual (não dirigível): o mapa continua sendo uma adaptação procedural, não uma reprodução 1:1 da cidade do PS1. Geometrias, materiais e texturas são liberados com `cityGroup` nas trocas de cidade.
 
 Regressão: `node --test tests/chicago-neighborhoods.test.cjs`; conjunto completo: `node --test tests/*.test.cjs`. Testes lógicos não substituem inspeção visual da renderização.
+
+
+## Chicago original do PS1 — geometria recebida, conversão e streamer experimental
+
+O pacote externo \`Chicago_Original_PS1_Setores_GLTF_Texturas_Visualizador.zip\` foi convertido dos arquivos OBJ/MTL/TGA fornecidos pelo proprietário do projeto, sem inventar ruas ou alterar a geometria da Chicago procedural já jogável.
+
+- **Geometria de origem:** \`chicago_day_split.obj\`, com **840.281 faces**, **1.483.596 vértices** e UVs originais.
+- **Saída:** 54 arquivos \`assets/chicago/chunks/*.glb\`, totalizando 1.544.872 triângulos; 59 páginas TGA transformadas em atlas WebP único de 2048 × 2048, com cor provisória para \`page_128\` e \`page_158\` (79 faces).
+- **Manifest:** \`assets/chicago/manifest.json\`; os setores mantêm as coordenadas OBJ e são carregados progressivamente.
+- **Carregador:** \`js/world/chicago-original-tile-stream.js\`, com geometria descartável, textura/material compartilhados, limite de solicitações concorrentes e isolamento de colisão.
+- **Visualizador independente:** \`chicago-original-preview.html\`; disponibiliza controle orbital, vista superior e navegação de câmera.
+- **Sem alterações na jogabilidade:** nenhuma alteração nas pistas, física, missões, IA, spawns, câmeras ou colisores do mapa atual.
+
+**IMPORTANTE:** os arquivos GLB/atlas/manifest gerados são grandes (aproximadamente 103 MiB no conjunto) e **não estão incluídos neste commit GitHub**. A página de preview vai informar que o manifest está ausente até que você copie a pasta \`assets/chicago/\` do pacote gerado para o repositório. No Windows, extraia o ZIP e execute \`INICIAR_VISUALIZADOR_WINDOWS.bat\` para testar o mapa localmente, com Python 3 e conexão às bibliotecas Three.js.
+
+Essa é uma **integração visual inicial**. O OBJ, sozinho, não garante vias trafegáveis, limites de água, colisão e sequências de missão. Antes da troca definitiva de cidade, precisamos calibrar escala/orientação do PS1, reconstruir malha navegável e testar trajetos reais. O fator de visualização 3,4 é **provisório**, não uma equivalência geográfica validada.
+
+Testes lógicos sem WebGL: \`node --test tests/chicago-original-stream.test.cjs\`.
