@@ -12,6 +12,8 @@ class DriverRegionalMissions {
     static car(g,config){
         const car=new DriverVehicle(g.scene,Object.assign({
             x:0,z:-80,heading:0,maxSpeed:50,accel:27},config));
+        // Parked mission vehicles stay put until Tanner gets in.
+        car.missionParked=config.isTarget===false;
         g.targetCar=car;g.vehicles.push(car);return car;
     }
     static begin(g,type){
