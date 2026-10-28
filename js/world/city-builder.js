@@ -1529,7 +1529,7 @@
                     DriverCoastalVisuals.update(this,dt,focusPosition);
                 if(this.caineBridgeGate)
                     this.caineBridgeGate.visible=!!this.caineBridgeClosed;
-                const targetAngle = this.bridgeRaised ? 0.32 : 0.08;
+                const targetAngle = this.bridgeRaised ? THREE.MathUtils.degToRad(38) : 0.08;
                 this.bridgeAngle = THREE.MathUtils.lerp(this.bridgeAngle, targetAngle, dt * 2.5);
                 if (this.bridgeSouthLeaf && this.bridgeNorthLeaf) {
                     this.bridgeSouthLeaf.rotation.x = -this.bridgeAngle;
