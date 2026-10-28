@@ -333,6 +333,22 @@
                     }
                 }
 
+                // R6: caminhão do pátio industrial norte de Goose Island.
+                // Só é criado quando a ponte e todo o corredor foram
+                // certificados como secos pela colisão atual.
+                if(this.currentCityKey==='chicago' &&
+                    typeof DriverChicagoGooseIslandNorthYard!=='undefined' &&
+                    this.city?.chicagoGooseIslandNorthYard?.accessReady){
+                    const northTruck=new DriverVehicle(this.scene,{
+                        name:'CARGA NORTE GOOSE ISLAND',
+                        color:0x647481,bodyStyle:'truck',
+                        x:-196,z:260,heading:0,
+                        maxSpeed:30,accel:17
+                    });
+                    northTruck.gooseIslandNorthYard=true;
+                    this.vehicles.push(northTruck);
+                }
+
                 this.tanner.setVisible(false);
                 const lowLight = this.weatherMode === 'night' || this.weatherMode === 'rain';
                 this.vehicles.forEach(v => {
