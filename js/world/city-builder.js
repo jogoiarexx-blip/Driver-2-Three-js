@@ -146,6 +146,10 @@
                 this.caineBridgeClosed=false;
                 this.caineBridgeGate=null;
                 this.secretGateOpen = false;
+                this.homeGarageDoor=null;
+                this.homeGarageDoorClosedBox=null;
+                this.homeGarageDoorOpen=false;
+                this.homeGarageDoorHeight=0;
                 this.signalClock = 0;
                 this.lastSignalPhase = -1;
 
@@ -935,7 +939,7 @@
                 this.buildingBoxes.push(this.homeGarageDoorClosedBox);
                 // Trilhos verticais e luminária da porta basculante.
                 for(const dx of [-13,-5])
-                    wall(cx+dx+9,2.35,cz+15.25,.23,4.7,.4,trim,false);
+                    wall(cx+dx,2.35,cz+15.25,.23,4.7,.4,trim,false);
                 wall(cx-9,4.85,cz+15.4,5,.22,.18,
                     new THREE.MeshBasicMaterial({color:0x34d399}),false);
                 const door=new THREE.Mesh(new THREE.BoxGeometry(3.3,4.1,0.4),
