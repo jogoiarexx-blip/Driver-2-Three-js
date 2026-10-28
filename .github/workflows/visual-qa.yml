@@ -15,6 +15,8 @@ on:
       - 'tests/chicago-r5-visitor-browser.cjs'
       - 'tests/chicago-r6-north-yard-browser.cjs'
       - 'tests/chicago-r7-real-driving-replay.cjs'
+      - 'tests/chicago-r7-junctions-browser.cjs'
+      - 'js/world/chicago-goose-island-junctions.js'
       - 'js/world/chicago-goose-island-north-yard.js'
       - 'js/world/chicago-goose-island-street.js'
       - 'js/world/chicago-ps1-coastline.js'
@@ -113,6 +115,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-root-preview-visual.cjs
+      - name: R7 conferir curvas visuais de Goose Island sem água ou colisores
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r7-junctions-browser.cjs
       - name: R7 dirigir fisicamente por 35-80 segundos simulados sem teletransporte
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
