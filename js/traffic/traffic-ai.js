@@ -281,6 +281,22 @@ class DriverTrafficAI {
             }
         }
 
+        if(wanted && pursuitTarget &&
+            !this.policeMemory.get(car)?.visible &&
+            typeof DriverPursuitNavigation!=='undefined'){
+            // Sem enxergar Tanner, a viatura vai até o último cruzamento
+            // conhecido pela rede de ruas, sem atravessar rio ou prédio.
+            const destination={
+                x:this.nearestGrid(pursuitTarget.x),
+                z:this.nearestGrid(pursuitTarget.z)
+            };
+            route.policeNavHolder=route.policeNavHolder||{};
+            const policePath=DriverPursuitNavigation.follow(
+                this.city,car,destination,route.policeNavHolder,dt);
+            if(policePath.target && !policePath.blocked)
+                target=policePath.target;
+        }
+
         const desiredHeading = Math.atan2(target.x - car.x, target.z - car.z);
         const angle = Math.atan2(
             Math.sin(desiredHeading - car.heading),
