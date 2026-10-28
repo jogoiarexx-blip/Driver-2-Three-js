@@ -1,5 +1,47 @@
-PACOTE COMPLEMENTAR DE GLB + RELATORIO
+DRIVER 2 — CHICAGO ORIGINAL PS1: PRIMEIRA INTEGRAÇÃO VISUAL/STREAMING
+=================================================================
 
-Inclua a pasta assets/vehicles deste ZIP na raiz do ZIP de fonte da revisao 3999ec7.
-Fonte completa: https://github.com/jogoiarexx-blip/Driver-2-Three-js/archive/3999ec766f5e317c8fb64d1352d05f3aa92a4f55.zip
-O GLB nao foi commitado no GitHub nesta revisao.
+O QUE ESTE PACOTE ENTREGA DE VERDADE
+- 54 setores GLB com a malha enviada (840.281 faces originais -> 1.544.872 triângulos).
+- 59 texturas TGA convertidas para um único atlas WebP (2048 x 2048 pixels).
+- Os dois materiais sem imagem (page_128 e page_158) são ROXOS provisórios,
+  representando 79 faces de 840.281 (~0,0094%). Nenhuma rua foi inventada.
+- Chunks com compartilhamento de material/textura e descarte quando distantes.
+- Visualizador de comparação independente; conversor Python reproduzível.
+- 3 testes unitários da camada visual.
+
+NÃO É AINDA UMA CIDADE DIRIGÍVEL OU UMA SUBSTITUIÇÃO FINAL
+- Colisores, navegação da IA, topologia de ruas, eventos, missões e interiores
+  NÃO foram extraídos automaticamente do OBJ.
+- A escala 3.4 aplicada pelo visualizador é provisória para enquadramento,
+  não calibração em metros. O OBJ original permanece com coordenadas intactas.
+- O visualizador é um recurso para inspeção de geometria, não o jogo.
+- O GitHub não recebe os GLB automaticamente por este pacote; publique a
+  pasta assets/chicago/ no seu repositório para habilitar a pré-visualização online.
+- A versão jogável da Chicago antiga permanece intocada.
+
+COMO TESTAR NO WINDOWS
+1. Extraia este ZIP inteiro para uma pasta de sua preferência.
+2. Execute INICIAR_VISUALIZADOR_WINDOWS.bat (Python 3 instalado).
+3. Abra http://localhost:8000/chicago-original-preview.html.
+4. Arraste para orbitar, use o scroll e WASD para explorar os setores.
+5. Para os setores GLB abrirem, a conexão com CDNs de Three.js é necessária.
+
+COMO INCLUIR NO REPOSITÓRIO GITHUB
+- Copie chicago-original-preview.html para a raiz do projeto.
+- Copie js/world/chicago-original-tile-stream.js para js/world/.
+- Copie toda a pasta assets/chicago/ para assets/chicago/ no repositório.
+- Os GLB por setor não superam 5 MB individualmente, mas o conjunto bruto
+  ocupa cerca de 103 MB (o ZIP comprimido ocupa menos).
+- Não duplique a cidade carregando as duas versões no mesmo gameplay.
+
+ETAPA FUTURA — PARA EFETIVAR A SUBSTITUIÇÃO JOGÁVEL
+1. Calibrar escala e norte real do PS1 usando pontos de controle medidos.
+2. Extrair a malha de superfícies de ruas e cruzamentos do material/OBJ e
+   confirmar conectividade original, incluindo rampas, becos e pontes.
+3. Reconstruir colisão estática, terreno e água com índice espacial.
+4. Reposicionar spawns, interiores, missão, polícia e tráfego sobre vias novas.
+5. Validar replays reais e só então ativar Chicago original no jogo.
+
+Arquivos TGA de entrada: chicago_textures.zip (fornecido pelo usuário).
+Geometria de entrada: chicago_day_split.obj (fornecido pelo usuário).
