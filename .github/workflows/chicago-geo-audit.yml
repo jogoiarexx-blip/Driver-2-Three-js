@@ -1,0 +1,43 @@
+name: Driver 2 — Auditoria geográfica Chicago (PS1)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/chicago-geo-audit.cjs'
+      - 'tests/chicago-geography-baseline.test.cjs'
+      - 'js/world/city-builder.js'
+      - 'js/world/road-geometry.js'
+      - 'js/world/chicago-neighborhoods.js'
+      - 'js/world/chicago-east-bridge.js'
+      - '.github/workflows/chicago-geo-audit.yml'
+  pull_request:
+    paths:
+      - 'tools/chicago-geo-audit.cjs'
+      - 'tests/chicago-geography-baseline.test.cjs'
+      - 'js/world/city-builder.js'
+      - 'js/world/road-geometry.js'
+      - 'js/world/chicago-neighborhoods.js'
+      - 'js/world/chicago-east-bridge.js'
+      - '.github/workflows/chicago-geo-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar auditoria do mapa sem alterar a engine
+        run: node --test tests/chicago-geography-baseline.test.cjs
+      - name: Exportar inventário geográfico da versão atual
+        run: node tools/chicago-geo-audit.cjs --out qa-artifacts/chicago-geographic
+      - name: Preservar diagnóstico JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver2-chicago-geographic-baseline
+          path: qa-artifacts/chicago-geographic/
+          retention-days: 14
