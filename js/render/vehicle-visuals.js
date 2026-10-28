@@ -35,8 +35,18 @@ class VehicleVisuals {
             vehicle.wheels.forEach((wheel, i) => {
                 const phase = i % 2 ? Math.PI * 0.8 : 0;
                 const axlePhase = i < 2 ? 0 : 1.45;
-                wheel.position.y = 0.44 + amplitude * 0.45 *
-                    Math.sin(time * (7 + speed * 0.5) + phase + axlePhase);
+                // Independent wheel travel: outside wheels compress in
+                // corners; front axle compresses under braking.
+                const side=i%2?1:-1,front=i<2?1:-1;
+                const lat=Math.max(-1,Math.min(1,
+                    Number(vehicle.suspensionLateralLoad)||0));
+                const lon=Math.max(-1,Math.min(1,
+                    Number(vehicle.suspensionLongitudinalLoad)||0));
+                const target=.44+amplitude*.45*
+                    Math.sin(time*(7+speed*.5)+phase+axlePhase)-
+                    side*lat*.018-front*lon*.012;
+                wheel.position.y+=(target-wheel.position.y)*
+                    (1-Math.exp(-12*Math.min(.05,Math.max(0,dt))));
             });
         }
         if(typeof DriverVehicleWheelRig!=='undefined')
