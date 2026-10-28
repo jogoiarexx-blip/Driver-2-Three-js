@@ -29,6 +29,7 @@ class DriverMissionBriefing {
         const title=document.getElementById('mission-title')?.textContent||
             type.replace(/_/g,' ').toUpperCase();
         this.seconds=0;this.active=true;
+        this.startedAt=typeof performance!=='undefined'?performance.now():null;
         this.element.textContent=title;
         this.element.style.display='flex';
         this.element.style.opacity='1';
@@ -37,7 +38,10 @@ class DriverMissionBriefing {
     }
     tick(dt){
         if(!this.active)return false;
-        this.seconds+=Math.max(0,Math.min(.05,Number(dt)||0));
+        this.seconds=this.startedAt!==null &&
+            typeof performance!=='undefined'?
+            Math.max(0,(performance.now()-this.startedAt)/1000):
+            this.seconds+Math.max(0,Math.min(.2,Number(dt)||0));
         if(this.seconds>=5){
             this.active=false;
             if(this.element){
