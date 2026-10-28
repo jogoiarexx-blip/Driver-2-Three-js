@@ -166,7 +166,10 @@
                 const ground = new THREE.Mesh(groundGeo, groundMat);
                 this.cityGroup.add(ground);
 
-                // Faixas centrais instanciadas: baixa contagem de draw calls, sem texturas extras.
+                // Ruas renderizadas somente sobre a grade rodável.
+                // Textura-base não contém linhas: pintura é independente.
+                if(typeof DriverRoadSurface!=='undefined')
+                    DriverRoadSurface.buildAsphalt(this);
                 this.buildRoadMarkings();
                 DriverStreetFurniture.build(this);
                 this.buildTrafficLights();
@@ -241,7 +244,11 @@
                 }
 
                 // 5. Quarteirões, Calçadas, Esconderijo e Garagem Secreta
-                const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x52525b });
+                const sidewalkColor=typeof DriverRoadSurface!=='undefined'?
+                    DriverRoadSurface.palette(this.preset.id).sidewalk:0x777a7c;
+                const sidewalkMat = new THREE.MeshLambertMaterial({
+                    color:sidewalkColor
+                });
                 const sidewalkPositions=[];
                 const coords = [];
                 for(let p=-320;p<=320;p+=80) coords.push(p);
@@ -358,6 +365,8 @@
                 }
 
                 this.buildParkAmenities();
+                if(typeof DriverRoadSurface!=='undefined')
+                    DriverRoadSurface.buildCurbs(this,sidewalkPositions);
 
                 this.districtLOD=new DriverDistrictLOD({
                     nearRadius:165,farRadius:230,maxSwitches:2
@@ -471,6 +480,8 @@
             }
 
             buildRoadMarkings() {
+                if(typeof DriverRoadSurface!=='undefined')
+                    return DriverRoadSurface.buildMarkings(this);
                 const positions = [];
                 // Os centros das avenidas seguem o espaçamento entre os quarteirões.
                 // Interrompe as marcas no canal para evitar faixas pintadas sobre água.
