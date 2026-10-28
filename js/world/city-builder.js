@@ -922,7 +922,9 @@
                 // Abertura para garagem com 8m de largura na fachada sul.
                 wall(cx-14,7.2,cz+15,2,14,.65);
                 wall(cx+5,7.2,cz+15,20,14,.65);
-                wall(cx-9,10.5,cz+15,8,7,.65);
+                // Viga SOBRE a entrada: não pode entrar em AABBs 2D!
+                // Antes era um colisor invisível apesar de ficar a 7..14 m.
+                wall(cx-9,10.5,cz+15,8,7,.65,masonry,false);
                 wall(cx,14.7,cz,32,1.2,32,trim,false);
                 // Divisória entre garagem e parte residencial.
                 wall(cx-4.7,3.3,cz+7.5,.5,6.6,14);
