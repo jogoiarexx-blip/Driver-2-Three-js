@@ -6,6 +6,7 @@ on:
       - 'js/entities/tanner-controller.js'
       - 'js/entities/tanner-vehicle-bone-rig.js'
       - 'tests/tanner-vehicle-rig-browser.cjs'
+      - 'tests/tanner-vehicle-rig.test.cjs'
       - 'js/vehicles/driver-vehicle.js'
       - 'js/vehicles/driver-vehicle-mount.js'
       - 'js/engine/driver2-game-engine.js'
