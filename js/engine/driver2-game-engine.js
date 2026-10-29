@@ -2643,6 +2643,8 @@
                     return false;
                 }
                 const parking=this.city.garageParking;
+                if(this.tanner.motorcycleVehicle===car)
+                    this.tanner.detachFromMotorcycle?.();
                 this.vehicles=this.vehicles.filter(v=>v!==car);
                 this.scene.remove(car.root);
                 if(typeof GPUResourceUtils!=='undefined')
