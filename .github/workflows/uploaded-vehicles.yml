@@ -3,6 +3,11 @@ on:
   push:
     paths:
       - 'js/assets/uploaded-vehicles.js'
+      - 'js/entities/tanner-controller.js'
+      - 'js/vehicles/driver-vehicle.js'
+      - 'js/vehicles/driver-vehicle-mount.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'tests/vehicle-mount-animation.test.cjs'
       - 'tests/uploaded-vehicles*'
       - '.github/workflows/uploaded-vehicles.yml'
   workflow_dispatch:
