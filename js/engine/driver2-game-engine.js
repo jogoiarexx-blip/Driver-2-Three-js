@@ -363,6 +363,7 @@
                     }
                 }
 
+                if(typeof DriverUploadedVehicles!=='undefined')DriverUploadedVehicles.spawn(this);
                 this.tanner.setVisible(false);
                 const lowLight = this.weatherMode === 'night' || this.weatherMode === 'rain';
                 this.vehicles.forEach(v => {
@@ -2648,7 +2649,7 @@
                 try{
                     vehicle=new DriverVehicle(this.scene,{
                         name:item.name,color:item.color,
-                        bodyStyle:item.bodyStyle,
+                        bodyStyle:item.bodyStyle,uploadedModel:item.uploadedModel,
                         maxSpeed:item.maxSpeed,accel:item.accel,
                         initialDamage:item.damage,
                         x:exit.x,z:exit.z,heading:exit.heading
@@ -3398,6 +3399,7 @@
                     if(meter && meter.textContent!==value)meter.textContent=value;
                 }
                 this.updateAIAndCollisions(dt);
+                if(typeof DriverUploadedVehicles!=='undefined')DriverUploadedVehicles.updateRiders(this);
                 this.city.update(dt,this.vehicles,(car,prop,speed)=>{
                     if(speed>=24 && car?.lastImpactZone)
                         this.effects.spawnCarBreakaway(car,car.lastImpactZone,speed);

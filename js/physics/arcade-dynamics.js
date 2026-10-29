@@ -10,7 +10,8 @@ class DriverArcadePhysics {
         return 1 - Math.exp(-rate * Math.max(0, dt));
     }
     static mass(vehicle) {
-        return vehicle.bodyStyle === 'bus' ? 5200 :
+        return vehicle.bodyStyle === 'motorcycle' ? 280 :
+            vehicle.bodyStyle === 'bus' ? 5200 :
             vehicle.bodyStyle === 'truck' ? 3800 :
             vehicle.bodyStyle === 'limo' ? 2150 : 1450;
     }

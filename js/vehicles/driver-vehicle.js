@@ -9,7 +9,8 @@
                 this.scene = scene;
                 this.name = config.name || '1970 Muscle V8';
                 this.color = config.color || 0xd97706;
-                this.bodyStyle = config.bodyStyle || 'muscle'; // 'muscle', 'bus', 'truck', 'limo'
+                this.bodyStyle = config.bodyStyle || 'muscle';
+                this.uploadedModel = config.uploadedModel || null; // 'muscle', 'bus', 'truck', 'limo'
                 this.isPolice = !!config.isPolice;
                 this.isTarget = !!config.isTarget;
                 this.isSecret = !!config.isSecret;
@@ -74,6 +75,8 @@
                 this.policeDoorRig=null;
                 this._cc0ModelApplied = false;
                 this._userCustomModel = false;
+                this._uploadedCustomModel = null;
+                this.motorcycleRider = null;
                 this.hoodPivot = null;
                 this.trunkPivot = null;
                 this.sirenRed = null;
@@ -102,6 +105,8 @@
                 this.wheels = [];
                 this.hubcapMeshes=[];
                 this.wheelRig=null;
+
+                if(this.bodyStyle==='motorcycle'){this.buildMotorcycleMesh();return;}
 
                 const bodyMat = new THREE.MeshLambertMaterial({ color: this.color });
                 this.bodyPaintMaterial = bodyMat;
@@ -295,6 +300,39 @@
             }
 
 
+            buildMotorcycleMesh(){
+                this.chassisTilt.scale.set(1,1,1);this.hubcaps=0;
+                const mat=new THREE.MeshLambertMaterial({color:this.color});this.bodyPaintMaterial=mat;
+                const body=new THREE.Mesh(new THREE.BoxGeometry(.55,.48,1.7),mat);
+                body.position.y=.82;this.chassisTilt.add(body);
+                const tire=new THREE.MeshLambertMaterial({color:0x171717});
+                const geo=new THREE.CylinderGeometry(.4,.4,.20,12);geo.rotateZ(Math.PI/2);
+                for(const z of [1,-1]){
+                    const wheel=new THREE.Mesh(geo,tire);wheel.position.set(0,.4,z);
+                    this.root.add(wheel);this.wheels.push(wheel);
+                }
+                this.mountMotorcycleRider();
+            }
+
+            mountMotorcycleRider(){
+                if(this.motorcycleRider?.parent)this.motorcycleRider.parent.remove(this.motorcycleRider);
+                const group=new THREE.Group();group.name='motorcycle-seated-rider';
+                const jacket=new THREE.MeshLambertMaterial({color:0x451a03});
+                const jeans=new THREE.MeshLambertMaterial({color:0x1d4ed8});
+                const skin=new THREE.MeshLambertMaterial({color:0xfdba74});
+                const part=(w,h,d,x,y,z,mat,rx=0)=>{
+                    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+                    mesh.position.set(x,y,z);mesh.rotation.x=rx;group.add(mesh);
+                };
+                part(.54,.65,.3,0,1.65,-.25,jacket,.18);
+                part(.34,.36,.34,0,2.15,-.13,skin);
+                for(const side of [-1,1]){
+                    part(.18,.65,.18,side*.32,1.62,.12,jacket,-.85);
+                    part(.2,.6,.2,side*.33,1.04,-.03,jeans,-.55);
+                }
+                this.motorcycleRider=group;this.chassisTilt.add(group);
+            }
+
             applyCC0Model(modelScene, shared = true) {
                 // Usuário pode substituir outro GLB manualmente. Apenas downloads
                 // automáticos não podem sobrescrever uma importação pessoal.
@@ -305,9 +343,10 @@
                     Math.min(size.x, size.y, size.z) < 0.01) return false;
 
                 // Ajuste ao chassi físico, sem criar um segundo carro sobre o original.
-                const width = 2.45;
-                const length = this.bodyStyle === 'truck' ? 6.6 : 5.15;
-                const height = this.bodyStyle === 'truck' ? 3.3 : 2.05;
+                const bike=this.bodyStyle==='motorcycle';
+                const width = bike?1.05:2.45;
+                const length = bike?2.8:this.bodyStyle === 'truck' ? 6.6 : 5.15;
+                const height = bike?1.5:this.bodyStyle === 'truck' ? 3.3 : 2.05;
                 const scale = Math.min(width / size.x, length / size.z, height / size.y);
                 const preserved = [this.sirenAssembly, this.targetMarker, this.lightsGroup, this.damageGroup];
                 this.chassisTilt.children.slice().forEach(child => {
@@ -329,7 +368,7 @@
                 modelScene.scale.setScalar(scale);
                 modelScene.position.set(
                     -(box.min.x + box.max.x) * 0.5 * scale,
-                    0.34 - box.min.y * scale,
+                    (bike?0.03:0.34) - box.min.y * scale,
                     -(box.min.z + box.max.z) * 0.5 * scale
                 );
                 modelScene.traverse(obj => {
@@ -343,6 +382,7 @@
                 this.hoodPivot = null;
                 this.trunkPivot = null;
                 this._cc0ModelApplied = shared;
+                if(bike)this.mountMotorcycleRider();
                 VehicleVisuals.setHeadlights(this, this.headlightsOn);
                 return true;
             }
@@ -632,7 +672,7 @@
                 if (this.wheels.length >= 2) {
                     this.wheels.forEach(w => { w.rotation.x = this.wheelSpin; });
                     this.wheels[0].rotation.y = this.steerAngle;
-                    this.wheels[1].rotation.y = this.steerAngle;
+                    this.wheels[1].rotation.y = this.bodyStyle==='motorcycle'?0:this.steerAngle;
                 }
             }
         }

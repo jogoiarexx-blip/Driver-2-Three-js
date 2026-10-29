@@ -21,6 +21,7 @@ class FreeVehicleAssets {
         this.policeTemplate=null;
         this.policePromise=null;
         this.policeStatus='pending';
+        this.uploaded=typeof DriverUploadedVehicles!=='undefined'?new DriverUploadedVehicles(engine,this):null;
         this.updateButton();
     }
 
@@ -266,8 +267,11 @@ class FreeVehicleAssets {
 
     decorateFleet() {
         if (!this.enabled) return;
+        this.uploaded?.attachBoat();
         this.engine.vehicles.forEach(vehicle=>{
-            if(this.canUseDriver2Model(vehicle)){
+            if(vehicle.uploadedModel&&this.uploaded){
+                this.uploaded.decorate(vehicle);
+            } else if(this.canUseDriver2Model(vehicle)){
                 this.getUserTemplate().then(template=>{
                     if(template && this.enabled){
                         if(!vehicle._userCustomModel &&
@@ -321,6 +325,7 @@ class FreeVehicleAssets {
                 }
             });
         }
+        if(this.uploaded?.boat)this.uploaded.boat.visible=this.enabled;
         this.updateButton();
         this.updateStatus();
     }

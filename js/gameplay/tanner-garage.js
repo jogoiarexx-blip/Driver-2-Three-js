@@ -12,7 +12,7 @@ class DriverTannerGarage {
     }
     static sanitize(item){
         if(!item||typeof item!=='object')return null;
-        const bodyStyle=['muscle','truck','limo','bus'].includes(item.bodyStyle)?
+        const bodyStyle=['muscle','truck','limo','bus','motorcycle'].includes(item.bodyStyle)?
             item.bodyStyle:'muscle';
         const color=Number(item.color);
         if(!Number.isInteger(color)||color<0||color>0xffffff)return null;
@@ -21,6 +21,7 @@ class DriverTannerGarage {
             name:str(item.name)||'VEÍCULO',
             color,
             bodyStyle,
+            uploadedModel:['pickup-new','pickup-old','motorcycle'].includes(item.uploadedModel)?item.uploadedModel:null,
             maxSpeed:Math.max(18,Math.min(90,Number(item.maxSpeed)||52)),
             accel:Math.max(8,Math.min(60,Number(item.accel)||28)),
             custom:item.custom===true,
@@ -50,7 +51,7 @@ class DriverTannerGarage {
     snapshot(vehicle){
         return this.constructor.sanitize({
             name:vehicle?.name,color:vehicle?.color,
-            bodyStyle:vehicle?.bodyStyle,maxSpeed:vehicle?.maxSpeed,
+            bodyStyle:vehicle?.bodyStyle,uploadedModel:vehicle?.uploadedModel,maxSpeed:vehicle?.maxSpeed,
             accel:vehicle?.accel,
             custom:vehicle?._userCustomModel===true,
             damage:vehicle?.damage

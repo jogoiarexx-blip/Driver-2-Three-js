@@ -1,0 +1,37 @@
+name: Driver 2 — veículos enviados
+on:
+  push:
+    paths:
+      - 'js/assets/uploaded-vehicles.js'
+      - 'tests/uploaded-vehicles*'
+      - '.github/workflows/uploaded-vehicles.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  uploaded-vehicles:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/*.test.cjs
+      - run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Testar GLBs, entrada, direção, modelos PS1 e troca de cidade
+        run: node tests/uploaded-vehicles-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uploaded-vehicles-qa
+          path: qa-artifacts/

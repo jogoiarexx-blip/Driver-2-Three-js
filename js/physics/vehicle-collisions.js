@@ -29,7 +29,8 @@ class DriverVehicleCollisions {
         // O volume físico é independente do GLB/texturas. As proporções
         // acompanham o chassi procedural e os veículos compridos.
         const type=vehicle?.bodyStyle;
-        const values=type==='bus'?{width:2.72,length:8.00,height:3.45}:
+        const values=type==='motorcycle'?{width:1.05,length:2.8,height:2.3}:
+            type==='bus'?{width:2.72,length:8.00,height:3.45}:
             type==='truck'?{width:2.65,length:6.80,height:3.35}:
             type==='limo'?{width:2.48,length:7.47,height:2.12}:
             {width:2.45,length:5.15,height:2.05};
