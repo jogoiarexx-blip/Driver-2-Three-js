@@ -33,8 +33,11 @@ class DriverUploadedVehicles {
                 if(!transition)engine.tanner.updateMotorcycleRidePose?.(
                     Math.max(0,Math.min(.08,engine._riderDelta||0)));
             }else if(transition?.vehicle===vehicle&&transition.bike){
+                // O GLB real continua visível até o último quadro da
+                // montagem. O proxy só entra quando o GLB não carregou.
                 rider.visible=transition.kind==='enter'?
-                    transition.progress>=.83:transition.progress<.16;
+                    (!engine.tanner?.vehicleBoneRig&&transition.progress>=.83):
+                    transition.progress<.16;
             }else{
                 rider.visible=engine.mode==='driving'&&engine.playerCar===vehicle;
             }
