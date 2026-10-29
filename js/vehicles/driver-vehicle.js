@@ -10,7 +10,7 @@
                 this.name = config.name || '1970 Muscle V8';
                 this.color = config.color || 0xd97706;
                 this.bodyStyle = config.bodyStyle || 'muscle';
-                this.uploadedModel = config.uploadedModel || null; // 'muscle', 'bus', 'truck', 'limo'
+                this.uploadedModel = config.uploadedModel || null;
                 this.isPolice = !!config.isPolice;
                 this.isTarget = !!config.isTarget;
                 this.isSecret = !!config.isSecret;
@@ -330,7 +330,7 @@
                     part(.18,.65,.18,side*.32,1.62,.12,jacket,-.85);
                     part(.2,.6,.2,side*.33,1.04,-.03,jeans,-.55);
                 }
-                this.motorcycleRider=group;this.chassisTilt.add(group);
+                group.visible=false;this.motorcycleRider=group;this.chassisTilt.add(group);
             }
 
             applyCC0Model(modelScene, shared = true) {
@@ -368,7 +368,7 @@
                 modelScene.scale.setScalar(scale);
                 modelScene.position.set(
                     -(box.min.x + box.max.x) * 0.5 * scale,
-                    (bike?0.03:0.34) - box.min.y * scale,
+                    (bike||this.uploadedModel?0.03:0.34) - box.min.y * scale,
                     -(box.min.z + box.max.z) * 0.5 * scale
                 );
                 modelScene.traverse(obj => {

@@ -39,3 +39,12 @@ test('moto tem massa e colisão próprias e mantém identidade na garagem',()=>{
  for(const id of ['pickup-new','pickup-old'])assert.equal(Garage.sanitize({...bike,bodyStyle:'truck',uploadedModel:id}).uploadedModel,id);
  assert.equal(Garage.sanitize({...bike,uploadedModel:'arbitrary.glb'}).uploadedModel,null);
 });
+test('download tardio não sobrescreve importação manual nem veículo removido',async()=>{
+ const vehicle={uploadedModel:'pickup-new',root:{parent:{}},applyCC0Model(){throw Error('must not replace personal model');}};
+ const engine={vehicles:[vehicle]},roster=new Roster(engine,{enabled:true});
+ let resolve;roster.getTemplate=()=>new Promise(r=>{resolve=r;});
+ roster.decorate(vehicle);vehicle._userCustomModel=true;resolve({});await Promise.resolve();
+ assert.equal(vehicle._userCustomModel,true);assert.equal(vehicle._uploadedCustomModel,undefined);
+ vehicle._userCustomModel=false;roster.decorate(vehicle);engine.vehicles=[];resolve({});await Promise.resolve();
+ assert.equal(vehicle._uploadedCustomModel,undefined);
+});

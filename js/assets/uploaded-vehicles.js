@@ -69,7 +69,7 @@ class DriverUploadedVehicles {
         if(vehicle._uploadedCustomModel===id)return;
         this.getTemplate(id).then(template=>{
             if(!template||!this.library.enabled||!this.engine.vehicles.includes(vehicle)||
-                !vehicle.root.parent||vehicle._uploadedCustomModel===id)return;
+                !vehicle.root.parent||vehicle._userCustomModel||vehicle._uploadedCustomModel===id)return;
             const wrapped=new THREE.Group(),clone=template.clone(true);
             clone.rotation.y=Math.PI/2;wrapped.add(clone);wrapped.updateMatrixWorld(true);
             vehicle._userCustomModel=false;

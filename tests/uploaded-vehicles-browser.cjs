@@ -40,10 +40,10 @@ const DIR='qa-artifacts';fs.mkdirSync(DIR,{recursive:true});
      return {entered,distance,damage:v.damage,submerged:v.isSubmerged,exited:g.mode==='on_foot',riderOn,riderOff:v.motorcycleRider?!v.motorcycleRider.visible:true};
     },id);
     assert(drive.entered&&drive.exited,JSON.stringify({id,drive}));assert(drive.distance>3&&!drive.submerged);if(id==='motorcycle')assert(drive.riderOn&&drive.riderOff);
-    await page.evaluate(id=>{const g=window.DriverGame,v=g.vehicles.find(v=>v.uploadedModel===id);g.camera.position.set(v.x+8,4.5,v.z+9);g.camera.lookAt(v.x,1,v.z);g.renderer.render(g.scene,g.camera);},id);
+    await page.evaluate(id=>{const g=window.DriverGame,v=g.vehicles.find(v=>v.uploadedModel===id);for(const other of g.vehicles)other.root.visible=other===v;g.camera.position.set(v.x+8,4.5,v.z+9);g.camera.lookAt(v.x,1,v.z);g.renderer.render(g.scene,g.camera);},id);
     await page.screenshot({path:`${DIR}/uploaded-${id}-${city}-${reports.length}.png`});
    }
-   await page.evaluate(()=>{const g=window.DriverGame;g.freeVehicleAssets.toggle();});
+   await page.evaluate(()=>{const g=window.DriverGame;for(const v of g.vehicles)v.root.visible=true;g.freeVehicleAssets.toggle();});
    assert(await page.evaluate(()=>window.DriverGame.vehicles.filter(v=>v.uploadedModel).every(v=>!v._uploadedCustomModel)));
    await page.evaluate(()=>window.DriverGame.freeVehicleAssets.toggle());
    await page.waitForFunction(()=>window.DriverGame.vehicles.filter(v=>v.uploadedModel).every(v=>v._uploadedCustomModel===v.uploadedModel));
