@@ -65,6 +65,7 @@
                 this.navigationHome=false;
                 this.debugVehiclePhysics=false;
                 this.policeDoorTransition=null;
+                this.vehicleMountTransition=null;
                 this.completedMissions=new Set();
                 this.storyCampaign=false;
                 this.missionToastRemaining=0;
@@ -1178,6 +1179,7 @@
                         this.policeDoorTransition.vehicle!==vehicle)return;
                     this.policeDoorTransition=null;
                     const badge=document.getElementById('player-state-badge');
+                    this.tanner.resetVehicleTransitionPose?.();
                     if(kind==='enter'){
                         const switched=vehicle!==originalCar;
                         this.playerCar=vehicle;
@@ -1215,7 +1217,7 @@
                 return true;
             }
 
-            updateVehicleDoorApproach(){
+            updateVehicleDoorApproach(dt=0){
                 const state=this.policeDoorTransition;
                 const vehicle=state?.vehicle,rig=vehicle?.policeDoorRig;
                 if(!rig)return;
@@ -1242,11 +1244,17 @@
                             zNear+(zFar-zNear)*t,vehicle.heading);
                     }
                 }
+                if(this.tanner.group.visible){
+                    const progress=Math.min(1,elapsed/(rig.duration||1.35));
+                    this.tanner.applyVehicleTransitionPose?.('car',
+                        state.kind,progress,dt);
+                }
             }
 
             toggleVehicleEnterExit() {
                 if (this.gameEnded || this.inReplayMode ||
-                    this.policeDoorTransition) return;
+                    this.policeDoorTransition||
+                    this.vehicleMountTransition) return;
                 this.audio.init();
 
                 if (this.mode === 'driving' && this.playerCar) {
@@ -1254,6 +1262,10 @@
                     if(this.playerCar.policeDoorRig){
                         if(this.startPoliceDoorTransition(this.playerCar,'exit'))
                             return;
+                    }
+                    if(typeof DriverVehicleMount!=='undefined'){
+                        DriverVehicleMount.start(this,this.playerCar,'exit');
+                        return;
                     }
                     this.mode = 'on_foot';
                     this.playerCar.speed = 0;
@@ -1349,6 +1361,10 @@
                         if(closestCar.policeDoorRig){
                             if(this.startPoliceDoorTransition(closestCar,'enter'))
                                 return;
+                        }
+                        if(typeof DriverVehicleMount!=='undefined'){
+                            DriverVehicleMount.start(this,closestCar,'enter');
+                            return;
                         }
                         const switchedCar = (closestCar !== this.playerCar);
                         this.playerCar = closestCar;
@@ -3369,14 +3385,16 @@
                     DriverPoliceDoorRig.update(
                         this.policeDoorTransition.vehicle,dt);
                     if(this.policeDoorTransition)
-                        this.updateVehicleDoorApproach();
+                        this.updateVehicleDoorApproach(dt);
                 }
+                if(this.vehicleMountTransition&&
+                    typeof DriverVehicleMount!=='undefined')
+                    DriverVehicleMount.update(this,dt);
                 if (!this.gameEnded) {
                     if(this.trainLine&&this.missionType==='story_train'&&
                         this.missionActive)this.trainLine.update(dt);
-                    if(this.policeDoorTransition){
-                        // Entrada/saída bloqueia controles até a porta
-                        // terminar seu ciclo, sem simular direção.
+                    if(this.policeDoorTransition||this.vehicleMountTransition){
+                        // Trava direção e movimento até Tanner concluir a animação.
                     } else if (this.mode === 'driving' && this.playerCar) {
                         this.playerCar.updatePhysics(dt, this.input, this.city, this.effects, this.audio, true);
                     } else {
