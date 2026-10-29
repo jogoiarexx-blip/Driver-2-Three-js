@@ -62,12 +62,17 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
    }
    mounted.drift=Math.abs(hip.node.position.y-hipBefore);
    const exit=DriverVehicleMount.start(g,v,'exit');
-   const detachedAtStart=g.tanner.group.parent===g.scene;
-   for(let i=0;i<115;i++){
+   const attachedAtStart=g.tanner.group.parent===v.chassisTilt;
+   for(let i=0;i<17;i++){
     DriverVehicleMount.update(g,1/60);
     DriverUploadedVehicles.updateRiders(g);
    }
-   const dismounted={exit,detachedAtStart,mode:g.mode,
+   const detachedDuringSwing=g.tanner.group.parent===g.scene;
+   for(let i=0;i<110;i++){
+    DriverVehicleMount.update(g,1/60);
+    DriverUploadedVehicles.updateRiders(g);
+   }
+   const dismounted={exit,attachedAtStart,detachedDuringSwing,mode:g.mode,
       parent:g.tanner.group.parent===g.scene,visible:g.tanner.group.visible,
       noRider:!v.motorcycleRider.visible&&g.tanner.motorcycleVehicle===null,
       restored:Math.abs(hip.node.position.y-hip.position.y)<1e-5};
@@ -83,7 +88,7 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
   assert(result.mounted.riderHidden,'must not draw a second procedural Tanner');
   assert(result.mounted.rigDelta>.05,'right leg needs real skeletal rotation');
   assert(result.mounted.drift<1e-4,'repeated ride poses accumulated deformation');
-  assert(result.dismounted.exit&&result.dismounted.detachedAtStart);
+  assert(result.dismounted.exit&&result.dismounted.attachedAtStart&&result.dismounted.detachedDuringSwing);
   assert.equal(result.dismounted.mode,'on_foot');
   assert(result.dismounted.parent&&result.dismounted.visible&&result.dismounted.noRider);
   assert(result.dismounted.restored&&result.sameObject);
