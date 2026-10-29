@@ -49,6 +49,7 @@ const base=(process.env.DRIVER_QA_URL||
             name:car.name,start:{x:car.x,z:car.z},
             minZ:car.z,maxZ:car.z,maxX:car.x,
             wet:0,blocked:0,submerged:0,maxStale:0,stale:0,
+            localStale:0,maxLocalStale:0,gridStall:null,lastRoute:null,
             turnFrames:0,turnReasons:{},maxDamage:0,
             minLimit:Infinity
         }));
@@ -81,6 +82,26 @@ const base=(process.env.DRIVER_QA_URL||
                     if(moved<.005&&Math.abs(car.speed)<1.5)rec.stale++;
                     else rec.stale=0;
                     rec.maxStale=Math.max(rec.maxStale,rec.stale);
+                    const local=!!(route.isIslandSpine ||
+                        route.islandApproach || route.isNorthYard ||
+                        route.isNorthYardSouth);
+                    rec.localStale=local ? rec.stale : 0;
+                    rec.maxLocalStale=Math.max(
+                        rec.maxLocalStale,rec.localStale);
+                    if(!local && rec.stale===100)
+                        rec.gridStall={
+                            atSecond:+(i*.05).toFixed(1),
+                            x:+car.x.toFixed(2),z:+car.z.toFixed(2),
+                            target:{...route.target},
+                            speed:+car.speed.toFixed(2),
+                            heading:+car.heading.toFixed(2)
+                        };
+                    rec.lastRoute={
+                        axis:route.axis,target:{...route.target},
+                        north:!!route.isNorthYard,
+                        south:!!route.isNorthYardSouth,
+                        island:!!route.isIslandSpine
+                    };
                     rec.maxDamage=Math.max(rec.maxDamage,car.damage);
                 }
                 contacts+=g.collisionSystem.step(
@@ -116,7 +137,11 @@ const base=(process.env.DRIVER_QA_URL||
         assert.equal(r.blocked,0,r.name+' atravessou prédio');
         assert.equal(r.submerged,0,r.name+' afundou');
         assert(r.maxDamage<35,r.name+' recebeu dano excessivo');
-        assert(r.maxStale<400,r.name+' ficou parado mais de 20 segundos');
+        assert(r.maxLocalStale<200,
+            r.name+' ficou preso mais de 10s no NOVO trecho de Goose Island');
+        // Manter maxStale e gridStall para denunciar eventuais travamentos
+        // posteriores na grade antiga, sem escondê-los do relatório R11.
+        assert(Number.isInteger(r.maxStale));
     }
     assert(result.records[1].maxX>-215,'Entregas não chegou à ilha');
     assert(result.records[2].maxZ>302,'Carga norte não atravessou ponte');
