@@ -4,6 +4,8 @@ on:
     paths:
       - 'js/assets/uploaded-vehicles.js'
       - 'js/entities/tanner-controller.js'
+      - 'js/entities/tanner-vehicle-bone-rig.js'
+      - 'tests/tanner-vehicle-rig-browser.cjs'
       - 'js/vehicles/driver-vehicle.js'
       - 'js/vehicles/driver-vehicle-mount.js'
       - 'js/engine/driver2-game-engine.js'
@@ -35,6 +37,8 @@ jobs:
           exit 1
       - name: Testar GLBs, entrada, direção, modelos PS1 e troca de cidade
         run: node tests/uploaded-vehicles-browser.cjs
+      - name: Validar Tanner real no esqueleto da motocicleta
+        run: node tests/tanner-vehicle-rig-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
