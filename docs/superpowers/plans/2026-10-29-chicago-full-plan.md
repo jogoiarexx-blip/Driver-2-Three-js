@@ -37,3 +37,12 @@
 - [ ] Package source ZIP with validation and limitations.
 
 Ruling: mission relocation is deferred because whole-map source-derived streets are not yet active/certified. Moving only markers would violate the requested order and conceal incomplete routes. Whole-map UV evidence is now available for the next street reconstruction stage. This is a progress revision, not completion of the full user request.
+
+## R15 — progress before mission migration
+
+- [x] Extract a source-linked whole-map candidate surface graph, explicitly ungraded and unfit for automatic traffic routing.
+- [x] Trace an actual marked-paving S curve, retain source pixels and source hash.
+- [x] Fit its shape by a uniform similarity transform, reserve its block, rebuild three lots and verify dry full-width clearance against the current river.
+- [ ] Verify physical traversal in both directions in the graphics runner, then publish.
+
+Placement ruling: use existing dry avenues at (-320,-80) and (-260,-160), away from the west canal. This preserves access without claiming the original geographic position. Mission relocation remains blocked by the unfinished whole-map street migration, as requested by the user.

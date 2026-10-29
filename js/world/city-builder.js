@@ -140,6 +140,7 @@
                 this.chicagoUndercoverLakefront=null;
                 this.chicagoCityPlan=null;
                 this.chicagoAirfield=null;
+                this.chicagoReferenceCurve=null;
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
@@ -291,6 +292,12 @@
                         const blockX = bx + 40;
                         const blockZ = bz - 40;
                         if (Math.abs(blockZ - 50) < 28) return;
+                        // R15: a forma da nova rua vem dos pixels observados
+                        // na referência PS1; retirar a planta antiga ANTES
+                        // de registrar calçadas, prédios e seus colisores.
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoPS1ReferenceCurve!=='undefined' &&
+                            DriverChicagoPS1ReferenceCurve.isCarvedBlock(blockX,blockZ))return;
                         // R4: retirar apenas a célula do parque (-200,200);
                         // ela estava fisicamente dentro da rua da ilha.
                         // O módulo substitui essa célula por uma avenida,
@@ -389,6 +396,9 @@
                     });
                     yield 'Quarteirões e edifícios '+(rowIndex+1)+'/'+coords.length;
                 }
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoPS1ReferenceCurve!=='undefined')
+                    DriverChicagoPS1ReferenceCurve.prepare(this);
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();
@@ -487,7 +497,7 @@
                     const far=new THREE.InstancedMesh(chunk.geometry,
                         this.districtFarMaterial,chunk.buildings.length);
                     for(const [i,b] of chunk.buildings.entries()){
-                        dummy.position.set(b.x,b.height/2+.35,b.z);
+                        dummy.position.set(b.x,b.height/2+(b.baseY??.35),b.z);
                         dummy.scale.set((b.width||38)/38,b.height,(b.depth||38)/38);
                         dummy.rotation.set(0,0,0);
                         dummy.updateMatrix();
@@ -539,7 +549,7 @@
                         this.districtMaterialCache.get(palette),
                         buildings.length);
                     buildings.forEach((b,i)=>{
-                        dummy.position.set(b.x,b.height/2+.35,b.z);
+                        dummy.position.set(b.x,b.height/2+(b.baseY??.35),b.z);
                         dummy.scale.set((b.width||38)/38,b.height,(b.depth||38)/38);
                         dummy.rotation.set(0,0,0);
                         dummy.updateMatrix();

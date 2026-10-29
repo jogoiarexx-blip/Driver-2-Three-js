@@ -182,7 +182,7 @@ class DriverChicagoCityPlan {
     static detailDistrict(city,buildings,parent){
         const parts=[];
         for(const b of buildings.filter(b=>b.planned)){
-            const top=b.height+.35,front=b.z+b.depth/2;
+            const top=b.height+(b.baseY??.35),front=b.z+b.depth/2;
             parts.push([b.x,top+.12,b.z,b.width+.3,.24,b.depth+.3,0x4e5256,false]);
             parts.push([b.x,3.5,front+.12,b.width,.3,.25,
                 b.kind==='commercial'?0x8c3834:0xb0aaa0,false]);

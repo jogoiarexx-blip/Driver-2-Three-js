@@ -1158,3 +1158,15 @@ Becos residenciais são adicionados somente quando o corredor de cada acesso é 
 Validação local: 599 testes Node passaram. O teste de navegador `chicago-ps1-undercover-visual.cjs` também confere o parcelamento novo, dimensões físicas, becos, aeródromo e 13 placas, mas sua execução é registrada separadamente no GitHub Actions.
 
 Revisão independente R14: corrigidas duas regressões antes da publicação. A área inteira das calçadas é confrontada com a costa, e pedestres/travessias usam os centros das calçadas em vez dos centros dos sublotes. As regressões foram reproduzidas falhando e passaram após as correções.
+
+## Chicago R15 — primeira rua derivada da forma observada no PS1
+
+`tools/chicago-reference-network.py` transforma a referência dos 54 GLBs em um grafo **candidato** de superfícies: 3.230 nós, 4.279 conexões e 119 componentes. O grafo inclui pavimento sem marcação, portanto também pode incluir pátios/calçadas; cruzamentos projetados podem ser passagens em níveis distintos. Não é usado automaticamente por tráfego ou missões e não certifica a conclusão do mapa.
+
+O mesmo extrator rastreia uma curva em S sobre **100 pixels efetivamente observados no pavimento marcado**, preservando o hash da fonte. A forma é ajustada por rotação e escala uniforme entre as avenidas (-320,-80) e (-260,-160), substituindo o quarteirão residencial comum (-280,-120). A posição é adaptada ao clone; não se afirma que essa curva pertencia a Ukrainian Village no jogo original.
+
+A rua nova tem 8 unidades de largura e atravessa o antigo lote fora da grade. A calçada quadrada anterior é retirada antes da construção, três casas são recolocadas fora da faixa e seus volumes visuais/físicos usam a mesma planta. As casas assentam em y=0, sem a elevação artificial dos passeios antigos. Casa de Tanner, estádio, garagens, estação e lugares das missões continuam preservados.
+
+Reprodução da extração: `python3 tools/chicago-reference-network.py` (NumPy e SciPy). O teste Node comprova hashes, pixels da fonte, transformação uniforme, afastamento das casas e largura seca em todo o corredor. O teste gráfico existente do Undercover ganhou dois replays com `DriverVehicle.updatePhysics` real, em sentidos opostos, sem teleportar entre pontos e sem outros veículos no corredor; os resultados são publicados separadamente no GitHub Actions.
+
+**Ainda pendente:** transformar o restante do grafo candidato em ruas verificadas, reconstruir as margens e certificar pontes/níveis; só então reposicionar integralmente as missões. A R15 não declara o mapa inteiro PS1 pronto.

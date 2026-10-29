@@ -61,6 +61,61 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
     assert(r.cityPlan.exactCollision&&r.cityPlan.lotCentersSolid);
     assert(r.cityPlan.links>8&&r.cityPlan.linksSafe,JSON.stringify(r.cityPlan));
     assert(r.cityPlan.airfield&&r.cityPlan.runwayDry);
+    const curveReplay=await page.evaluate(()=>{
+        const g=window.DriverGame,c=g.city,plan=c.chicagoReferenceCurve;
+        if(!plan)return {missing:true};
+        g.isPaused=true;
+        const effects={addSkidMark(){},spawnTireSmoke(){},spawnImpactSparks(){},
+            spawnCarBreakaway(){},spawnWaterSplash(){},ejectHubcap(){}};
+        const replay=reverse=>{
+            const path=reverse?[...plan.points].reverse():plan.points;
+            const first=path[0],next=path[1];
+            const car=new DriverVehicle(g.scene,{name:'R15 PHYSICS',bodyStyle:'muscle',
+                x:first.x,z:first.z,heading:Math.atan2(next.x-first.x,next.z-first.z),
+                maxSpeed:24,accel:18,color:0xbb523c});
+            const result={reverse,completed:false,wet:0,blocked:0,submerged:0,
+                maxDamage:0,maxOffset:0,samples:[]};let index=1;
+            const offset=()=>{
+                let best=Infinity;
+                for(let i=1;i<path.length;i++){
+                    const a=path[i-1],b=path[i],dx=b.x-a.x,dz=b.z-a.z;
+                    const t=Math.max(0,Math.min(1,((car.x-a.x)*dx+(car.z-a.z)*dz)/(dx*dx+dz*dz||1)));
+                    best=Math.min(best,Math.hypot(car.x-a.x-t*dx,car.z-a.z-t*dz));
+                }
+                return best;
+            };
+            try{
+                for(let frame=0;frame<1200;frame++){
+                    while(index<path.length-1&&Math.hypot(car.x-path[index].x,car.z-path[index].z)<4)index++;
+                    const target=path[index],distance=Math.hypot(car.x-target.x,car.z-target.z);
+                    if(index===path.length-1&&distance<3){result.completed=true;break;}
+                    const desired=Math.atan2(target.x-car.x,target.z-car.z);
+                    const angle=Math.atan2(Math.sin(desired-car.heading),Math.cos(desired-car.heading));
+                    const limit=Math.abs(angle)>.3?6:8;
+                    car.updatePhysics(.05,{up:car.speed<limit,down:car.speed>limit+.6,
+                        left:angle<-.08,right:angle>.08,handbrake:false,sprint:false},c,effects,null,false);
+                    if(c.isWaterAt(car.x,car.z))result.wet++;
+                    if(c.isPointBlocked(car.x,car.z,1.55,car.y))result.blocked++;
+                    if(car.isSubmerged)result.submerged++;
+                    result.maxDamage=Math.max(result.maxDamage,car.damage);
+                    result.maxOffset=Math.max(result.maxOffset,offset());
+                    if(frame%40===0)result.samples.push({t:frame*.05,x:car.x,z:car.z,index,speed:car.speed});
+                }
+                result.end={x:car.x,z:car.z,index};return result;
+            }finally{GPUResourceUtils.disposeSubtree(car.root);g.scene.remove(car.root);}
+        };
+        return {sourcePixels:plan.sourcePixels,carved:!c.sidewalkGrid.has('-280:-120'),
+            tests:[replay(false),replay(true)]};
+    });
+    fs.writeFileSync(path.join(dir,'chicago-r15-source-curve-replay.json'),JSON.stringify(curveReplay,null,2));
+    console.log('CHICAGO R15 SOURCE CURVE '+JSON.stringify(curveReplay));
+    assert.equal(curveReplay.missing,undefined);
+    assert(curveReplay.carved&&curveReplay.sourcePixels>50);
+    for(const test of curveReplay.tests){
+        assert(test.completed,JSON.stringify(test));
+        assert.equal(test.wet,0);assert.equal(test.blocked,0);assert.equal(test.submerged,0);
+        assert(test.maxDamage<15);assert(test.maxOffset<2.45,JSON.stringify(test));
+    }
     assert.equal(r.preset,'chicago');assert(r.geography&&r.lakeMesh);
     assert(r.lake,'Lago não está posicionado a leste de Chicago');
     assert.equal(r.lastAvenue,false,'Lago submergiu a última avenida');
@@ -78,6 +133,11 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
         g.camera.updateProjectionMatrix();g.renderer.render(g.scene,g.camera);
     });
     await page.screenshot({path:path.join(dir,'chicago-ps1-undercover-lake-r1.png')});
+    await page.evaluate(()=>{
+        const g=window.DriverGame;g.camera.position.set(-280,100,-155);
+        g.camera.lookAt(-280,0,-120);g.camera.updateProjectionMatrix();g.renderer.render(g.scene,g.camera);
+    });
+    await page.screenshot({path:path.join(dir,'chicago-r15-source-curve.png')});
     await page.evaluate(()=>{
         const g=window.DriverGame;g.camera.position.set(30,620,-90);
         g.camera.lookAt(0,0,-20);g.camera.updateProjectionMatrix();
