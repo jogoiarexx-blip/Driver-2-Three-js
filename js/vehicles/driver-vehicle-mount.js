@@ -44,6 +44,8 @@ class DriverVehicleMount {
         const bike=vehicle.bodyStyle==='motorcycle';
         const stand=this.chooseStandPoint(engine,vehicle,kind);
         if(!stand)return false; // Não materializar Tanner dentro de paredes.
+        if(bike&&kind==='exit')
+            engine.tanner.detachFromMotorcycle?.();
         const source=engine.tanner.group.position;
         const from=kind==='enter'?
             {x:source.x,y:source.y,z:source.z,heading:engine.tanner.heading}:
@@ -62,12 +64,12 @@ class DriverVehicleMount {
         else engine.tanner.setVisible(false);
         return true;
     }
-    static setActor(engine,p,heading,style,kind,t,dt){
+    static setActor(engine,p,heading,style,kind,t,dt,side=-1){
         const person=engine.tanner;
         const ground=engine.city?.getGroundHeightAt?.(p.x,p.z,p.y)??p.y;
         person.setPosition(p.x,Math.max(p.y,Number.isFinite(ground)?ground:p.y),
             p.z,heading);
-        person.applyVehicleTransitionPose?.(style,kind,t,dt);
+        person.applyVehicleTransitionPose?.(style,kind,t,dt,side);
     }
     static move(a,b,t,raise=0){
         return {
@@ -93,6 +95,8 @@ class DriverVehicleMount {
             engine.playerCar=s.vehicle;
             engine.mode='driving';
             engine.tanner.setVisible(false);
+            if(s.bike)
+                engine.tanner.mountOnMotorcycle?.(s.vehicle);
             if(changed&&!engine.isPoliceNearPlayer?.(45))
                 engine.felony=Math.max(0,(engine.felony||0)-65);
             else if(s.vehicle.isPolice)
@@ -122,13 +126,13 @@ class DriverVehicleMount {
         if(s.kind==='enter'){
             if(t<.30){
                 const p=this.move(s.from,s.near,t/.30);
-                this.setActor(engine,p,s.vehicle.heading,style,'enter',t,dt);
+                this.setActor(engine,p,s.vehicle.heading,style,'enter',t,dt,s.stand.side);
             }else if(t<.83){
                 const f=(t-.30)/.53;
                 // Joelho sobre o banco da moto; cabeça e tronco acompanham.
                 const lift=s.bike?.35*Math.sin(Math.PI*f):-.12*Math.sin(Math.PI*f);
                 const p=this.move(s.near,s.seat,f,lift);
-                this.setActor(engine,p,s.vehicle.heading,style,'enter',t,dt);
+                this.setActor(engine,p,s.vehicle.heading,style,'enter',t,dt,s.stand.side);
             }
             if(t>=.83)engine.tanner.setVisible(false);
         }else{
@@ -137,10 +141,10 @@ class DriverVehicleMount {
                 const f=(t-.16)/.61;
                 const lift=s.bike?.28*Math.sin(Math.PI*f):-.10*Math.sin(Math.PI*f);
                 const p=this.move(s.seat,s.near,f,lift);
-                this.setActor(engine,p,s.vehicle.heading,style,'exit',t,dt);
+                this.setActor(engine,p,s.vehicle.heading,style,'exit',t,dt,s.stand.side);
             }else if(t>=.77){
                 const p=this.move(s.near,s.stand,(t-.77)/.23);
-                this.setActor(engine,p,s.vehicle.heading,style,'exit',t,dt);
+                this.setActor(engine,p,s.vehicle.heading,style,'exit',t,dt,s.stand.side);
             }
         }
         if(t>=1)this.finish(engine,s);
