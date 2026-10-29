@@ -72,7 +72,7 @@ test('porta abre também no carro GLB do jogador mantendo física original',()=>
     assert.match(rig,/vehicle\.isPolice\|\|vehicle\._userCustomModel/);
     assert.match(engine,/if\(this\.playerCar\.policeDoorRig\)/);
     assert.match(engine,/if\(closestCar\.policeDoorRig\)/);
-    assert.match(engine,/updateVehicleDoorApproach\(\)/);
+    assert.match(engine,/updateVehicleDoorApproach\(dt\)/);
     assert.match(engine,/this\.tanner\.setPosition\(/);
 });
 test('GLB carro_driver2_otimizado original tem uma malha e região de porta detectável',()=>{
