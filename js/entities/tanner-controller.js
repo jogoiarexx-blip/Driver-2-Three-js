@@ -199,6 +199,7 @@
                 this.group.rotation.set(0,0,0);
                 this.heading=0;
                 this.motorcycleVehicle=vehicle;
+                this.group.userData.driverPlayerRider=true;
                 this.group.visible=true;
                 this.applyVehicleTransitionPose('motorcycle','ride',1,0);
                 return true;
@@ -215,6 +216,7 @@
                 // Scene.add restaura a propriedade da entidade Tanner e evita
                 // que o descarte do veículo libere seu material/esqueleto.
                 this.scene.add(this.group);
+                delete this.group.userData.driverPlayerRider;
                 this.motorcycleVehicle=null;
                 this.group.rotation.set(0,0,0);
                 this.group.visible=false;
