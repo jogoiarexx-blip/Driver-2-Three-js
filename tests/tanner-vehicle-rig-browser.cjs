@@ -1,0 +1,94 @@
+'use strict';
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
+fs.mkdirSync('qa-artifacts',{recursive:true});
+(async()=>{
+ const browser=await chromium.launch({headless:true,args:[
+  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl',
+  '--ignore-gpu-blocklist','--enable-unsafe-swiftshader'
+ ]});
+ const page=await browser.newPage({viewport:{width:1280,height:760}});
+ const errors=[];
+ page.on('pageerror',error=>errors.push(String(error)));
+ page.setDefaultTimeout(120000);
+ try{
+  await page.addInitScript(()=>localStorage.setItem(
+   'driver2-menu-preferences-v1',
+   JSON.stringify({models:false,scanlines:false,reducedMotion:true})));
+  await page.goto(process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/',
+   {waitUntil:'domcontentloaded',timeout:60000});
+  await page.waitForFunction(()=>window.DriverBoot&&window.THREE);
+  assert(await page.evaluate(()=>window.DriverBoot.start('ride')));
+  await page.waitForFunction(()=>window.DriverGame?.city?.ready &&
+   window.DriverBoot?.sessionReady, null,{timeout:120000});
+  await page.waitForFunction(()=>window.DriverGame?.tanner?.vehicleBoneRig &&
+   window.DriverGame?.vehicles?.some(v=>v.bodyStyle==='motorcycle'),
+   null,{timeout:120000});
+  const result=await page.evaluate(()=>{
+   const g=window.DriverGame,v=g.vehicles.find(v=>v.bodyStyle==='motorcycle');
+   g.isPaused=true;g.mode='on_foot';g.gameEnded=false;g.inReplayMode=false;
+   g.policeDoorTransition=null;g.vehicleMountTransition=null;
+   g.tanner.detachFromMotorcycle?.();
+   g.tanner.setPosition(v.x-1.65,v.y,v.z-.18,v.heading);
+   g.tanner.setVisible(true);
+   const originalGroup=g.tanner.group,originalRig=g.tanner.vehicleBoneRig;
+   const begin=DriverVehicleMount.start(g,v,'enter');
+   if(!begin)return {ok:false,reason:'cannot mount at this world coordinate',x:v.x,z:v.z};
+   for(let i=0;i<55;i++){
+    DriverVehicleMount.update(g,1/60);
+    DriverUploadedVehicles.updateRiders(g);
+   }
+   const halfway={visible:g.tanner.group.visible,
+      parent:g.tanner.group.parent===g.scene,
+      rigApplied:originalRig.applied,
+      phase:g.vehicleMountTransition?.progress};
+   for(let i=0;i<70;i++){
+    DriverVehicleMount.update(g,1/60);
+    DriverUploadedVehicles.updateRiders(g);
+   }
+   const high=originalRig.found.rightUpLeg;
+   const delta=Math.abs(high.node.quaternion.x-high.rotation.x)+
+       Math.abs(high.node.quaternion.z-high.rotation.z);
+   const mounted={
+      mode:g.mode,attached:g.tanner.motorcycleVehicle===v,
+      riderHidden:!v.motorcycleRider.visible,
+      TannerVisible:g.tanner.group.visible,
+      owner:g.tanner.group.parent===v.chassisTilt,
+      rigDelta:delta
+   };
+   const hip=originalRig.found.hips;
+   const hipBefore=hip.node.position.y;
+   for(let i=0;i<180;i++){
+    g._riderDelta=1/60;DriverUploadedVehicles.updateRiders(g);
+   }
+   mounted.drift=Math.abs(hip.node.position.y-hipBefore);
+   const exit=DriverVehicleMount.start(g,v,'exit');
+   const detachedAtStart=g.tanner.group.parent===g.scene;
+   for(let i=0;i<115;i++){
+    DriverVehicleMount.update(g,1/60);
+    DriverUploadedVehicles.updateRiders(g);
+   }
+   const dismounted={exit,detachedAtStart,mode:g.mode,
+      parent:g.tanner.group.parent===g.scene,visible:g.tanner.group.visible,
+      noRider:!v.motorcycleRider.visible&&g.tanner.motorcycleVehicle===null,
+      restored:Math.abs(hip.node.position.y-hip.position.y)<1e-5};
+   return {ok:true,halfway,mounted,dismounted,
+       bones:Object.keys(originalRig.found),sameObject:g.tanner.group===originalGroup};
+  });
+  console.log('TANNER_SKELETAL_MOTORCYCLE',JSON.stringify(result));
+  assert(result.ok,JSON.stringify(result));
+  assert(result.halfway.parent&&result.halfway.visible);
+  assert(result.halfway.rigApplied>.1,'bone pose must be applied while mounting');
+  assert.equal(result.mounted.mode,'driving');
+  assert(result.mounted.attached&&result.mounted.owner&&result.mounted.TannerVisible);
+  assert(result.mounted.riderHidden,'must not draw a second procedural Tanner');
+  assert(result.mounted.rigDelta>.05,'right leg needs real skeletal rotation');
+  assert(result.mounted.drift<1e-4,'repeated ride poses accumulated deformation');
+  assert(result.dismounted.exit&&result.dismounted.detachedAtStart);
+  assert.equal(result.dismounted.mode,'on_foot');
+  assert(result.dismounted.parent&&result.dismounted.visible&&result.dismounted.noRider);
+  assert(result.dismounted.restored&&result.sameObject);
+  assert.equal(errors.length,0,errors.join('\n'));
+  fs.writeFileSync('qa-artifacts/tanner-skeletal-motorcycle.json',
+    JSON.stringify({result,errors},null,2));
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
