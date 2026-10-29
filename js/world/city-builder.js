@@ -143,6 +143,7 @@
                 this.chicagoReferenceCurve=null;
                 this.chicagoReferenceExtension=null;
                 this.chicagoReferenceLoop=null;
+                this.chicagoReferenceBridge=null;
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
@@ -221,10 +222,18 @@
                     {minX:-255,maxX:-225},{minX:225,maxX:255}
                 ];
                 for(const z of [34,66]){
-                    for(const [x0,x1] of [
-                        [-427,-255],[-225,-11.5],
-                        [11.5,225],[255,427]
-                    ]){
+                    const ranges=[[-427,-255],[-225,-11.5],[11.5,225],[255,427]];
+                    const opening=this.preset.id==='chicago'&&
+                        typeof DriverChicagoPS1ReferenceBridge!=='undefined'?
+                        DriverChicagoPS1ReferenceBridge.openingAt(z):null;
+                    const segments=opening?ranges.flatMap(([a,b])=>{
+                        if(b<=opening.minX||a>=opening.maxX)return [[a,b]];
+                        const cut=[];
+                        if(a<opening.minX)cut.push([a,opening.minX]);
+                        if(b>opening.maxX)cut.push([opening.maxX,b]);
+                        return cut;
+                    }):ranges;
+                    for(const [x0,x1] of segments){
                         const wall=new THREE.Mesh(
                             new THREE.BoxGeometry(x1-x0,1.5,1.5),wallMat);
                         wall.position.set((x0+x1)/2,.75,z);
@@ -410,6 +419,9 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceLoop!=='undefined')
                     DriverChicagoPS1ReferenceLoop.prepare(this);
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoPS1ReferenceBridge!=='undefined')
+                    DriverChicagoPS1ReferenceBridge.prepare(this);
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();
@@ -1765,6 +1777,9 @@
             }
 
             isWaterAt(x,z){
+                if(this.preset?.id==='chicago' &&
+                    typeof DriverChicagoPS1ReferenceBridge!=='undefined' &&
+                    DriverChicagoPS1ReferenceBridge.isBridgeDeck(x,z))return false;
                 // O canal z≈306,3 corta a nova avenida da ilha.
                 // A ponte física do R6 é um deck SECO, como as do R2,
                 // e tem prioridade sobre a máscara hídrica antiga.
@@ -1842,6 +1857,11 @@
             }
 
             getGroundHeightAt(x,z,referenceY=null) {
+                if(this.preset?.id==='chicago' &&
+                    typeof DriverChicagoPS1ReferenceBridge!=='undefined'){
+                    const deck=DriverChicagoPS1ReferenceBridge.deckHeight(x,z);
+                    if(deck!==null)return deck;
+                }
                 if(this.trainStation){
                     const ramp=this.trainStation.ramp,p=this.trainStation.platform;
                     // Eixo da rampa é estreito. Suavizar a borda evita
@@ -1889,6 +1909,9 @@
             }
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
+                if(this.preset?.id==='chicago' &&
+                    typeof DriverChicagoPS1ReferenceBridge!=='undefined' &&
+                    DriverChicagoPS1ReferenceBridge.railBlocked(x,z,radius,y))return true;
                 if (this.interiorArea(x,z,radius)){
                     // Dentro de casa, testar somente os móveis sólidos.
                     // As paredes exteriores pertencem ao mundo externo.

@@ -59,7 +59,7 @@ class DriverChicagoPS1ReferenceCurve {
         geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();
         const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x45494b,side:THREE.DoubleSide}));
         mesh.name=placement.name;city.cityGroup.add(mesh);
-        const trim=[[placement.x,.006,placement.z,50,.01,50,0x526848,false]];
+        const trim=placement.foundation===false?[]:[[placement.x,.006,placement.z,50,.01,50,0x526848,false]];
         for(const lot of plan.lots){
             trim.push([lot.x,.013,lot.z,lot.width+2,.012,lot.depth+2,0x96988f,false]);
             city.districtBuildings.push(lot);
@@ -70,7 +70,7 @@ class DriverChicagoPS1ReferenceCurve {
             city.buildingBoxes.push({minX:lot.x-lot.width/2,maxX:lot.x+lot.width/2,
                 minZ:lot.z-lot.depth/2,maxZ:lot.z+lot.depth/2,chicagoPlanLot:true});
         }
-        if(typeof DriverSpecialStructures!=='undefined')
+        if(trim.length&&typeof DriverSpecialStructures!=='undefined')
             DriverSpecialStructures.pack(city.cityGroup,trim,'chicago-r15-curved-block');
         if(city.chicagoCityPlan){
             city.chicagoCityPlan.blocks.push({x:placement.x,z:placement.z,district:'ukrainian-village',kind:'reference-street'});

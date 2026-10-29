@@ -1204,3 +1204,13 @@ observados na fonte, cerca de 129 unidades de rua nova e 253 por volta. A extra�
 dos sete arquivos de rede/curvas foi reproduzida byte a byte. Revisão independente
 sem bloqueios críticos/importantes. O mapa completo e a mudança das missões seguem
 pendentes, nessa ordem.
+
+### Chicago R18 — ligação norte e travessia física do canal
+
+A referência continua da cabeceira norte do circuito R16/R17 por mais 187 unidades,
+a partir de 180 pixels de pavimento observado do PS1 e com o mesmo alinhamento.
+A travessia do canal procedural recebeu tabuleiro elevado, rampas, corrimãos com
+colisão e aberturas correspondentes nos muros visuais e físicos das duas margens.
+A água permanece ao lado do tabuleiro. Essa ponte tem altura reconstruída para o
+Undercover; não é uma certificação da ponte original. Nenhuma missão foi movida.
+O teste gráfico inclui travessia real nos dois sentidos e mantém os replays R15-R17.

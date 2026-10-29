@@ -87,3 +87,22 @@ R17 evidence: 123 observed source pixels, 129.04 units of new western road,
 252.79 units per closed lap with R16. All seven generated network/curve files
 reproduced byte-for-byte. 607 Node tests passed. The four-city aggregate is
 tracked separately; this revision does not certify the complete PS1 map.
+
+## R18 — northern source continuation and canal crossing
+
+Extend from the R16/R17 northern source anchor through the next 180 observed
+paving pixels using the same R15 similarity fit. The 187-unit continuation crosses
+the legacy Undercover canal, so reconstruct a stationary deck (12 units wide),
+small approach ramps, rendered/physical side rails and matching cuts in both
+visible and collision canal walls. Use the same road plan for those cuts and
+bridge physics. Deck elevation and placement are adapted to this procedural canal;
+projected paving pixels do not certify the original bridge grade or neighborhood.
+
+The corridor adds no houses and relocates no mission sites. Neighboring water
+must remain deep and wet; other cities retain their existing canal/ground rules.
+Retain R15-R17 physical replays and add an actual vehicle crossing in both
+directions, source/deck/collision tests and a bridge screenshot before publishing.
+
+- [x] Source trace, shared anchor, deck/rail/ground integration and foreign-city tests.
+- [ ] Whole Node suite, independent review and browser bidirectional crossing.
+- [ ] Publish after checks and verify Pages deployment.
