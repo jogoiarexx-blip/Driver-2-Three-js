@@ -119,11 +119,15 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         g.playerCar.speed=0;
         g.toggleVehicleEnterExit();
       });
+      // A saída de moto/carro leva ~1,2s; esperar o ciclo terminar
+      // antes de posicionar o jogador para o teste de caminhada.
+      await page.waitForFunction(()=>{
+        const g=window.DriverGame;
+        return g.mode==='on_foot'&&!g.policeDoorTransition&&
+          !g.vehicleMountTransition;
+      },null,{timeout:6000});
       await page.evaluate(()=>{
         const g=window.DriverGame;
-        if(g.mode!=='on_foot' && g.playerCar.policeDoorRig)
-          throw Error('Saída do veículo policial não concluída');
-        if(g.mode!=='on_foot')g.toggleVehicleEnterExit();
         g.tanner.setPosition(200,0,-170,Math.PI);
         g.tanner.setVisible(true);
         g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
