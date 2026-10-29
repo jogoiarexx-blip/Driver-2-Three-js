@@ -223,6 +223,9 @@
                     this.tanner.resetVehicleTransitionPose?.();
                     this.vehicleMountTransition=null;
                 }
+                // Não destruir o grupo de Tanner junto com a moto ao
+                // trocar a cidade ou reconstruir a frota.
+                this.tanner.detachFromMotorcycle?.();
                 if(this.policeDoorTransition){
                     if(typeof DriverPoliceDoorRig!=='undefined')
                         DriverPoliceDoorRig.cancel(
@@ -3424,6 +3427,7 @@
                     if(meter && meter.textContent!==value)meter.textContent=value;
                 }
                 this.updateAIAndCollisions(dt);
+                this._riderDelta=dt;
                 if(typeof DriverUploadedVehicles!=='undefined')DriverUploadedVehicles.updateRiders(this);
                 this.city.update(dt,this.vehicles,(car,prop,speed)=>{
                     if(speed>=24 && car?.lastImpactZone)
