@@ -65,3 +65,19 @@ and leave all mission starts/objectives unchanged. The graph remains ungraded.
 - [ ] Publish only after graphics checks; verify Pages.
 
 R16 independent read-only review: no critical/important defects. Joined corridor length is approximately 236 world units; 124 belong to the extension. Four-city aggregate remains tracked separately from this physical corridor validation.
+
+## R17 — close the source loop
+
+Continue the same alignment by reconstructing the western source branch between
+R16's two exact source anchors. Extract only observed marked/plain paving in the
+inspected narrow western raster window, retaining source pixels and hash. The
+branch runs outside the old grid's west edge; no mission site or existing parcel
+is removed. Reuse validated road geometry with no new houses in the corridor.
+Drive a complete closed lap in both directions, retain previous R15/R16 replays,
+and capture the full circuit in a browser screenshot. Placement remains adapted;
+this does not certify the remaining whole-city road network or traffic routes.
+
+- [x] Source extraction, exact shared anchors, dry full width, existing lot clearance.
+- [x] 607 Node tests passed, including R15/R16 regressions.
+- [ ] Whole-loop physics and browser rendering verification.
+- [ ] Independent review, authorized publication and Pages verification.

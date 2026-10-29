@@ -142,6 +142,7 @@
                 this.chicagoAirfield=null;
                 this.chicagoReferenceCurve=null;
                 this.chicagoReferenceExtension=null;
+                this.chicagoReferenceLoop=null;
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
@@ -406,6 +407,9 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceExtension!=='undefined')
                     DriverChicagoPS1ReferenceExtension.prepare(this);
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoPS1ReferenceLoop!=='undefined')
+                    DriverChicagoPS1ReferenceLoop.prepare(this);
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();

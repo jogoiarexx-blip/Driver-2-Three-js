@@ -1187,3 +1187,13 @@ Validação R16: 605 testes Node passaram. O runner gráfico 40891102102 passou 
 percurso conjunto nos dois sentidos, sem água, bloqueio ou submersão, com os
 limites de dano e afastamento lateral verificados. Revisão independente sem
 defeitos críticos/importantes. Isso valida esse corredor, não o mapa PS1 todo.
+
+### Chicago R17 — circuito oeste baseado na referência
+
+O braço oeste da mesma referência agora fecha um circuito com a R16, usando as
+mesmas duas cabeceiras e a mesma transformação uniforme da R15. O pavimento foi
+extraído dos pixels observados na janela oeste; o corredor fica a oeste da grade
+antiga, sem remover casas ou deslocar missões. A posição no Undercover continua
+adaptada: não representa certificação da localização original nem do mapa todo.
+Os testes gráficos agora incluem uma volta completa nos dois sentidos e uma
+captura do circuito, além dos percursos anteriores.
