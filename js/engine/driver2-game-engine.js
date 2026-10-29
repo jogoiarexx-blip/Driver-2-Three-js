@@ -217,6 +217,12 @@
             }
 
             spawnAllVehicles() {
+                // Descartar uma montagem em curso antes de destruir veículos
+                // ao trocar de cidade, reiniciar missão ou recriar a frota.
+                if(this.vehicleMountTransition){
+                    this.tanner.resetVehicleTransitionPose?.();
+                    this.vehicleMountTransition=null;
+                }
                 if(this.policeDoorTransition){
                     if(typeof DriverPoliceDoorRig!=='undefined')
                         DriverPoliceDoorRig.cancel(
