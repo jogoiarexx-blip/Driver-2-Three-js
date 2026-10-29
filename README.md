@@ -1214,3 +1214,11 @@ colisão e aberturas correspondentes nos muros visuais e físicos das duas marge
 A água permanece ao lado do tabuleiro. Essa ponte tem altura reconstruída para o
 Undercover; não é uma certificação da ponte original. Nenhuma missão foi movida.
 O teste gráfico inclui travessia real nos dois sentidos e mantém os replays R15-R17.
+
+Validação R18: **611 testes Node passaram**. O runner 40903434279 passou a
+travessia nos dois sentidos com física real e os percursos R15-R17. O contorno
+convexo do tabuleiro é compartilhado pela máscara de água, geometria e corrimãos;
+as superfícies das rampas são cortadas nas mesmas mudanças de altura da física.
+A revisão independente não encontrou bloqueios críticos/importantes. Os nove
+arquivos gerados foram reproduzidos byte a byte. O mapa completo segue em
+reconstrução; mudar as missões continua sendo a etapa posterior.

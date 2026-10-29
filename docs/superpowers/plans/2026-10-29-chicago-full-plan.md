@@ -104,10 +104,17 @@ Retain R15-R17 physical replays and add an actual vehicle crossing in both
 directions, source/deck/collision tests and a bridge screenshot before publishing.
 
 - [x] Source trace, shared anchor, deck/rail/ground integration and foreign-city tests.
-- [ ] Whole Node suite, independent review and browser bidirectional crossing.
-- [ ] Publish after checks and verify Pages deployment.
+- [x] 611 Node tests, independent review and bidirectional crossing passed (40903434279, Undercover step).
+- Publication authorized after checks; Pages status tracked by the release Actions workflow.
 
 R18 full-width finding: offset rails pinched the inside source bend. Replaced them
 with a single convex deck footprint shared by water masking, mesh and rails, and
 cut each ramp surface at its exact profile breaks. Added the full-width rail
 clearance regression before repeating browser validation.
+
+R18 final evidence: the initial narrow offset-rail prototype failed startup in
+40902920455 and was never published to main. The corrected canonical-footprint
+version (8bda0c5) passed the R4-R7 regressions and the Undercover step, including
+R15-R18 physical replays. Independent re-review found no critical/important
+blockers and dense rail-clearance sampling passed. Nine generated source/network
+files reproduced byte-for-byte. Full-city reconstruction remains unfinished.
