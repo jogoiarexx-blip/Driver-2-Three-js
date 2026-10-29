@@ -104,6 +104,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       await page.evaluate(()=>{
          const g=window.DriverGame,p=g.pedManager.malePedestrian.current;
          g.isPaused=true;
+         for(const other of g.pedManager.pedestrians)other.mesh.visible=other===p;
          p.mesh.visible=true;
          p.x=17;p.z=-40;
          p.mesh.position.set(17,g.city.getSidewalkHeightAt(17,-40),-40);
@@ -120,13 +121,14 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       for(let variant=0;variant<3;variant++){
          await page.evaluate(index=>{
             const g=window.DriverGame,model=g.pedManager.variantPedestrians.models[index],p=model.current;
+            for(const other of g.pedManager.pedestrians)other.mesh.visible=other===p;
             p.mesh.visible=true;p.mesh.position.set(17,g.city.getSidewalkHeightAt(17,-40),-40);p.mesh.rotation.set(0,0,0);
             model.update(p,.05,true,false);g.camera.position.set(21,3.1,-33);g.camera.lookAt(17,1.2,-40);
             g.camera.updateProjectionMatrix();g.renderer.render(g.scene,g.camera);
          },variant);
          await page.screenshot({path:path.join(DIR,'extra-pedestrian-'+variant+'-'+city+'.png')});
       }
-      await page.evaluate(()=>{window.DriverGame.isPaused=false;});
+      await page.evaluate(()=>{for(const p of window.DriverGame.pedManager.pedestrians)p.mesh.visible=true;window.DriverGame.isPaused=false;});
    }
    assert.equal(extraRequests.length,3,'Cada GLB adicional deve ser baixado apenas uma vez');
    assert.equal(new Set(extraRequests).size,3);

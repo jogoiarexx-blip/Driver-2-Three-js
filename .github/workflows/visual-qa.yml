@@ -112,6 +112,10 @@ jobs:
           done
           cat /tmp/driver-http.log
           exit 1
+      - name: Validar cinco modelos de pedestres e troca Chicago/Havana
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/male-pedestrian-visual.cjs
       - name: Validar carregamento do mapa original de Chicago na raiz
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
@@ -148,10 +152,6 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-ps1-undercover-visual.cjs
-      - name: Validar cinco modelos de pedestres e troca Chicago/Havana
-        env:
-          DRIVER_QA_URL: http://127.0.0.1:4173/
-        run: node tests/male-pedestrian-visual.cjs
       - name: Jogar e testar os 10 modos da expansão no Chromium
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
