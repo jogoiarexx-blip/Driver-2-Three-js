@@ -44,7 +44,7 @@ Ruling: mission relocation is deferred because whole-map source-derived streets 
 - [x] Trace an actual marked-paving S curve, retain source pixels and source hash.
 - [x] Fit its shape by a uniform similarity transform, reserve its block, rebuild three lots and verify dry full-width clearance against the current river.
 - [x] Verify physical traversal in both directions in the graphics runner.
-- [ ] Publish R15 and verify Pages.
+- [x] Publish R15 and verify Pages.
 
 Placement ruling: use existing dry avenues at (-320,-80) and (-260,-160), away from the west canal. This preserves access without claiming the original geographic position. Mission relocation remains blocked by the unfinished whole-map street migration, as requested by the user.
 
@@ -61,5 +61,7 @@ and leave all mission starts/objectives unchanged. The graph remains ungraded.
 
 - [x] Source provenance, shared alignment, dry full width and lot clearance tests.
 - [x] 605 Node tests pass; prior R15 tests retained.
-- [ ] Full joined R16/R15 physical drive in both directions in browser.
+- [x] Full joined R16/R15 physical drive in both directions in browser (workflow 40891102102, Undercover step passed).
 - [ ] Publish only after graphics checks; verify Pages.
+
+R16 independent read-only review: no critical/important defects. Joined corridor length is approximately 236 world units; 124 belong to the extension. Four-city aggregate remains tracked separately from this physical corridor validation.

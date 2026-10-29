@@ -1182,3 +1182,8 @@ quarteirão comum foi liberado e reconstruído com três casas e colisores próp
 O teste gráfico percorre a ligação R16 + R15 inteira nos dois sentidos usando a
 física real do carro. A posição continua adaptada ao Undercover; o restante da
 malha original ainda está em reconstrução, e as missões não foram deslocadas.
+
+Validação R16: 605 testes Node passaram. O runner gráfico 40891102102 passou o
+percurso conjunto nos dois sentidos, sem água, bloqueio ou submersão, com os
+limites de dano e afastamento lateral verificados. Revisão independente sem
+defeitos críticos/importantes. Isso valida esse corredor, não o mapa PS1 todo.
