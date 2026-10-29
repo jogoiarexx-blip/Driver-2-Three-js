@@ -67,6 +67,10 @@
             }
 
             buildCarMesh() {
+                // Preserva o Tanner real se a moto mudar de malha.
+                const realRider=this.chassisTilt.children.find(
+                    child=>child.userData?.driverPlayerRider)||null;
+                if(realRider)this.chassisTilt.remove(realRider);
                 // Ao voltar ao visual PS1, não deixar uma dobradiça GLB
                 // antiga ligada aos controles de entrada/saída.
                 if(this.policeDoorRig &&
@@ -106,7 +110,11 @@
                 this.hubcapMeshes=[];
                 this.wheelRig=null;
 
-                if(this.bodyStyle==='motorcycle'){this.buildMotorcycleMesh();return;}
+                if(this.bodyStyle==='motorcycle'){
+                    this.buildMotorcycleMesh();
+                    if(realRider)this.chassisTilt.add(realRider);
+                    return;
+                }
 
                 const bodyMat = new THREE.MeshLambertMaterial({ color: this.color });
                 this.bodyPaintMaterial = bodyMat;
@@ -297,6 +305,7 @@
                 });
                 VehicleDamageFX.attach(this);
                 VehicleVisuals.setHeadlights(this, this.headlightsOn);
+                if(realRider)this.chassisTilt.add(realRider);
             }
 
 
@@ -364,7 +373,10 @@
                 const length = bike?2.8:this.bodyStyle === 'truck' ? 6.6 : 5.15;
                 const height = bike?1.5:this.bodyStyle === 'truck' ? 3.3 : 2.05;
                 const scale = Math.min(width / size.x, length / size.z, height / size.y);
-                const preserved = [this.sirenAssembly, this.targetMarker, this.lightsGroup, this.damageGroup];
+                const preserved = [this.sirenAssembly, this.targetMarker,
+                    this.lightsGroup, this.damageGroup,
+                    ...this.chassisTilt.children.filter(
+                        child=>child.userData?.driverPlayerRider)];
                 this.chassisTilt.children.slice().forEach(child => {
                     if (!preserved.includes(child)) {
                         GPUResourceUtils.disposeSubtree(child);
