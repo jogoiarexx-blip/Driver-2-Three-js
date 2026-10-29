@@ -3,7 +3,7 @@ class DriverPedestrianVariants {
     static DEFINITIONS=[
         {id:'mendigo',url:'./assets/pedestrians/mendingo.glb',pedestrianIndex:2,height:2.04,walkName:'Walking',textureMaxSize:1024},
         {id:'woman-2',url:'./assets/pedestrians/mulher%202.glb',pedestrianIndex:3,height:2.05,walkName:'Walking_Woman',textureMaxSize:1024},
-        {id:'woman-3',url:'./assets/pedestrians/mulher%203.glb',pedestrianIndex:4,height:2.05,walkName:'Walking_Woman',textureMaxSize:1024}
+        {id:'woman-3',url:'./assets/pedestrians/mulher%203.glb',pedestrianIndex:4,height:2.05,walkName:'Walking_Woman',textureMaxSize:1024,repairSkinDeformation:true}
     ];
     constructor(manager){
         this.models=DriverPedestrianVariants.DEFINITIONS.map(config=>new DriverMalePedestrian(manager,{...config,tag:'glbVariant'}));
