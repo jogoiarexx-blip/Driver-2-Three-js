@@ -26,9 +26,13 @@ class DriverUploadedVehicles {
             const rider=vehicle.motorcycleRider;
             if(!rider)continue;
             const transition=engine.vehicleMountTransition;
-            if(transition?.vehicle===vehicle&&transition.bike){
-                // Durante o movimento só um Tanner fica visível:
-                // primeiro personagem a pé, depois piloto sentado.
+            if(engine.tanner?.motorcycleVehicle===vehicle){
+                // O mesmo GLB Tanner está conectado à moto: nunca sobrepor
+                // o boneco procedural, que permanece só como fallback.
+                rider.visible=false;
+                if(!transition)engine.tanner.updateMotorcycleRidePose?.(
+                    Math.max(0,Math.min(.08,engine._riderDelta||0)));
+            }else if(transition?.vehicle===vehicle&&transition.bike){
                 rider.visible=transition.kind==='enter'?
                     transition.progress>=.83:transition.progress<.16;
             }else{
