@@ -154,3 +154,36 @@ collision-footprint samples stayed on rendered pavement. Stadium presence and
 mission marker were retained. Independent final re-review found no blockers.
 Eleven generated source/network files reproduced byte-for-byte. The complete
 original map and subsequent mission relocation remain unfinished.
+
+## R20 — source-sized world foundation and western arterial
+
+Goal: remove the 410-unit world boundary that prevents extending the original
+source alignment, then build the next observed western arterial outside it.
+Architecture: generate the full source footprint in the unchanged R15 similarity
+fit; derive rectangular Chicago ground/play bounds including every legacy site.
+Other cities keep their original square bounds. Extend ground and visible canal
+consistently, and cover newly opened land with simple ground grass pending its
+source-specific reconstruction. A source-derived S arterial continues R19 north.
+
+Files: generated chicago/reference-world-r20.{json,js} and
+chicago/reference-arterial-r20.{json,js}; new js/world/chicago-source-world.js and
+js/world/chicago-ps1-reference-arterial.js; CityBuilder reset/ground/boundary;
+index script order; generator and Node/browser regression tests.
+
+Review focus: no invisible world wall on the new road; no ground/water render
+mismatch at expanded boundaries; switching to Havana/Vegas/Rio restores original
+bounds; all legacy sites remain inside; no source-fit rescaling or mission moves.
+The full footprint is space reserved for reconstruction, not finished streets.
+
+- [x] RED tests for full footprint inclusion, rectangular boundary and foreign cities.
+- [x] Implement generated world envelope, reset-safe CityBuilder application and ground.
+- [x] RED tests for the linked arterial and full-width dry clearance.
+- [x] Implement source arterial without relocating any existing site.
+- [ ] Node suite, independent review and bidirectional physical replay beyond z410.
+- [ ] Publish only after those checks and verify Pages; package source ZIP.
+
+R20 review correction: expanded lake physics originally continued beyond its
+old z420 visual edge. The shoreline renderer and trim now share the expanded
+terrain extent with the clamped physics shoreline; (400,600) has a regression
+test and the actual browser mesh extent is asserted. Independent re-review
+found no remaining critical/important issue. 619 Node tests passed.

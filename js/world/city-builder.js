@@ -49,6 +49,7 @@
                 this.secretGateBoxIndex = -1;
 
                 this.preset=CITY_PRESETS[presetKey] || CITY_PRESETS.chicago;
+                if(typeof DriverChicagoSourceWorld!=='undefined')DriverChicagoSourceWorld.apply(this);
                 this.ready=false;
                 this.districtLOD=null;
                 this.districtChunks=new Map();
@@ -85,6 +86,7 @@
             resetCityForPreset(presetKey) {
                 this.ready=false;
                 this.preset = CITY_PRESETS[presetKey] || CITY_PRESETS.chicago;
+                if(typeof DriverChicagoSourceWorld!=='undefined')DriverChicagoSourceWorld.apply(this);
                 this.buildSequence++;
 
                 // Libera recursos WebGL da cidade anterior: sem vazar memória ao alternar cidades.
@@ -145,6 +147,8 @@
                 this.chicagoReferenceLoop=null;
                 this.chicagoReferenceBridge=null;
                 this.chicagoReferenceNorthNetwork=null;
+                this.chicagoReferenceArterial=null;
+                this.chicagoSourceGround=null;
                 this.chicagoReferenceNorthStem=null;
                 this.chicagoReferenceNorthContinuation=null;
                 this.chicagoReferenceNorthBranch=null;
@@ -192,11 +196,16 @@
                 asphTex.repeat.set(64, 64);
 
                 // 1. Base de Asfalto da Cidade
-                const groundGeo = new THREE.PlaneGeometry(840, 840);
+                const terrain=this.worldTerrain||{minX:-420,maxX:420,minZ:-420,maxZ:420};
+                const terrainWidth=terrain.maxX-terrain.minX,terrainDepth=terrain.maxZ-terrain.minZ;
+                const terrainX=(terrain.minX+terrain.maxX)/2,terrainZ=(terrain.minZ+terrain.maxZ)/2;
+                const groundGeo = new THREE.PlaneGeometry(terrainWidth,terrainDepth);
                 groundGeo.rotateX(-Math.PI / 2);
                 const groundMat = new THREE.MeshLambertMaterial({ map: asphTex });
                 const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.position.set(terrainX,0,terrainZ);
                 this.cityGroup.add(ground);
+                if(typeof DriverChicagoSourceWorld!=='undefined')DriverChicagoSourceWorld.buildGrass(this);
 
                 // Ruas renderizadas somente sobre a grade rodável.
                 // Textura-base não contém linhas: pintura é independente.
@@ -209,11 +218,11 @@
                 yield 'Asfalto, ruas, sinalização e semáforos';
 
                 // 2. Canal Central (Rio Chicago / Baía de Havana / Canal da Orla do Rio)
-                const riverGeo = new THREE.PlaneGeometry(840, 32);
+                const riverGeo = new THREE.PlaneGeometry(terrainWidth, 32);
                 riverGeo.rotateX(-Math.PI / 2);
                 const riverMat = new THREE.MeshBasicMaterial({ color: this.preset.waterColor });
                 const river = new THREE.Mesh(riverGeo, riverMat);
-                river.position.set(0, 0.06, 50);
+                river.position.set(terrainX, 0.06, 50);
                 this.cityGroup.add(river);
                 if(typeof DriverCoastalVisuals!=='undefined')
                     DriverCoastalVisuals.build(this);
@@ -432,6 +441,9 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceNorthNetwork!=='undefined')
                     DriverChicagoPS1ReferenceNorthNetwork.prepare(this);
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoPS1ReferenceArterial!=='undefined')
+                    DriverChicagoPS1ReferenceArterial.prepare(this);
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();
@@ -1933,7 +1945,10 @@
                     return true;
                 if(this.caineBridgeClosed && Math.abs(x)<11+radius &&
                     z+radius>49.5 && z-radius<52.5)return true;
-                if (Math.abs(x)>this.worldLimit || Math.abs(z)>this.worldLimit)return true;
+                if(this.worldBounds){
+                    const b=this.worldBounds;
+                    if(x<b.minX||x>b.maxX||z<b.minZ||z>b.maxZ)return true;
+                }else if (Math.abs(x)>this.worldLimit || Math.abs(z)>this.worldLimit)return true;
                 // Corrimãos físicos somente no volume desenhado, com
                 // alturas locais coerentes com a rampa e não com o chão.
                 if(this.trainStation){

@@ -1239,3 +1239,17 @@ de colisão fora do asfalto renderizado. O entroncamento ganhou um alargamento
 pavimentado real para as conversões. Os replays R15-R18, o estádio e o marcador
 de missão foram preservados. Revisão independente sem bloqueios. A reconstrução
 do mapa completo ainda não terminou; as missões permanecem nos lugares atuais.
+
+### Chicago R20 — base mundial ampliada e arterial oeste
+
+O limite antigo em 410 unidades impedia continuar a referência. Chicago agora
+usa limites retangulares calculados para incluir a projeção completa dos 54
+setores, na mesma escala da R15, mantendo todo o cenário anterior. O terreno,
+o canal e o lago visível acompanham essa ampliação; Havana, Vegas e Rio mantêm
+seus limites anteriores. A área nova gramada é **base ainda não reconstruída**,
+não uma declaração de que o mapa original inteiro ficou pronto.
+
+Uma arterial oeste de aproximadamente **380 unidades**, extraída de 346 pixels
+de pavimento observado, continua a R19 e atravessa a antiga borda até z≈632.
+Nenhuma missão ou construção existente foi reposicionada. A validação inclui
+limites reais, troca de cidade, água visível/física e direção nos dois sentidos.

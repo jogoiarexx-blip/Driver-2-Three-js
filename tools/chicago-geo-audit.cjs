@@ -41,6 +41,7 @@ function audit({objPath}={}){
     const River=evaluate('js/world/chicago-ps1-river-branches.js','DriverChicagoPS1RiverBranches');
     const North=evaluate('js/world/chicago-goose-island-north-yard.js','DriverChicagoGooseIslandNorthYard');
     const Plan=evaluate('js/world/chicago-city-plan.js','DriverChicagoCityPlan');
+    const World=require('../js/world/chicago-source-world.js');
     const City=evaluate('js/world/city-builder.js','CityBuilder',{
         DriverChicagoEastBridge:Bridge,DriverChicagoPS1Coastline:Coast,
         DriverChicagoPS1RiverBranches:River,DriverChicagoGooseIslandNorthYard:North});
@@ -49,11 +50,12 @@ function audit({objPath}={}){
     const raw=source('js/world/city-builder.js');
     const ext=raw.match(/this\.roadExtent\s*=\s*(\d+)\s*;\s*this\.worldLimit\s*=\s*(\d+)/);
     if(!ext||!/for\s*\(let p=-320;p<=320;p\+=80\)/.test(raw)||
-       !/new THREE\.PlaneGeometry\(840,\s*32\)/.test(raw))
+       !/new THREE\.PlaneGeometry\(terrainWidth,\s*32\)/.test(raw))
         throw Error('A geometria mudou: atualizar e rever as premissas da auditoria.');
-    const roadExtent=Number(ext[1]),worldLimit=Number(ext[2]);
+    const roadExtent=Number(ext[1]),legacyWorldLimit=Number(ext[2]);
     const city={roadExtent,preset:{id:'chicago'},bridgeAngle:0,
         isPointBlocked:()=>false};
+    World.apply(city);
     city.isWaterAt=(x,z)=>City.prototype.isWaterAt.call(city,x,z);
     const graph=Road.auditNetwork(city);
     const districts=Array.from(Neighborhood.DISTRICTS,d=>({
@@ -72,7 +74,9 @@ function audit({objPath}={}){
     return {
         city:'chicago',reference:'Driver 2 PS1',referenceGeometryRegistered:false,
         code:{
-            step:Road.STEP,roadHalf:Road.ROAD_HALF,roadExtent,worldLimit,
+            step:Road.STEP,roadHalf:Road.ROAD_HALF,roadExtent,legacyWorldLimit,
+            worldLimit:city.worldLimit,worldBounds:city.worldBounds,groundBounds:city.worldTerrain,
+            wholeSourceMapBuilt:World.source.wholeMapBuilt,
             theoreticalGridNodes:graph.nodes,proceduralCells:cells.length,
             river:{kind:'central-canal-with-north-south-branches',centerZ:50,visualWidth:32,
                 eastWaterSample:!!city.isWaterAt(385,-240),

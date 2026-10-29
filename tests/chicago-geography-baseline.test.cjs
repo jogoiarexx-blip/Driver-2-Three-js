@@ -20,7 +20,10 @@ test('a grade teórica e as camadas de água atuais são detectadas',()=>{
     assert.equal(data.code.step,80);
     assert.equal(data.code.roadHalf,12);
     assert.equal(data.code.roadExtent,320);
-    assert.equal(data.code.worldLimit,410);
+    assert.equal(data.code.legacyWorldLimit,410);
+    assert(data.code.worldLimit>1300);
+    assert(data.code.worldBounds.maxX<600);
+    assert.equal(data.code.wholeSourceMapBuilt,false);
     assert.equal(data.code.theoreticalGridNodes,81);
     assert.equal(data.code.proceduralCells,71);
     assert.equal(data.code.river.canalWaterSample,true);
@@ -36,7 +39,8 @@ test('Navy Pier e Meigs não estão certificados como acessíveis',()=>{
     assert.equal(data.navyPier.verifiedRoadConnection,false);
     assert.equal(data.navyPier.visualOnly,true);
     assert(data.navyPier.deckMinX>data.code.roadExtent);
-    assert(data.navyPier.deckMaxX>data.code.worldLimit);
+    assert(data.navyPier.deckMaxX>data.code.legacyWorldLimit);
+    assert(data.navyPier.deckMaxX<data.code.worldBounds.maxX);
     assert.equal(data.meigs.runwayVerified,false);
 });
 test('OBJ opcional só produz estatística de vértices, nunca fidelidade fictícia',()=>{

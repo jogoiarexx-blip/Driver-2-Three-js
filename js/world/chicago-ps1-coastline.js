@@ -38,9 +38,16 @@ class DriverChicagoPS1Coastline {
         return Number.isFinite(x)&&Number.isFinite(z) &&
             x>=this.shoreX(z) && !this.pier(x,z);
     }
-    static createWater() {
+    static shorePoints(city){
+        const points=this.SHORE.map(p=>({...p}));
+        const min=city?.worldTerrain?.minZ??points[0].z,max=city?.worldTerrain?.maxZ??points.at(-1).z;
+        if(min<points[0].z)points.unshift({z:min,x:this.shoreX(min)});
+        if(max>points.at(-1).z)points.push({z:max,x:this.shoreX(max)});
+        return points;
+    }
+    static createWater(city) {
         const vertices=[],uv=[];
-        const points=this.SHORE;
+        const points=this.shorePoints(city);
         // Extender o lago visual para o horizonte, sem física fora do mapa.
         for(let i=0;i<points.length-1;i++){
             const a=points[i],b=points[i+1],far=560;
@@ -70,11 +77,12 @@ class DriverChicagoPS1Coastline {
     static build(city) {
         if(!this.isChicago(city))return null;
         if(city.chicagoPS1Coastline)return city.chicagoPS1Coastline;
-        const mesh=this.createWater();
+        const mesh=this.createWater(city);
         city.cityGroup.add(mesh);
         const trim=[];
-        for(let i=0;i<this.SHORE.length-1;i++){
-            const a=this.SHORE[i],b=this.SHORE[i+1];
+        const shoreline=this.shorePoints(city);
+        for(let i=0;i<shoreline.length-1;i++){
+            const a=shoreline[i],b=shoreline[i+1];
             const z=(a.z+b.z)*.5;
             if(z>=-68&&z<=-16)continue; // entrada de Navy Pier
             const x=(a.x+b.x)*.5;
@@ -87,7 +95,7 @@ class DriverChicagoPS1Coastline {
             DriverSpecialStructures.pack(
                 city.cityGroup,trim,'chicago-ps1-lakeshore-trim');
         const result={
-            mesh,shoreline:this.SHORE.length,
+            mesh,shoreline:shoreline.length,
             westernRoadLimit:this.EAST_ROAD_LIMIT,
             waterPhysics:true,piersPreserved:true,
             addedColliders:0,mode:'procedural-phase1'
