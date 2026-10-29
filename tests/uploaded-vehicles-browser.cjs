@@ -12,10 +12,11 @@ const DIR='qa-artifacts';fs.mkdirSync(DIR,{recursive:true});
   await page.waitForFunction(()=>window.DriverBoot&&window.THREE);
   assert(await page.evaluate(()=>window.DriverBoot.start('ride')));
   await page.waitForFunction(()=>window.DriverGame?.city.ready&&window.DriverBoot.sessionReady);
-  await page.evaluate(()=>{const g=window.DriverGame;g.isPaused=true;if(!g.freeVehicleAssets.enabled)g.freeVehicleAssets.toggle();});
+  await page.evaluate(()=>{const g=window.DriverGame;g.isPaused=true;window.DriverBoot.settings.models=true;if(!g.freeVehicleAssets.enabled)g.freeVehicleAssets.toggle();});
   for(const city of ['chicago','havana','chicago']){
    if(reports.length){assert(await page.evaluate(c=>window.DriverGame.requestCityChange(c),city));await page.waitForFunction(c=>window.DriverGame.currentCityKey===c&&window.DriverGame.city.ready,city);}
    await page.evaluate(()=>{window.DriverGame.isPaused=true;window.DriverGame.freeVehicleAssets.decorateFleet();});
+   console.log('CITY',city,await page.evaluate(()=>({enabled:window.DriverGame.freeVehicleAssets.enabled,slots:window.DriverGame.vehicles.filter(v=>v.uploadedModel).map(v=>v.uploadedModel)})));
    await page.waitForFunction(()=>window.DriverGame.vehicles.filter(v=>v.uploadedModel).length===3&&window.DriverGame.vehicles.filter(v=>v.uploadedModel).every(v=>v._uploadedCustomModel===v.uploadedModel));
    if(city==='chicago')await page.waitForFunction(()=>window.DriverGame.freeVehicleAssets.uploaded.boat?.parent===window.DriverGame.city.cityGroup);
    const report=await page.evaluate(()=>{
@@ -50,5 +51,5 @@ const DIR='qa-artifacts';fs.mkdirSync(DIR,{recursive:true});
   }
   assert.equal(requests.length,4,'Uploads must be downloaded once across toggles and city changes');assert.equal(new Set(requests).size,4);assert.equal(errors.length,0,errors.join('\n'));
   fs.writeFileSync(`${DIR}/uploaded-vehicles-report.json`,JSON.stringify({status:'PASS',reports,requests,errors},null,2));console.log(JSON.stringify({status:'PASS',reports,downloads:requests.length}));
- }finally{await browser.close();}
+ }catch(error){console.error('DIAGNOSTIC',JSON.stringify(await page.evaluate(()=>{const g=window.DriverGame;return {city:g?.currentCityKey,enabled:g?.freeVehicleAssets.enabled,states:g?.freeVehicleAssets.uploaded.states,vehicles:g?.vehicles.filter(v=>v.uploadedModel).map(v=>({id:v.uploadedModel,applied:v._uploadedCustomModel,custom:v._userCustomModel})),errors:[]};}).catch(()=>({unavailable:true}))));throw error;}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
