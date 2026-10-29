@@ -289,6 +289,32 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
         const segments=network.segments;
         const plans=Object.fromEntries(['branch','continuation'].map(key=>[key,{...segments[key],points:segments.stem.points.concat(segments[key].points.slice(1))}]));
         g.isPaused=true;
+        const surfaceMeshes=[c.chicagoReferenceBridge.mesh,...Object.values(segments).map(p=>p.mesh),network.junction.mesh,
+            c.cityGroup.children.find(o=>o.name==='driver2-road-asphalt-chicago')];
+        const triangles=[];
+        for(const mesh of surfaceMeshes){
+            mesh.updateWorldMatrix(true,false);
+            const position=mesh.geometry.attributes.position,index=mesh.geometry.index;
+            const count=index?index.count:position.count;
+            for(let instance=0;instance<(mesh.isInstancedMesh?mesh.count:1);instance++){
+                const matrix=new THREE.Matrix4();
+                if(mesh.isInstancedMesh){mesh.getMatrixAt(instance,matrix);matrix.premultiply(mesh.matrixWorld);}
+                else matrix.copy(mesh.matrixWorld);
+                for(let i=0;i<count;i+=3){
+                    const points=[0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(position,index?index.getX(i+k):i+k).applyMatrix4(matrix));
+                    const [a,b,c]=points;
+                    if(Math.abs((b.x-a.x)*(c.z-a.z)-(b.z-a.z)*(c.x-a.x))<1e-8)continue;
+                    const box={points,minX:Math.min(...points.map(p=>p.x)),maxX:Math.max(...points.map(p=>p.x)),minZ:Math.min(...points.map(p=>p.z)),maxZ:Math.max(...points.map(p=>p.z))};
+                    if(box.maxX< -345||box.minX> -250||box.maxZ<175||box.minZ>335)continue;
+                    triangles.push(box);
+                }
+            }
+        }
+        const paved=(x,z)=>triangles.some(t=>{
+            if(x<t.minX-1e-5||x>t.maxX+1e-5||z<t.minZ-1e-5||z>t.maxZ+1e-5)return false;
+            const signs=t.points.map((a,i)=>{const b=t.points[(i+1)%3];return (b.x-a.x)*(z-a.z)-(b.z-a.z)*(x-a.x);});
+            return signs.every(v=>v>=-1e-5)||signs.every(v=>v<=1e-5);
+        });
         const effects={addSkidMark(){},spawnTireSmoke(){},spawnImpactSparks(){},
             spawnCarBreakaway(){},spawnWaterSplash(){},ejectHubcap(){}};
         const replay=(key,reverse)=>{
@@ -299,7 +325,7 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
                 x:first.x,z:first.z,heading:Math.atan2(next.x-first.x,next.z-first.z),
                 maxSpeed:24,accel:18,color:0xbb523c});
             const result={key,reverse,completed:false,wet:0,blocked:0,submerged:0,
-                maxDamage:0,maxOffset:0,samples:[]};let index=1;
+                maxDamage:0,maxOffset:0,roadFootprintMisses:0,samples:[]};let index=1;
             const offset=()=>{
                 let best=Infinity;
                 for(let i=1;i<path.length;i++){
@@ -323,7 +349,9 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
                     if(c.isPointBlocked(car.x,car.z,1.55,car.y))result.blocked++;
                     if(car.isSubmerged)result.submerged++;
                     result.maxDamage=Math.max(result.maxDamage,car.damage);
-                    result.maxOffset=Math.max(result.maxOffset,offset());
+                    const deviation=offset();
+                    if(deviation>result.maxOffset){result.maxOffset=deviation;result.maxOffsetAt={x:car.x,z:car.z};}
+                    if(!paved(car.x,car.z)||Array.from({length:16},(_,i)=>i*Math.PI/8).some(angle=>!paved(car.x+Math.cos(angle)*1.55,car.z+Math.sin(angle)*1.55)))result.roadFootprintMisses++;
                     if(frame%40===0)result.samples.push({t:frame*.05,x:car.x,z:car.z,index,speed:car.speed});
                 }
                 result.end={x:car.x,z:car.z,index};return result;
@@ -340,7 +368,7 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
     for(const test of northReplay.tests){
         assert(test.completed,JSON.stringify(test));
         assert.equal(test.wet,0);assert.equal(test.blocked,0);assert.equal(test.submerged,0);
-        assert(test.maxDamage<15);assert(test.maxOffset<2.45,JSON.stringify(test));
+        assert(test.maxDamage<15);assert.equal(test.roadFootprintMisses,0,JSON.stringify(test));
     }
     assert.equal(r.preset,'chicago');assert(r.geography&&r.lakeMesh);
     assert(r.lake,'Lago não está posicionado a leste de Chicago');

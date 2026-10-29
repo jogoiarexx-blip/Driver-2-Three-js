@@ -25,3 +25,10 @@ test('rede tem proveniência reproduzível e largura seca longe das fachadas',()
   }
  }
 });
+test('entroncamento tem piso real suficiente para a carroceria fazer a curva',()=>{
+ assert(Net);const junction=Net.plans().stem.points.at(-1);
+ assert.equal(typeof Net.junction,'function','entroncamento precisa de piso construído');
+ const apron=Net.junction();assert.deepEqual({x:apron.x,z:apron.z},junction);
+ assert(apron.radius-Math.hypot(3,4)>=1.55,'a curva precisa de alargamento físico');
+ assert(apron.radius<Math.hypot(20,20),'não autorizar terreno fora das ruas');
+});

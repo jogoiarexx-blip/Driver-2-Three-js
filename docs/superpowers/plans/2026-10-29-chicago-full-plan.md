@@ -138,3 +138,12 @@ presence. Publication remains authorized after these checks.
 - [x] 613 Node tests passed; prior R15-R18 regressions retained.
 - [ ] Independent review and four north-route browser physical replays.
 - [ ] Publish checked source and verify Pages deployment.
+
+R19 junction check: first graphics run completed all four routes, but one exceeded
+the single-centerline 2.45-unit margin at the junction (3.085). Added a physical
+9-unit-radius paved apron and a regression for the turn envelope. The R19 browser
+check now samples the 1.55-unit collision footprint against actual rendered
+triangles of the new roads, apron and connected R18/legacy avenue asphalt, with
+instance/world transforms applied. Zero footprint misses are required; water,
+blockage, damage and route-completion assertions remain. Older R15-R18 centerline
+checks remain unchanged. The failed prototype was not published to main.

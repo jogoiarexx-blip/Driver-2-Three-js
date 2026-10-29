@@ -34,11 +34,17 @@ class DriverChicagoPS1ReferenceNorthNetwork {
         return this.cachedRoadClasses;
     }
     static plans(){return Object.fromEntries(Object.entries(this.roadClasses).map(([name,Road])=>[name,Road.plan()]));}
+    static junction(){const p=this.plans().stem.points.at(-1);return {...p,radius:9};}
     static prepare(city){
         if(city?.preset?.id!=='chicago')return null;
         if(city.chicagoReferenceNorthNetwork)return city.chicagoReferenceNorthNetwork;
         const segments=Object.fromEntries(Object.entries(this.roadClasses).map(([name,Road])=>[name,Road.prepare(city)]));
-        city.chicagoReferenceNorthNetwork={segments,wholeMapCertified:false,missionsMigrated:false};
+        const junction=this.junction();
+        const apron=new THREE.Mesh(new THREE.CircleGeometry(junction.radius,48),
+            new THREE.MeshLambertMaterial({color:0x45494b,side:THREE.DoubleSide}));
+        apron.rotation.x=-Math.PI/2;apron.position.set(junction.x,.034,junction.z);
+        apron.name='chicago-r19-north-junction-apron';city.cityGroup.add(apron);
+        city.chicagoReferenceNorthNetwork={segments,junction:{...junction,mesh:apron},wholeMapCertified:false,missionsMigrated:false};
         return city.chicagoReferenceNorthNetwork;
     }
 }
