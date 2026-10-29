@@ -1,0 +1,53 @@
+name: Driver 2 - Chicago R10 - Semaforos reais
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/traffic/traffic-ai.js'
+      - 'tests/chicago-r10-traffic-signals.test.cjs'
+      - 'tests/chicago-r10-live-signals-browser.cjs'
+      - '.github/workflows/chicago-r10-traffic-signals.yml'
+  pull_request:
+    paths:
+      - 'js/traffic/traffic-ai.js'
+      - 'tests/chicago-r10-traffic-signals.test.cjs'
+      - 'tests/chicago-r10-live-signals-browser.cjs'
+      - '.github/workflows/chicago-r10-traffic-signals.yml'
+permissions:
+  contents: read
+jobs:
+  signal-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar respeito aos sinais reais e ignorar sinais fantasmas
+        run: node --test tests/chicago-r10-traffic-signals.test.cjs
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir Driver 2 localmente
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/chicago-r10-http.log 2>&1 &
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/chicago-r10-http.log; exit 1
+      - name: Quatro caminhões por 60 segundos com semáforos alternando
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r10-live-signals-browser.cjs
+      - name: Disponibilizar telemetria e screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r10-real-traffic-light-replay
+          path: |
+            qa-artifacts/chicago-r10-live-signals.json
+            qa-artifacts/chicago-r10-live-signals.png
+          retention-days: 14
