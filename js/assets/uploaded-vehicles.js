@@ -22,8 +22,27 @@ class DriverUploadedVehicles {
         }
     }
     static updateRiders(engine){
-        for(const vehicle of engine.vehicles)if(vehicle.motorcycleRider)
-            vehicle.motorcycleRider.visible=engine.mode==='driving'&&engine.playerCar===vehicle;
+        for(const vehicle of engine.vehicles){
+            const rider=vehicle.motorcycleRider;
+            if(!rider)continue;
+            const transition=engine.vehicleMountTransition;
+            if(transition?.vehicle===vehicle&&transition.bike){
+                // Durante o movimento só um Tanner fica visível:
+                // primeiro personagem a pé, depois piloto sentado.
+                rider.visible=transition.kind==='enter'?
+                    transition.progress>=.83:transition.progress<.16;
+            }else{
+                rider.visible=engine.mode==='driving'&&engine.playerCar===vehicle;
+            }
+            if(rider.visible){
+                rider.rotation.z=Math.max(-.12,Math.min(.12,
+                    -(vehicle.rollAngle||0)*.20));
+                rider.rotation.x=Math.max(-.10,Math.min(.10,
+                    Math.abs(vehicle.speed||0)*-.0018));
+            }else{
+                rider.rotation.x=0;rider.rotation.z=0;
+            }
+        }
     }
     static resizeTextures(root){
         const replacements=new Map();
