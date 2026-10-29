@@ -12,7 +12,10 @@ class DriverMalePedestrian {
     static PEDESTRIAN_INDEX=1;
     static HEIGHT_METERS=2.08;
 
-    constructor(manager){
+    constructor(manager,options={}){
+        this.config={url:DriverMalePedestrian.ASSET_URL,pedestrianIndex:DriverMalePedestrian.PEDESTRIAN_INDEX,
+            height:DriverMalePedestrian.HEIGHT_METERS,tag:'glbMale',id:'male',textureMaxSize:0,...options};
+        this.resizedTextures=0;
         this.manager=manager;
         this.promise=null;
         this.state='pending';
@@ -40,11 +43,12 @@ class DriverMalePedestrian {
         this.state='loading';
         this.promise=new Promise(resolve=>{
             new THREE.GLTFLoader().load(
-                DriverMalePedestrian.ASSET_URL,gltf=>{
+                this.config.url,gltf=>{
                     try{
                         if(!gltf?.scene||!gltf?.animations?.length)
                             throw new Error('Cena ou animações ausentes no GLB');
-                        const walk=gltf.animations.find(clip=>
+                        const walk=gltf.animations.find(clip=>clip.name===this.config.walkName)||
+                            gltf.animations.find(clip=>
                             /^(walking|walk)$/i.test(clip.name))||
                             gltf.animations.find(clip=>
                                 /walk|andar/i.test(clip.name));
@@ -64,7 +68,7 @@ class DriverMalePedestrian {
 
                         // O arquivo tem aproximadamente 1,87m de altura;
                         // o pedestre do mundo terá 2,08m, sem pés flutuando.
-                        const scale=DriverMalePedestrian.HEIGHT_METERS/size.y;
+                        const scale=this.config.height/size.y;
                         root.scale.multiplyScalar(scale);
                         root.position.set(
                             -(bounds.min.x+bounds.max.x)*.5*scale,
@@ -81,6 +85,7 @@ class DriverMalePedestrian {
                                 node.receiveShadow=false;
                             }
                         });
+                        this.resizeTextures(root);
                         this.container=new THREE.Group();
                         this.container.position.y=0;
                         this.container.add(root);
@@ -113,13 +118,37 @@ class DriverMalePedestrian {
         return this.promise;
     }
 
+    resizeTextures(root){
+        const cap=this.config.textureMaxSize;
+        if(!cap||typeof document==='undefined')return;
+        const replacements=new Map();
+        root.traverse(node=>{
+            for(const material of (Array.isArray(node.material)?node.material:[node.material]).filter(Boolean)){
+                for(const key of Object.keys(material)){
+                    const texture=material[key],image=texture?.image;
+                    if(!texture?.isTexture||!image||Math.max(image.width||0,image.height||0)<=cap)continue;
+                    if(!replacements.has(texture)){
+                        const canvas=document.createElement('canvas'),ratio=cap/Math.max(image.width,image.height);
+                        canvas.width=Math.max(1,Math.round(image.width*ratio));canvas.height=Math.max(1,Math.round(image.height*ratio));
+                        canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+                        const resized=texture.clone();resized.image=canvas;resized.needsUpdate=true;
+                        replacements.set(texture,resized);this.resizedTextures++;
+                    }
+                    material[key]=replacements.get(texture);material.needsUpdate=true;
+                }
+            }
+        });
+        for(const texture of replacements.keys())texture.dispose();
+    }
+
     release(){
         if(this.container?.parent)this.container.parent.remove(this.container);
         if(this.current){
             // Restaurar o modelo procedural ao liberar a vaga.
             for(const child of this.current.mesh?.children||[])
                 child.visible=true;
-            this.current.glbMale=false;
+            this.current[this.config.tag]=false;
+            if(this.config.tag==='glbVariant')delete this.current.variantId;
             this.current=null;
         }
         this.lastMoving=false;
@@ -130,13 +159,15 @@ class DriverMalePedestrian {
         if(this.state!=='ready'||!this.container)return false;
         // A primeira vaga (0) pertence à pedestre feminina.
         const ped=this.manager?.pedestrians?.[
-            DriverMalePedestrian.PEDESTRIAN_INDEX];
-        if(!ped?.mesh||ped.glbFemale)return false;
+            this.config.pedestrianIndex];
+        if(!ped?.mesh)return false;
         if(this.current===ped)return true;
+        if(ped.glbFemale||ped.glbMale||ped.glbVariant)return false;
         this.release();
         for(const child of ped.mesh.children)child.visible=false;
         ped.mesh.add(this.container);
-        ped.glbMale=true;
+        ped[this.config.tag]=true;
+        if(this.config.tag==='glbVariant')ped.variantId=this.config.id;
         this.current=ped;
         this.walkAction.reset().play();
         this.walkAction.paused=true;
@@ -171,7 +202,8 @@ class DriverMalePedestrian {
 
     status(){
         return {state:this.state,active:!!this.current,
-            pedestrianIndex:DriverMalePedestrian.PEDESTRIAN_INDEX,
+            pedestrianIndex:this.config.pedestrianIndex,
+            id:this.config.id,assetUrl:this.config.url,resizedTextures:this.resizedTextures,
             animated:!!this.walkAction,
             animations:this.animationNames.slice(),
             originalHeight:this.originalHeight,error:this.error,
