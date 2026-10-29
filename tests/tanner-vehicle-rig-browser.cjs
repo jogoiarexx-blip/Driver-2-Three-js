@@ -61,6 +61,15 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
     g._riderDelta=1/60;DriverUploadedVehicles.updateRiders(g);
    }
    mounted.drift=Math.abs(hip.node.position.y-hipBefore);
+   // Teste de regressão: reconstruir malha ou aplicar GLB novo não pode
+   // descartar o próprio Tanner junto com os antigos meshes do chassi.
+   v.buildCarMesh();
+   mounted.survivedRebuild=g.tanner.group.parent===v.chassisTilt;
+   const replacement=new THREE.Group();
+   replacement.add(new THREE.Mesh(new THREE.BoxGeometry(.7,1.2,2.0),
+       new THREE.MeshLambertMaterial({color:0x64748b})));
+   mounted.replacementAccepted=v.applyCC0Model(replacement,true);
+   mounted.survivedGLBSwap=g.tanner.group.parent===v.chassisTilt;
    const exit=DriverVehicleMount.start(g,v,'exit');
    const attachedAtStart=g.tanner.group.parent===v.chassisTilt;
    for(let i=0;i<17;i++){
@@ -88,6 +97,8 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
   assert(result.mounted.riderHidden,'must not draw a second procedural Tanner');
   assert(result.mounted.rigDelta>.05,'right leg needs real skeletal rotation');
   assert(result.mounted.drift<1e-4,'repeated ride poses accumulated deformation');
+  assert(result.mounted.survivedRebuild&&result.mounted.replacementAccepted&&
+    result.mounted.survivedGLBSwap,'rider must survive vehicle mesh replacement');
   assert(result.dismounted.exit&&result.dismounted.attachedAtStart&&result.dismounted.detachedDuringSwing);
   assert.equal(result.dismounted.mode,'on_foot');
   assert(result.dismounted.parent&&result.dismounted.visible&&result.dismounted.noRider);
