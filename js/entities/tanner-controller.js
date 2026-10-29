@@ -12,6 +12,8 @@
                 this.isSitting = false;
                 this.vehicleBoneRig=null;
                 this.motorcycleVehicle=null;
+                this.motorcycleDynamics=null;
+                this.motorcycleContactReport=null;
 
                 this.buildTannerMesh();
                 this.loadPlayerModel();
@@ -199,6 +201,8 @@
                 this.group.rotation.set(0,0,0);
                 this.heading=0;
                 this.motorcycleVehicle=vehicle;
+                this.motorcycleDynamics=null;
+                this.motorcycleContactReport=null;
                 this.group.userData.driverPlayerRider=true;
                 this.group.visible=true;
                 this.applyVehicleTransitionPose('motorcycle','ride',1,0);
@@ -207,7 +211,14 @@
 
             updateMotorcycleRidePose(dt) {
                 if(!this.motorcycleVehicle||!this.vehicleBoneRig)return;
-                this.applyVehicleTransitionPose('motorcycle','ride',1,dt);
+                const seconds=Math.max(0,Math.min(.08,Number(dt)||0));
+                this.applyVehicleTransitionPose('motorcycle','ride',1,seconds);
+                if(typeof DriverMotorcycleContactIK!=='undefined'){
+                    this.motorcycleDynamics=DriverMotorcycleContactIK.signals(
+                        this.motorcycleDynamics,this.motorcycleVehicle,seconds);
+                    this.motorcycleContactReport=DriverMotorcycleContactIK.apply(
+                        this,this.motorcycleVehicle,this.motorcycleDynamics);
+                }
             }
 
             detachFromMotorcycle() {
@@ -218,6 +229,8 @@
                 this.scene.add(this.group);
                 delete this.group.userData.driverPlayerRider;
                 this.motorcycleVehicle=null;
+                this.motorcycleDynamics=null;
+                this.motorcycleContactReport=null;
                 this.group.rotation.set(0,0,0);
                 this.group.visible=false;
                 return true;
