@@ -31,6 +31,7 @@ class DriverMalePedestrian {
         this.lastMoving=false;
         this.lastRunning=false;
         this.originalHeight=0;
+        this.visualRepairs={normalizedSkins:0,scaleTracksRemoved:0,invalidTracksRemoved:0};
     }
 
     load(){
@@ -47,6 +48,10 @@ class DriverMalePedestrian {
                     try{
                         if(!gltf?.scene||!gltf?.animations?.length)
                             throw new Error('Cena ou animações ausentes no GLB');
+                        // Modelos Meshy podem trazer keyframes de escala nos ossos
+                        // que deformam braços/rosto durante a caminhada. A correção
+                        // é opt-in somente para a personagem mulher 3.
+                        this.repairRigAndAnimations(gltf.scene,gltf.animations);
                         const walk=gltf.animations.find(clip=>clip.name===this.config.walkName)||
                             gltf.animations.find(clip=>
                             /^(walking|walk)$/i.test(clip.name))||
@@ -116,6 +121,35 @@ class DriverMalePedestrian {
                 });
         });
         return this.promise;
+    }
+
+    repairRigAndAnimations(root,clips){
+        if(!this.config.repairSkinDeformation)return;
+        this.visualRepairs={normalizedSkins:0,scaleTracksRemoved:0,invalidTracksRemoved:0};
+        root.traverse(node=>{
+            if(!node.isSkinnedMesh)return;
+            // WEIGHTS_0 mal normalizados causam vértices esticados, sobretudo
+            // na transição entre quadril, ombros e braços.
+            if(typeof node.normalizeSkinWeights==='function'){
+                node.normalizeSkinWeights();
+                this.visualRepairs.normalizedSkins++;
+            }
+        });
+        for(const clip of clips){
+            if(!Array.isArray(clip.tracks))continue;
+            clip.tracks=clip.tracks.filter(track=>{
+                if(/\.scale$/i.test(track?.name||'')){
+                    this.visualRepairs.scaleTracksRemoved++;
+                    return false;
+                }
+                // Ignorar canais corrompidos em vez de propagar NaN ao rig.
+                if(track?.values && Array.from(track.values).some(v=>!Number.isFinite(v))){
+                    this.visualRepairs.invalidTracksRemoved++;
+                    return false;
+                }
+                return true;
+            });
+        }
     }
 
     resizeTextures(root){
@@ -206,7 +240,7 @@ class DriverMalePedestrian {
             id:this.config.id,assetUrl:this.config.url,resizedTextures:this.resizedTextures,
             animated:!!this.walkAction,
             animations:this.animationNames.slice(),
-            originalHeight:this.originalHeight,error:this.error,
+            originalHeight:this.originalHeight,visualRepairs:{...this.visualRepairs},error:this.error,
             pedestrianCount:this.manager?.pedestrians?.length||0};
     }
 }
