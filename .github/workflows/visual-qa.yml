@@ -55,6 +55,7 @@ on:
       - 'js/engine/gpu-resources.js'
       - 'tests/gpu-resource-lifecycle.test.cjs'
       - 'js/assets/driver-female-pedestrian.js'
+      - 'js/assets/driver-pedestrian-variants.js'
       - 'js/entities/pedestrians-roadblocks.js'
       - 'assets/pedestrians/**'
       - '.github/workflows/visual-qa.yml'
@@ -111,6 +112,10 @@ jobs:
           done
           cat /tmp/driver-http.log
           exit 1
+      - name: Validar cinco modelos de pedestres e troca Chicago/Havana
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/male-pedestrian-visual.cjs
       - name: Validar carregamento do mapa original de Chicago na raiz
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
@@ -147,10 +152,6 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-ps1-undercover-visual.cjs
-      - name: Inspecionar visualmente novo pedestre masculino em Chicago e Havana
-        env:
-          DRIVER_QA_URL: http://127.0.0.1:4173/
-        run: node tests/male-pedestrian-visual.cjs
       - name: Jogar e testar os 10 modos da expansão no Chromium
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/

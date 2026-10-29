@@ -16,7 +16,8 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  ]});
  const page=await browser.newPage({viewport:{width:1152,height:720}});
  page.setDefaultTimeout(120000);
- const errors=[],results=[];
+ const errors=[],results=[],extraRequests=[];
+ page.on('request',request=>{const url=decodeURIComponent(request.url());if(/assets\/pedestrians\/(mendingo|mulher [23])\.glb/.test(url))extraRequests.push(url);});
  page.on('pageerror',e=>errors.push(String(e)));
  try{
    await page.addInitScript(()=>localStorage.setItem(
@@ -66,6 +67,36 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       assert(data.femaleActive,'Female pedestrian disappeared');
       assert(data.skinnedMeshes>=1,'GLB body is not skinned');
       assert(data.hasWalking&&data.hasRunning);
+      await page.waitForFunction(()=>window.DriverGame?.pedManager?.variantPedestrians?.models.every(model=>
+         ['ready','error','missing','unsupported'].includes(model.state)),null,{timeout:120000});
+      const variants=await page.evaluate(()=>{
+         const g=window.DriverGame,m=g.pedManager;
+         return m.variantPedestrians.models.map(model=>{
+            const p=model.current;if(p)p.mesh.visible=true;
+            let skins=0,maxTexture=0;
+            model.root?.traverse(node=>{
+               if(node.isSkinnedMesh)skins++;
+               for(const mat of (Array.isArray(node.material)?node.material:[node.material]).filter(Boolean))
+                  for(const value of Object.values(mat))if(value?.isTexture&&value.image)
+                     maxTexture=Math.max(maxTexture,value.image.width||0,value.image.height||0);
+            });
+            const before=model.mixer?.time||0;
+            model.update(p,.05,true,false);const walk=model.action?.getClip().name;
+            model.update(p,.05,true,true);const run=model.action?.getClip().name;
+            model.update(p,.05,false,false);
+            return {status:model.status(),rootUUID:model.root?.uuid,skins,maxTexture,walk,run,
+               slot:m.pedestrians.indexOf(p),advanced:(model.mixer?.time||0)>before,paused:model.action?.paused};
+         });
+      });
+      assert.equal(variants.length,3);
+      for(const v of variants){
+         assert.equal(v.status.state,'ready',JSON.stringify(v));assert(v.status.active&&v.skins>0);
+         assert(v.slot>=2&&v.slot<=4);assert(v.maxTexture>0&&v.maxTexture<=1024);
+         assert(v.advanced&&v.paused);assert.equal(v.run,'Running');
+         assert.equal(v.walk,v.status.id==='mendigo'?'Walking':'Walking_Woman');
+      }
+      if(results.length)for(let i=0;i<variants.length;i++)assert.equal(variants[i].rootUUID,results[0].variants[i].rootUUID,'GLB foi recarregado ao trocar de cidade');
+      data.variants=variants;
       results.push(data);
 
       // Pause gameplay so the camera can photograph the actual skinned
@@ -73,6 +104,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       await page.evaluate(()=>{
          const g=window.DriverGame,p=g.pedManager.malePedestrian.current;
          g.isPaused=true;
+         for(const other of g.pedManager.pedestrians)other.mesh.visible=other===p;
          p.mesh.visible=true;
          p.x=17;p.z=-40;
          p.mesh.position.set(17,g.city.getSidewalkHeightAt(17,-40),-40);
@@ -86,8 +118,20 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       await sleep(850);
       await page.screenshot({path:path.join(DIR,
          'male-pedestrian-'+city+'-glb.png')});
-      await page.evaluate(()=>{window.DriverGame.isPaused=false;});
+      for(let variant=0;variant<3;variant++){
+         await page.evaluate(index=>{
+            const g=window.DriverGame,model=g.pedManager.variantPedestrians.models[index],p=model.current;
+            for(const other of g.pedManager.pedestrians)other.mesh.visible=other===p;
+            p.mesh.visible=true;p.mesh.position.set(17,g.city.getSidewalkHeightAt(17,-40),-40);p.mesh.rotation.set(0,0,0);
+            model.update(p,.05,true,false);g.camera.position.set(21,3.1,-33);g.camera.lookAt(17,1.2,-40);
+            g.camera.updateProjectionMatrix();g.renderer.render(g.scene,g.camera);
+         },variant);
+         await page.screenshot({path:path.join(DIR,'extra-pedestrian-'+variant+'-'+city+'.png')});
+      }
+      await page.evaluate(()=>{for(const p of window.DriverGame.pedManager.pedestrians)p.mesh.visible=true;window.DriverGame.isPaused=false;});
    }
+   assert.equal(extraRequests.length,3,'Cada GLB adicional deve ser baixado apenas uma vez');
+   assert.equal(new Set(extraRequests).size,3);
    assert.equal(errors.length,0,'Browser errors: '+errors.join(' | '));
    fs.writeFileSync(path.join(DIR,'male-pedestrian-report.json'),
       JSON.stringify({status:'PASS',results,errors},null,2));

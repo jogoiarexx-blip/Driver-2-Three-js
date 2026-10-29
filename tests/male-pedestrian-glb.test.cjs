@@ -135,7 +135,7 @@ test('game wires the model without replacing all pedestrians',()=>{
     assert(MANAGER.includes('this.malePedestrian?.load()'));
     assert(MANAGER.includes('this.malePedestrian?.update(p,dt,moving,crossing)'));
     assert(MANAGER.includes('!p.glbFemale&&!p.glbMale'));
-    assert(MANAGER.includes('(p.glbFemale||p.glbMale)?0'));
+    assert(MANAGER.includes('(p.glbFemale||p.glbMale||p.glbVariant)?0'));
     assert(MANAGER.includes('for(let i=0;i<28;i++)'));
 });
 test('missing GLTF loader preserves default procedural male',async()=>{
@@ -146,4 +146,14 @@ test('missing GLTF loader preserves default procedural male',async()=>{
     assert.equal(await a.load(),false);
     assert.equal(a.state,'unsupported');
     assert.equal(a.current,null);
+});
+test('adapter configura modelo adicional com slot e animação próprios sem ocupar homem original',async()=>{
+ const ctx=vm.createContext({THREE:{...THREE,GLTFLoader:class{load(url,onLoad){assert.equal(url,'./assets/pedestrians/mulher%202.glb');onLoad({scene:new Group(),animations:[...fakeGltf.animations,{name:'Walking_Woman',tracks:[1]}]});}}},Math,Number,Promise});
+ const Variant=vm.runInContext(SCRIPT+';DriverMalePedestrian',ctx),manager={pedestrians:Array.from({length:5},ped)};
+ for(const p of manager.pedestrians)p.mesh.add(new Group());
+ const model=new Variant(manager,{url:'./assets/pedestrians/mulher%202.glb',pedestrianIndex:3,height:2.05,tag:'glbVariant',id:'woman-2',walkName:'Walking_Woman'});
+ assert.equal(await model.load(),true);assert.equal(model.current,manager.pedestrians[3]);assert.equal(model.current.glbVariant,true);
+ assert.equal(manager.pedestrians[1].glbMale,undefined);assert.equal(model.walkAction.clip.name,'Walking_Woman');
+ model.current.mesh.visible=true;model.update(model.current,.016,true,true);assert.equal(model.action.clip.name,'Running');
+ model.release();assert.equal(manager.pedestrians[3].glbVariant,false);assert.equal(manager.pedestrians[3].mesh.children[0].visible,true);
 });

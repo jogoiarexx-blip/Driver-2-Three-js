@@ -1259,3 +1259,19 @@ direção nos dois sentidos além da antiga borda, os replays R15-R19 e a checag
 da extensão visível do lago. Revisão independente sem bloqueios após a correção
 da água fora do cenário antigo. Os 15 arquivos gerados foram reproduzidos byte a
 byte. Os três novos GLBs de pedestres enviados ao repositório foram preservados.
+
+### Pedestres adicionais enviados ao GitHub
+
+`mendingo.glb`, `mulher 2.glb` e `mulher 3.glb` agora ocupam três vagas normais
+entre os 28 civis. Os modelos masculino e feminino anteriores permanecem ativos.
+Cada novo personagem usa seu próprio esqueleto, caminhada e corrida, com as
+mesmas rotas, travessias, paradas e esquivas da IA existente. Os modelos são
+carregados em sequência e reutilizados ao trocar de cidade. Se um arquivo falhar,
+o pedestre procedural continua visível. As texturas dos três novos modelos são
+limitadas a 1024 no carregamento para reduzir memória; os GLBs originais não foram
+alterados. As missões e a reconstrução do mapa não mudam nesta atualização.
+
+Validação dos pedestres adicionais: **621 testes Node passaram**. O runner
+40927658665 validou os cinco modelos em Chicago e Havana, skinning real, animações,
+pausa, texturas até 1024 e reutilização dos mesmos rigs na troca de cidade, com
+apenas um download por arquivo novo. Revisão independente sem bloqueios.
