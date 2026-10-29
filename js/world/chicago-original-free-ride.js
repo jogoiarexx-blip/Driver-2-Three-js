@@ -44,11 +44,13 @@ class DriverChicagoOriginalFreeRide {
             const k=e.key.toLowerCase();
             if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))
                 e.preventDefault();
-            if(e.repeat && ['p','c','r','q','escape'].includes(k))return;
+            if(e.repeat && ['p','c','r','q','m','escape'].includes(k))return;
             if(k==='p'||k==='escape')this.paused=!this.paused;
             if(k==='c')this.cameraMode=(this.cameraMode+1)%3;
             if(k==='r')this.resetVehicle();
             if(k==='q')this.switchQuality();
+            if(k==='m'){const map=document.getElementById('chicago-ride-map');
+                if(map)map.hidden=!map.hidden;}
             this.keys.add(k);
         };
         this._keyup=e=>this.keys.delete(e.key.toLowerCase());
@@ -76,6 +78,8 @@ class DriverChicagoOriginalFreeRide {
         this.show('Lendo solo e colisões da Chicago original...');
         await this.world.load('./chicago/drive-mask.json');
         this.world.rescaleWorld(DriverChicagoOriginalFreeRide.WORLD_SCALE);
+        const mapCanvas=document.getElementById('chicago-ride-map-canvas');
+        if(mapCanvas)this.minimap=new DriverChicagoOriginalMinimap(mapCanvas,this.world);
         this.show('Preparando os 54 setores do mapa PS1...');
         await this.stream.start();
         // O plano quase horizontal do original é Y=0; seu menor vértice
@@ -146,6 +150,7 @@ class DriverChicagoOriginalFreeRide {
         }
         this.stream.update({x:this.car.x,z:this.car.z});
         this.renderer.render(this.scene,this.camera);
+        this.minimap?.draw(this.car);
         const kmh=Math.round(Math.abs(this.car.speed)*3.4);
         const stat=this.stats||{};
         const speed=document.getElementById('chicago-ride-speed');

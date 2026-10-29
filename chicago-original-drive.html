@@ -20,6 +20,10 @@ padding:8px 10px;margin:6px 4px 0 0;cursor:pointer}
 #chicago-ride-notice{color:#ffdc92;font-size:12px;font-weight:bold;margin-top:8px}
 @media (max-width:680px){#footer{display:none}#hud{font-size:12px;padding:10px}
 h1{font-size:14px}#speedbox{padding:7px;min-width:88px}#chicago-ride-speed{font-size:26px}}
+#chicago-ride-map{position:fixed;right:16px;top:14px;margin:0;background:#071321e8;border:1px solid #667a92;border-radius:8px;padding:6px;width:180px}
+#chicago-ride-map canvas{width:100%;height:auto}#chicago-ride-map figcaption{font-size:10px;color:#b6c8da;text-align:center;line-height:1.4}
+#chicago-ride-map[hidden]{display:none}
+@media(max-width:680px){#chicago-ride-map{top:auto;bottom:90px;right:8px;width:115px}}
 </style></head><body>
 <div id="chicago-ride-root"></div>
 <div id="hud"><h1>DRIVER 2 • CHICAGO ORIGINAL PS1</h1>
@@ -35,6 +39,7 @@ h1{font-size:14px}#speedbox{padding:7px;min-width:88px}#chicago-ride-speed{font-
 <small>WASD/setas: dirigir • Espaço: freio de mão • Shift: burnout.<br>
 Não inclui ainda missões e tráfego nas ruas originais; a física não foi alterada.</small>
 </div>
+<figure id="chicago-ride-map"><canvas id="chicago-ride-map-canvas" width="180" height="300" aria-label="Pisos extraídos de Chicago PS1 e posição do carro"></canvas><figcaption>CHICAGO PS1 · M: ocultar<br>Pisos candidatos · vias não certificadas</figcaption></figure>
 <div id="speedbox"><span id="chicago-ride-speed">000</span><div><small>KM/H</small></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -46,6 +51,7 @@ Não inclui ainda missões e tráfego nas ruas originais; a física não foi alt
 <script src="./js/vehicles/driver-vehicle.js"></script>
 <script src="./js/world/chicago-original-tile-stream.js"></script>
 <script src="./js/world/chicago-original-drive-map.js"></script>
+<script src="./js/world/chicago-original-minimap.js"></script>
 <script src="./js/world/chicago-original-free-ride.js"></script>
 <script>
 (async()=>{

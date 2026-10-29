@@ -90,6 +90,16 @@ class DriverChicagoOriginalTileStream {
             .filter(t=>this._distance(t)<=this.loadRadius &&
                 !this.loaded.has(t.id)&&!this.pending.has(t.id)&&!this.failed.has(t.id))
             .sort((a,b)=>this._distance(a)-this._distance(b));
+        // Reserve cache slots for the closest sectors, including pending loads.
+        // A small distance margin avoids churn at a boundary between two tiles.
+        for(const tile of this.queue){
+            if(this.loaded.size+this.pending.size<this.maxLoaded)break;
+            const farthest=[...this.loaded.entries()].sort(
+                (a,b)=>this._distance(b[1].tile)-this._distance(a[1].tile))[0];
+            if(!farthest||this._distance(farthest[1].tile)<=this._distance(tile)+2)break;
+            this._release(farthest[1].group);
+            this.loaded.delete(farthest[0]);
+        }
         this._pump();return this.stats();
     }
     _pump(){

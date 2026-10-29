@@ -49,3 +49,16 @@ test('rejeita manifest inválido, URLs de fora e promessa de física',()=>{
  assert.throws(()=>s.bindManifest({...manifest,tiles:[{id:'unsafe',url:'../../evil.glb',bounds:manifest.tiles[0].bounds}]}),/Chunk inválido/);
  assert.throws(()=>s.bindManifest({}),/Manifest/);
 });
+
+test('prioriza o setor próximo mesmo com cache cheio dentro do raio de retenção',()=>{
+ const a=newStream({maxLoaded:1,loadRadius:55,unloadRadius:75});
+ a.bindManifest(manifest);a.material={dispose(){}};
+ a.update({x:0,z:0});
+ assert(a.loaded.has('00_00'));
+ const old=a.loaded.get('00_00').group;
+ // B está a 40 unidades OBJ de A: ambos ainda no raio de retenção.
+ a.update({x:40*3.4,z:0});
+ assert(a.loaded.has('02_00'),'setor sob o carro deve substituir o distante');
+ assert.equal(a.loaded.size,1);
+ assert.equal(old.parent,null);
+});

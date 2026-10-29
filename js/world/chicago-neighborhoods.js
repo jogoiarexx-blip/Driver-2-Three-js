@@ -8,7 +8,7 @@
 class DriverChicagoNeighborhoods {
     static DISTRICTS = [
         {id:'wrigleyville',name:'WRIGLEYVILLE',x:-278,z:220,color:0x67e8f9},
-        {id:'lincoln-park',name:'LINCOLN PARK',x:95,z:236,color:0x86efac},
+        {id:'lincoln-park',name:'LINCOLN PARK',x:280,z:236,color:0x86efac},
         {id:'gold-coast',name:'GOLD COAST',x:230,z:124,color:0xfde68a},
         {id:'downtown',name:'DOWNTOWN / LOOP',x:64,z:-65,color:0xfbbf24},
         {id:'grant-park',name:'GRANT PARK',x:280,z:-120,color:0x4ade80},

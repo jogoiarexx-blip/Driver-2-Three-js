@@ -137,6 +137,7 @@
                 this.chicagoLowerWacker=null;
                 this.chicagoOverhaulStats=null;
                 this.chicagoPS1Coastline=null;
+                this.chicagoUndercoverLakefront=null;
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
@@ -304,6 +305,11 @@
                             DriverChicagoGooseIslandNorthYard.isCarvedBlock(blockX,blockZ))
                             return;
 
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoUndercoverLakefront!=='undefined' &&
+                            DriverChicagoUndercoverLakefront.isCarvedBlock(blockX,blockZ))
+                            return;
+
                         // Calçadas agrupadas em uma única draw call instanciada.
                         sidewalkPositions.push({x:blockX,z:blockZ});
                         // Grade física única para o piso elevado e para a IA.
@@ -330,6 +336,10 @@
                         } else if (this.preset.id==='chicago' &&
                             blockX===120 && blockZ===-280) {
                             this.buildEnterableStore(blockX,blockZ,'garage');
+                        } else if (this.preset.id==='chicago' &&
+                            typeof DriverChicagoUndercoverLakefront!=='undefined' &&
+                            DriverChicagoUndercoverLakefront.isParkBlock(blockX,blockZ)) {
+                            this.buildParkBlock(blockX,blockZ);
                         } else if ((blockX + blockZ) % 160 === 0) {
                             this.buildParkBlock(blockX, blockZ);
                         } else {
@@ -384,6 +394,8 @@
                     // a leste da malha, sem mudar rotas de campanha.
                     if(typeof DriverChicagoPS1Coastline!=='undefined')
                         DriverChicagoPS1Coastline.build(this);
+                    if(typeof DriverChicagoUndercoverLakefront!=='undefined')
+                        DriverChicagoUndercoverLakefront.build(this);
                     // R2: rio Norte/Sul e Goose Island: travessias sobre ruas
                     // transversais, sem deslocar missões nem substituir IA.
                     if(typeof DriverChicagoPS1RiverBranches!=='undefined')

@@ -1128,3 +1128,19 @@ O controlador atua **antes** da mudança de waypoint. Não muda `DriverArcadePhy
 Reproduzir `node --test tests/chicago-r11-turn-control.test.cjs`. O teste `tests/chicago-r11-turn-physics-browser.cjs` simula **60 segundos físicos com os quatro caminhões, sinalização real e sistema de colisões**, sem teletransportar, registra quantidade e pontos de atuação do controle de curva, verifica água/obstáculos/danos/paradas e salva JSON + screenshot. O workflow `chicago-r11-turn-control.yml` disponibiliza os artefatos.
 
 A malha industrial permanece procedural, inspirada no PS1. Os GLBs originais e os pontos de missão do Undercover não foram alterados.
+
+## Chicago R12 — continuidade dos setores originais e orientação pelo piso PS1
+
+O passeio livre original agora troca setores distantes por setores mais próximos quando o cache está cheio, mesmo antes de atingirem o raio de descarregamento. Uma margem de 2 unidades OBJ reduz trocas repetidas nas bordas. O limite de memória e o descarte de geometria continuam ativos; o atlas compartilhado é preservado.
+
+Um plano compacto acompanha a posição e direção do carro, gerado diretamente dos bits da máscara extraída dos 54 GLBs. Mantém a proporção geográfica, sem grade de 80 e sem rótulos de bairros inventados. Tecla M oculta/exibe. As áreas claras são pisos candidatos: não são ruas certificadas nem água classificada.
+
+Validação local: 587 testes Node passaram, incluindo reprodução do cache cheio que falhava antes da correção. Nenhuma validação visual em navegador foi executada nesta rodada. A campanha Undercover permanece procedural; esta revisão não migra missões, não acrescenta relevo e não certifica fidelidade percentual.
+
+## Chicago R13 — geografia procedural do Undercover na orla norte
+
+A mudança é aplicada ao `CityBuilder` da campanha: avenida curva de 240 unidades, com duas faixas (12,6 de largura), acompanhando a margem do lago entre z=80 e z=320. Quatro acessos unem a avenida às ruas de z=80/160/240/320. Três células externas em x=360 são reservadas antes da geração de edifícios/calçadas, evitando quarteirões sobre o novo corredor. Lincoln Park passa a ocupar três células ao norte em x=280; a placa acompanha a nova área. O parque preexistente é preservado e duas células antes edificadas passam a ser parques.
+
+O eixo fica 17 unidades a oeste da margem física, e as faixas foram verificadas secas em amostras de 2 unidades. Não foram deslocadas a casa de Tanner, a garagem secreta, a estação, o estádio, os pontos iniciais ou objetivos das missões. O tráfego em grade não passa automaticamente a usar a avenida nova. A R12 do passeio livre original está incluída.
+
+São coordenadas procedurais adaptadas, não ruas extraídas/certificadas do PS1. A revisão não homologa a campanha completa nem elimina a grade antiga. Validação: suíte Node e verificação de sintaxe; inspeção visual em navegador ainda pendente.
