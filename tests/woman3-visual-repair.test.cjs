@@ -63,4 +63,9 @@ test('published woman 3 contains a real skinned, animated GLB',()=>{
  assert(gltf.animations?.some(a=>a.name==='Walking_Woman'));
  assert(gltf.meshes?.some(mesh=>mesh.primitives?.some(p=>
   p.attributes?.JOINTS_0!==undefined&&p.attributes?.WEIGHTS_0!==undefined)));
+ const channels=gltf.animations.flatMap(a=>a.channels||[]);
+ const scaleChannels=channels.filter(c=>c.target?.path==='scale');
+ const posChannels=channels.filter(c=>c.target?.path==='translation');
+ const skinnedMeshes=gltf.meshes.filter(mesh=>mesh.primitives?.some(p=>p.attributes?.JOINTS_0!==undefined));
+ console.log('Mulher 3 / GLB diagnostic:',JSON.stringify({bytes:file.length,skins:gltf.skins.length,skinnedMeshes:skinnedMeshes.length,animations:gltf.animations.map(a=>a.name),scaleChannels:scaleChannels.length,positionChannels:posChannels.length,images:gltf.images?.length||0}));
 });
