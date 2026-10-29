@@ -136,8 +136,8 @@ presence. Publication remains authorized after these checks.
 
 - [x] Canonical junction, source provenance and physical lot clearance tests.
 - [x] 613 Node tests passed; prior R15-R18 regressions retained.
-- [ ] Independent review and four north-route browser physical replays.
-- [ ] Publish checked source and verify Pages deployment.
+- [x] Independent review and four north-route browser physical replays (40906667252, Undercover step passed).
+- Source publication authorized after checks; Pages status tracked by the release workflow.
 
 R19 junction check: first graphics run completed all four routes, but one exceeded
 the single-centerline 2.45-unit margin at the junction (3.085). Added a physical
@@ -147,3 +147,10 @@ triangles of the new roads, apron and connected R18/legacy avenue asphalt, with
 instance/world transforms applied. Zero footprint misses are required; water,
 blockage, damage and route-completion assertions remain. Older R15-R18 centerline
 checks remain unchanged. The failed prototype was not published to main.
+
+R19 final verification: 614 Node tests passed. Graphics run 40906667252 passed
+the Undercover step with all four north routes and R15-R18 replays; all R19
+collision-footprint samples stayed on rendered pavement. Stadium presence and
+mission marker were retained. Independent final re-review found no blockers.
+Eleven generated source/network files reproduced byte-for-byte. The complete
+original map and subsequent mission relocation remain unfinished.

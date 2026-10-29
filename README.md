@@ -1232,3 +1232,10 @@ com uma cabeceira única compartilhada entre os três trechos. O quarteirão com
 (-280,280) foi reconstruído com três casas fora das pistas; o estádio permanece
 preservado. O teste gráfico inclui os dois caminhos nos dois sentidos com física
 real do carro. A posição continua adaptada ao Undercover, e as missões não mudam.
+
+Validação R19: **614 testes Node passaram**. O runner 40906667252 passou os
+quatro percursos norte, sem colisões/submersão e sem pontos amostrados do volume
+de colisão fora do asfalto renderizado. O entroncamento ganhou um alargamento
+pavimentado real para as conversões. Os replays R15-R18, o estádio e o marcador
+de missão foram preservados. Revisão independente sem bloqueios. A reconstrução
+do mapa completo ainda não terminou; as missões permanecem nos lugares atuais.
