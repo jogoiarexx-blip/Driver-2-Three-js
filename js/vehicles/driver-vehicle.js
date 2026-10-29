@@ -315,22 +315,38 @@
             }
 
             mountMotorcycleRider(){
-                if(this.motorcycleRider?.parent)this.motorcycleRider.parent.remove(this.motorcycleRider);
-                const group=new THREE.Group();group.name='motorcycle-seated-rider';
+                if(this.motorcycleRider?.parent)
+                    this.motorcycleRider.parent.remove(this.motorcycleRider);
+                const group=new THREE.Group();
+                group.name='motorcycle-seated-rider';
                 const jacket=new THREE.MeshLambertMaterial({color:0x451a03});
                 const jeans=new THREE.MeshLambertMaterial({color:0x1d4ed8});
                 const skin=new THREE.MeshLambertMaterial({color:0xfdba74});
+                const hair=new THREE.MeshLambertMaterial({color:0x27272a});
+                const boots=new THREE.MeshLambertMaterial({color:0x1c1917});
                 const part=(w,h,d,x,y,z,mat,rx=0)=>{
                     const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
-                    mesh.position.set(x,y,z);mesh.rotation.x=rx;group.add(mesh);
+                    mesh.position.set(x,y,z);
+                    mesh.rotation.x=rx;group.add(mesh);
+                    return mesh;
                 };
-                part(.54,.65,.3,0,1.65,-.25,jacket,.18);
-                part(.34,.36,.34,0,2.15,-.13,skin);
+                // Silhueta sentada: quadril sobre banco, tronco levemente
+                // inclinado, pés nos apoios e mãos alcançando o guidão.
+                part(.45,.18,.31,0,1.29,-.38,jeans);
+                part(.52,.63,.30,0,1.66,-.29,jacket,-.17);
+                part(.34,.36,.34,0,2.10,-.19,skin);
+                part(.36,.13,.36,0,2.31,-.21,hair);
                 for(const side of [-1,1]){
-                    part(.18,.65,.18,side*.32,1.62,.12,jacket,-.85);
-                    part(.2,.6,.2,side*.33,1.04,-.03,jeans,-.55);
+                    part(.19,.39,.18,side*.31,1.66,-.08,jacket,-.55);
+                    part(.16,.40,.16,side*.32,1.38,.18,jacket,-.70);
+                    part(.14,.14,.15,side*.33,1.24,.43,skin);
+                    part(.23,.45,.24,side*.18,1.11,-.14,jeans,-.58);
+                    part(.19,.43,.20,side*.26,.82,.07,jeans,.34);
+                    part(.24,.14,.36,side*.27,.62,.23,boots);
                 }
-                group.visible=false;this.motorcycleRider=group;this.chassisTilt.add(group);
+                group.visible=false;
+                this.motorcycleRider=group;
+                this.chassisTilt.add(group);
             }
 
             applyCC0Model(modelScene, shared = true) {
