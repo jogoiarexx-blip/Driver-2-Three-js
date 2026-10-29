@@ -1117,3 +1117,14 @@ A R9 havia certificado **quatro caminhões simultâneos por 60 segundos**, mas o
 
 **Validação:** `tests/chicago-r10-traffic-signals.test.cjs` verifica as distinções. `tests/chicago-r10-live-signals-browser.cjs` repete a simulação dos quatro veículos com a **fase real de 24 segundos** do `CityBuilder` por 60 segundos virtuais; não substitui `isTrafficGreen` por uma função que sempre retorna `true`. A telemetria em `qa-artifacts/chicago-r10-live-signals.json` mede tempo parado, área transitável, danos e ocorrências de vermelho/verde. A cidade original PS1 ainda não é a base da campanha; os GLBs continuam no diretório `chicago/` para a migração gradual.
 
+
+
+## Chicago R11 — desaceleração antecipada nas curvas da ilha
+
+A R10 validou 60 segundos com quatro caminhões e semáforos reais. A R11 corrige o comportamento de **frear tarde** em conversões de cerca de 90 graus: `js/traffic/chicago-local-turn-control.js` detecta as cinco aproximações estreitas da Goose Island procedural (entrada oeste, curva de entrada na indústria, saída da rua interna, saída do deck norte e retorno sul) e fornece um limite progressivo de aproximadamente **7–16 unidades de velocidade**, com piso um pouco maior nos decks.
+
+O controlador atua **antes** da mudança de waypoint. Não muda `DriverArcadePhysics`, `DriverVehicle`, a posição dos carros, o volante do jogador ou a temporização dos semáforos. Só é aplicado aos quatro veículos locais de Goose Island, em Chicago, e nunca a veículos de missão com `scriptedDrive`. A IA registra `route.localTurnAssist` e `route.localTurnSpeed` para diagnóstico reproduzível.
+
+Reproduzir `node --test tests/chicago-r11-turn-control.test.cjs`. O teste `tests/chicago-r11-turn-physics-browser.cjs` simula **60 segundos físicos com os quatro caminhões, sinalização real e sistema de colisões**, sem teletransportar, registra quantidade e pontos de atuação do controle de curva, verifica água/obstáculos/danos/paradas e salva JSON + screenshot. O workflow `chicago-r11-turn-control.yml` disponibiliza os artefatos.
+
+A malha industrial permanece procedural, inspirada no PS1. Os GLBs originais e os pontos de missão do Undercover não foram alterados.
