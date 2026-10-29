@@ -505,6 +505,18 @@ class DriverTrafficAI {
             this.city?.preset?.id==='chicago' &&
             route.isNorthYardSouth)
             maxSpeed=Math.min(maxSpeed,12);
+        // R11: frear antes da curva real, e não somente depois que o
+        // waypoint virou. Não altera volante ou física de outros carros.
+        const localTurn=typeof DriverChicagoLocalTurnControl!=='undefined' &&
+            DriverChicagoLocalTurnControl.speedLimit(this.city,car,route);
+        if(localTurn){
+            maxSpeed=Math.min(maxSpeed,localTurn.speed);
+            route.localTurnAssist=localTurn.reason;
+            route.localTurnSpeed=localTurn.speed;
+        }else{
+            route.localTurnAssist=null;
+            route.localTurnSpeed=null;
+        }
         if (maneuver) maxSpeed=Math.min(maxSpeed,maneuver.speedLimit);
         if (scripted) maxSpeed=scripted.done||missionRoute?.blocked?0:
             Math.min(maxSpeed,scripted.maxSpeed||23);

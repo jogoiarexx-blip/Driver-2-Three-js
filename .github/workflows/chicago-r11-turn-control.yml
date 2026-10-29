@@ -1,0 +1,55 @@
+name: Driver 2 - Chicago R11 - Curvas sem teleporte
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/traffic/chicago-local-turn-control.js'
+      - 'js/traffic/traffic-ai.js'
+      - 'tests/chicago-r11-turn-control.test.cjs'
+      - 'tests/chicago-r11-turn-physics-browser.cjs'
+      - '.github/workflows/chicago-r11-turn-control.yml'
+  pull_request:
+    paths:
+      - 'js/traffic/chicago-local-turn-control.js'
+      - 'js/traffic/traffic-ai.js'
+      - 'tests/chicago-r11-turn-control.test.cjs'
+      - 'tests/chicago-r11-turn-physics-browser.cjs'
+      - '.github/workflows/chicago-r11-turn-control.yml'
+permissions:
+  contents: read
+jobs:
+  turn-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar pre-frenagem local e isolamento da campanha
+        run: node --test tests/chicago-r11-turn-control.test.cjs
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir Driver 2 localmente
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/chicago-r11-http.log 2>&1 &
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/chicago-r11-http.log; exit 1
+      - name: Simular quatro caminhões por 60s com semáforos reais
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r11-turn-physics-browser.cjs
+      - name: Publicar diagnóstico de curvas e screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r11-traffic-turn-diagnostics
+          path: |
+            qa-artifacts/chicago-r11-turn-replay.json
+            qa-artifacts/chicago-r11-turn-replay.png
+          retention-days: 14
