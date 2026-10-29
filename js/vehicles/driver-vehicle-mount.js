@@ -61,7 +61,8 @@ class DriverVehicleMount {
             from,near,seat,stand,originalCar:engine.playerCar
         };
         if(kind==='enter')engine.tanner.setVisible(true);
-        else engine.tanner.setVisible(false);
+        else engine.tanner.setVisible(bike&&
+            engine.tanner.motorcycleVehicle===vehicle);
         return true;
     }
     static setActor(engine,p,heading,style,kind,t,dt,side=-1){
