@@ -107,7 +107,8 @@ test('dossiês são coletados estritamente na ordem',()=>{
 test('modelo 3D personalizado pode ser substituído sem perder proteção do cache',()=>{
   const code=read('js/vehicles/driver-vehicle.js');
   assert.match(code,/\(this\._userCustomModel && shared\)/);
-  assert.match(code,/preserved = \[this\.sirenAssembly, this\.targetMarker, this\.lightsGroup, this\.damageGroup\]/);
+  assert.match(code,/const preserved = \[this\.sirenAssembly, this\.targetMarker,/);
+  assert.match(code,/child\.userData\?\.driverPlayerRider/);
   assert.match(code,/obj\.userData\.cc0SharedAsset = shared/);
 });
 test('missão 7 e botão de faróis estão vinculados ao jogo',()=>{
