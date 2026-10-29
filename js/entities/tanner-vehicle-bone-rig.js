@@ -9,8 +9,10 @@ class DriverTannerVehicleRig {
         hips:'Hips',spine:'Spine',spine1:'Spine1',spine2:'Spine2',
         leftArm:'LeftArm',rightArm:'RightArm',
         leftForeArm:'LeftForeArm',rightForeArm:'RightForeArm',
+        leftHand:'LeftHand',rightHand:'RightHand',
         leftUpLeg:'LeftUpLeg',rightUpLeg:'RightUpLeg',
-        leftLeg:'LeftLeg',rightLeg:'RightLeg'
+        leftLeg:'LeftLeg',rightLeg:'RightLeg',
+        leftFoot:'LeftFoot',rightFoot:'RightFoot'
     };
     static bind(root){
         if(!root?.traverse || typeof THREE==='undefined' ||
