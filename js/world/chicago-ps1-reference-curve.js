@@ -34,9 +34,11 @@ class DriverChicagoPS1ReferenceCurve {
             sourcePixels:this.source.sourcePixels.length,originalPlacementCertified:false,
             wholeMapCertified:false,mode:'source-shaped-curve-r15'};
     }
+    static get placement(){return {key:"chicagoReferenceCurve",x:-280,z:-120,name:"chicago-r15-source-shaped-street"};}
     static prepare(city){
+        const placement=this.placement;
         if(city?.preset?.id!=='chicago')return null;
-        if(city.chicagoReferenceCurve)return city.chicagoReferenceCurve;
+        if(city[placement.key])return city[placement.key];
         const plan=this.plan(),vertices=[],edges=[];
         for(let i=0;i<plan.points.length;i++){
             const p=plan.points[i],a=plan.points[Math.max(0,i-1)],b=plan.points[Math.min(plan.points.length-1,i+1)];
@@ -56,8 +58,8 @@ class DriverChicagoPS1ReferenceCurve {
         const geo=new THREE.BufferGeometry();
         geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();
         const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x45494b,side:THREE.DoubleSide}));
-        mesh.name='chicago-r15-source-shaped-street';city.cityGroup.add(mesh);
-        const trim=[[-280,.006,-120,50,.01,50,0x526848,false]];
+        mesh.name=placement.name;city.cityGroup.add(mesh);
+        const trim=[[placement.x,.006,placement.z,50,.01,50,0x526848,false]];
         for(const lot of plan.lots){
             trim.push([lot.x,.013,lot.z,lot.width+2,.012,lot.depth+2,0x96988f,false]);
             city.districtBuildings.push(lot);
@@ -71,12 +73,12 @@ class DriverChicagoPS1ReferenceCurve {
         if(typeof DriverSpecialStructures!=='undefined')
             DriverSpecialStructures.pack(city.cityGroup,trim,'chicago-r15-curved-block');
         if(city.chicagoCityPlan){
-            city.chicagoCityPlan.blocks.push({x:-280,z:-120,district:'ukrainian-village',kind:'reference-street'});
+            city.chicagoCityPlan.blocks.push({x:placement.x,z:placement.z,district:'ukrainian-village',kind:'reference-street'});
             city.chicagoCityPlan.lots+=plan.lots.length;
             city.chicagoCityPlan.byDistrict['ukrainian-village']=(
                 city.chicagoCityPlan.byDistrict['ukrainian-village']||0)+1;
         }
-        city.chicagoReferenceCurve={...plan,mesh};return city.chicagoReferenceCurve;
+        city[placement.key]={...plan,mesh};return city[placement.key];
     }
 }
 if(typeof module!=='undefined'&&module.exports){

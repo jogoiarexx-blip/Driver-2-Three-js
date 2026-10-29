@@ -1172,3 +1172,13 @@ Reprodução da extração: `python3 tools/chicago-reference-network.py` (NumPy 
 **Ainda pendente:** transformar o restante do grafo candidato em ruas verificadas, reconstruir as margens e certificar pontes/níveis; só então reposicionar integralmente as missões. A R15 não declara o mapa inteiro PS1 pronto.
 
 Validação R15: **603 testes Node passaram**. Na revisão independente não foram encontrados bloqueios críticos/importantes. O runner gráfico passou pelos dois replays da curva nova e pelos testes R4–R7 de Goose Island. A suíte completa das quatro cidades é registrada no Actions; a conclusão de todo o mapa não é inferida desses testes. A planta comparativa está em `docs/chicago-r15-planta-comparativa.png` (diagrama, não screenshot do jogo).
+
+### Chicago R16 — prolongamento contínuo da referência
+
+A rua da R15 ganhou um prolongamento ao norte com o **mesmo alinhamento e escala**,
+extraído de 119 pixels de pavimento observado do PS1. O novo traçado usa pavimento
+marcado e liso para atravessar pequenas interrupções de textura na fonte. Outro
+quarteirão comum foi liberado e reconstruído com três casas e colisores próprios.
+O teste gráfico percorre a ligação R16 + R15 inteira nos dois sentidos usando a
+física real do carro. A posição continua adaptada ao Undercover; o restante da
+malha original ainda está em reconstrução, e as missões não foram deslocadas.

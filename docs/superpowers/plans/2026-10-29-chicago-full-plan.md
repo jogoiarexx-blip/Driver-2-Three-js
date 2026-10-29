@@ -49,3 +49,17 @@ Ruling: mission relocation is deferred because whole-map source-derived streets 
 Placement ruling: use existing dry avenues at (-320,-80) and (-260,-160), away from the west canal. This preserves access without claiming the original geographic position. Mission relocation remains blocked by the unfinished whole-map street migration, as requested by the user.
 
 R15 final review: independent read-only review found no critical/important issue. 603 Node tests passed. Graphics runner 40885121455 passed the Undercover step containing both source-curve physical replays and the R4-R7 regressions. The four-city aggregate was still running when the release was prepared.
+
+## R16 — contiguous source extension
+
+Continue the R15 source alignment northward, using the same similarity transform.
+The reference's marked texture has gaps; the new trace uses observed marked OR
+plain paving within a narrow inspected window, with all 119 source pixels kept.
+This is an adapted source corridor, not certified source neighborhood placement.
+Reserve the adjacent ordinary block (-280,-40), rebuild three physical parcels,
+and leave all mission starts/objectives unchanged. The graph remains ungraded.
+
+- [x] Source provenance, shared alignment, dry full width and lot clearance tests.
+- [x] 605 Node tests pass; prior R15 tests retained.
+- [ ] Full joined R16/R15 physical drive in both directions in browser.
+- [ ] Publish only after graphics checks; verify Pages.

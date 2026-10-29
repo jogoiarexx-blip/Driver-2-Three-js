@@ -141,6 +141,7 @@
                 this.chicagoCityPlan=null;
                 this.chicagoAirfield=null;
                 this.chicagoReferenceCurve=null;
+                this.chicagoReferenceExtension=null;
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
@@ -298,6 +299,9 @@
                         if(this.preset.id==='chicago' &&
                             typeof DriverChicagoPS1ReferenceCurve!=='undefined' &&
                             DriverChicagoPS1ReferenceCurve.isCarvedBlock(blockX,blockZ))return;
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoPS1ReferenceExtension!=='undefined' &&
+                            DriverChicagoPS1ReferenceExtension.isCarvedBlock(blockX,blockZ))return;
                         // R4: retirar apenas a célula do parque (-200,200);
                         // ela estava fisicamente dentro da rua da ilha.
                         // O módulo substitui essa célula por uma avenida,
@@ -399,6 +403,9 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceCurve!=='undefined')
                     DriverChicagoPS1ReferenceCurve.prepare(this);
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoPS1ReferenceExtension!=='undefined')
+                    DriverChicagoPS1ReferenceExtension.prepare(this);
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();
