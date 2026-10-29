@@ -62,7 +62,7 @@ and leave all mission starts/objectives unchanged. The graph remains ungraded.
 - [x] Source provenance, shared alignment, dry full width and lot clearance tests.
 - [x] 605 Node tests pass; prior R15 tests retained.
 - [x] Full joined R16/R15 physical drive in both directions in browser (workflow 40891102102, Undercover step passed).
-- [ ] Publish only after graphics checks; verify Pages.
+- [x] Published R16 after graphics checks; Pages deployment verified.
 
 R16 independent read-only review: no critical/important defects. Joined corridor length is approximately 236 world units; 124 belong to the extension. Four-city aggregate remains tracked separately from this physical corridor validation.
 
@@ -79,5 +79,11 @@ this does not certify the remaining whole-city road network or traffic routes.
 
 - [x] Source extraction, exact shared anchors, dry full width, existing lot clearance.
 - [x] 607 Node tests passed, including R15/R16 regressions.
-- [ ] Whole-loop physics and browser rendering verification.
-- [ ] Independent review, authorized publication and Pages verification.
+- [x] Whole-loop physics and browser rendering verification (40901020242, Undercover step passed).
+- [x] Independent review: no critical/important issues; publication authorized.
+- Pages publication status is tracked by the release Actions workflow.
+
+R17 evidence: 123 observed source pixels, 129.04 units of new western road,
+252.79 units per closed lap with R16. All seven generated network/curve files
+reproduced byte-for-byte. 607 Node tests passed. The four-city aggregate is
+tracked separately; this revision does not certify the complete PS1 map.

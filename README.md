@@ -1197,3 +1197,10 @@ antiga, sem remover casas ou deslocar missões. A posição no Undercover contin
 adaptada: não representa certificação da localização original nem do mapa todo.
 Os testes gráficos agora incluem uma volta completa nos dois sentidos e uma
 captura do circuito, além dos percursos anteriores.
+
+Validação R17: **607 testes Node passaram**; o runner 40901020242 passou a volta
+completa nos dois sentidos e manteve as validações R15/R16. Foram 123 pixels
+observados na fonte, cerca de 129 unidades de rua nova e 253 por volta. A extração
+dos sete arquivos de rede/curvas foi reproduzida byte a byte. Revisão independente
+sem bloqueios críticos/importantes. O mapa completo e a mudança das missões seguem
+pendentes, nessa ordem.
