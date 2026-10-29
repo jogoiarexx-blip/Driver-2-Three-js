@@ -10,6 +10,8 @@
                 this.heading = 0;
                 this.walkCycle = 0;
                 this.isSitting = false;
+                this.vehicleBoneRig=null;
+                this.motorcycleVehicle=null;
 
                 this.buildTannerMesh();
                 this.loadPlayerModel();
@@ -85,6 +87,9 @@
                     });
                     this.group.add(model);
                     this.playerModel = model;
+                    // O esqueleto Mixamo original, sem clonar o GLB.
+                    this.vehicleBoneRig=typeof DriverTannerVehicleRig!=='undefined'?
+                        DriverTannerVehicleRig.bind(model):null;
                     for (const part of [this.torso, this.head, this.leftArm,
                         this.rightArm, this.leftLeg, this.rightLeg]) {
                         part.visible = false;
@@ -127,7 +132,7 @@
             // Pose temporizada, também disponível quando o GLB não contém
             // animações específicas de abrir porta ou montar motocicleta.
             // Não altera rig, pesos ou física, evitando deformações no Tanner.
-            applyVehicleTransitionPose(style,kind,progress,dt=0) {
+            applyVehicleTransitionPose(style,kind,progress,dt=0,mountSide=-1) {
                 const t=Math.max(0,Math.min(1,progress));
                 const bike=style==='motorcycle';
                 const entering=kind==='enter';
@@ -135,8 +140,11 @@
                 const rise=bike?Math.sin(Math.PI*Math.max(0,Math.min(1,
                     (t-.30)/.53))):0;
                 const side=entering?-1:1;
+                if(this.vehicleBoneRig&&
+                    typeof DriverTannerVehicleRig!=='undefined')
+                    DriverTannerVehicleRig.restore(this.vehicleBoneRig);
                 if(this.animationMixer) {
-                    this.playModelAnimation(t<.3?'walk':'idle');
+                    this.playModelAnimation(kind!=='ride'&&t<.26?'walk':'idle');
                     this.animationMixer.update(Math.max(0,Math.min(.08,dt)));
                 }
                 this.group.rotation.x=-(bike?.18:.14)*motion;
@@ -145,7 +153,11 @@
                 this.rightArm.rotation.x=-(bike?.8:.4)*motion;
                 this.leftLeg.rotation.x=(bike?1.28:.55)*Math.max(motion,rise);
                 this.rightLeg.rotation.x=-(bike?.45:.22)*motion;
-                if(this.playerModel) {
+                if(this.vehicleBoneRig&&
+                    typeof DriverTannerVehicleRig!=='undefined')
+                    DriverTannerVehicleRig.apply(this.vehicleBoneRig,
+                        style,kind,t,mountSide);
+                if(this.playerModel&&!this.vehicleBoneRig) {
                     if(!this._modelMountBase) {
                         this._modelMountBase={
                             x:this.playerModel.rotation.x,
@@ -162,6 +174,9 @@
             }
 
             resetVehicleTransitionPose() {
+                if(this.vehicleBoneRig&&
+                    typeof DriverTannerVehicleRig!=='undefined')
+                    DriverTannerVehicleRig.restore(this.vehicleBoneRig);
                 this.group.rotation.x=0;
                 this.group.rotation.z=0;
                 for(const limb of [this.leftArm,this.rightArm,
@@ -173,6 +188,37 @@
                 }
                 this._modelMountBase=null;
                 if(this.playerModel)this.playModelAnimation('idle');
+            }
+
+            mountOnMotorcycle(vehicle) {
+                if(!vehicle?.chassisTilt||!this.vehicleBoneRig||
+                    !this.playerModel||this.motorcycleVehicle)return false;
+                this.resetVehicleTransitionPose();
+                vehicle.chassisTilt.add(this.group);
+                this.group.position.set(0,0,-.30);
+                this.group.rotation.set(0,0,0);
+                this.heading=0;
+                this.motorcycleVehicle=vehicle;
+                this.group.visible=true;
+                this.applyVehicleTransitionPose('motorcycle','ride',1,0);
+                return true;
+            }
+
+            updateMotorcycleRidePose(dt) {
+                if(!this.motorcycleVehicle||!this.vehicleBoneRig)return;
+                this.applyVehicleTransitionPose('motorcycle','ride',1,dt);
+            }
+
+            detachFromMotorcycle() {
+                if(!this.motorcycleVehicle)return false;
+                this.resetVehicleTransitionPose();
+                // Scene.add restaura a propriedade da entidade Tanner e evita
+                // que o descarte do veículo libere seu material/esqueleto.
+                this.scene.add(this.group);
+                this.motorcycleVehicle=null;
+                this.group.rotation.set(0,0,0);
+                this.group.visible=false;
+                return true;
             }
 
             setVisible(visible) {
@@ -206,7 +252,12 @@
 
             update(dt, input, cityBuilder) {
                 if (!this.group.visible) return;
-                if (this.animationMixer) this.animationMixer.update(Math.min(dt, 0.08));
+                if (this.animationMixer) {
+                    if(this.vehicleBoneRig&&
+                        typeof DriverTannerVehicleRig!=='undefined')
+                        DriverTannerVehicleRig.restore(this.vehicleBoneRig);
+                    this.animationMixer.update(Math.min(dt, 0.08));
+                }
 
                 // Se Tanner estiver sentado no banco e o jogador tentar andar, levanta automaticamente
                 if (this.isSitting) {
