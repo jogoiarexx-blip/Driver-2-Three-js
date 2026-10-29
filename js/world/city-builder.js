@@ -138,6 +138,8 @@
                 this.chicagoOverhaulStats=null;
                 this.chicagoPS1Coastline=null;
                 this.chicagoUndercoverLakefront=null;
+                this.chicagoCityPlan=null;
+                this.chicagoAirfield=null;
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
@@ -310,6 +312,13 @@
                             DriverChicagoUndercoverLakefront.isCarvedBlock(blockX,blockZ))
                             return;
 
+                        // Nenhum quarteirão novo sobre o lago: a costa física
+                        // é a mesma usada pelos carros e pelo parcelamento.
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoCityPlan!=='undefined' &&
+                            !DriverChicagoCityPlan.isProtected(blockX,blockZ) &&
+                            !DriverChicagoCityPlan.allowsSidewalk(blockX,blockZ))return;
+
                         // Calçadas agrupadas em uma única draw call instanciada.
                         sidewalkPositions.push({x:blockX,z:blockZ});
                         // Grade física única para o piso elevado e para a IA.
@@ -340,6 +349,9 @@
                             typeof DriverChicagoUndercoverLakefront!=='undefined' &&
                             DriverChicagoUndercoverLakefront.isParkBlock(blockX,blockZ)) {
                             this.buildParkBlock(blockX,blockZ);
+                        } else if (this.preset.id==='chicago' &&
+                            typeof DriverChicagoCityPlan!=='undefined') {
+                            DriverChicagoCityPlan.addBlock(this,blockX,blockZ);
                         } else if ((blockX + blockZ) % 160 === 0) {
                             this.buildParkBlock(blockX, blockZ);
                         } else {
@@ -396,6 +408,10 @@
                         DriverChicagoPS1Coastline.build(this);
                     if(typeof DriverChicagoUndercoverLakefront!=='undefined')
                         DriverChicagoUndercoverLakefront.build(this);
+                    if(typeof DriverChicagoCityPlan!=='undefined')
+                        DriverChicagoCityPlan.buildLandmarks(this);
+                    if(typeof DriverChicagoCityPlan!=='undefined')
+                        DriverChicagoCityPlan.buildCourtyardLinks(this);
                     // R2: rio Norte/Sul e Goose Island: travessias sobre ruas
                     // transversais, sem deslocar missões nem substituir IA.
                     if(typeof DriverChicagoPS1RiverBranches!=='undefined')
@@ -472,7 +488,7 @@
                         this.districtFarMaterial,chunk.buildings.length);
                     for(const [i,b] of chunk.buildings.entries()){
                         dummy.position.set(b.x,b.height/2+.35,b.z);
-                        dummy.scale.set(1,b.height,1);
+                        dummy.scale.set((b.width||38)/38,b.height,(b.depth||38)/38);
                         dummy.rotation.set(0,0,0);
                         dummy.updateMatrix();
                         far.setMatrixAt(i,dummy.matrix);
@@ -524,7 +540,7 @@
                         buildings.length);
                     buildings.forEach((b,i)=>{
                         dummy.position.set(b.x,b.height/2+.35,b.z);
-                        dummy.scale.set(1,b.height,1);
+                        dummy.scale.set((b.width||38)/38,b.height,(b.depth||38)/38);
                         dummy.rotation.set(0,0,0);
                         dummy.updateMatrix();
                         mesh.setMatrixAt(i,dummy.matrix);
@@ -533,11 +549,15 @@
                     mesh.frustumCulled=!!(chunk.geometry?.boundingSphere);
                     group.add(mesh);
                 }
-                UrbanDistricts.decorate(this,chunk.buildings,group);
+                const legacyBuildings=chunk.buildings.filter(b=>!b.planned);
+                UrbanDistricts.decorate(this,legacyBuildings,group);
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoCityPlan!=='undefined')
+                    DriverChicagoCityPlan.detailDistrict(this,chunk.buildings,group);
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoOverhaul!=='undefined')
                     DriverChicagoOverhaul.detailDistrict(this,
-                        chunk.buildings,group);
+                        legacyBuildings,group);
                 if(this.preset.id==='rio' &&
                     typeof DriverRioOverhaul!=='undefined')
                     DriverRioOverhaul.detailDistrict(this,

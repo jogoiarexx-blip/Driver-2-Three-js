@@ -34,8 +34,31 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
             buildings:c.buildingBoxes.length,
             player:{x:g.playerCar.x,z:g.playerCar.z},
             carOnDryLand:!c.isWaterAt(g.playerCar.x,g.playerCar.z),
+            cityPlan:c.chicagoCityPlan&&{
+                blocks:c.chicagoCityPlan.blocks.length,lots:c.chicagoCityPlan.lots,
+                links:c.chicagoCityPlan.courtyardLinks?.length,
+                districts:DriverChicagoNeighborhoods.DISTRICTS.length,
+                exactCollision:c.districtBuildings.filter(b=>b.planned).every(b=>
+                    c.buildingBoxes.some(a=>a.chicagoPlanLot&&
+                        Math.abs(a.minX-(b.x-b.width/2))<.001&&
+                        Math.abs(a.maxX-(b.x+b.width/2))<.001&&
+                        Math.abs(a.minZ-(b.z-b.depth/2))<.001&&
+                        Math.abs(a.maxZ-(b.z+b.depth/2))<.001)),
+                linksSafe:c.chicagoCityPlan.courtyardLinks?.every(l=>
+                    DriverRoadGeometry.segmentDrivable(c,l.from.x,l.from.z,l.to.x,l.to.z,1.7)),
+                lotCentersSolid:c.districtBuildings.filter(b=>b.planned).every(b=>
+                    c.isPointBlocked(b.x,b.z,0,0)),
+                airfield:!!c.chicagoAirfield,
+                runwayDry:c.chicagoAirfield&&!c.isWaterAt(c.chicagoAirfield.x,c.chicagoAirfield.z)
+            },
             lakeMesh:c.cityGroup.children.some(o=>o.name==='chicago-ps1-lake-michigan')};
     });
+    assert(r.cityPlan,'Undercover sem plano integral');
+    assert(r.cityPlan.blocks>35&&r.cityPlan.lots>80,JSON.stringify(r.cityPlan));
+    assert.equal(r.cityPlan.districts,13);
+    assert(r.cityPlan.exactCollision&&r.cityPlan.lotCentersSolid);
+    assert(r.cityPlan.links>8&&r.cityPlan.linksSafe,JSON.stringify(r.cityPlan));
+    assert(r.cityPlan.airfield&&r.cityPlan.runwayDry);
     assert.equal(r.preset,'chicago');assert(r.geography&&r.lakeMesh);
     assert(r.lake,'Lago não está posicionado a leste de Chicago');
     assert.equal(r.lastAvenue,false,'Lago submergiu a última avenida');
@@ -53,6 +76,12 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
         g.camera.updateProjectionMatrix();g.renderer.render(g.scene,g.camera);
     });
     await page.screenshot({path:path.join(dir,'chicago-ps1-undercover-lake-r1.png')});
-    console.log('PASS CHICAGO PS1 UNDERCOVER R1',JSON.stringify(r));
+    await page.evaluate(()=>{
+        const g=window.DriverGame;g.camera.position.set(30,620,-90);
+        g.camera.lookAt(0,0,-20);g.camera.updateProjectionMatrix();
+        g.renderer.render(g.scene,g.camera);
+    });
+    await page.screenshot({path:path.join(dir,'chicago-r14-whole-city-plan.png')});
+    console.log('PASS CHICAGO PS1 UNDERCOVER R14',JSON.stringify(r));
  } finally{await page.close();await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

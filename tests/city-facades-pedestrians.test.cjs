@@ -137,7 +137,7 @@ test('novo módulo carrega antes dos pedestres, sem alterar cenas antigas',()=>{
     assert.match(engine,/this\.pedManager\.spawnCityPedestrians\(this\.city/);
     assert.match(engine,/this\.getPlayerPosition\(\)\);/);
     const city=read('js/world/city-builder.js');
-    assert.match(city,/UrbanDistricts\.decorate\(this,chunk\.buildings,group\)/);
+    assert.match(city,/UrbanDistricts\.decorate\(this,legacyBuildings,group\)/);
 });
 
 test('streaming reutiliza no máximo três pedestres longe sem criar malhas',()=>{

@@ -1144,3 +1144,17 @@ A mudança é aplicada ao `CityBuilder` da campanha: avenida curva de 240 unidad
 O eixo fica 17 unidades a oeste da margem física, e as faixas foram verificadas secas em amostras de 2 unidades. Não foram deslocadas a casa de Tanner, a garagem secreta, a estação, o estádio, os pontos iniciais ou objetivos das missões. O tráfego em grade não passa automaticamente a usar a avenida nova. A R12 do passeio livre original está incluída.
 
 São coordenadas procedurais adaptadas, não ruas extraídas/certificadas do PS1. A revisão não homologa a campanha completa nem elimina a grade antiga. Validação: suíte Node e verificação de sintaxe; inspeção visual em navegador ainda pendente.
+
+## Chicago R14 — parcelamento global e referência de pavimentação original
+
+O Undercover passa a usar `DriverChicagoCityPlan` nos quarteirões comuns. Os 13 setores têm uso do solo próprio: casas geminadas com pátios no oeste/norte, comércio em Greektown/Chinatown, galpões em Goose Island, apartamentos na Gold Coast, torres no Loop e parques concentrados na orla. Os lotes geram AABBs e instâncias visuais com as mesmas larguras e profundidades, nos dois níveis de LOD. As fachadas genéricas de 38 unidades deixam de ser aplicadas aos lotes menores. Casa, estação, garagens e estádio conservam as construções interativas.
+
+Becos residenciais são adicionados somente quando o corredor de cada acesso é seco e livre de colisores, e seu asfalto acompanha a altura física das calçadas. Meigs recebe pista de 132 unidades e dois acessos à avenida leste, além de hangar com volume físico. Nenhuma missão ou percurso foi deslocado nesta revisão.
+
+`tools/chicago-reference-streets.py` inspeciona todos os 54 GLBs e seus UVs, separando superfícies com marcas de pista, pavimento comum, grama e água em `chicago/reference-street-survey.json` e na imagem de referência. Os hashes ligam cada registro aos arquivos efetivamente lidos. A extração percorreu 1.544.872 triângulos. Reproduzir: `python3 tools/chicago-reference-streets.py --preview chicago/reference-street-survey.png` (NumPy e Pillow).
+
+**Limite principal:** a extração ainda não é a rede viária do Undercover. O jogo conserva a grade de 80 e as ramificações anteriores; os bairros têm posições adaptadas. Classificar todo o parcelamento NÃO conclui a reconstrução de todas as curvas, margens, pontes e ligações PS1. O mapa inteiro ainda não está certificado, e os lugares das missões ficam para depois da validação da malha nova. Não usar esta revisão como alegação de mapa ou campanha 100% concluídos.
+
+Validação local: 599 testes Node passaram. O teste de navegador `chicago-ps1-undercover-visual.cjs` também confere o parcelamento novo, dimensões físicas, becos, aeródromo e 13 placas, mas sua execução é registrada separadamente no GitHub Actions.
+
+Revisão independente R14: corrigidas duas regressões antes da publicação. A área inteira das calçadas é confrontada com a costa, e pedestres/travessias usam os centros das calçadas em vez dos centros dos sublotes. As regressões foram reproduzidas falhando e passaram após as correções.

@@ -6,7 +6,8 @@
  * A camada é recriada com a cidade e descartada junto ao cityGroup.
  */
 class DriverChicagoNeighborhoods {
-    static DISTRICTS = [
+    static DISTRICTS = typeof DriverChicagoCityPlan!=='undefined'?
+        DriverChicagoCityPlan.DISTRICTS : [
         {id:'wrigleyville',name:'WRIGLEYVILLE',x:-278,z:220,color:0x67e8f9},
         {id:'lincoln-park',name:'LINCOLN PARK',x:280,z:236,color:0x86efac},
         {id:'gold-coast',name:'GOLD COAST',x:230,z:124,color:0xfde68a},

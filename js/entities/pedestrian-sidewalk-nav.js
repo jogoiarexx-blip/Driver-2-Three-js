@@ -25,8 +25,13 @@ class DriverPedestrianSidewalks {
         return blocks;
     }
     static cityBlocks(city) {
-        const source=city?.districtBuildings?.length ?
-            city.districtBuildings : this.fallbackBlocks();
+        // O parcelamento R14 contém vários prédios por calçada. Os
+        // sublotes não são centros de quadra para um anel de caminhada.
+        const source=city?.chicagoCityPlan && city?.sidewalkGrid?.size?
+            [...city.sidewalkGrid].map(key=>{
+                const [x,z]=key.split(':').map(Number);return {x,z};
+            }):city?.districtBuildings?.length ?
+                city.districtBuildings : this.fallbackBlocks();
         return source.filter(b=>Number.isFinite(b.x)&&
             Number.isFinite(b.z)&&!(b.z>10&&b.z<90) &&
             Math.abs(b.x)<=320&&Math.abs(b.z)<=320);
@@ -92,8 +97,10 @@ class DriverPedestrianSidewalks {
         const block={x:p.block.x+move.dx,z:p.block.z+move.dz};
         // Somente quadras existentes: não atravessar canal nem entrar em
         // locais usados por missões, parques ou edifícios especiais.
-        if(city.districtBuildings?.length &&
-            !city.districtBuildings.some(b=>b.x===block.x&&b.z===block.z))
+        const existingBlocks=city.chicagoCityPlan?
+            this.cityBlocks(city):city.districtBuildings;
+        if(existingBlocks?.length &&
+            !existingBlocks.some(b=>b.x===block.x&&b.z===block.z))
             return null;
         if(!this.blockSafe(city,block))return null;
         const from=this.route(p.block)[corner];

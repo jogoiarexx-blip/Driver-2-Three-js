@@ -105,7 +105,7 @@ test('cidade mantém caixas de colisão independentemente de LOD',()=>{
 test('detalhes arquitetônicos só entram nas malhas de perto',()=>{
     const city=read('js/world/city-builder.js');
     const urban=read('js/world/urban-districts.js');
-    assert.match(city,/UrbanDistricts\.decorate\(this,chunk\.buildings,group\)/);
+    assert.match(city,/UrbanDistricts\.decorate\(this,legacyBuildings,group\)/);
     assert.match(urban,/parent\.add\(mesh\)/);
     assert.match(city,/this\.districtMaterialCache\.get\(palette\)/);
 });
