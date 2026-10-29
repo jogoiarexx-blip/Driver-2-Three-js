@@ -38,6 +38,7 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
                 blocks:c.chicagoCityPlan.blocks.length,lots:c.chicagoCityPlan.lots,
                 links:c.chicagoCityPlan.courtyardLinks?.length,
                 districts:DriverChicagoNeighborhoods.DISTRICTS.length,
+                pedestrians:g.pedManager.pedestrians.length,
                 exactCollision:c.districtBuildings.filter(b=>b.planned).every(b=>
                     c.buildingBoxes.some(a=>a.chicagoPlanLot&&
                         Math.abs(a.minX-(b.x-b.width/2))<.001&&
@@ -56,6 +57,7 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
     assert(r.cityPlan,'Undercover sem plano integral');
     assert(r.cityPlan.blocks>35&&r.cityPlan.lots>80,JSON.stringify(r.cityPlan));
     assert.equal(r.cityPlan.districts,13);
+    assert.equal(r.cityPlan.pedestrians,28);
     assert(r.cityPlan.exactCollision&&r.cityPlan.lotCentersSolid);
     assert(r.cityPlan.links>8&&r.cityPlan.linksSafe,JSON.stringify(r.cityPlan));
     assert(r.cityPlan.airfield&&r.cityPlan.runwayDry);

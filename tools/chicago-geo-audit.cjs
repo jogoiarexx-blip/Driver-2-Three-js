@@ -37,10 +37,15 @@ function audit({objPath}={}){
     const Road=evaluate('js/world/road-geometry.js','DriverRoadGeometry');
     const Bridge=evaluate('js/world/chicago-east-bridge.js',
         'DriverChicagoEastBridge');
-    const City=evaluate('js/world/city-builder.js','CityBuilder',
-        {DriverChicagoEastBridge:Bridge});
+    const Coast=evaluate('js/world/chicago-ps1-coastline.js','DriverChicagoPS1Coastline');
+    const River=evaluate('js/world/chicago-ps1-river-branches.js','DriverChicagoPS1RiverBranches');
+    const North=evaluate('js/world/chicago-goose-island-north-yard.js','DriverChicagoGooseIslandNorthYard');
+    const Plan=evaluate('js/world/chicago-city-plan.js','DriverChicagoCityPlan');
+    const City=evaluate('js/world/city-builder.js','CityBuilder',{
+        DriverChicagoEastBridge:Bridge,DriverChicagoPS1Coastline:Coast,
+        DriverChicagoPS1RiverBranches:River,DriverChicagoGooseIslandNorthYard:North});
     const Neighborhood=evaluate('js/world/chicago-neighborhoods.js',
-        'DriverChicagoNeighborhoods');
+        'DriverChicagoNeighborhoods',{DriverChicagoCityPlan:Plan});
     const raw=source('js/world/city-builder.js');
     const ext=raw.match(/this\.roadExtent\s*=\s*(\d+)\s*;\s*this\.worldLimit\s*=\s*(\d+)/);
     if(!ext||!/for\s*\(let p=-320;p<=320;p\+=80\)/.test(raw)||
@@ -69,7 +74,7 @@ function audit({objPath}={}){
         code:{
             step:Road.STEP,roadHalf:Road.ROAD_HALF,roadExtent,worldLimit,
             theoreticalGridNodes:graph.nodes,proceduralCells:cells.length,
-            river:{kind:'straight',centerZ:50,visualWidth:32,
+            river:{kind:'central-canal-with-north-south-branches',centerZ:50,visualWidth:32,
                 eastWaterSample:!!city.isWaterAt(385,-240),
                 canalWaterSample:!!city.isWaterAt(160,50),
                 eastBridgeWaterSample:!!city.isWaterAt(240,50)}

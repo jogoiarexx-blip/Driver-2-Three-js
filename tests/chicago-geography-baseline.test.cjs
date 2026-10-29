@@ -10,14 +10,13 @@ test('auditoria não atribui fidelidade sem referência PS1 registrada',()=>{
     assert.equal(data.metrics.geometricFidelityPercent,null);
     assert.equal(data.metrics.roadRecall,null);
 });
-test('setores: 10 âncoras de nome não são 13 bairros físicos',()=>{
+test('setores atuais: 13 placas não comprovam fidelidade territorial',()=>{
     assert.equal(data.neighborhoods.referenceCount,13);
-    assert.equal(data.neighborhoods.declaredMarkers.length,10);
-    assert.deepEqual(data.neighborhoods.missingMarkers,
-        ['wicker-park','ukrainian-village','goose-island']);
-    assert.equal(data.neighborhoods.markerCoveragePercent,76.9);
+    assert.equal(data.neighborhoods.declaredMarkers.length,13);
+    assert.deepEqual(data.neighborhoods.missingMarkers,[]);
+    assert.equal(data.neighborhoods.markerCoveragePercent,100);
 });
-test('a grade de 80, os 71 blocos procedurais e o rio linear são detectados',()=>{
+test('a grade teórica e as camadas de água atuais são detectadas',()=>{
     assert.equal(data.code.step,80);
     assert.equal(data.code.roadHalf,12);
     assert.equal(data.code.roadExtent,320);
@@ -25,7 +24,7 @@ test('a grade de 80, os 71 blocos procedurais e o rio linear são detectados',()
     assert.equal(data.code.theoreticalGridNodes,81);
     assert.equal(data.code.proceduralCells,71);
     assert.equal(data.code.river.canalWaterSample,true);
-    assert.equal(data.code.river.eastWaterSample,false);
+    assert.equal(data.code.river.eastWaterSample,true);
     assert.equal(data.code.river.eastBridgeWaterSample,false);
 });
 test('não confundir grafo sem colisão real com replay de direção',()=>{
