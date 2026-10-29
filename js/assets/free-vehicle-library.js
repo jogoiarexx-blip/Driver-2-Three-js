@@ -333,9 +333,9 @@ class FreeVehicleAssets {
     updateButton() {
         const button = document.getElementById('btn-free-assets');
         if (!button) return;
-        button.textContent = this.enabled ? '🚘 3D CC0' : '🚘 PS1';
+        button.textContent = this.enabled ? '🚘 3D GLB' : '🚘 PS1';
         button.title = this.enabled ?
-            'Modelos 3D gratuitos Kenney CC0 ativos (M para alternar)' :
+            'Modelos GLB do GitHub e alternativas Kenney ativos (M para alternar)' :
             'Malhas clássicas procedurais ativas (M para alternar)';
         button.setAttribute('aria-pressed', this.enabled ? 'true' : 'false');
     }
@@ -352,6 +352,7 @@ class FreeVehicleAssets {
                 'GLB não disponível; carros alternativos ativos. ':
                 'Preparando carro_driver2_otimizado.glb… ')+
             'Modelos 3D ativos: '+count+
+            ' • Veículos enviados: '+this.engine.vehicles.filter(v=>v._uploadedCustomModel).length+
             (this.policeStatus==='github'?
                 ' • Viaturas GLB do usuário'+
                 (this.engine.vehicles.some(v=>v.policeDoorRig)?

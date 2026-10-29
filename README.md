@@ -1275,3 +1275,17 @@ Validação dos pedestres adicionais: **621 testes Node passaram**. O runner
 40927658665 validou os cinco modelos em Chicago e Havana, skinning real, animações,
 pausa, texturas até 1024 e reutilização dos mesmos rigs na troca de cidade, com
 apenas um download por arquivo novo. Revisão independente sem bloqueios.
+
+### Veículos adicionais enviados ao GitHub
+
+As caminhonetes nova e antiga e a moto aparecem estacionadas junto à avenida
+inicial: x=9, z=-38/-58/-78. Saia do carro e pressione E perto de uma delas para
+assumir os controles arcade existentes. Os carros anteriores e caminhões de
+missão continuam disponíveis. A moto tem volume físico e massa próprios, modelo
+procedural de reserva e piloto sentado enquanto controlada. A identidade dos
+três veículos é preservada ao guardar e retirar da garagem de Tanner.
+
+O barco de pesca fica ancorado ao sul do Navy Pier, em Chicago, como cenário;
+não há controles de navegação. Os quatro GLBs originais foram preservados. O
+carregador reutiliza um template por arquivo, limita texturas a 1024 e mantém
+fallback procedural se houver falha. A tecla M alterna os modelos como antes.

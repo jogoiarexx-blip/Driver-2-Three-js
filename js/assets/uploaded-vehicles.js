@@ -84,7 +84,7 @@ class DriverUploadedVehicles {
         const city=this.engine.city;
         if(city?.preset?.id!=='chicago')return;
         this.getTemplate('boat').then(template=>{
-            if(!template||!this.library.enabled||this.engine.city!==city||!city.cityGroup?.parent)return;
+            if(!template||!this.library.enabled||this.engine.city!==city||city.preset?.id!=='chicago'||!city.cityGroup?.parent)return;
             if(this.boat?.parent===city.cityGroup){this.boat.visible=true;return;}
             const root=new THREE.Group(),model=template.clone(true);root.add(model);
             model.rotation.y=Math.PI/2;root.updateMatrixWorld(true);

@@ -48,3 +48,8 @@ test('download tardio não sobrescreve importação manual nem veículo removido
  vehicle._userCustomModel=false;roster.decorate(vehicle);engine.vehicles=[];resolve({});await Promise.resolve();
  assert.equal(vehicle._uploadedCustomModel,undefined);
 });
+test('barco em download não aparece em outra cidade após reset do mesmo CityBuilder',async()=>{
+ const city={preset:{id:'chicago'},cityGroup:{parent:{}}},roster=new Roster({city},{enabled:true});
+ let resolve;roster.getTemplate=()=>new Promise(r=>{resolve=r;});roster.attachBoat();
+ city.preset={id:'havana'};resolve({});await Promise.resolve();assert.equal(roster.boat,null);
+});
