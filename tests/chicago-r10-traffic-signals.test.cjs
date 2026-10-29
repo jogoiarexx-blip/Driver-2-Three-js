@@ -30,7 +30,7 @@ test('semáforos só estão nos cruzamentos REAIS da grade para carros locais',(
     ]) {
         assert.equal(ai.signalApplies(car,route({x:-196,z:185})),false);
         assert.equal(ai.signalApplies(car,route({x:-196,z:320})),false);
-        assert.equal(ai.signalApplies(car,route({x:-160,z:236})),false);
+        assert.equal(ai.signalApplies(car,route({x:-160,z:236})),true);
         assert.equal(ai.signalApplies(car,route({x:-156,z:316})),true);
         assert.equal(ai.signalApplies(car,route({x:-160,z:156})),true);
     }
