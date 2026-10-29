@@ -44,8 +44,8 @@ class DriverVehicleMount {
         const bike=vehicle.bodyStyle==='motorcycle';
         const stand=this.chooseStandPoint(engine,vehicle,kind);
         if(!stand)return false; // Não materializar Tanner dentro de paredes.
-        if(bike&&kind==='exit')
-            engine.tanner.detachFromMotorcycle?.();
+        // A moto conserva o Tanner real até o momento em que a
+        // perna começa a passar por cima do banco (sem trocar de modelo).
         const source=engine.tanner.group.position;
         const from=kind==='enter'?
             {x:source.x,y:source.y,z:source.z,heading:engine.tanner.heading}:
@@ -134,8 +134,18 @@ class DriverVehicleMount {
                 const p=this.move(s.near,s.seat,f,lift);
                 this.setActor(engine,p,s.vehicle.heading,style,'enter',t,dt,s.stand.side);
             }
-            if(t>=.83)engine.tanner.setVisible(false);
+            if(t>=.83){
+                if(s.bike&&engine.tanner.vehicleBoneRig){
+                    // Terminamos a pose com o GLB real, sem mostrar o
+                    // piloto procedural durante os últimos 0,25 segundos.
+                    this.setActor(engine,s.seat,s.vehicle.heading,
+                        style,'enter',t,dt,s.stand.side);
+                }else engine.tanner.setVisible(false);
+            }
         }else{
+            if(t>=.16&&s.bike&&
+                engine.tanner.motorcycleVehicle===s.vehicle)
+                engine.tanner.detachFromMotorcycle?.();
             if(t>=.16)engine.tanner.setVisible(true);
             if(t>=.16&&t<.77){
                 const f=(t-.16)/.61;
