@@ -367,6 +367,24 @@ class DriverTrafficAI {
         return Infinity;
     }
 
+    // R10: semáforos reais apenas nos cruzamentos da grade. O destino
+    // de uma curva industrial PS1 aproximada pode estar no meio da via:
+    // tratá-lo como semáforo causava parada em ponto sem sinalização.
+    // Civis comuns, perseguições e veículos de missão não mudam.
+    signalApplies(car,route,scripted=false) {
+        if(scripted || this.city?.preset?.id!=='chicago')return true;
+        const local=car?.gooseIslandRoute ||
+            car?.gooseIslandVisitor ||
+            car?.gooseIslandNorthYard ||
+            car?.gooseIslandSouthbound;
+        if(!local)return true;
+        const target=route?.target;
+        if(!Number.isFinite(target?.x)||!Number.isFinite(target?.z))
+            return false;
+        return Math.abs(target.x-this.nearestGrid(target.x))<=6 &&
+            Math.abs(target.z-this.nearestGrid(target.z))<=6;
+    }
+
     getInput(car, dt, vehicles, playerPos, felony) {
         const route = this.getRoute(car);
         const scripted = car.scriptedDrive || null;
@@ -512,6 +530,7 @@ class DriverTrafficAI {
         const stopForRed=!pursuing && (!car.isTarget || !!scripted) &&
             (!scripted || !scripted.done) &&
             distanceToIntersection<28 && distanceToIntersection>7 &&
+            this.signalApplies(car,route,!!scripted) &&
             !this.city.isTrafficGreen(junctionAxis);
         const distanceAhead = this.vehicleAhead(car, vehicles);
         const stopForCar = distanceAhead < 8 + Math.max(0, car.speed) * 0.33;

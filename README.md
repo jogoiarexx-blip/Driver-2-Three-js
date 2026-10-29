@@ -1106,3 +1106,14 @@ Cada segmento é conferido por `DriverRoadGeometry.segmentDrivable`. O relatóri
 Teste de lógica: `node --test tests/chicago-r9-local-network.test.cjs`. Teste conjunto: `node tests/chicago-r9-concurrent-browser.cjs` em um servidor HTTP local com Playwright/Chromium. Workflow dedicado: `chicago-r9-traffic.yml`.
 
 **Limites:** o primeiro cenário conjunto mantém sinais de trânsito verdes para comparar especificamente a interação entre veículos; não prova comportamento em todos os ciclos de semáforo, tráfego aleatório, pedestres ou 100% das missões. Todas as coordenadas ainda são da Chicago **procedural**, não da rede viária certificada dos 54 GLBs originais do PS1.
+
+## Chicago R10 — semáforos reais no tráfego industrial
+
+A R9 havia certificado **quatro caminhões simultâneos por 60 segundos**, mas o replay forçava todos os semáforos verdes. A R10 remove essa simplificação no novo teste e corrige uma parada indevida no cálculo de IA.
+
+**Problema técnico:** a IA utiliza waypoints intermediários em Goose Island, como `(-196,185)` e `(-196,320)`, que **não são cruzamentos da grade**. Como o verificador de semáforos considerava qualquer waypoint a até 28 unidades uma interseção, alguns caminhões paravam no meio da rua quando o eixo estava vermelho.
+
+**Correção:** `DriverTrafficAI.signalApplies` exige que o alvo dos quatro veículos especiais da ilha esteja próximo (até 6 unidades em cada eixo) de um cruzamento da malha de 80. Waypoints industriais internos deixam de provocar paradas artificiais; cruzamentos reais, por exemplo `(-160,156)`, continuam respeitando a alternância. Civis comuns, veículos de missão, polícia, as quatro cidades, dirigibilidade dos carros do jogador e perseguições não são modificados por essa filtragem.
+
+**Validação:** `tests/chicago-r10-traffic-signals.test.cjs` verifica as distinções. `tests/chicago-r10-live-signals-browser.cjs` repete a simulação dos quatro veículos com a **fase real de 24 segundos** do `CityBuilder` por 60 segundos virtuais; não substitui `isTrafficGreen` por uma função que sempre retorna `true`. A telemetria em `qa-artifacts/chicago-r10-live-signals.json` mede tempo parado, área transitável, danos e ocorrências de vermelho/verde. A cidade original PS1 ainda não é a base da campanha; os GLBs continuam no diretório `chicago/` para a migração gradual.
+
