@@ -5,6 +5,8 @@ on:
       - 'js/assets/uploaded-vehicles.js'
       - 'js/entities/tanner-controller.js'
       - 'js/entities/tanner-vehicle-bone-rig.js'
+      - 'js/entities/tanner-motorcycle-contact-ik.js'
+      - 'tests/tanner-motorcycle-contact.test.cjs'
       - 'tests/tanner-vehicle-rig-browser.cjs'
       - 'tests/tanner-vehicle-rig.test.cjs'
       - 'js/vehicles/driver-vehicle.js'
