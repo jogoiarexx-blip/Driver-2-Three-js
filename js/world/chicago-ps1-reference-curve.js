@@ -40,6 +40,9 @@ class DriverChicagoPS1ReferenceCurve {
         if(city?.preset?.id!=='chicago')return null;
         if(city[placement.key])return city[placement.key];
         const plan=this.plan(),vertices=[],edges=[];
+        const district=placement.district||plan.lots[0]?.district||
+            (typeof DriverChicagoCityPlan!=='undefined'?DriverChicagoCityPlan.districtAt(placement.x,placement.z)?.id:null)||
+            'ukrainian-village';
         for(let i=0;i<plan.points.length;i++){
             const p=plan.points[i],a=plan.points[Math.max(0,i-1)],b=plan.points[Math.min(plan.points.length-1,i+1)];
             const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz),half=plan.width/2;
@@ -73,10 +76,10 @@ class DriverChicagoPS1ReferenceCurve {
         if(trim.length&&typeof DriverSpecialStructures!=='undefined')
             DriverSpecialStructures.pack(city.cityGroup,trim,'chicago-r15-curved-block');
         if(city.chicagoCityPlan){
-            city.chicagoCityPlan.blocks.push({x:placement.x,z:placement.z,district:'ukrainian-village',kind:'reference-street'});
+            city.chicagoCityPlan.blocks.push({x:placement.x,z:placement.z,district,kind:'reference-street'});
             city.chicagoCityPlan.lots+=plan.lots.length;
-            city.chicagoCityPlan.byDistrict['ukrainian-village']=(
-                city.chicagoCityPlan.byDistrict['ukrainian-village']||0)+1;
+            city.chicagoCityPlan.byDistrict[district]=(
+                city.chicagoCityPlan.byDistrict[district]||0)+1;
         }
         city[placement.key]={...plan,mesh};return city[placement.key];
     }

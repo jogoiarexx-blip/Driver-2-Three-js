@@ -118,3 +118,23 @@ version (8bda0c5) passed the R4-R7 regressions and the Undercover step, includin
 R15-R18 physical replays. Independent re-review found no critical/important
 blockers and dense rail-clearance sampling passed. Nine generated source/network
 files reproduced byte-for-byte. Full-city reconstruction remains unfinished.
+
+## R19 — three-edge north network
+
+Reconstruct a small connected source network after R18: a 102-unit stem to one
+canonical junction, a 46-unit northern continuation and a 94-unit neighborhood
+branch joining the existing z320 avenue. Extract the three traces separately so
+all junction endpoints remain identical after smoothing; retain the same R15 fit.
+
+Reserve only ordinary block (-280,280); rebuild three residential lots from shared
+visual/collision rectangles before LOD generation. Preserve stadium (-280,200) and
+all mission sites. Give source corridor reports their actual adapted district.
+Keep original source neighborhood/whole-map certification false. Validate both
+stem routes in both directions using actual vehicle physics, all older street
+replays, source hashes/pixels, dry full-width clearance, lot setbacks and stadium
+presence. Publication remains authorized after these checks.
+
+- [x] Canonical junction, source provenance and physical lot clearance tests.
+- [x] 613 Node tests passed; prior R15-R18 regressions retained.
+- [ ] Independent review and four north-route browser physical replays.
+- [ ] Publish checked source and verify Pages deployment.

@@ -1222,3 +1222,13 @@ as superfícies das rampas são cortadas nas mesmas mudanças de altura da físi
 A revisão independente não encontrou bloqueios críticos/importantes. Os nove
 arquivos gerados foram reproduzidos byte a byte. O mapa completo segue em
 reconstrução; mudar as missões continua sendo a etapa posterior.
+
+### Chicago R19 — entroncamento norte com três ruas conectadas
+
+A ligação da ponte R18 agora continua por uma rede de três trechos extraídos do
+pavimento observado do PS1: chegada ao entroncamento, continuação norte e ramal
+para a avenida existente. São aproximadamente **242 unidades de ruas novas**,
+com uma cabeceira única compartilhada entre os três trechos. O quarteirão comum
+(-280,280) foi reconstruído com três casas fora das pistas; o estádio permanece
+preservado. O teste gráfico inclui os dois caminhos nos dois sentidos com física
+real do carro. A posição continua adaptada ao Undercover, e as missões não mudam.
