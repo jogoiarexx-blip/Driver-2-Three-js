@@ -38,10 +38,10 @@ jobs:
             sleep 1
           done
           exit 1
-      - name: Testar GLBs, entrada, direção, modelos PS1 e troca de cidade
-        run: node tests/uploaded-vehicles-browser.cjs
       - name: Validar Tanner real no esqueleto da motocicleta
         run: node tests/tanner-vehicle-rig-browser.cjs
+      - name: Testar GLBs, entrada, direção, modelos PS1 e troca de cidade
+        run: node tests/uploaded-vehicles-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
