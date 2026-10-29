@@ -10,7 +10,16 @@ class DriverChicagoPS1ReferenceBridge extends DriverChicagoSourceBridgeBase {
     static fitPoint(point){return DriverChicagoSourceBridgeBase.fitPoint(point);}
     static get placement(){return {key:'chicagoReferenceBridge',x:-360,z:120,foundation:false,name:'chicago-r18-source-north-road'};}
     static plan(){
-        if(!this.cachedPlan){const p=super.plan();p.lots=[];p.mode='source-north-bridge-r18';this.cachedPlan=p;}
+        if(!this.cachedPlan){
+            const p=super.plan(),points=[p.points[0]];
+            for(let i=1;i<p.points.length;i++){
+                const a=p.points[i-1],b=p.points[i],dz=b.z-a.z;
+                const cuts=Math.abs(dz)<1e-9?[]:[22,34,66,80].map(z=>(z-a.z)/dz).filter(t=>t>0&&t<1).sort((a,b)=>a-b);
+                for(const t of cuts)points.push({x:a.x+(b.x-a.x)*t,z:a.z+dz*t});
+                points.push(b);
+            }
+            p.points=points;p.lots=[];p.mode='source-north-bridge-r18';this.cachedPlan=p;
+        }
         return this.cachedPlan;
     }
     static axisAt(z){
@@ -32,21 +41,51 @@ class DriverChicagoPS1ReferenceBridge extends DriverChicagoSourceBridgeBase {
         }
         return best;
     }
-    static isBridgeDeck(x,z){return z>=22&&z<=80&&this.distance(x,z)<=6;}
+    static deckPolygon(){
+        if(this.cachedPolygon)return this.cachedPolygon;
+        const points=this.bridgeEdges(22,80).flat().sort((a,b)=>a.x-b.x||a.z-b.z);
+        const cross=(a,b,c)=>(b.x-a.x)*(c.z-a.z)-(b.z-a.z)*(c.x-a.x);
+        const half=items=>{const out=[];for(const p of items){while(out.length>1&&cross(out.at(-2),out.at(-1),p)<=0)out.pop();out.push(p);}return out;};
+        const lower=half(points),upper=half([...points].reverse());
+        this.cachedPolygon=lower.slice(0,-1).concat(upper.slice(0,-1));return this.cachedPolygon;
+    }
+    static isBridgeDeck(x,z){
+        if(!Number.isFinite(x)||!Number.isFinite(z)||z<12||z>90)return false;
+        const p=this.deckPolygon();
+        return p.every((a,i)=>{const b=p[(i+1)%p.length];return (b.x-a.x)*(z-a.z)-(b.z-a.z)*(x-a.x)>=-1e-6;});
+    }
     static profile(z){return .18*Math.max(0,Math.min(1,(z-22)/12,(80-z)/14));}
     static deckHeight(x,z){return this.isBridgeDeck(x,z)?this.profile(z):null;}
-    static openingAt(z){const x=this.axisAt(z);return x===null?null:{minX:x-8,maxX:x+8};}
+    static openingAt(z){
+        const p=this.deckPolygon(),xs=[];
+        for(let i=0;i<p.length;i++){
+            const a=p[i],b=p[(i+1)%p.length];
+            if(z<Math.min(a.z,b.z)||z>Math.max(a.z,b.z)||Math.abs(b.z-a.z)<1e-9)continue;
+            xs.push(a.x+(b.x-a.x)*(z-a.z)/(b.z-a.z));
+        }
+        return xs.length?{minX:Math.min(...xs)-2,maxX:Math.max(...xs)+2}:null;
+    }
     static bridgeEdges(start,end){
         const path=[{x:this.axisAt(start),z:start},...this.plan().points.filter(p=>p.z>start&&p.z<end),{x:this.axisAt(end),z:end}];
         return path.map((p,i)=>{
             const a=path[Math.max(0,i-1)],b=path[Math.min(path.length-1,i+1)];
             const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);
-            return [-1,1].map(sign=>({x:p.x-sign*dz/len*6,z:p.z+sign*dx/len*6}));
+            return [-1,1].map(sign=>({x:p.x-sign*dz/len*8,z:p.z+sign*dx/len*8}));
         });
     }
     static railSegments(){
-        if(!this.cachedRails){const edges=this.bridgeEdges(28,72);this.cachedRails=[];
-            for(let i=1;i<edges.length;i++)for(const side of [0,1])this.cachedRails.push({a:edges[i-1][side],b:edges[i][side]});}
+        if(this.cachedRails)return this.cachedRails;
+        const polygon=this.deckPolygon();this.cachedRails=[];
+        for(let i=0;i<polygon.length;i++){
+            const a=polygon[i],b=polygon[(i+1)%polygon.length],dz=b.z-a.z;
+            if(Math.abs(dz)<1e-9)continue;
+            const low=Math.max(0,Math.min((28-a.z)/dz,(72-a.z)/dz));
+            const high=Math.min(1,Math.max((28-a.z)/dz,(72-a.z)/dz));
+            if(low>=high)continue;
+            const at=t=>({x:a.x+(b.x-a.x)*t,z:a.z+dz*t});
+            const cuts=[low,...[34,66].map(z=>(z-a.z)/dz).filter(t=>t>low&&t<high).sort((a,b)=>a-b),high];
+            for(let j=1;j<cuts.length;j++)this.cachedRails.push({a:at(cuts[j-1]),b:at(cuts[j])});
+        }
         return this.cachedRails;
     }
     static railBlocked(x,z,radius=1.2,y=0){
@@ -64,12 +103,21 @@ class DriverChicagoPS1ReferenceBridge extends DriverChicagoSourceBridgeBase {
         for(let i=0;i<positions.count;i++)positions.setY(i,.035+(this.deckHeight(positions.getX(i),positions.getZ(i))??0));
         positions.needsUpdate=true;result.mesh.geometry.computeVertexNormals();
         result.mesh.geometry.computeBoundingBox();result.mesh.geometry.computeBoundingSphere();
-        const deck=[],rails=[],edges=this.bridgeEdges(22,80);
+        const deck=[],rails=[];
         const triangle=(out,a,b,c)=>out.push(...a,...b,...c);
         const v=p=>[p.x,this.profile(p.z),p.z];
-        for(let i=1;i<edges.length;i++){
-            const [a,b]=edges[i-1],[c,d]=edges[i];
-            triangle(deck,v(a),v(b),v(c));triangle(deck,v(b),v(d),v(c));
+        const clip=(points,z,above)=>{
+            const out=[];
+            for(let i=0;i<points.length;i++){
+                const a=points[i],b=points[(i+1)%points.length],inside=p=>above?p.z>=z:p.z<=z;
+                if(inside(a))out.push(a);
+                if(inside(a)!==inside(b)){const t=(z-a.z)/(b.z-a.z);out.push({x:a.x+(b.x-a.x)*t,z});}
+            }
+            return out;
+        };
+        for(const [lo,hi] of [[12,22],[22,34],[34,66],[66,80],[80,90]]){
+            const polygon=clip(clip(this.deckPolygon(),lo,true),hi,false);
+            for(let i=1;i<polygon.length-1;i++)triangle(deck,v(polygon[0]),v(polygon[i]),v(polygon[i+1]));
         }
         for(const {a,b} of this.railSegments()){
             const low=p=>[p.x,this.profile(p.z)+.05,p.z],high=p=>[p.x,this.profile(p.z)+.85,p.z];

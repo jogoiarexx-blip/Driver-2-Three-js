@@ -13,7 +13,7 @@ test('tabuleiro, rampas e cortes de margem deixam um corredor físico sem apagar
  for(const z of [34,50,66]){
   const x=Bridge.axisAt(z);assert(Number.isFinite(x));
   assert(Bridge.isBridgeDeck(x,z));assert(Bridge.deckHeight(x,z)>.1);
-  assert(!Bridge.isBridgeDeck(x+9,z));assert.equal(Bridge.deckHeight(x+9,z),null);
+  const outside=Bridge.openingAt(z).maxX+2;assert(!Bridge.isBridgeDeck(outside,z));assert.equal(Bridge.deckHeight(outside,z),null);
   assert(!Bridge.railBlocked(x,z,1.55,0));
   if(z!==50){const gap=Bridge.openingAt(z);assert(gap.minX<x-6&&gap.maxX>x+6);}
  }
@@ -35,4 +35,12 @@ test('CityBuilder usa altura de ponte e preserva água e isolamento das outras c
  assert.equal(Bridge.source.sourceSHA256,crypto.createHash('sha256').update(raw).digest('hex'));
  const masks=['markedPaving','plainPaving'].map(k=>zlib.gunzipSync(Buffer.from(survey.layers[k].gzipBitsetBase64,'base64')));
  for(const [x,y] of Bridge.source.sourcePixels){const bit=y*survey.width+x;assert(masks.some(b=>b[bit>>>3]&(128>>>(bit&7))));}
+});
+
+test('toda a largura útil passa longe dos corrimãos nas curvas do tabuleiro',()=>{
+ assert(Bridge);const p=Bridge.plan();
+ for(let i=0;i<p.points.length;i++){
+  const c=p.points[i],a=p.points[Math.max(0,i-1)],b=p.points[Math.min(p.points.length-1,i+1)],l=Math.hypot(b.x-a.x,b.z-a.z);
+  for(const s of [-1,0,1]){const x=c.x-s*(b.z-a.z)/l*4,z=c.z+s*(b.x-a.x)/l*4;assert(!Bridge.railBlocked(x,z,1.55,0));}
+ }
 });

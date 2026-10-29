@@ -92,7 +92,7 @@ tracked separately; this revision does not certify the complete PS1 map.
 
 Extend from the R16/R17 northern source anchor through the next 180 observed
 paving pixels using the same R15 similarity fit. The 187-unit continuation crosses
-the legacy Undercover canal, so reconstruct a stationary deck (12 units wide),
+the legacy Undercover canal, so reconstruct a stationary convex deck around the road envelope,
 small approach ramps, rendered/physical side rails and matching cuts in both
 visible and collision canal walls. Use the same road plan for those cuts and
 bridge physics. Deck elevation and placement are adapted to this procedural canal;
@@ -106,3 +106,8 @@ directions, source/deck/collision tests and a bridge screenshot before publishin
 - [x] Source trace, shared anchor, deck/rail/ground integration and foreign-city tests.
 - [ ] Whole Node suite, independent review and browser bidirectional crossing.
 - [ ] Publish after checks and verify Pages deployment.
+
+R18 full-width finding: offset rails pinched the inside source bend. Replaced them
+with a single convex deck footprint shared by water masking, mesh and rails, and
+cut each ramp surface at its exact profile breaks. Added the full-width rail
+clearance regression before repeating browser validation.
