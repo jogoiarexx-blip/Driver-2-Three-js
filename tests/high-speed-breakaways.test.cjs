@@ -174,5 +174,6 @@ test('efeitos são conectados a colisões, paredes e frota sem substituir GLB',(
     assert.match(engine,/spawnCarBreakaway\(event\.a,event\.zoneA/);
     assert.match(vehicle,/effects\.spawnCarBreakaway\(this,zone,impactSpeed\)/);
     assert.match(vehicle,/this\.frontBumperMesh=null/);
-    assert.match(vehicle,/preserved = \[this\.sirenAssembly, this\.targetMarker, this\.lightsGroup, this\.damageGroup\]/);
+    assert.match(vehicle,/const preserved = \[this\.sirenAssembly, this\.targetMarker,/);
+    assert.match(vehicle,/child\.userData\?\.driverPlayerRider/);
 });
