@@ -124,6 +124,57 @@
                 this.activeClip = clip;
             }
 
+            // Pose temporizada, também disponível quando o GLB não contém
+            // animações específicas de abrir porta ou montar motocicleta.
+            // Não altera rig, pesos ou física, evitando deformações no Tanner.
+            applyVehicleTransitionPose(style,kind,progress,dt=0) {
+                const t=Math.max(0,Math.min(1,progress));
+                const bike=style==='motorcycle';
+                const entering=kind==='enter';
+                const motion=Math.sin(Math.PI*t);
+                const rise=bike?Math.sin(Math.PI*Math.max(0,Math.min(1,
+                    (t-.30)/.53))):0;
+                const side=entering?-1:1;
+                if(this.animationMixer) {
+                    this.playModelAnimation(t<.3?'walk':'idle');
+                    this.animationMixer.update(Math.max(0,Math.min(.08,dt)));
+                }
+                this.group.rotation.x=-(bike?.18:.14)*motion;
+                this.group.rotation.z=side*(bike?.19:.10)*motion;
+                this.leftArm.rotation.x=-(bike?.95:.7)*motion;
+                this.rightArm.rotation.x=-(bike?.8:.4)*motion;
+                this.leftLeg.rotation.x=(bike?1.28:.55)*Math.max(motion,rise);
+                this.rightLeg.rotation.x=-(bike?.45:.22)*motion;
+                if(this.playerModel) {
+                    if(!this._modelMountBase) {
+                        this._modelMountBase={
+                            x:this.playerModel.rotation.x,
+                            z:this.playerModel.rotation.z
+                        };
+                    }
+                    // Para modelos sem clip de montagem, curvar o corpo
+                    // sem mudar o comprimento dos membros/esqueleto.
+                    this.playerModel.rotation.x=this._modelMountBase.x-
+                        (bike?.13:.09)*motion;
+                    this.playerModel.rotation.z=this._modelMountBase.z+
+                        side*(bike?.08:.05)*motion;
+                }
+            }
+
+            resetVehicleTransitionPose() {
+                this.group.rotation.x=0;
+                this.group.rotation.z=0;
+                for(const limb of [this.leftArm,this.rightArm,
+                    this.leftLeg,this.rightLeg])
+                    if(limb)limb.rotation.x=0;
+                if(this.playerModel && this._modelMountBase) {
+                    this.playerModel.rotation.x=this._modelMountBase.x;
+                    this.playerModel.rotation.z=this._modelMountBase.z;
+                }
+                this._modelMountBase=null;
+                if(this.playerModel)this.playModelAnimation('idle');
+            }
+
             setVisible(visible) {
                 this.group.visible = visible;
             }
