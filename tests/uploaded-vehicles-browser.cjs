@@ -33,14 +33,20 @@ const DIR='qa-artifacts';fs.mkdirSync(DIR,{recursive:true});
     const drive=await page.evaluate(id=>{
      const g=window.DriverGame,v=g.vehicles.find(v=>v.uploadedModel===id);
      g.gameEnded=false;g.inReplayMode=false;g.mode='on_foot';g.tanner.setPosition(v.x-2,v.y,v.z,0);g.toggleVehicleEnterExit();
+     const animatedEnter=!!g.vehicleMountTransition;
+     for(let i=0;i<115;i++){DriverVehicleMount.update(g,1/60);DriverUploadedVehicles.updateRiders(g);}
      const entered=g.playerCar===v&&g.mode==='driving';DriverUploadedVehicles.updateRiders(g);
      const riderOn=v.motorcycleRider?.visible;
      v.x=4;v.z=-110;v.heading=0;v.speed=0;v.damage=0;v.updateTransform();const before=v.z;
      for(let i=0;i<60;i++)v.updatePhysics(1/60,{up:true},g.city,g.effects,g.audio,true);
-     const distance=v.z-before;v.speed=0;g.toggleVehicleEnterExit();DriverUploadedVehicles.updateRiders(g);
-     return {entered,distance,damage:v.damage,submerged:v.isSubmerged,exited:g.mode==='on_foot',riderOn,riderOff:v.motorcycleRider?!v.motorcycleRider.visible:true};
+     const distance=v.z-before;v.speed=0;g.toggleVehicleEnterExit();
+     const animatedExit=!!g.vehicleMountTransition;
+     for(let i=0;i<110;i++){DriverVehicleMount.update(g,1/60);DriverUploadedVehicles.updateRiders(g);}
+     return {animatedEnter,animatedExit,entered,distance,damage:v.damage,
+      submerged:v.isSubmerged,exited:g.mode==='on_foot',
+      riderOn,riderOff:v.motorcycleRider?!v.motorcycleRider.visible:true};
     },id);
-    assert(drive.entered&&drive.exited,JSON.stringify({id,drive}));assert(drive.distance>3&&!drive.submerged);if(id==='motorcycle')assert(drive.riderOn&&drive.riderOff);
+    assert(drive.animatedEnter&&drive.animatedExit&&drive.entered&&drive.exited,JSON.stringify({id,drive}));assert(drive.distance>3&&!drive.submerged);if(id==='motorcycle')assert(drive.riderOn&&drive.riderOff);
     await page.evaluate(id=>{const g=window.DriverGame,v=g.vehicles.find(v=>v.uploadedModel===id);for(const other of g.vehicles)other.root.visible=other===v;g.camera.position.set(v.x+8,4.5,v.z+9);g.camera.lookAt(v.x,1,v.z);g.renderer.render(g.scene,g.camera);},id);
     await page.screenshot({path:`${DIR}/uploaded-${id}-${city}-${reports.length}.png`});
    }
