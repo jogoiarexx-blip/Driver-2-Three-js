@@ -179,11 +179,18 @@ The full footprint is space reserved for reconstruction, not finished streets.
 - [x] Implement generated world envelope, reset-safe CityBuilder application and ground.
 - [x] RED tests for the linked arterial and full-width dry clearance.
 - [x] Implement source arterial without relocating any existing site.
-- [ ] Node suite, independent review and bidirectional physical replay beyond z410.
-- [ ] Publish only after those checks and verify Pages; package source ZIP.
+- [x] 619 Node tests, independent re-review and bidirectional replay beyond z410 (40924898757, Undercover step passed).
+- Publication authorized after checks; Pages status tracked by the release Actions workflow.
 
 R20 review correction: expanded lake physics originally continued beyond its
 old z420 visual edge. The shoreline renderer and trim now share the expanded
 terrain extent with the clamped physics shoreline; (400,600) has a regression
 test and the actual browser mesh extent is asserted. Independent re-review
 found no remaining critical/important issue. 619 Node tests passed.
+
+R20 evidence: physical replay completed the approximately 380-unit arterial in
+both directions beyond the old world boundary; all prior R15-R19 checks passed
+in the same Undercover step. Expanded lake mesh bounds were checked directly.
+The 15 generated files reproduced byte-for-byte. New user pedestrian GLBs from
+remote main were merged unchanged. The envelope fits the whole source, but the
+remaining land, streets, buildings and geography are still to be reconstructed.

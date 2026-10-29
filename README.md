@@ -1253,3 +1253,9 @@ Uma arterial oeste de aproximadamente **380 unidades**, extraída de 346 pixels
 de pavimento observado, continua a R19 e atravessa a antiga borda até z≈632.
 Nenhuma missão ou construção existente foi reposicionada. A validação inclui
 limites reais, troca de cidade, água visível/física e direção nos dois sentidos.
+
+Validação R20: **619 testes Node passaram**. O runner 40924898757 passou a
+direção nos dois sentidos além da antiga borda, os replays R15-R19 e a checagem
+da extensão visível do lago. Revisão independente sem bloqueios após a correção
+da água fora do cenário antigo. Os 15 arquivos gerados foram reproduzidos byte a
+byte. Os três novos GLBs de pedestres enviados ao repositório foram preservados.
