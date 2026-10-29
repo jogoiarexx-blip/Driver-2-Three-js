@@ -61,6 +61,20 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
     g._riderDelta=1/60;DriverUploadedVehicles.updateRiders(g);
    }
    mounted.drift=Math.abs(hip.node.position.y-hipBefore);
+   const contacts=g.tanner.motorcycleContactReport||{};
+   mounted.contactReport=contacts;
+   mounted.contactsImproved=Object.values(contacts).filter(c=>
+       c&&!c.skipped&&Number.isFinite(c.before)&&Number.isFinite(c.after)&&
+       c.after<c.before-.001).length;
+   // Testar a reação ao guidão e à aceleração na pose montada.
+   v.steerAngle=.45;v.rollAngle=.10;v.lateralVelocity=2;v.speed=19;
+   for(let i=0;i<65;i++){
+       g._riderDelta=1/60;DriverUploadedVehicles.updateRiders(g);
+   }
+   mounted.steeringLean=g.tanner.motorcycleDynamics?.lean;
+   v.speed=0;
+   g._riderDelta=1/60;DriverUploadedVehicles.updateRiders(g);
+   mounted.braking=g.tanner.motorcycleDynamics?.brake;
    // Teste de regressão: reconstruir malha ou aplicar GLB novo não pode
    // descartar o próprio Tanner junto com os antigos meshes do chassi.
    v.buildCarMesh();
@@ -97,6 +111,10 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
   assert(result.mounted.riderHidden,'must not draw a second procedural Tanner');
   assert(result.mounted.rigDelta>.05,'right leg needs real skeletal rotation');
   assert(result.mounted.drift<1e-4,'repeated ride poses accumulated deformation');
+  assert(result.mounted.contactsImproved>=2,
+    'IK must measurably move hands/feet closer to controls: '+JSON.stringify(result.mounted.contactReport));
+  assert(result.mounted.steeringLean<-.02,'torso must lean as bike steers');
+  assert(result.mounted.braking>.01,'rider must react to braking');
   assert(result.mounted.survivedRebuild&&result.mounted.replacementAccepted&&
     result.mounted.survivedGLBSwap,'rider must survive vehicle mesh replacement');
   assert(result.dismounted.exit&&result.dismounted.attachedAtStart&&result.dismounted.detachedDuringSwing);
