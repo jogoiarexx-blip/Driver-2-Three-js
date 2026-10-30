@@ -1,0 +1,64 @@
+name: Driver 2 - Chicago R27 - Revisão dos 55 cruzamentos PS1
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/chicago-r26-grade-audit.cjs'
+      - 'tools/chicago-r27-review-conflicts.cjs'
+      - 'js/world/chicago-grade-review-r27.js'
+      - 'tests/chicago-r27-*'
+      - 'chicago/reference-grade-r27.json'
+      - 'chicago-original-preview.html'
+      - '.github/workflows/chicago-r27-height-review.yml'
+  pull_request:
+    paths:
+      - 'tools/chicago-r26-grade-audit.cjs'
+      - 'tools/chicago-r27-review-conflicts.cjs'
+      - 'js/world/chicago-grade-review-r27.js'
+      - 'tests/chicago-r27-*'
+      - 'chicago/reference-grade-r27.json'
+      - 'chicago-original-preview.html'
+      - '.github/workflows/chicago-r27-height-review.yml'
+permissions:
+  contents: read
+jobs:
+  classify-height-overlaps:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: R27 testar separação contínua, amostras isoladas e lacunas
+        run: node --test tests/chicago-r27-height-overlap.test.cjs
+      - name: Revisar todos os 55 conflitos com geometria 3D original do PS1
+        run: node tools/chicago-r27-review-conflicts.cjs qa-artifacts/chicago-r27/height-review.json
+      - name: Validar inventário e que trânsito e missões não foram alterados
+        run: |
+          node - <<'JS'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const report=JSON.parse(fs.readFileSync(
+            'qa-artifacts/chicago-r27/height-review.json','utf8'));
+          assert.equal(report.sourceTiles,54);
+          assert.equal(report.sourceTriangles,1544872);
+          assert.equal(report.sourceGraphEdges,4279);
+          assert.equal(report.inspectedConflictEdges,55);
+          assert.equal(report.records.length,55);
+          assert.equal(Object.values(report.conflictBreakdown)
+            .reduce((s,n)=>s+n,0),55);
+          assert.equal(report.routes.r23.length,6);
+          assert.equal(report.routes.r25.length,3);
+          assert.equal(report.gradeSeparatedRoutesCanAutoConnect,false);
+          assert.equal(report.trafficOrMissionsModified,false);
+          assert.equal(report.certifiedOverpasses,0);
+          console.log('R27 verified',JSON.stringify(report.conflictBreakdown));
+          JS
+      - name: Publicar resultados, evidências por aresta e classificações
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chicago-r27-ps1-height-conflict-review
+          path: qa-artifacts/chicago-r27/
+          retention-days: 30
