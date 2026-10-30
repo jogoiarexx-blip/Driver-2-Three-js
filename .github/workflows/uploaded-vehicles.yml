@@ -2,6 +2,7 @@ name: Driver 2 — veículos enviados
 on:
   push:
     paths:
+      - 'assets/vehicles/**'
       - 'js/assets/uploaded-vehicles.js'
       - 'js/entities/tanner-controller.js'
       - 'js/entities/tanner-vehicle-bone-rig.js'
