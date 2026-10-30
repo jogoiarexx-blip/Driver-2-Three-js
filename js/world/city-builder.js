@@ -462,6 +462,8 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoPS1StreetNetwork!=='undefined')
                     DriverChicagoPS1StreetNetwork.build(this);
+                if(this.preset.id==='chicago' && typeof DriverChicagoNorthRoadsideR32!=='undefined' && typeof DriverChicagoPS1StreetNetwork!=='undefined')
+                    DriverChicagoNorthRoadsideR32.build(this,DriverChicagoPS1StreetNetwork.sourcePaths(this));
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();
