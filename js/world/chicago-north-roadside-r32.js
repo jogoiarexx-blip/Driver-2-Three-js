@@ -29,7 +29,7 @@ class DriverChicagoNorthRoadsideR32 {
       lots.push({x,z,width:11,depth:11,height:8+(lots.length%4)*3,baseY:0,
        palette:lots.length%3,planned:true,kind:'residential',district:'wrigleyville',adaptedR32:true});
      }
-     remaining+=42;
+     remaining+=28;
     }
     remaining-=len;
    }

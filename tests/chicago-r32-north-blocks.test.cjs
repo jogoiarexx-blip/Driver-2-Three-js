@@ -19,3 +19,10 @@ test('rejeita retângulo que sobrepõe obstáculo estreito na borda',()=>{
  assert(!Blocks.plan(city,[p]).some(l=>l.x-l.width/2< -21&&l.x+l.width/2> -22&&l.z-l.depth/2<464&&l.z+l.depth/2>463));
  assert(Blocks.plan(city,[p]).every(l=>l.z-l.depth/2>=440));
 });
+test('corredor norte recebe ocupação contínua sem lotes sobrepostos',()=>{
+ const classes=['chicago-ps1-reference-arterial','chicago-ps1-north-candidate-r23','chicago-ps1-eastern-fork-r25'];
+ const paths=classes.map(n=>require('../js/world/'+n+'.js').plan());
+ const city={preset:{id:'chicago'},isWaterAt:()=>false,isPointBlocked:()=>false,buildingBoxes:[]};
+ const lots=Blocks.plan(city,paths);assert(lots.length>=26,`poucos lotes: ${lots.length}`);
+ for(let i=0;i<lots.length;i++)for(let j=0;j<i;j++)assert(!(Math.abs(lots[i].x-lots[j].x)<11&&Math.abs(lots[i].z-lots[j].z)<11));
+});
