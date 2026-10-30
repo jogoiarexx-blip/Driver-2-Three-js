@@ -27,6 +27,9 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
   const blocks=await page.evaluate(()=>{const c=window.DriverGame.city;return {lots:c.chicagoNorthRoadsideR32?.length||0,boxes:c.buildingBoxes.filter(b=>b.adaptedR32).length,chunks:[...c.districtChunks.values()].filter(x=>x.buildings.some(b=>b.adaptedR32)).length};});
   assert(blocks.lots>0&&blocks.boxes===blocks.lots&&blocks.chunks>0,JSON.stringify(blocks));
   console.log("CHICAGO_R32_BLOCKS",JSON.stringify(blocks));
+  const marking=await page.evaluate(()=>{const c=window.DriverGame.city,m=c.cityGroup.getObjectByName('chicago-r33-north-road-markings');return {exists:!!m,vertices:m?.geometry?.attributes?.position?.count||0};});
+  assert(marking.exists&&marking.vertices>0,JSON.stringify(marking));
+  console.log('CHICAGO_R33_MARKINGS',JSON.stringify(marking));
   const report=await page.evaluate(()=>{
    const game=window.DriverGame,city=game.city,
     road=city.chicagoReferenceEasternForkR25,
