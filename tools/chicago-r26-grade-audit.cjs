@@ -8,8 +8,9 @@
  * Run: node tools/chicago-r26-grade-audit.cjs [output.json]
  * This is strictly an AUDIT; cannot certify lanes or register traffic paths.
  */
-const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),zlib=require('node:zlib');
 const Guard=require('../js/world/chicago-grade-guard-r26.js');
+const Pavement=require('../js/world/chicago-road-evidence-r24.js');
 const Root=path.resolve(__dirname,'..');
 const REGIONS=[[65,191,128,254],[2,88,65,152]];
 function glbAccessors(file){
@@ -151,7 +152,21 @@ function build(root=Root,outFile='qa-artifacts/chicago-r26/grade-evidence.json')
         lowest=Math.min(lowest,r.minY[i]);
         highest=Math.max(highest,r.maxY[i]);
     }
-    const grade=Guard.audit(graph,r);
+    // Double gate: same-level height AND wide enough source paving.
+    // This deliberately excludes narrow sidewalks, yards and unknown pads
+    // despite their geometric continuity in the projected skeleton.
+    const masks=Object.fromEntries(Pavement.LAYERS.map(name=>[
+        name,zlib.gunzipSync(Buffer.from(
+            survey.layers[name].gzipBitsetBase64,'base64'))
+    ]));
+    const paved=Pavement.classify(graph,survey,masks);
+    const grade=Guard.audit(graph,r,paved.records);
+    grade.pavementGate={
+        counts:paved.counts,
+        acceptedSourceClasses:['strong','medium'],
+        requiresSameLevel:true,
+        qualifiedEdgeIds:grade.gradeGuardCandidates
+    };
     grade.sourceRaster={
         width:r.width,height:r.height,stepOBJ:r.stepOBJ,
         cellsOccupied:occupied,cellsStacked:stacked,
@@ -181,6 +196,24 @@ function build(root=Root,outFile='qa-artifacts/chicago-r26/grade-evidence.json')
         r25:grade.existingReferenceRoutes.r25.map(e=>({id:e.id,status:e.status})),
         gradedIntersectionsCertified:false,trafficRewired:false};
     console.log('CHICAGO_R26_GRADE_AUDIT '+JSON.stringify(summary));
+    // Small provenance-rich visual overlay payload; includes only flagged
+    // edges and nodes. Full 4279-edge evidence stays in the ZIP artifact.
+    console.log('CHICAGO_R26_GRADE_COMPACT '+JSON.stringify({
+        format:grade.format,sourceSurveySHA256:graph.sourceSHA256,
+        sourceTriangles:r.trianglesRead,sourceSectors:r.tilesRead,
+        cellsStacked:stacked,
+        nodeCounts:grade.nodeCounts,edgeCounts:grade.edgeCounts,
+        pavingCounts:paved.counts,
+        gradeGuardCandidateCount:grade.gradeGuardCandidates.length,
+        conflictEdgeIds:grade.edges.filter(e=>
+            e.status==='multi-level-conflict').map(e=>e.id),
+        stackedNodeIds:grade.stackedNodeIds,
+        existingReferenceRoutes:Object.fromEntries(
+            Object.entries(grade.existingReferenceRoutes)
+                .map(([key,edges])=>[key,edges.map(e=>({id:e.id,status:e.status}))])),
+        junctionsCertified:false,wholeMapCertified:false,
+        note:'Conflicts from coincident source pavement at multiple heights; may include non-road surfaces. Do not create a navigable 2D intersection.'
+    }));
     return summary;
 }
 if(require.main===module)build(Root,process.argv[2]||
