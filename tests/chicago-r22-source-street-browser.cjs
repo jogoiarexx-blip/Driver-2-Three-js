@@ -96,7 +96,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
   console.log('CHICAGO_R22_ROAD_BROWSER',JSON.stringify(report));
   fs.writeFileSync('qa-artifacts/chicago-r22-street-network.json',
    JSON.stringify({report,errors},null,2));
-  assert.equal(report.sourceCorridors,11);
+  assert.equal(report.sourceCorridors,12);
   assert.equal(report.connectorsAccepted,1);
   assert(report.meshParent);
   assert.equal(report.startToSurveyEnd,0);
