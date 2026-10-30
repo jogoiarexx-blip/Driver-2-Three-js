@@ -168,3 +168,48 @@ O workflow `Driver 2 - Chicago R27 - Revisão dos 55 cruzamentos PS1` salva
 o JSON detalhado, a revisão compacta e a captura de tela do Chromium. O passo
 seguinte será analisar altura e textura de cada segmento de interseção,
 com atenção à conectividade real de rampas e pontes, antes da migração física.
+
+## R28 — grafo de rotas 3D separado por níveis, sem junções falsas
+
+A R28 cria um **roteador experimental e isolado** para a Chicago original.
+Ele só conecta arestas que compartilham o mesmo **ID de nó da rede PS1**:
+uma interseção visual de dois segmentos em X/Z não é suficiente. Além disso,
+usa os dados de pavimento da R24 e as alturas dos GLBs da R26. Nenhuma ligação
+pode passar por nó com observação de altura empilhada, altura ausente, conflito
+de grade ou inclinação acima do limite conservador de 8,5%.
+
+Resultados da auditoria sobre **4.279 arestas / 3.230 nós / 54 GLBs**:
+
+| Decisão automática | Arestas |
+| --- | ---: |
+| Pavimento ou largura insuficiente | 3.954 |
+| Conflito, ausência ou ambiguidade de nível | 107 |
+| Inclinação acima do limite R28 | 2 |
+| **Candidatas restantes para inspeção de conectividade** | **216** |
+
+As 216 candidatas formam uma rede muito fragmentada. O componente com maior
+comprimento disponível contém apenas **duas arestas conectadas** (17,126
+unidades OBJ). Logo, **a rede NÃO deve ser utilizada como rota de trânsito
+do jogo**. A R23 tem apenas as arestas 1822 e 1777 elegíveis; a R25 não
+tem arestas elegíveis pelos critérios conservadores R28, embora ambas
+continuem jogáveis no Undercover como adaptações.
+
+Reproduzir com Node 22:
+
+```sh
+node --test tests/chicago-r28-layered-routes.test.cjs
+node tools/chicago-r28-layered-route-audit.cjs qa-artifacts/chicago-r28/layered-review-routes.json
+```
+
+O arquivo [`reference-layered-r28.json`](reference-layered-r28.json)
+guarda os **216 IDs** e os exemplos de rotas. Na
+[visualização da Chicago original](../chicago-original-preview.html),
+clique **Ver rotas por nível R28** para ver essas candidatas em verde-água
+e um exemplo conectado em amarelo.
+
+Este é um grafo de diagnóstico, **não um sistema de tráfego integrado**:
+não corrige automaticamente as faixas, não atribui sentidos únicos,
+não modifica as missões e não homologa rampas ou viadutos. A próxima
+etapa útil é investigar os limites de altura por aresta com rastros
+visuais e validar um corredor contínuo individualmente antes de
+inseri-lo no mapa jogável.
