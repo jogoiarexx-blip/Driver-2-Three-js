@@ -34,7 +34,8 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
   const report=await page.evaluate(reverse=>{
    const game=window.DriverGame,city=game.city,
     road=city.chicagoReferenceNorthLinkR35,
-    pts=reverse?[...road.points].reverse():road.points,graph=city.chicagoPS1StreetNetwork,
+    combined=[...city.chicagoReferenceEasternForkR25.points.slice(-12),...road.points.slice(1)],
+    pts=reverse?[...combined].reverse():combined,graph=city.chicagoPS1StreetNetwork,
     first=pts[0],second=pts[1],last=pts.at(-1);
    game.isPaused=true;
    const pathDistance=(x,z)=>{
