@@ -15,6 +15,15 @@ class DriverChicagoNorthLinkR35 extends DriverChicagoR35Base {
     }
     static plan(){
         const path=super.plan();
+        const Network=typeof module!=='undefined'&&module.exports?
+            require('./chicago-ps1-street-network-r22.js'):DriverChicagoPS1StreetNetwork;
+        let smooth=Network.simplify(this.source.pointsOBJ.map(p=>this.fitPoint(p)),2);
+        for(let pass=0;pass<2;pass++){
+            const out=[smooth[0]];
+            for(let i=1;i<smooth.length;i++)for(const t of [.25,.75])out.push({x:smooth[i-1].x+(smooth[i].x-smooth[i-1].x)*t,z:smooth[i-1].z+(smooth[i].z-smooth[i-1].z)*t});
+            out.push(smooth.at(-1));smooth=out;
+        }
+        path.points=smooth;path.adaptedSimplificationTolerance=2;
         const predecessor=typeof DriverChicagoPS1EasternForkR25!=='undefined'?
             DriverChicagoPS1EasternForkR25:this.parentR25;
         if(!predecessor?.plan)throw Error('R35 requer o plano R25');
