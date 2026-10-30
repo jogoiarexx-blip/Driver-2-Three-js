@@ -9,7 +9,7 @@ small{color:#a8b7c6}button{background:#1e4571;border:1px solid #3f7295;color:whi
 </style></head><body><div id="view"></div>
 <section id="panel"><b>CHICAGO • ORIGINAL PS1</b><div>Pré-visualização geográfica da geometria enviada pelo usuário. Não é a cidade jogável nem altera as missões e a física do clone.</div>
 <small>Arraste para orbitar • Roda para zoom • WASD/setas para mover • Tecla 1: centro • Tecla 2: vista superior.</small>
-<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
+<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
 <div id="footer">OBJ dividido em 54 setores • carregamento sob demanda • material faltante em roxo</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -90,6 +90,79 @@ roadsButton.addEventListener('click',async()=>{
    loadingRoads=false;roadsButton.disabled=false;
  }
 });
+// R26: audit overlay from actual source GLB elevation evidence.
+let gradeOverlay=null,gradeLoading=false;
+const gradeButton=document.getElementById('grades'),
+      gradeStatus=document.getElementById('grade-audit');
+gradeButton.addEventListener('click',async()=>{
+ if(gradeOverlay){
+   gradeOverlay.visible=!gradeOverlay.visible;
+   gradeButton.textContent=gradeOverlay.visible?
+     'Ocultar conflitos de altura':'Mostrar conflitos de altura';
+   return;
+ }
+ if(gradeLoading)return;
+ gradeLoading=true;gradeButton.disabled=true;
+ gradeButton.textContent='Carregando desníveis…';
+ gradeStatus.textContent='Lendo alturas auditadas e cruzamentos candidatos…';
+ try{
+   const [graph,data]=await Promise.all([
+     './chicago/reference-network.json',
+     './chicago/reference-grade-r26.json'
+   ].map(async url=>{
+     const response=await fetch(url);
+     if(!response.ok)throw Error('HTTP '+response.status+': '+url);
+     return response.json();
+   }));
+   if(graph.sourceSHA256!==data.sourceSurveySHA256)
+     throw Error('Dados de altura não correspondem à versão da malha PS1');
+   const linePositions=[],nodePositions=[];
+   for(const id of data.conflictEdgeIds){
+     const points=graph.edges[id]?.pointsOBJ;
+     if(!points)throw Error('Aresta fora da rede: '+id);
+     for(let j=1;j<points.length;j++)for(const p of
+       [points[j-1],points[j]])
+       linePositions.push(p[0],.225,p[1]);
+   }
+   for(const id of data.stackedNodeIds){
+     const p=graph.nodes[id]?.pointOBJ;
+     if(!p)throw Error('Nó fora da rede: '+id);
+     nodePositions.push(p[0],.26,p[1]);
+   }
+   gradeOverlay=new THREE.Group();
+   gradeOverlay.name='chicago-r26-source-height-conflicts';
+   gradeOverlay.userData.visualOnly=true;
+   gradeOverlay.userData.streetCertified=false;
+   const linesGeo=new THREE.BufferGeometry();
+   linesGeo.setAttribute('position',
+     new THREE.Float32BufferAttribute(linePositions,3));
+   const lines=new THREE.LineSegments(linesGeo,new THREE.LineBasicMaterial({
+     color:0xf36d76,transparent:true,opacity:.97,depthTest:false
+   }));
+   lines.renderOrder=10;lines.name='r26-conflicting-source-edges';
+   gradeOverlay.add(lines);
+   const pointsGeo=new THREE.BufferGeometry();
+   pointsGeo.setAttribute('position',
+     new THREE.Float32BufferAttribute(nodePositions,3));
+   const points=new THREE.Points(pointsGeo,new THREE.PointsMaterial({
+     color:0xffd18f,size:2.5,sizeAttenuation:true,depthTest:false
+   }));
+   points.renderOrder=11;points.name='r26-stacked-junction-nodes';
+   gradeOverlay.add(points);
+   stream.root.add(gradeOverlay);
+   gradeButton.textContent='Ocultar conflitos de altura';
+   gradeStatus.textContent='R26: '+data.conflictEdgeIds.length+
+     ' conexões em vermelho e '+data.stackedNodeIds.length+
+     ' nós em laranja exigem revisão de nível. '+
+     data.gradeGuardCandidateCount+
+     ' conexões atendem simultaneamente aos filtros de pavimento e altura. '+
+     'A vista é uma projeção; não certifica viadutos nem cruzamentos.';
+ }catch(error){
+   gradeStatus.textContent='Não foi possível consultar a auditoria R26: '+
+     String(error.message||error);
+   gradeButton.textContent='Tentar novamente';
+ }finally{gradeLoading=false;gradeButton.disabled=false;}
+});
 let drag=false,px=0,py=0;
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);
@@ -117,6 +190,13 @@ let then=performance.now();function frame(now){requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-addEventListener('pagehide',()=>{if(evidenceOverlay){evidenceOverlay.traverse(obj=>{obj.geometry?.dispose?.();obj.material?.dispose?.();});evidenceOverlay.parent?.remove(evidenceOverlay);}stream.dispose();renderer.dispose()});
+addEventListener('pagehide',()=>{
+ for(const group of [evidenceOverlay,gradeOverlay]){
+  if(!group)continue;
+  group.traverse(obj=>{obj.geometry?.dispose?.();obj.material?.dispose?.();});
+  group.parent?.remove(group);
+ }
+ stream.dispose();renderer.dispose();
+});
 })();
 </script></body></html>
