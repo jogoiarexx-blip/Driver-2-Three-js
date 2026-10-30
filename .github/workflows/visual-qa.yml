@@ -84,6 +84,8 @@ jobs:
         run: node --test tests/chicago-neighborhoods.test.cjs
       - name: Certificar fachadas PS1 encaixadas nos lotes de Chicago
         run: node --test tests/chicago-ps1-facades-r21.test.cjs
+      - name: R22 certificar conexões dos corredores PS1, margens e radar
+        run: node --test tests/chicago-r22-source-street-network.test.cjs
       - name: Certificar desempenho e descarte de chunks
         run: node --test tests/district-visibility.test.cjs
       - name: Certificar Driving Games, missões de Vegas e Rio e spatial hash
@@ -114,6 +116,10 @@ jobs:
           done
           cat /tmp/driver-http.log
           exit 1
+      - name: R22 dirigir pelo acesso norte e certificar radar da Chicago
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r22-source-street-browser.cjs
       - name: Validar cinco modelos de pedestres e troca Chicago/Havana
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
