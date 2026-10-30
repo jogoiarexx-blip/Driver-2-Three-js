@@ -147,6 +147,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r37-north-branch-browser.cjs
+      - name: R38 dirigir pelo retorno leste
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r38-east-return-browser.cjs
       - name: Validar cinco modelos de pedestres e troca Chicago/Havana
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
