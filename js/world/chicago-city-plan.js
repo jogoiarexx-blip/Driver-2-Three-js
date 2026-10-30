@@ -180,23 +180,139 @@ class DriverChicagoCityPlan {
         city.chicagoCityPlan.courtyardLinks=links;
     }
     static detailDistrict(city,buildings,parent){
-        const parts=[];
+        // Chicago PS1: janelas, cornijas e portas seguem CADA lote.
+        // Não usar fachadas fixas de 38 m em prédios subdivididos de 11 m:
+        // isso criava vitrines suspensas no ar e pedaços sobre a calçada.
+        const parts=[],stats={lots:0,windows:0,fireEscapes:0,industrialDoors:0};
+        const add=(x,y,z,w,h,d,color,light=false)=>{
+            if([x,y,z,w,h,d].every(Number.isFinite)&&w>0&&h>0&&d>0)
+                parts.push([x,y,z,w,h,d,color,light]);
+        };
         for(const b of buildings.filter(b=>b.planned)){
-            const top=b.height+(b.baseY??.35),front=b.z+b.depth/2;
-            parts.push([b.x,top+.12,b.z,b.width+.3,.24,b.depth+.3,0x4e5256,false]);
-            parts.push([b.x,3.5,front+.12,b.width,.3,.25,
-                b.kind==='commercial'?0x8c3834:0xb0aaa0,false]);
-            if(b.kind==='industrial'){
-                parts.push([b.x,2,front+.16,b.width*.52,3.5,.22,0x52616b,false]);
-                parts.push([b.x-3,top+1.2,b.z,2,2.4,2,0x746354,false]);
-            }else if(b.kind==='residential'){
-                parts.push([b.x,1.35,front+.15,1.5,2.6,.25,0x604637,false]);
-            }else if(b.kind==='tower'){
-                parts.push([b.x,top+1.7,b.z,b.width*.65,3,b.depth*.65,0x465361,false]);
+            const x=b.x,z=b.z,w=b.width,d=b.depth,h=b.height,
+                base=b.baseY??.35,top=base+h;
+            if(![x,z,w,d,h,base].every(Number.isFinite)||w<2||d<2||h<3)
+                continue;
+            stats.lots++;
+            const r=this.random(x,z,29);
+            const industrial=b.kind==='industrial',
+                residential=b.kind==='residential',
+                highrise=b.kind==='tower'||b.kind==='apartment',
+                commercial=b.kind==='commercial';
+            const stone=industrial?0x8b8072:residential?0xb2a48e:
+                highrise?0x8d9699:0xa59b8a;
+            const dark=industrial?0x46525a:residential?0x453f3b:
+                0x344451;
+            const glass=industrial?0x42535c:residential?0x53656b:
+                0x5a7180;
+            const brick=residential?(r>.48?0x965744:0x794337):
+                industrial?0x765547:0x76746e;
+            const edgeX=x+w/2,edgeZ=z+d/2;
+            const inset=.18;
+            // Ornamentação rente à fachada, sem novos volumes de colisão.
+            add(x,top+.12,z,w+.22,.28,d+.22,dark);
+            for(const side of [-1,1]){
+                add(x,base+.52,z+side*(d/2+.07),w,.72,.15,stone);
+                add(x+side*(w/2+.07),base+.52,z,.15,.72,d,stone);
+                add(x,top-.14,z+side*(d/2+.10),w+.25,.38,.20,stone);
+                add(x+side*(w/2+.10),top-.14,z,.20,.38,d+.25,stone);
+            }
+            if(residential||industrial){
+                add(x,top+.42,z,w*.60,.54,d*.50,brick);
+                add(x,top+.74,z,w*.62,.12,d*.52,stone);
+            }
+            if(highrise){
+                add(x,top+1.0,z,w*.66,1.8,d*.66,dark);
+                if(h>52)add(x,top+2.2,z,w*.48,.7,d*.44,stone);
+            }
+            // Tamanho e quantidade de janelas derivados de largura/altura.
+            const floors=Math.min(18,Math.max(1,Math.floor((h-5)/3.3)));
+            const columns=Math.min(6,Math.max(1,Math.floor((w-1.6)/3)));
+            const rowHeight=Math.min(3.3,(h-5.1)/Math.max(1,floors));
+            const span=(w-1.7)/columns;
+            const sizeX=Math.max(.85,Math.min(1.7,span*.60));
+            const windowHeight=industrial?1.05:Math.min(1.75,rowHeight*.6);
+            for(let floor=0;floor<floors;floor++){
+                const y=base+4.25+floor*rowHeight;
+                if(y+windowHeight/2>top-.65)break;
+                if(industrial&&floor%2!==0)continue;
+                for(let col=0;col<columns;col++){
+                    const wx=x-w/2+.85+span*(col+.5);
+                    const lit=this.random(x*11+col,z*7+floor,71)>.85;
+                    for(const side of [-1,1]){
+                        const wz=z+side*(d/2+.11);
+                        add(wx,y,wz,sizeX,windowHeight,.12,
+                            lit?0xb2a38c:glass,lit);
+                        add(wx,y+windowHeight/2+.12,wz,
+                            sizeX+.22,.16,.16,stone);
+                    }
+                    stats.windows+=2;
+                }
+                // Laterais: colunas independentes, sem repetir quatro
+                // janelas enormes em armazéns estreitos.
+                const depthColumns=Math.min(7,Math.max(1,Math.floor((d-1.5)/4.2)));
+                const dz=(d-1.6)/depthColumns;
+                for(let col=0;col<depthColumns;col++){
+                    const wz=z-d/2+.8+dz*(col+.5);
+                    for(const side of [-1,1]){
+                        const wx=x+side*(w/2+.11);
+                        add(wx,y,wz,.12,windowHeight,
+                            Math.max(.80,Math.min(1.65,dz*.55)),glass);
+                    }
+                    stats.windows+=2;
+                }
+            }
+            // Térreo com acesso e detalhes compatíveis com cada bairro.
+            const front=edgeZ+.12;
+            const doorX=x-w*.22;
+            add(doorX,base+1.85,front,Math.min(1.95,w*.24),
+                3.0,.17,dark);
+            add(doorX,base+3.43,front,Math.min(2.3,w*.30),
+                .19,.23,stone);
+            if(industrial){
+                add(x+w*.13,base+2.35,front,
+                    Math.max(2.8,Math.min(w*.48,7)),4.3,.22,dark);
+                for(let n=0;n<3;n++)
+                    add(x+w*.13,base+1.3+n*1.05,front+.14,
+                        Math.max(2.4,Math.min(w*.44,6.7)),.10,.12,stone);
+                add(x+w*.13,base+4.85,front+.46,
+                    Math.min(w*.65,8),.30,.70,brick);
+                stats.industrialDoors++;
+            }else if(commercial){
+                add(x+w*.18,base+2.0,front,
+                    Math.max(1.7,Math.min(w*.38,5)),2.4,.17,glass);
+                add(x,base+4.1,front+.37,w*.84,.38,.8,brick);
+                add(x,base+4.33,front+.42,w*.82,.17,.78,stone);
+            }else if(residential){
+                // Degraus e verga de pedra: tijolos típicos do oeste.
+                for(let step=0;step<3;step++)
+                    add(doorX,base+.10+step*.19,front+.40-step*.12,
+                        Math.min(2.4,w*.3),.14,.42,stone);
+                if(h>12&&w>10){
+                    // Escada metálica junto à parede, sem projetar-se
+                    // além dos 22 m reservados ao lote/rua.
+                    const fx=x+w*.23,fw=Math.min(2.9,w*.25);
+                    for(let y=base+7.2;y<top-2;y+=6.5){
+                        add(fx,y,front+.34,fw,.16,.62,dark);
+                        add(fx,y+.55,front+.69,fw,.10,.09,stone);
+                        for(const sign of [-1,1])
+                            add(fx+sign*fw/2,y+.44,front+.58,
+                                .11,1.05,.10,dark);
+                        stats.fireEscapes++;
+                    }
+                }
+            }else if(highrise){
+                // Faixa vertical, presente nos edifícios do Loop/Gold Coast.
+                for(const offset of [-.38,.38])
+                    add(x+offset*w,base+h*.50,front,
+                        .27,h-.9,.16,stone);
             }
         }
         if(typeof DriverSpecialStructures!=='undefined')
-            DriverSpecialStructures.pack(parent,parts,'chicago-r14-parcel-details');
+            DriverSpecialStructures.pack(parent,parts,
+                'chicago-r21-ps1-lot-facades');
+        city.chicagoPS1ParcelStyle=stats;
+        return stats;
     }
 }
 if(typeof module!=='undefined'&&module.exports){
