@@ -79,3 +79,13 @@ test('full Chicago parcel facades are built only in LOD chunks, not in every fra
  assert.match(builder,/const legacyBuildings=chunk\.buildings\.filter\(b=>!b\.planned\)/);
  assert.match(code,/chicago-r21-ps1-lot-facades/);
 });
+
+test('brick districts cannot accidentally receive blue glass tower palette',()=>{
+ const west=Plan.lots(-280,120);
+ const industry=Plan.lots(-200,200);
+ const loop=Plan.lots(60,-70);
+ assert(west.every(b=>[1,2].includes(b.palette)));
+ assert(industry.every(b=>[1,2].includes(b.palette)));
+ assert(loop.every(b=>[0,1,3].includes(b.palette)));
+ assert.equal(JSON.stringify(west),JSON.stringify(Plan.lots(-280,120)));
+});
