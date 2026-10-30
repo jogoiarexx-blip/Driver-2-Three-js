@@ -114,11 +114,40 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         assert(visualDamage.scaleZ<.9,'Capô não amassou em '+city);
         assert(visualDamage.hingeX<-.1,'Capô não dobrou em '+city);
       }
-      await page.evaluate(()=>{
-        const g=window.DriverGame;
-        g.playerCar.speed=0;
+      const exitStarted=await page.evaluate(()=>{
+        const g=window.DriverGame,car=g.playerCar;
+        car.speed=0;
+        // O teste visual teleporta o carro para a foto. Se cair numa
+        // vaga cercada por colisores, localizar uma posição segura
+        // em vez de exigir a saída dentro de um prédio/água.
+        const find=()=>DriverVehicleMount.chooseStandPoint(g,car,'exit');
+        if(!car.policeDoorRig&&!find()){
+          const origin={x:car.x,y:car.y,z:car.z};
+          let ok=false;
+          for(const radius of [5,10,17,25,40]){
+            for(let i=0;i<16;i++){
+              const angle=i*Math.PI/8;
+              const x=origin.x+Math.cos(angle)*radius;
+              const z=origin.z+Math.sin(angle)*radius;
+              const y=g.city.getGroundHeightAt(x,z,origin.y);
+              if(g.city.isWaterAt(x,z)||g.city.isPointBlocked(x,z,1.7,y))
+                continue;
+              car.x=x;car.z=z;car.y=y;
+              if(find()){ok=true;break;}
+            }
+            if(ok)break;
+          }
+          if(!ok){car.x=origin.x;car.z=origin.z;car.y=origin.y;}
+          car.updateTransform();
+        }
         g.toggleVehicleEnterExit();
+        return {started:!!g.vehicleMountTransition||
+            !!g.policeDoorTransition||g.mode==='on_foot',
+          position:{x:car.x,y:car.y,z:car.z},
+          safe:car.policeDoorRig?true:!!find()};
       });
+      assert(exitStarted.started,
+        'Saída segura indisponível em '+city+': '+JSON.stringify(exitStarted));
       // A saída de moto/carro leva ~1,2s; esperar o ciclo terminar
       // antes de posicionar o jogador para o teste de caminhada.
       await page.waitForFunction(()=>{
