@@ -127,7 +127,7 @@ test('one male uses index 1, woman retains index 0; walk and running are animate
     assert.equal(male.action.paused,false);
 });
 test('game wires the model without replacing all pedestrians',()=>{
-    assert(INDEX.includes('src="./js/assets/driver-male-pedestrian.js"'));
+    assert(INDEX.includes('src="./js/assets/driver-male-pedestrian.js?'));
     assert(INDEX.indexOf('driver-male-pedestrian.js')<
         INDEX.indexOf('pedestrians-roadblocks.js'));
     assert(MANAGER.includes('new DriverMalePedestrian(this)'));
