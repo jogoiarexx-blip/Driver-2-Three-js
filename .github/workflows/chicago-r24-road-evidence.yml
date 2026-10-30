@@ -1,0 +1,61 @@
+name: Driver 2 - Chicago PS1 R24 - Classificador de vias
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'chicago/reference-network.json'
+      - 'chicago/reference-street-survey.json'
+      - 'chicago-original-preview.html'
+      - 'js/world/chicago-road-evidence-r24.js'
+      - 'tools/chicago-r24-classify-roads.cjs'
+      - 'tests/chicago-r24-*'
+      - '.github/workflows/chicago-r24-road-evidence.yml'
+  pull_request:
+    paths:
+      - 'chicago/reference-network.json'
+      - 'chicago/reference-street-survey.json'
+      - 'chicago-original-preview.html'
+      - 'js/world/chicago-road-evidence-r24.js'
+      - 'tools/chicago-r24-classify-roads.cjs'
+      - 'tests/chicago-r24-*'
+      - '.github/workflows/chicago-r24-road-evidence.yml'
+permissions:
+  contents: read
+jobs:
+  source-pavement-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: R24 certificar máscaras e evitar ruas falsas em todas as arestas
+        run: node --test tests/chicago-r24-road-evidence.test.cjs
+      - name: Gerar inventário e ranking dos 4.279 trechos
+        run: node tools/chicago-r24-classify-roads.cjs qa-artifacts/chicago-r24/road-evidence.json
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir visualização da Chicago original
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/chicago-r24-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/chicago-original-preview.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-r24-http.log
+          exit 1
+      - name: Mostrar vias prováveis e alternar camadas no Chromium
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r24-road-overlay-browser.cjs
+      - name: Publicar auditoria R24, topologia e screenshot
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chicago-ps1-r24-pavement-evidence
+          path: qa-artifacts/chicago-r24/
+          retention-days: 30
