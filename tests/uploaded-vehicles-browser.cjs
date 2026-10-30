@@ -32,9 +32,19 @@ const DIR='qa-artifacts';fs.mkdirSync(DIR,{recursive:true});
       return {id:v.uploadedModel,style:v.bodyStyle,meshes,maxTexture,blocked:g.city.isPointBlocked(v.x,v.z,1.55),water:g.city.isWaterAt(v.x,v.z),dimensions:DriverVehicleCollisions.dimensions(v)};
      })};
    },hasBusAsset);
-   assert.equal(report.models.length,verifyIds.length);for(const m of report.models){assert(m.meshes>0);assert(m.maxTexture>0&&m.maxTexture<=1024);assert(!m.water&&!m.blocked,JSON.stringify(m));}
+   assert.equal(report.models.length,verifyIds.length);
+   for(const m of report.models){
+    assert(m.meshes>0);assert(m.maxTexture>0&&m.maxTexture<=1024);
+    assert(!m.water&&!m.blocked,JSON.stringify(m));
+   }
+   if(hasBusAsset){
+    const bus=report.models.find(m=>m.id==='school-bus');
+    assert(bus&&bus.style==='bus','ônibus escolar substitui ônibus original');
+    assert.equal(bus.dimensions.width,2.72);
+    assert.equal(bus.dimensions.length,8);
+   }
    assert.equal(report.boat,city==='chicago');reports.push(report);
-   for(const id of ['pickup-new','pickup-old','motorcycle']){
+   for(const id of verifyIds){
     const drive=await page.evaluate(id=>{
      const g=window.DriverGame,v=g.vehicles.find(v=>v.uploadedModel===id);
      g.gameEnded=false;g.inReplayMode=false;g.mode='on_foot';g.tanner.setPosition(v.x-2,v.y,v.z,0);g.toggleVehicleEnterExit();
