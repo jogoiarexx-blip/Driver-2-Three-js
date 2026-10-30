@@ -1,5 +1,4 @@
-/* Browser smoke: the exact uploaded GLB is skinned and active as one male
- * pedestrian, with the female and the other 26 NPCs untouched. */
+/* Browser smoke: five uploaded, skinned GLBs fill all 28 civilian slots. */
 'use strict';
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
@@ -96,6 +95,24 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
          assert.equal(v.walk,v.status.id==='mendigo'?'Walking':'Walking_Woman');
       }
       if(results.length)for(let i=0;i<variants.length;i++)assert.equal(variants[i].rootUUID,results[0].variants[i].rootUUID,'GLB foi recarregado ao trocar de cidade');
+      await page.waitForFunction(()=>{
+         const c=window.DriverGame?.pedManager?.uploadedCrowd?.status();
+         return c?.loadedModels===5 && c?.filledSlots===28;
+      },null,{timeout:120000});
+      const crowd=await page.evaluate(()=>{
+         const m=window.DriverGame.pedManager;
+         let withSkin=0;
+         for(const p of m.pedestrians){
+            let hasSkin=false;
+            p.mesh.traverse(node=>{if(node.isSkinnedMesh)hasSkin=true;});
+            if(hasSkin)withSkin++;
+         }
+         return {status:m.uploadedCrowd.status(),withSkin};
+      });
+      assert.equal(crowd.status.proceduralCivilians,0);
+      assert.equal(crowd.status.waitingSlots,0);
+      assert.equal(crowd.withSkin,28,'nenhuma vaga pode ter corpo procedural ou ficar sem rig');
+      data.crowd=crowd;
       data.variants=variants;
       results.push(data);
 
