@@ -43,3 +43,9 @@ Não há base para dar um percentual confiável de fidelidade total ou afirmar e
 - `chicago/reference-grade-r26.json`, `reference-grade-r27.json`, `reference-layered-r28.json`, `reference-recovery-r29.json`: evidências de altura e candidatos.
 - `docs/superpowers/plans/2026-10-29-chicago-full-plan.md`: histórico de implementação e testes.
 - `tools/chicago-geo-audit.cjs` e testes `tests/chicago-*`: auditorias e replays existentes; consultar saída atual antes de declarar resultados novos.
+
+## Execução R30 — inventário por setor
+
+Primeira etapa iniciada: `tools/chicago-r30-sector-inventory.cjs` gera `chicago/sector-inventory-r30.json` e a [planta dos 54 setores projetados](setores-originais-r30.svg). Cada setor reúne limites da fonte, quatro cantos transformados, hash do setor fornecido, triângulos classificados por textura e quantidades de caixas de segmentos candidatos sobrepostas. Essas quantidades não são extensões de rua e podem contar o mesmo segmento em mais de um setor. O gerador verifica a correspondência do hash do levantamento com as entradas de grafo, recuperação R29 e curva R15. Os hashes de setores são os registrados pelo levantamento; o inventário não relê os GLBs para verificá-los.
+
+Validação: 710 testes Node passaram, incluindo rejeição de levantamento incompatível. Os arquivos gerados são reproduzíveis byte a byte. Esta etapa não adiciona ruas jogáveis; a classificação de pavimento, construção dos setores, testes de direção e posterior mudança das missões continuam pendentes.
