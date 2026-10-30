@@ -15,6 +15,7 @@ on:
       - 'tests/chicago-r5-visitor-browser.cjs'
       - 'tests/chicago-r6-north-yard-browser.cjs'
       - 'tests/chicago-r7-real-driving-replay.cjs'
+      - 'tests/chicago-r22-*'
       - 'tests/chicago-r7-junctions-browser.cjs'
       - 'js/world/chicago-goose-island-junctions.js'
       - 'js/world/chicago-goose-island-north-yard.js'
