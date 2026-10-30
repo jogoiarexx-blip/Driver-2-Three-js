@@ -148,6 +148,13 @@ class DriverUploadedPedestrianCrowd {
         }catch(e){this.lastError=String(e?.message||e);}
     }
 
+    releaseOfficer(officer) {
+        const record=this.officers.get(officer);
+        if(!record)return;
+        this.detach(record);
+        this.officers.delete(officer);
+    }
+
     update(ped,dt,moving,crossing=false,distance=0) {
         const index=this.manager.pedestrians.indexOf(ped);
         const record=this.instances.get(index);
