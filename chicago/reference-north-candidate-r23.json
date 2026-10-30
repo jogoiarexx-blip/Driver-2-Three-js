@@ -1,0 +1,85 @@
+{
+  "format": "Driver2ChicagoNorthCandidateR23",
+  "source": "chicago/reference-network.json",
+  "sourceSHA256": "a94e6e47cb22066f671abe2d5547cf9f96391b874c5fb08229ed4773cc25ba50",
+  "referenceBasis": "Surface skeleton from 54 original PS1 geometry sectors; candidate paving, not certified lane",
+  "sourceEdgeIds": [
+    1822,
+    1777,
+    1762,
+    1650,
+    1557,
+    1550
+  ],
+  "sourceNodeIds": [
+    1389,
+    1342,
+    1302,
+    1290,
+    1208,
+    1131,
+    1125
+  ],
+  "sourcePixels": [],
+  "pointsOBJ": [
+    [
+      -90.225,
+      135.507
+    ],
+    [
+      -90.225,
+      137.132
+    ],
+    [
+      -90.225,
+      138.632
+    ],
+    [
+      -90.35,
+      139.132
+    ],
+    [
+      -90.35,
+      140.757
+    ],
+    [
+      -89.85,
+      141.132
+    ],
+    [
+      -89.85,
+      143.257
+    ],
+    [
+      -90.35,
+      143.757
+    ],
+    [
+      -90.475,
+      144.632
+    ],
+    [
+      -90.225,
+      146.257
+    ],
+    [
+      -89.225,
+      147.882
+    ],
+    [
+      -89.225,
+      148.132
+    ],
+    [
+      -88.975,
+      148.132
+    ]
+  ],
+  "observedCenterlineLengthOBJ": 13.6585,
+  "networkEdgesCount": 4279,
+  "roadClassificationCertified": false,
+  "originalPlacementCertified": false,
+  "wholeMapCertified": false,
+  "missionsMigrated": false,
+  "limitation": "Candidate from the PS1 ground skeleton. Includes unresolved sidewalk/yard/grade possibilities. Adapted transformation using R15, not original positions; require width/water/collision proof and driving replay before certifying as a playable corridor."
+}
