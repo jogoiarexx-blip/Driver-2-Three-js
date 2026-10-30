@@ -43,6 +43,40 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
    const radar=DriverChicagoPS1StreetNetwork.drawRadar(
     g.radarCtx,city,{x:source.x,z:source.z,heading:0},
     .5,g.radarCanvas.width,g.radarCanvas.height);
+   // Física real do veículo, não reposicionamento quadro a quadro.
+   const car=new DriverVehicle(g.scene,{
+     name:'R22 TEST CAR',bodyStyle:'muscle',color:0x576879,
+     x:link.from.x,z:link.from.z,
+     heading:Math.atan2(dx,dz),maxSpeed:19,accel:15
+   });
+   const effects={addSkidMark(){},spawnTireSmoke(){},
+     spawnImpactSparks(){},spawnCarBreakaway(){},
+     spawnWaterSplash(){},ejectHubcap(){}};
+   const drive={frames:0,fromDistance:len,toDistance:Infinity,
+     wetFrames:0,blockedFrames:0,maxDamage:0,samples:[]};
+   try{
+     for(let frame=0;frame<320;frame++){
+       car.updatePhysics(1/30,{
+         up:true,down:false,left:false,right:false,handbrake:false
+       },city,effects,null,false);
+       drive.frames=frame+1;
+       const dist=Math.hypot(car.x-link.to.x,car.z-link.to.z);
+       drive.toDistance=dist;
+       if(city.isWaterAt(car.x,car.z))drive.wetFrames++;
+       if(city.isPointBlocked(car.x,car.z,1.55,car.y))
+         drive.blockedFrames++;
+       drive.maxDamage=Math.max(drive.maxDamage,car.damage);
+       if(frame%30===0)drive.samples.push({
+         x:+car.x.toFixed(2),z:+car.z.toFixed(2),
+         speed:+car.speed.toFixed(2),distance:+dist.toFixed(2)
+       });
+       if(dist<3.4)break;
+     }
+   }finally{
+     g.scene.remove(car.root);
+     if(typeof GPUResourceUtils!=='undefined')
+       GPUResourceUtils.disposeSubtree(car.root);
+   }
    return {
     sourceCorridors:r.sourceCorridors,connectorsPlanned:r.connectorsPlanned,
     connectorsAccepted:r.connectorsAccepted,
@@ -53,6 +87,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
     blocked:points.filter(p=>p.blocked).length,
     submerged:points.filter(p=>p.water).length,
     radarPaths:r.radarPaths.length,radarDrawn:radar,
+    physicalDrive:drive,
     stillAtChicago:g.currentCityKey==='chicago',
     wholePS1MapCertified:r.wholePS1MapCertified,
     missionsMigrated:r.missionsMigrated
@@ -70,6 +105,12 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
   assert(report.safeSamples>=45);
   assert.equal(report.radarPaths,9);
   assert(report.radarDrawn>1);
+  assert(report.physicalDrive.toDistance<3.4,
+    'real car could not reach the north grid via the new street: '+
+    JSON.stringify(report.physicalDrive));
+  assert.equal(report.physicalDrive.wetFrames,0);
+  assert.equal(report.physicalDrive.blockedFrames,0);
+  assert(report.physicalDrive.maxDamage<8);
   assert(report.stillAtChicago);
   assert.equal(report.wholePS1MapCertified,false);
   assert.equal(report.missionsMigrated,false);
