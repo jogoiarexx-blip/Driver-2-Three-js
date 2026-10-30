@@ -464,6 +464,8 @@
                     DriverChicagoPS1StreetNetwork.build(this);
                 if(this.preset.id==='chicago' && typeof DriverChicagoNorthRoadsideR32!=='undefined' && typeof DriverChicagoPS1StreetNetwork!=='undefined')
                     DriverChicagoNorthRoadsideR32.build(this,DriverChicagoPS1StreetNetwork.sourcePaths(this));
+                if(this.preset.id==='chicago' && typeof DriverChicagoNorthMarkingsR33!=='undefined')
+                    DriverChicagoNorthMarkingsR33.build(this,[this.chicagoReferenceArterial,this.chicagoReferenceNorthCandidateR23,this.chicagoReferenceEasternForkR25].filter(Boolean));
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();
