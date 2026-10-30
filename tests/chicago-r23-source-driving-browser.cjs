@@ -132,7 +132,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
    JSON.stringify({report,errors},null,2)+'\n');
   assert(report.loaded);
   assert.deepEqual(report.sourceEdgeIds,[1822,1777,1762,1650,1557,1550]);
-  assert.equal(report.sourceCorridors,10);
+  assert.equal(report.sourceCorridors,11);
   assert.equal(report.classificationCertified,false);
   assert.equal(report.originalPlacementCertified,false);
   assert(report.footprint.samples>100);

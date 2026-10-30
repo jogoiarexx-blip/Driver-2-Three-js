@@ -135,6 +135,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r25-eastern-fork-browser.cjs
+      - name: R35 dirigir pela nova ligação norte
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r35-north-link-browser.cjs
       - name: Validar cinco modelos de pedestres e troca Chicago/Havana
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
