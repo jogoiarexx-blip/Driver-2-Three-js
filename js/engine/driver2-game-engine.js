@@ -2794,6 +2794,14 @@
                     }
                 }
 
+                // Traçados observados no pavimento PS1: R15–R20.
+                // Segmento de ligação inferido é marcado separadamente.
+                // Renderização somente no radar, sem tráfego artificial.
+                if(this.currentCityKey==='chicago' &&
+                    typeof DriverChicagoPS1StreetNetwork!=='undefined')
+                    DriverChicagoPS1StreetNetwork.drawRadar(ctx,this.city,
+                        pos,scale,w,h);
+
                 // Prédios no radar
                 ctx.fillStyle = '#334155';
                 for (const b of this.city.buildingBoxes) {
