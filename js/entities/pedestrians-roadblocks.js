@@ -14,6 +14,8 @@
                     new DriverMalePedestrian(this):null;
                 this.variantPedestrians=typeof DriverPedestrianVariants==='function'?
                     new DriverPedestrianVariants(this):null;
+                this.uploadedCrowd=typeof DriverUploadedPedestrianCrowd==='function'?
+                    new DriverUploadedPedestrianCrowd(this):null;
                 this.roadblocks = [];
                 this.roadblockOfficers = [];
                 this.officerTime = 0;
@@ -25,6 +27,7 @@
                 // Uma única frota de 28 personagens e sem animações
                 // exigindo esqueleto/CPU em personagens distantes.
                 // Preserva o rig GLB antes da limpeza dos objetos da cidade anterior.
+                this.uploadedCrowd?.release();
                 this.femalePedestrian?.release();
                 this.malePedestrian?.release();
                 this.variantPedestrians?.release();
@@ -42,21 +45,6 @@
                 const blocks=typeof DriverPedestrianSidewalks!=='undefined'?
                     DriverPedestrianSidewalks.pick(city,focus,28):[];
                 this.pedestrianBlocks=blocks;
-                const colors=city?.preset?.id==='havana'?
-                    [0xfda4af,0xfbbf24,0x67e8f9,0xfb7185]:
-                    city?.preset?.id==='vegas'?
-                    [0xf9a8d4,0x5eead4,0xfcd34d,0x818cf8]:
-                    city?.preset?.id==='rio'?
-                    [0x38bdf8,0x4ade80,0xfde047,0xfb7185]:
-                    [0xef4444,0x3b82f6,0x10b981,0xf59e0b,0xa855f7];
-                const skinMat=new THREE.MeshLambertMaterial({color:0xfdba74});
-                const pantsMat=new THREE.MeshLambertMaterial({color:0x1e293b});
-                const shirtMats=colors.map(color=>
-                    new THREE.MeshLambertMaterial({color}));
-                const legGeo=new THREE.BoxGeometry(.17,.64,.23);
-                const armGeo=new THREE.BoxGeometry(.15,.55,.2);
-                const torsoGeo=new THREE.BoxGeometry(.43,.62,.29);
-                const headGeo=new THREE.BoxGeometry(.31,.31,.31);
                 for(let i=0;i<28;i++){
                     const block=blocks[i]||{x:40+(i%4)*80,z:-200+Math.floor(i/4)*80};
                     const route=typeof DriverPedestrianSidewalks!=='undefined'?
@@ -71,26 +59,8 @@
                     const x=p0.x+(p1.x-p0.x)*t;
                     const z=p0.z+(p1.z-p0.z)*t;
                     const pedGroup=new THREE.Group();
-                    const torso=new THREE.Mesh(torsoGeo,shirtMats[i%colors.length]);
-                    torso.position.y=.95;
-                    const head=new THREE.Mesh(headGeo,skinMat);
-                    head.position.y=1.45;
-                    const legs=[],arms=[];
-                    for(const side of [-1,1]){
-                        const leg=new THREE.Group();
-                        leg.position.set(side*.12,.69,0);
-                        const legMesh=new THREE.Mesh(legGeo,pantsMat);
-                        legMesh.position.y=-.34;
-                        leg.add(legMesh);pedGroup.add(leg);
-                        legs.push(leg);
-                        const arm=new THREE.Group();
-                        arm.position.set(side*.32,1.18,0);
-                        const armMesh=new THREE.Mesh(armGeo,shirtMats[i%colors.length]);
-                        armMesh.position.y=-.26;
-                        arm.add(armMesh);pedGroup.add(arm);
-                        arms.push(arm);
-                    }
-                    pedGroup.add(torso,head);
+                    // Apenas o contêiner lógico; os visuais são GLBs carregados.
+                    // Ficar vazio durante carregamento é intencional.
                     const surface=city?.getSidewalkHeightAt?.(x,z) ?? .35;
                     pedGroup.position.set(x,surface,z);
                     this.group.add(pedGroup);
@@ -98,23 +68,24 @@
                         mesh:pedGroup,x,z,route,block,nextCorner:(edge+1)%4,
                         walkSpeed:2.2+(i%5)*.22,
                         waitTimer:0,diveTimer:0,diveVx:0,diveVz:0,
-                        walkPhase:i*.9,dir:i%2?1:-1,arms,legs,
+                        walkPhase:i*.9,dir:i%2?1:-1,arms:[],legs:[],
                         visualClock:i*.37,stepRate:0,lookClock:0,
                         crossing:null,waitingCrossingPlan:null,
                         walkCorners:0,signalWaitElapsed:0,
                         sleepTick:0,visibleTime:0
                     });
                 }
-                // Uma mulher animada entre os 28 pedestres normais.
-                // Mesma rota, semáforos, colisões, reciclagem e esquiva.
+                // As cinco fontes usam suas vagas originais; o restante é
+                // clonado com rig independente, nunca um humano procedural.
+                // O catálogo vai preenchendo as vagas conforme cada GLB chega.
+                const populate=()=>this.uploadedCrowd?.fill();
                 this.femalePedestrian?.attachToFirst();
-                this.femalePedestrian?.load();
-                // Segunda vaga: GLB masculino real com Walking/Running,
-                // sem adicionar pedestres nem alterar a IA de calçada.
+                this.femalePedestrian?.load().then(populate);
                 this.malePedestrian?.attachToPedestrian();
-                this.malePedestrian?.load();
+                this.malePedestrian?.load().then(populate);
                 this.variantPedestrians?.attach();
-                this.variantPedestrians?.load();
+                this.variantPedestrians?.load().then(populate);
+                populate();
             }
 
             recycleDistantPedestrians(focus,dt){
@@ -219,38 +190,10 @@
             }
 
             spawnRoadblockOfficers(loc) {
-                const uniform = new THREE.MeshLambertMaterial({ color: 0x1e3a8a });
-                const cap = new THREE.MeshLambertMaterial({ color: 0x0f172a });
-                const skin = new THREE.MeshLambertMaterial({ color: 0xe5ad84 });
-                const reflector = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+                // Agentes também usam os GLBs do usuário, sem corpos em caixas.
                 for (const sign of [-1, 1]) {
                     const group = new THREE.Group();
-                    const body = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.87, 0.38), uniform);
-                    body.position.y = 1.12;
-                    const head = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.38, 0.33), skin);
-                    head.position.y = 1.76;
-                    const hat = new THREE.Mesh(new THREE.BoxGeometry(0.43, 0.16, 0.4), cap);
-                    hat.position.y = 2.03;
-                    const vest = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.13, 0.41), reflector);
-                    vest.position.y = 1.15;
-                    group.add(body, head, hat, vest);
-                    const legs = [];
-                    for (const side of [-1, 1]) {
-                        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.72, 0.25), cap);
-                        leg.position.set(side * 0.17, 0.37, 0);
-                        group.add(leg);
-                        legs.push(leg);
-                    }
-                    const arms = [];
-                    for (const side of [-1, 1]) {
-                        const arm = new THREE.Group();
-                        arm.position.set(side * 0.39, 1.42, 0);
-                        const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.65, 0.20), uniform);
-                        mesh.position.y = -0.29;
-                        arm.add(mesh);
-                        group.add(arm);
-                        arms.push(arm);
-                    }
+                    const arms = [], legs = [];
                     // Lados da avenida, sem bloquear a pista de rolamento.
                     const along = loc.axis === 'x' ?
                         { x: loc.x, z: loc.z + sign * 12.6 } :
@@ -259,11 +202,13 @@
                     group.rotation.y = loc.axis === 'x' ? sign * Math.PI / 2 :
                         sign > 0 ? -Math.PI / 2 : Math.PI / 2;
                     this.group.add(group);
-                    this.roadblockOfficers.push({
+                    const officer={
                         mesh: group, arms, legs, x: along.x, z: along.z,
                         axis: loc.axis, side: sign, t: sign * 0.7,
                         retreat: 0, dynamic: true
-                    });
+                    };
+                    this.roadblockOfficers.push(officer);
+                    this.uploadedCrowd?.attachOfficer(officer);
                 }
             }
 
@@ -281,12 +226,7 @@
                     officer.mesh.position.z = officer.z +
                         (officer.axis === 'x' ? away : 0);
                     officer.t += dt * 3;
-                    const wave = Math.sin(officer.t * 2.7);
-                    // Um braço sinaliza parar; o outro oscila ligeiramente.
-                    officer.arms[0].rotation.z = -0.95 + wave * 0.22;
-                    officer.arms[1].rotation.z = 0.18 + wave * 0.12;
-                    officer.legs[0].rotation.x = officer.retreat * 0.17;
-                    officer.legs[1].rotation.x = -officer.retreat * 0.17;
+                    // O rig real fica parado enquanto o agente recua da via.
                 }
             }
 
@@ -300,6 +240,7 @@
                 this.roadblocks = keep;
                 this.roadblockOfficers = this.roadblockOfficers.filter(officer => {
                     if (!officer.dynamic) return true;
+                    this.uploadedCrowd?.releaseOfficer(officer);
                     GPUResourceUtils.disposeSubtree(officer.mesh);
                     officer.mesh.parent?.remove(officer.mesh);
                     return false;
@@ -337,14 +278,6 @@
                         (targetRate-(p.stepRate||0))*Math.min(1,dt*8);
                     p.walkPhase+=dt*p.stepRate;
                     p.visualClock=(p.visualClock||0)+dt;
-                    const swing=Math.sin(p.walkPhase)*
-                        (crossing?.66:moving?.47:.07);
-                    if(!p.glbFemale&&!p.glbMale&&!p.glbVariant)for(let i=0;i<2;i++){
-                        if(p.legs[i])p.legs[i].rotation.x=(i?1:-1)*swing;
-                        if(p.arms[i])p.arms[i].rotation.x=
-                            (i?-1:1)*(swing*.82+
-                            (moving?.06:Math.sin(p.visualClock*1.6)*.035));
-                    }
                     if((state.dx||state.dz)&&moving)
                         p.mesh.rotation.y=Math.atan2(state.dx,state.dz);
                     if(p.glbFemale)
@@ -353,6 +286,8 @@
                         this.malePedestrian?.update(p,dt,moving,crossing);
                     if(p.glbVariant)
                         this.variantPedestrians?.update(p,dt,moving,crossing);
+                    if(p.glbCrowd)
+                        this.uploadedCrowd?.update(p,dt,moving,crossing,dist);
                     // Antecipação na passada, leve inclinação ao correr.
                     // A esquiva não altera a posição ou a colisão.
                     p.mesh.rotation.z=state.state==='dodge'?
@@ -366,10 +301,7 @@
                     // descem para y=0 durante a travessia. O rig GLB
                     // já traz o balanço de caminhada: sem bob artificial.
                     const pavement=this.city?.getSidewalkHeightAt?.(p.x,p.z) ?? .35;
-                    const bob=(p.glbFemale||p.glbMale||p.glbVariant)?0:(moving?
-                        Math.abs(Math.sin(p.walkPhase))*
-                        (crossing?.10:.07):0);
-                    p.mesh.position.set(p.x,pavement+bob,p.z);
+                    p.mesh.position.set(p.x,pavement,p.z);
                 }
 
                 // Publica apenas travessias ativas. A IA civil enxerga
