@@ -58,7 +58,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
    const effects={addSkidMark(){},spawnTireSmoke(){},
      spawnImpactSparks(){},spawnCarBreakaway(){},
      spawnWaterSplash(){},ejectHubcap(){}};
-   let progress=0,offroadFrames=0,maxOffset=0,maxDamage=0,
+   let progress=0,offroadFrames=0,maxOffset=0,peakOffset=null,maxDamage=0,
        waterFrames=0,blockedFrames=0,frames=0,
        finalDistance=Infinity;
    const samples=[];
@@ -75,20 +75,27 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
      for(let i=progress+1;i<pts.length;i++){
       distance+=Math.hypot(pts[i].x-pts[i-1].x,
         pts[i].z-pts[i-1].z);
-      if(distance>7){target=pts[i];break;}
+      if(distance>4.5){target=pts[i];break;}
      }
      const desired=Math.atan2(target.x-car.x,target.z-car.z),
        delta=Math.atan2(Math.sin(desired-car.heading),
          Math.cos(desired-car.heading));
-     const steering=delta>.045?1:delta<-.045?-1:0;
+     const steering=delta>.035?1:delta<-.035?-1:0;
+     const remaining=Math.hypot(car.x-last.x,car.z-last.z);
+     // O piloto de QA desacelera antes da curva e do ponto final.
+     const targetSpeed=remaining<12?3.2:remaining<24?4.2:5.8;
      const input={
-      up:car.speed<8.0,
-      down:car.speed>8.5,
+      up:car.speed<targetSpeed-.15,
+      down:car.speed>targetSpeed+.15,
       left:steering<0,right:steering>0,handbrake:false
      };
      car.updatePhysics(1/30,input,city,effects,null,false);
      const offset=pathDistance(car.x,car.z);
-     maxOffset=Math.max(maxOffset,offset);
+     if(offset>maxOffset){
+       maxOffset=offset;
+       peakOffset={frame,x:+car.x.toFixed(2),z:+car.z.toFixed(2),
+         speed:+car.speed.toFixed(2),progress};
+     }
      if(offset>4.2)offroadFrames++;
      if(city.isWaterAt(car.x,car.z))waterFrames++;
      if(city.isPointBlocked(car.x,car.z,1.55,car.y))
@@ -114,7 +121,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
     sourceCorridors:graph.sourceCorridors,
     originalPlacementCertified:road.originalPlacementCertified,
     classificationCertified:road.roadClassificationCertified,
-    footprint,frames,maxOffset,offroadFrames,
+    footprint,frames,maxOffset,peakOffset,offroadFrames,
     maxDamage,waterFrames,blockedFrames,finalDistance,
     samples,mission:city.missionStart?.type,
     stillChicago:game.currentCityKey==='chicago'
