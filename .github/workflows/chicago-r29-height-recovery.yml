@@ -1,0 +1,84 @@
+name: Driver 2 - Chicago R29 - Recuperar alturas reais PS1
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-height-recovery-r29.js'
+      - 'tools/chicago-r29-height-recovery.cjs'
+      - 'tests/chicago-r29-*'
+      - 'chicago/reference-recovery-r29.json'
+      - 'chicago-original-preview.html'
+      - '.github/workflows/chicago-r29-height-recovery.yml'
+  pull_request:
+    paths:
+      - 'js/world/chicago-height-recovery-r29.js'
+      - 'tools/chicago-r29-height-recovery.cjs'
+      - 'tests/chicago-r29-*'
+      - 'chicago/reference-recovery-r29.json'
+      - 'chicago-original-preview.html'
+      - '.github/workflows/chicago-r29-height-recovery.yml'
+permissions:
+  contents: read
+jobs:
+  local-height-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: R29 testar lacunas reais contra níveis, rampas e buracos
+        run: node --test tests/chicago-r29-height-recovery.test.cjs
+      - name: Auditar as 4.279 arestas com todos os 54 GLBs da Chicago original
+        run: node tools/chicago-r29-height-recovery.cjs qa-artifacts/chicago-r29/local-height-recovery.json
+      - name: Validar preservação da R28 e bloqueios sem inventar vias
+        run: |
+          node - <<'JS'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const data=JSON.parse(fs.readFileSync('qa-artifacts/chicago-r29/local-height-recovery.json'));
+          const r28=require('./chicago/reference-layered-r28.json');
+          assert.equal(data.sourceGLBTiles,54);
+          assert.equal(data.originalTriangles,1544872);
+          assert.equal(data.sourceGraphEdges,4279);
+          assert.equal(data.baselineEdges,216);
+          assert.equal(data.combinedCandidateCount,216+data.recoveredEdges);
+          assert.equal(data.combinedCandidateIds.length,data.combinedCandidateCount);
+          const prior=new Set(r28.candidateEdgeIds);
+          assert([...prior].every(x=>data.combinedCandidateIds.includes(x)));
+          assert(data.additionalEdgeIds.every(x=>!prior.has(x)));
+          assert.equal(data.newTrafficLinks,0);
+          assert.equal(data.newInferredNodes,0);
+          assert.equal(data.bridgesCertified,0);
+          assert.equal(data.missionRoutesModified,false);
+          assert.equal(data.existingSourceRoutes.r23.length,6);
+          assert.equal(data.existingSourceRoutes.r25.length,3);
+          console.log('R29 verified',JSON.stringify({
+            before:216,after:data.combinedCandidateCount,
+            added:data.recoveredEdges,topComponents:data.topComponents.slice(0,3)}));
+          JS
+      - name: Instalar Chromium para visualizar as rotas originais
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir visualização original no navegador
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/chicago-r29.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/chicago-original-preview.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-r29.log
+          exit 1
+      - name: Verificar overlay de alturas recuperadas no mapa PS1
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r29-height-recovery-browser.cjs
+      - name: Preservar auditoria detalhada e captura dos trechos novos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r29-original-height-recovery
+          path: qa-artifacts/chicago-r29/
+          retention-days: 30
