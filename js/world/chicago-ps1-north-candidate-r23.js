@@ -31,11 +31,30 @@ class DriverChicagoPS1NorthCandidateR23 extends DriverChicagoR23Base {
             this.parentArterial;
         const previous=origin?.plan()?.points?.at(-1);
         if(previous){
-            const first=road.points[0],
-                seam=Math.hypot(first.x-previous.x,first.z-previous.z);
-            if(seam>10)throw Error('R23 sem ligação curta à avenida R20');
-            road.points=[{...previous},...road.points];
+            const first=this.source.pointsOBJ[0],
+                second=this.source.pointsOBJ[1],
+                joinZ=origin.source.pointsOBJ.at(-1)[1],
+                dz=second[1]-first[1];
+            // O esqueleto começa 0,5 OBJ ao SUL da ponta da R20.
+            // Costurar no primeiro nó inteiro gerava uma curva em U:
+            // o carro saía 12m da pista para só depois apontar ao norte.
+            // Recortar a aresta original na latitude da R20 preserva o
+            // alinhamento e mantém TODAS as outras arestas imutáveis.
+            const t=(joinZ-first[1])/dz;
+            if(!Number.isFinite(t)||t<0||t>1)
+                throw Error('R23 sem interseção contínua com avenida R20');
+            const cut=this.fitPoint([
+                first[0]+(second[0]-first[0])*t,
+                first[1]+dz*t
+            ]);
+            const seam=Math.hypot(cut.x-previous.x,cut.z-previous.z);
+            if(seam>6)throw Error('R23 sem ligação curta à avenida R20');
+            const forward=road.points.filter(p=>p.z>cut.z+.65);
+            if(forward.length<6)
+                throw Error('R23 não possui segmentos após a junção');
+            road.points=[{...previous},cut,...forward];
             road.adaptedSeamLength=seam;
+            road.sourceSeamTrimmed=true;
         }else throw Error('R23 requer a avenida anterior R20');
         road.lots=[];
         road.width=8;
