@@ -29,3 +29,24 @@ python3 tools/chicago-ground-survey.py --root chicago --output qa-artifacts/chic
 Abrir `qa-artifacts/chicago-ground/chicago-ground-candidates.png` (azul = superfícies do solo; ocre = níveis baixos elevados), e comparar `ground-survey.json` gerado com a baseline `chicago/ground-survey.json`.
 
 O workflow **Driver 2 - Auditoria de superfícies Chicago PS1** também gera o mapa e o diagnóstico como artefatos verificáveis no GitHub Actions. O próximo passo será distinguir estradas de calçadas e terrenos, calibrar escala e certificar conexões e colisões antes de migrar o jogo.
+
+## R24 — classificação de superfície dos 4.279 segmentos candidatos
+
+O arquivo `reference-network.json` preserva **4.279 conexões** extraídas do piso dos 54 setores. **Não é uma malha de ruas certificada**: pode incluir calçadas, pátios, plataformas e cruzamentos em diferentes alturas.
+
+A R24 introduz a auditoria automática em `tools/chicago-r24-classify-roads.cjs`, baseada nas máscaras originais `reference-street-survey.json`. Cada aresta é examinada por amostragem transversal em 7 posições (centro, ±0,2, ±0,45 e ±0,7 unidades OBJ), considerando pavimento marcado, pavimento sem marca, grama, água, limites e comprimento.
+
+A classificação é **forte**, **intermediária**, **revisar** ou **descartar**. Mesmo a classe forte indica somente boa evidência de pavimentação; NÃO demonstra pista dirigida, pontes niveladas ou geometria de tráfego. O relatório também agrupa segmentos conexos e prioriza os maiores corredores para inspeção manual.
+
+Reproduzir com Node.js 22:
+
+```sh
+node --test tests/chicago-r24-road-evidence.test.cjs
+node tools/chicago-r24-classify-roads.cjs qa-artifacts/chicago-r24/road-evidence.json
+```
+
+Para enxergar as classes sobre a geometria original, abra [a pré-visualização Chicago PS1](../chicago-original-preview.html) e clique em **Mostrar vias candidatas**. As linhas verdes têm evidência mais forte; ocre, intermediária; azul, revisão. É uma camada **somente visual** e opcional, sem alterar Undercover, veículos, missões ou a máscara do passeio livre.
+
+O workflow **Driver 2 - Chicago PS1 R24 - Classificador de vias** executa a auditoria, testa o overlay no Chromium e guarda a lista completa por ID como artefato do GitHub Actions.
+
+Próximas etapas: auditar manualmente os cruzamentos com diferenças de altura e distinguir ruas de pátios/calçadas; só então aprovar lote a lote para migração física ao Undercover.
