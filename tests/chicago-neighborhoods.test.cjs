@@ -107,7 +107,11 @@ test('somente Chicago recebe as placas e dez marcadores coloridos',()=>{
     assert(captions.includes('MEIGS FIELD'));
     const markers=packed.find(x=>x.name==='chicago-neighborhood-beacons');
     assert.equal(markers.parts.length,20);
-    assert.equal(new Set(markers.parts.map(x=>x[6])).size,10);
+    assert(markers.parts.every(p=>p[7]===false),
+        'placas dos bairros não devem brilhar como neon');
+    assert(markers.parts.every(p=>p[1]<5&&p[4]<5),
+        'placas de bairro precisam ficar na altura da rua');
+    assert(markers.parts.every(p=>p[6]===0x637475||p[6]===0xb2b9b4));
     assert.equal(World.build(c),result,'build duplo não gera duplicação');
     assert.equal(c.cityGroup.children.length,1);
 });
