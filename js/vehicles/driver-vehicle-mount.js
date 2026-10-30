@@ -7,6 +7,25 @@ class DriverVehicleMount {
     static clamp(t){return Math.max(0,Math.min(1,t));}
     static ease(t){t=this.clamp(t);return t*t*(3-2*t);}
     static lerp(a,b,t){return a+(b-a)*this.ease(t);}
+    static heading(from,to,t){
+        // Menor caminho: não girar quase 360 graus ao cruzar ±PI.
+        const delta=Math.atan2(Math.sin(to-from),Math.cos(to-from));
+        return from+delta*this.ease(t);
+    }
+    static ridingSeat(vehicle){
+        // O mesmo ponto local usado pelo TannerController ao sentar.
+        // Evita trocar instantaneamente do chão para um ponto aproximado.
+        if(typeof THREE!=='undefined' && THREE.Vector3 &&
+            vehicle?.chassisTilt?.localToWorld){
+            vehicle.chassisTilt.updateWorldMatrix?.(true,false);
+            const p=vehicle.chassisTilt.localToWorld(
+                new THREE.Vector3(0,0,-.30));
+            if(Number.isFinite(p.x)&&Number.isFinite(p.y)&&
+                Number.isFinite(p.z))
+                return {x:p.x,y:p.y,z:p.z,heading:vehicle.heading};
+        }
+        return this.position(vehicle,1,0,-.30);
+    }
     static position(vehicle,side,distance,forward=0){
         const h=Number(vehicle.heading)||0;
         return {
@@ -49,9 +68,11 @@ class DriverVehicleMount {
         const source=engine.tanner.group.position;
         const from=kind==='enter'?
             {x:source.x,y:source.y,z:source.z,heading:engine.tanner.heading}:
-            this.position(vehicle,stand.side,bike?.12:.28,bike?-.28:.15);
+            (bike?this.ridingSeat(vehicle):
+                this.position(vehicle,stand.side,.28,.15));
         const near=this.position(vehicle,stand.side,bike?.68:1.18,bike?-.32:.12);
-        const seat=this.position(vehicle,stand.side,bike?0:.16,bike?-.35:.12);
+        const seat=bike?this.ridingSeat(vehicle):
+            this.position(vehicle,stand.side,.16,.12);
         vehicle.speed=0;
         vehicle.lateralVelocity=0;
         engine.vehicleMountTransition={
@@ -65,9 +86,10 @@ class DriverVehicleMount {
             engine.tanner.motorcycleVehicle===vehicle);
         return true;
     }
-    static setActor(engine,p,heading,style,kind,t,dt,side=-1){
+    static setActor(engine,p,heading,style,kind,t,dt,side=-1,groundClamp=true){
         const person=engine.tanner;
-        const ground=engine.city?.getGroundHeightAt?.(p.x,p.z,p.y)??p.y;
+        const ground=groundClamp?
+            (engine.city?.getGroundHeightAt?.(p.x,p.z,p.y)??p.y):p.y;
         person.setPosition(p.x,Math.max(p.y,Number.isFinite(ground)?ground:p.y),
             p.z,heading);
         person.applyVehicleTransitionPose?.(style,kind,t,dt,side);
@@ -127,20 +149,23 @@ class DriverVehicleMount {
         if(s.kind==='enter'){
             if(t<.30){
                 const p=this.move(s.from,s.near,t/.30);
-                this.setActor(engine,p,s.vehicle.heading,style,'enter',t,dt,s.stand.side);
+                this.setActor(engine,p,
+                    this.heading(s.from.heading,s.vehicle.heading,t/.30),
+                    style,'enter',t,dt,s.stand.side);
             }else if(t<.83){
                 const f=(t-.30)/.53;
                 // Joelho sobre o banco da moto; cabeça e tronco acompanham.
                 const lift=s.bike?.35*Math.sin(Math.PI*f):-.12*Math.sin(Math.PI*f);
                 const p=this.move(s.near,s.seat,f,lift);
-                this.setActor(engine,p,s.vehicle.heading,style,'enter',t,dt,s.stand.side);
+                this.setActor(engine,p,s.vehicle.heading,style,'enter',t,dt,
+                    s.stand.side,!s.bike);
             }
             if(t>=.83){
                 if(s.bike&&engine.tanner.vehicleBoneRig){
                     // Terminamos a pose com o GLB real, sem mostrar o
                     // piloto procedural durante os últimos 0,25 segundos.
                     this.setActor(engine,s.seat,s.vehicle.heading,
-                        style,'enter',t,dt,s.stand.side);
+                        style,'enter',t,dt,s.stand.side,false);
                 }else engine.tanner.setVisible(false);
             }
         }else{
@@ -152,7 +177,8 @@ class DriverVehicleMount {
                 const f=(t-.16)/.61;
                 const lift=s.bike?.28*Math.sin(Math.PI*f):-.10*Math.sin(Math.PI*f);
                 const p=this.move(s.seat,s.near,f,lift);
-                this.setActor(engine,p,s.vehicle.heading,style,'exit',t,dt,s.stand.side);
+                this.setActor(engine,p,s.vehicle.heading,style,'exit',t,dt,
+                    s.stand.side,!s.bike);
             }else if(t>=.77){
                 const p=this.move(s.near,s.stand,(t-.77)/.23);
                 this.setActor(engine,p,s.vehicle.heading,style,'exit',t,dt,s.stand.side);
