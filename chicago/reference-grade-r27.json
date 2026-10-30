@@ -1,0 +1,1288 @@
+{
+  "format": "Driver2ChicagoGradeReviewR27",
+  "sourceSurveySHA256": "a94e6e47cb22066f671abe2d5547cf9f96391b874c5fb08229ed4773cc25ba50",
+  "sourceTiles": 54,
+  "sourceTriangles": 1544872,
+  "sourceGraphEdges": 4279,
+  "inspectedConflictEdges": 55,
+  "conflictBreakdown": {
+    "sustainedSeparatedHeight": 0,
+    "localizedOrAmbiguous": 50,
+    "sharedNodeNoLocalOverlap": 5
+  },
+  "records": [
+    {
+      "id": 281,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -61.1,
+          "z": 207.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 292,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1535,
+      "examples": [
+        {
+          "x": -38.475,
+          "z": 207.882,
+          "yLow": 0.0026,
+          "yHigh": 0.1561,
+          "gap": 0.1535,
+          "repeats": 2,
+          "adjacentConflicts": 1,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 317,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -61.475,
+          "z": 207.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -61.1,
+          "z": 207.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 319,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -61.1,
+          "z": 207.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -60.725,
+          "z": 207.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 320,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -61.1,
+          "z": 207.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 360,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -37.85,
+          "z": 205.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 365,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -38.225,
+          "z": 205.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -37.85,
+          "z": 205.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 367,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -37.85,
+          "z": 205.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -37.475,
+          "z": 205.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 368,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -37.85,
+          "z": 205.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 744,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 3,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -30.725,
+          "z": 166.882,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 3,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -30.85,
+          "z": 166.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 819,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.151,
+      "examples": [
+        {
+          "x": -30.85,
+          "z": 166.132,
+          "yLow": 0.0026,
+          "yHigh": 0.1536,
+          "gap": 0.151,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 821,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.151,
+      "examples": [
+        {
+          "x": -30.85,
+          "z": 166.132,
+          "yLow": 0.0026,
+          "yHigh": 0.1536,
+          "gap": 0.151,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 874,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.151,
+      "examples": [
+        {
+          "x": -31.1,
+          "z": 162.882,
+          "yLow": 0.0026,
+          "yHigh": 0.1536,
+          "gap": 0.151,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 891,
+      "kind": "shared-node-conflict-without-edge-overlap",
+      "overlapCells": 0,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0,
+      "examples": []
+    },
+    {
+      "id": 896,
+      "kind": "shared-node-conflict-without-edge-overlap",
+      "overlapCells": 0,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0,
+      "examples": []
+    },
+    {
+      "id": 906,
+      "kind": "shared-node-conflict-without-edge-overlap",
+      "overlapCells": 0,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0,
+      "examples": []
+    },
+    {
+      "id": 974,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -77.225,
+          "z": 157.632,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -77.225,
+          "z": 157.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 989,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1535,
+      "examples": [
+        {
+          "x": -31.225,
+          "z": 158.632,
+          "yLow": 0.0026,
+          "yHigh": 0.1561,
+          "gap": 0.1535,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -31.225,
+          "z": 158.007,
+          "yLow": 0.0026,
+          "yHigh": 0.1536,
+          "gap": 0.151,
+          "repeats": 2,
+          "adjacentConflicts": 2,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1014,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -77.225,
+          "z": 157.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1015,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -77.225,
+          "z": 157.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1016,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -77.225,
+          "z": 157.257,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -77.225,
+          "z": 156.757,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1083,
+      "kind": "shared-node-conflict-without-edge-overlap",
+      "overlapCells": 0,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0,
+      "examples": []
+    },
+    {
+      "id": 1085,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -30.725,
+          "z": 154.882,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -30.725,
+          "z": 155.382,
+          "yLow": 0.0026,
+          "yHigh": 0.1561,
+          "gap": 0.1535,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1557,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1323,
+      "examples": [
+        {
+          "x": -89.85,
+          "z": 141.507,
+          "yLow": 0.0026,
+          "yHigh": 0.1349,
+          "gap": 0.1323,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1650,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 3,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -90.35,
+          "z": 140.382,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -90.35,
+          "z": 140.757,
+          "yLow": 0.0026,
+          "yHigh": 0.1561,
+          "gap": 0.1535,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1748,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -37.85,
+          "z": 138.632,
+          "yLow": -0.1536,
+          "yHigh": 0,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1766,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -37.85,
+          "z": 138.632,
+          "yLow": -0.1536,
+          "yHigh": 0,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1778,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1537,
+      "examples": [
+        {
+          "x": -37.975,
+          "z": 138.382,
+          "yLow": -0.1511,
+          "yHigh": 0.0026,
+          "gap": 0.1537,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -37.85,
+          "z": 138.632,
+          "yLow": -0.1536,
+          "yHigh": 0,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1782,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1537,
+      "examples": [
+        {
+          "x": -37.975,
+          "z": 138.382,
+          "yLow": -0.1511,
+          "yHigh": 0.0026,
+          "gap": 0.1537,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1783,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1537,
+      "examples": [
+        {
+          "x": -37.975,
+          "z": 138.382,
+          "yLow": -0.1511,
+          "yHigh": 0.0026,
+          "gap": 0.1537,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1903,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -90.475,
+          "z": 134.257,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1952,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -90.475,
+          "z": 134.257,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 1953,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -90.475,
+          "z": 134.257,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -90.225,
+          "z": 134.007,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 2,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2006,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.151,
+      "examples": [
+        {
+          "x": -92.6,
+          "z": 131.632,
+          "yLow": 0.0026,
+          "yHigh": 0.1536,
+          "gap": 0.151,
+          "repeats": 2,
+          "adjacentConflicts": 1,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2031,
+      "kind": "shared-node-conflict-without-edge-overlap",
+      "overlapCells": 0,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0,
+      "examples": []
+    },
+    {
+      "id": 2032,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -42.1,
+          "z": 130.757,
+          "yLow": -0.1536,
+          "yHigh": 0,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2053,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -42.1,
+          "z": 130.757,
+          "yLow": -0.1536,
+          "yHigh": 0,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2054,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -42.1,
+          "z": 130.757,
+          "yLow": -0.1536,
+          "yHigh": 0,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2058,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.151,
+      "examples": [
+        {
+          "x": -96.475,
+          "z": 130.507,
+          "yLow": 0.0026,
+          "yHigh": 0.1536,
+          "gap": 0.151,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2142,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -97.85,
+          "z": 127.632,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2147,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -97.975,
+          "z": 127.632,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -98.35,
+          "z": 127.632,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2148,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -97.85,
+          "z": 127.632,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -97.975,
+          "z": 127.632,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2149,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -97.975,
+          "z": 127.632,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -97.975,
+          "z": 127.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2150,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -97.85,
+          "z": 127.632,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -97.85,
+          "z": 127.507,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2170,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -97.85,
+          "z": 127.507,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -97.975,
+          "z": 127.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2171,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -97.975,
+          "z": 127.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2172,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1561,
+      "examples": [
+        {
+          "x": -97.85,
+          "z": 127.507,
+          "yLow": 0,
+          "yHigh": 0.1561,
+          "gap": 0.1561,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -97.475,
+          "z": 127.507,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 2987,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1511,
+      "examples": [
+        {
+          "x": -42.225,
+          "z": 102.882,
+          "yLow": -0.1511,
+          "yHigh": 0,
+          "gap": 0.1511,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 3582,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1537,
+      "examples": [
+        {
+          "x": -42.225,
+          "z": 83.882,
+          "yLow": -0.1511,
+          "yHigh": 0.0026,
+          "gap": 0.1537,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 3610,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1537,
+      "examples": [
+        {
+          "x": -42.225,
+          "z": 83.882,
+          "yLow": -0.1511,
+          "yHigh": 0.0026,
+          "gap": 0.1537,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 3654,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1562,
+      "examples": [
+        {
+          "x": -42.6,
+          "z": 83.882,
+          "yLow": -0.1536,
+          "yHigh": 0.0026,
+          "gap": 0.1562,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -42.225,
+          "z": 83.882,
+          "yLow": -0.1511,
+          "yHigh": 0.0026,
+          "gap": 0.1537,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 3655,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1537,
+      "examples": [
+        {
+          "x": -42.225,
+          "z": 83.882,
+          "yLow": -0.1511,
+          "yHigh": 0.0026,
+          "gap": 0.1537,
+          "repeats": 2,
+          "adjacentConflicts": 8,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -42.225,
+          "z": 83.507,
+          "yLow": -0.1511,
+          "yHigh": 0,
+          "gap": 0.1511,
+          "repeats": 2,
+          "adjacentConflicts": 5,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 4241,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -58.975,
+          "z": 35.632,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 4243,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 1,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -58.975,
+          "z": 35.632,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    },
+    {
+      "id": 4244,
+      "kind": "localized-or-ambiguous-overlap",
+      "overlapCells": 2,
+      "sustainedHighGapCells": 0,
+      "maxHeightDifferenceOBJ": 0.1536,
+      "examples": [
+        {
+          "x": -58.975,
+          "z": 35.632,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        },
+        {
+          "x": -58.975,
+          "z": 35.132,
+          "yLow": 0,
+          "yHigh": 0.1536,
+          "gap": 0.1536,
+          "repeats": 2,
+          "adjacentConflicts": 3,
+          "adjacentHighGap": 0
+        }
+      ]
+    }
+  ],
+  "existingReferenceRoutes": {
+    "r23": [
+      {
+        "id": 1822,
+        "kind": "single-level-evidence",
+        "grade": "single-level-evidence",
+        "overlapCells": 0,
+        "maxHeightDifferenceOBJ": 0
+      },
+      {
+        "id": 1777,
+        "kind": "single-level-evidence",
+        "grade": "single-level-evidence",
+        "overlapCells": 0,
+        "maxHeightDifferenceOBJ": 0
+      },
+      {
+        "id": 1762,
+        "kind": "single-level-evidence",
+        "grade": "single-level-evidence",
+        "overlapCells": 0,
+        "maxHeightDifferenceOBJ": 0
+      },
+      {
+        "id": 1650,
+        "kind": "localized-or-ambiguous-overlap",
+        "grade": "multi-level-conflict",
+        "overlapCells": 3,
+        "maxHeightDifferenceOBJ": 0.1561
+      },
+      {
+        "id": 1557,
+        "kind": "localized-or-ambiguous-overlap",
+        "grade": "multi-level-conflict",
+        "overlapCells": 1,
+        "maxHeightDifferenceOBJ": 0.1323
+      },
+      {
+        "id": 1550,
+        "kind": "height-observation-incomplete",
+        "grade": "incomplete-observation",
+        "overlapCells": 0,
+        "maxHeightDifferenceOBJ": 0
+      }
+    ],
+    "r25": [
+      {
+        "id": 1520,
+        "kind": "height-observation-incomplete",
+        "grade": "incomplete-observation",
+        "overlapCells": 0,
+        "maxHeightDifferenceOBJ": 0
+      },
+      {
+        "id": 1437,
+        "kind": "height-observation-incomplete",
+        "grade": "incomplete-observation",
+        "overlapCells": 0,
+        "maxHeightDifferenceOBJ": 0
+      },
+      {
+        "id": 1017,
+        "kind": "height-observation-incomplete",
+        "grade": "incomplete-observation",
+        "overlapCells": 0,
+        "maxHeightDifferenceOBJ": 0
+      }
+    ]
+  },
+  "autoTrafficJunctionsAuthorized": 0,
+  "certifiedOverpasses": 0,
+  "certifiedAtGradeJunctions": 0,
+  "warning": "Level separation is inferred from repeated overlapping pavement samples, NOT confirmed overpass / ramp classification. No 2-D crossing may auto-connect."
+}
