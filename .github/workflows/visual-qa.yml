@@ -16,6 +16,7 @@ on:
       - 'tests/chicago-r6-north-yard-browser.cjs'
       - 'tests/chicago-r7-real-driving-replay.cjs'
       - 'tests/chicago-r22-*'
+      - 'tests/chicago-r23-*'
       - 'tests/chicago-r7-junctions-browser.cjs'
       - 'js/world/chicago-goose-island-junctions.js'
       - 'js/world/chicago-goose-island-north-yard.js'
@@ -87,6 +88,8 @@ jobs:
         run: node --test tests/chicago-ps1-facades-r21.test.cjs
       - name: R22 certificar conexões dos corredores PS1, margens e radar
         run: node --test tests/chicago-r22-source-street-network.test.cjs
+      - name: R23 verificar seis arestas originais, escala e emenda à R20
+        run: node --test tests/chicago-r23-source-extension.test.cjs
       - name: Certificar desempenho e descarte de chunks
         run: node --test tests/district-visibility.test.cjs
       - name: Certificar Driving Games, missões de Vegas e Rio e spatial hash
@@ -121,6 +124,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r22-source-street-browser.cjs
+      - name: R23 dirigir por via candidata com controle real e sem teleporte
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r23-source-driving-browser.cjs
       - name: Validar cinco modelos de pedestres e troca Chicago/Havana
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
