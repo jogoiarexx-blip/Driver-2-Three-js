@@ -55,6 +55,23 @@ jobs:
           assert.equal(report.certifiedOverpasses,0);
           console.log('R27 verified',JSON.stringify(report.conflictBreakdown));
           JS
+      - name: Instalar Chromium para revisar visualmente cruzamentos
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir a Chicago original em HTTP
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/chicago-r27.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/chicago-original-preview.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-r27.log
+          exit 1
+      - name: Validar no Chromium a nova camada R27 sobre os GLBs originais
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r27-height-review-browser.cjs
       - name: Publicar resultados, evidências por aresta e classificações
         uses: actions/upload-artifact@v4
         if: always()
