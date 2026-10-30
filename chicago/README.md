@@ -50,3 +50,32 @@ Para enxergar as classes sobre a geometria original, abra [a pré-visualização
 O workflow **Driver 2 - Chicago PS1 R24 - Classificador de vias** executa a auditoria, testa o overlay no Chromium e guarda a lista completa por ID como artefato do GitHub Actions.
 
 Próximas etapas: auditar manualmente os cruzamentos com diferenças de altura e distinguir ruas de pátios/calçadas; só então aprovar lote a lote para migração física ao Undercover.
+
+## R25 — continuação leste/nordeste no Undercover
+
+A R25 utiliza **três arestas consecutivas da rede superficial PS1**:
+`1520 → 1437 → 1017`, conectadas pelos nós `1125 → 1100 → 1043 → 752`.
+O nó 1125 coincide com a extremidade da R23. Seus pontos foram preservados em
+[`reference-eastern-fork-r25.json`](reference-eastern-fork-r25.json);
+o runtime utiliza a transformação R15, sem alterar as posições das missões.
+
+O prolongamento curvo acrescenta cerca de **129 unidades da escala do clone** na região norte,
+usa pavimento de 8 unidades, e passa pelo mesmo teste físico de água e colisores das vias
+R15–R23. Ele aparece no minimapa do jogo.
+
+**Limite da evidência:** a R24 classificou as arestas 1520 e 1017 como **revisar**,
+e a 1437 como **intermediária**. Isso significa que o passeio original fornece
+superfície pavimentada, mas a R25 é somente uma **adaptação dirigível**,
+não um posicionamento homologado das faixas, calçadas ou dos níveis do PS1.
+Não é correto contar esse trecho como nova rua original 100% certificada.
+
+Reproduzir:
+```sh
+node --test tests/chicago-r25-eastern-fork.test.cjs
+# Com Playwright, servidor local e Chromium:
+node tests/chicago-r25-eastern-fork-browser.cjs
+```
+
+O workflow `Driver 2 - QA visual das quatro cidades` verifica a
+dirigibilidade real, os limites da pista, os nove corredores anteriores,
+a bifurcação R25 e a ausência de regressões nas quatro cidades.
