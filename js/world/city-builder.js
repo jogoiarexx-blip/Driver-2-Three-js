@@ -148,6 +148,7 @@
                 this.chicagoReferenceBridge=null;
                 this.chicagoReferenceNorthNetwork=null;
                 this.chicagoReferenceArterial=null;
+                this.chicagoPS1StreetNetwork=null;
                 this.chicagoSourceGround=null;
                 this.chicagoReferenceNorthStem=null;
                 this.chicagoReferenceNorthContinuation=null;
@@ -444,6 +445,11 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceArterial!=='undefined')
                     DriverChicagoPS1ReferenceArterial.prepare(this);
+                // R22: liga a bifurcação observada ao eixo viário da
+                // cidade só se todo o corredor estiver livre e seco.
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoPS1StreetNetwork!=='undefined')
+                    DriverChicagoPS1StreetNetwork.build(this);
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
                 this.buildMissionStartMarker();
