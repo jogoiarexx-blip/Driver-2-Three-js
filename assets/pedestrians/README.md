@@ -1,39 +1,60 @@
-# Pedestre feminina animada
+# Pedestres personalizados — Driver 2 Three.js
 
-O jogo foi preparado para uma pedestre feminina usando o arquivo **mulher_walk.glb**.
+## Estado atual: somente modelos enviados pelo usuário
 
-## Instalação do arquivo binário
+Os civis não utilizam mais corpos gerados com caixas/cores procedurais. A
+cidade conserva **28 vagas lógicas** de pedestres e a IA de calçadas, curvas,
+esquiva, travessia e semáforo existente.
 
-1. Abra esta pasta no GitHub.
-2. Clique em **Add file → Upload files**.
-3. Envie `mulher_walk.glb` do pacote disponibilizado no chat.
-4. Clique em **Commit changes** na branch `main`.
+**Fontes GLB carregadas uma única vez:**
+1. `mulher_walk.glb` (vaga original 0).
+2. `Pedestre_Masculino_Driver2_Atirar_Com_Pistola.glb` (vaga original 1).
+3. `mendingo.glb` (vaga original 2).
+4. `mulher 2.glb` (vaga original 3).
+5. `mulher 3.glb` (vaga original 4).
 
-Caminho obrigatório: `assets/pedestrians/mulher_walk.glb`.
+As outras **23 vagas** recebem cópias com esqueleto e animação independentes,
+mas compartilham os mesmos buffers de geometria, materiais e texturas.
+As cópias respeitam a altura dos modelos originais com pequena variação de
+escala, animação de caminhada, corrida se disponível, pausa e LOD de animação.
 
-O arquivo contém o modelo low-poly feminino otimizado, esqueleto preservado e animação `Walking_Woman`. O sistema mantém 28 pedestres com a IA original; apenas uma personagem usa o GLB. Quando o arquivo está ausente, o jogo mantém o pedestre procedural como fallback.
+Os agentes posicionados nos bloqueios também reutilizam GLBs do catálogo
+(preferencialmente o homem com pistola). A IA policial de perseguição e os
+cavaletes não foram alterados.
 
-## Diagnóstico
+## Carregamento e falhas
 
-Durante o jogo, abra o console e execute:
+- Os arquivos são requisitados conforme a partida inicia, e não no menu.
+- Se um GLB ainda não carregou, sua vaga pode receber temporariamente um
+  **outro GLB enviado pelo usuário** que já esteja pronto.
+- Se nenhum GLB puder carregar, a vaga fica **invisível**, sem gerar um
+  personagem procedural como substituto.
+- A troca de cidade libera os rigs clonados antes de descartar as malhas de
+  cidade. Os cinco templates seguem em cache e são reutilizados.
+- O contador de pedestres continua em 28, sem multiplicar agentes da IA.
 
-`DriverGame.pedManager.femalePedestrian.status()`
-
-`state: 'ready'` e `active: true` confirmam que o modelo foi carregado. `state: 'missing'` indica que ainda não foi publicado no caminho acima.
-
-## Pedestre masculino com pistola — integrado
-
-O arquivo **Pedestre_Masculino_Driver2_Atirar_Com_Pistola.glb** já está no repositório e foi conferido por SHA com o arquivo enviado pelo usuário. **Não é necessário reenviar.**
-
-- Carregado por `js/assets/driver-male-pedestrian.js`, na vaga de índice **1** do conjunto original de 28 pedestres. A vaga 0 continua feminina.
-- Preserva **Walking, Running, Aim_Pistol, Shoot_Pistol e Shoot_From_Idle**. O movimento padrão usa caminhada; nas travessias usa corrida. A pistola acompanha o rig, mas o civil **não atira automaticamente**.
-- Escala de **2,08 m**, origem ajustada aos pés, frente em **+Z** para acompanhar a direção da IA.
-- Usa as mesmas calçadas, semáforos, IA, esquivas e colisões existentes. Mantém o procedimento de fallback se o GLB não estiver disponível.
-
-Para conferir no navegador com o jogo iniciado:
+No console do navegador, depois de iniciar a partida:
 
 ```js
-DriverGame.pedManager.malePedestrian.status()
+DriverGame.pedManager.uploadedCrowd.status()
 ```
 
-O esperado é `state: 'ready'`, `active: true` e `pedestrianIndex: 1`.
+Confira `loadedModels` (ideal: 5), `filledSlots` (ideal: 28),
+`waitingSlots` (ideal: 0) e `proceduralCivilians` (sempre 0).
+
+## Como adicionar novos modelos no futuro
+
+1. Envie o arquivo `.glb` animado para esta pasta.
+2. Acrescente uma definição em
+   `js/assets/driver-pedestrian-variants.js`, usando
+   `pedestrianIndex` novo (5, 6, 7 etc., no máximo 27).
+3. Informe `url`, `id`, `height` e `walkName`. Se o modelo tiver
+   `Running`, a travessia também usará a animação.
+4. Publique o commit. O sistema redistribuirá automaticamente as vagas
+   restantes entre todos os GLBs cadastrados.
+
+Sem as definições, o GitHub Pages não consegue descobrir arquivos novos
+automaticamente, pois a hospedagem estática não expõe a listagem da pasta.
+
+Testes: `node --test tests/uploaded-pedestrian-crowd.test.cjs`,
+`node --test tests/male-pedestrian-glb.test.cjs` e o workflow de QA.
