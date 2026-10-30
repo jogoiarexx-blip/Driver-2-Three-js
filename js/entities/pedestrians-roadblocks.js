@@ -226,7 +226,8 @@
                     officer.mesh.position.z = officer.z +
                         (officer.axis === 'x' ? away : 0);
                     officer.t += dt * 3;
-                    // O rig real fica parado enquanto o agente recua da via.
+                    // O sinal de parar é animado pelos ossos do GLB.
+                    this.uploadedCrowd?.animateOfficer(officer,dt);
                 }
             }
 
