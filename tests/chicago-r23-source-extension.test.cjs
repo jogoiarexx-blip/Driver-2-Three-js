@@ -31,7 +31,8 @@ test('R23 mantém a escala uniforme da R15, termina ao norte e conecta à R20',(
    mapped=R15.fitPoint(reference.pointsOBJ.at(-1));
  assert.deepEqual(r.points[0],first);
  assert.deepEqual(r.points.at(-1),mapped);
- assert(r.adaptedSeamLength>1&&r.adaptedSeamLength<6);
+ assert(r.adaptedSeamLength>7&&r.adaptedSeamLength<14);
+ assert.equal(r.sourceJoinNodeId,1342);
  assert.equal(r.sourceSeamTrimmed,true);
  assert(r.points[1].z>=r.points[0].z,
    'a via não deve fazer uma volta ao sul antes de seguir ao norte');
