@@ -18,14 +18,18 @@ A aplicação roda em hospedagem estática, sem listagem automática de pastas.
 
 ### Situação do binário
 
-**Pendente de inclusão do GLB no GitHub.** A integração no JS foi publicada,
-mas o conector do GitHub não permite transmitir diretamente o upload binário
-recebido no chat. O usuário precisa usar `Add file → Upload files` dentro
-de `assets/vehicles/` e enviar o GLB otimizado disponibilizado no chat,
-renomeado para `onibus escolar.glb`, ou o original com esse nome.
+**GLB publicado na branch `main`.** O arquivo `assets/vehicles/onibus escolar.glb`
+foi confirmado no GitHub com 2.806.984 bytes, hash Git do blob
+`f4eaafb12cd7572c3443bb348e84e7c58f586e6c`.
+O arquivo é exatamente o modelo original enviado, com 8.965 vértices,
+7.838 triângulos, textura embutida e nenhuma animação própria.
 
-Até que o arquivo esteja publicado, o ônibus original conserva a
-carroceria procedural para que o jogo nunca tenha um veículo invisível.
+Com a opção de modelos GLB habilitada, o carregador deve substituir a
+carroceria antiga pela nova. Se o download falhar, a carroceria procedural
+continua como fallback para evitar um veículo invisível.
+
+O workflow `uploaded-vehicles.yml` também verifica os GLBs quando arquivos
+na pasta de veículos forem modificados.
 
 ### Ajuste de escala
 
