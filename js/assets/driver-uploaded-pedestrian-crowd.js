@@ -144,8 +144,29 @@ class DriverUploadedPedestrianCrowd {
         try{
             const record=this.makeInstance(model,officer,
                 this.manager.roadblockOfficers.indexOf(officer));
+            // Reaproveita ossos reais do GLB para o sinal de parar.
+            // Sem braços geométricos artificiais, somente animação do rig.
+            record.root.traverse(node=>{
+                if(record.signalBone||!node.isBone)return;
+                if(/(?:upper.?arm|shoulder|arm.*upper|leftarm|rightarm)/i.test(node.name||'')){
+                    record.signalBone=node;
+                    record.signalBase=node.rotation.z;
+                }
+            });
+            record.signalClock=0;
             this.officers.set(officer,record);
         }catch(e){this.lastError=String(e?.message||e);}
+    }
+
+    animateOfficer(officer,dt) {
+        const record=this.officers.get(officer);
+        if(!record)return;
+        record.signalClock+=Math.max(0,dt);
+        if(record.signalBone) {
+            const direction=officer.side<0?-1:1;
+            record.signalBone.rotation.z=record.signalBase+
+                direction*(-.48+Math.sin(record.signalClock*3.2)*.16);
+        }
     }
 
     releaseOfficer(officer) {
