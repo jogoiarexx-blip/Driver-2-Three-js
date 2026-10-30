@@ -113,3 +113,43 @@ test('runner and HTML use transition module while preserving police door rig',()
  assert.match(engine,/this\.policeDoorTransition\|\|this\.vehicleMountTransition/);
  assert.match(engine,/this\.startPoliceDoorTransition\(this\.playerCar,'exit'\)/);
 });
+
+// A única referência aceitável para o fim da animação é a posição
+// real do chassi, não uma estimativa baseada no centro físico.
+test('motorcycle seat anchor uses chassis world transform, not vehicle y',()=>{
+ class Vec{constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z;}}
+ const Actual=vm.runInNewContext(read('js/vehicles/driver-vehicle-mount.js')+
+     '\nDriverVehicleMount',{Math,Number,THREE:{Vector3:Vec}});
+ const {engine,bike}=harness();
+ bike.x=9;bike.y=1;bike.z=8;bike.heading=.8;
+ bike.chassisTilt={
+   updateWorldMatrix(){this.updated=true;},
+   localToWorld(v){return {x:bike.x+v.x+.25,y:2.15,z:bike.z+v.z-1.2};}
+ };
+ const seat=Actual.ridingSeat(bike);
+ assert.equal(seat.x,9.25);
+ assert.equal(seat.y,2.15);
+ assert.equal(seat.z,6.5);
+ assert.equal(bike.chassisTilt.updated,true);
+ assert(Actual.start(engine,bike,'enter'));
+ const s=engine.vehicleMountTransition;
+ assert.equal(s.seat.y,seat.y);
+ assert.equal(s.seat.x,seat.x);
+});
+test('mount approaches bike on shortest heading path across 180° boundary',()=>{
+ const from=Math.PI-.08,to=-Math.PI+.08;
+ const quarter=Mount.heading(from,to,.25);
+ const halfway=Mount.heading(from,to,.5);
+ assert(Math.abs(quarter-from)<.06);
+ assert(Math.abs(halfway-from)<.1);
+ assert(Math.abs(Math.sin(halfway))<.1);
+});
+test('seat pose is not clamped to pavement during the leg sweep',()=>{
+ const {engine,bike,tanner}=harness('motorcycle',{
+     getGroundHeightAt:()=>9
+ });
+ assert(Mount.start(engine,bike,'enter'));
+ for(let i=0;i<80;i++)Mount.update(engine,1/60);
+ assert(tanner.group.position.y<1,
+    'seat phase should not jump up to sidewalk/pavement height');
+});
