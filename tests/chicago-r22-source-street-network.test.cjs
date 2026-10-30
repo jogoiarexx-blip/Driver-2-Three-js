@@ -7,12 +7,14 @@ const R17=require('../js/world/chicago-ps1-reference-loop.js');
 const R18=require('../js/world/chicago-ps1-reference-bridge.js');
 const R19=require('../js/world/chicago-ps1-reference-north-network.js');
 const R20=require('../js/world/chicago-ps1-reference-arterial.js');
+const R23=require('../js/world/chicago-ps1-north-candidate-r23.js');
 const road=[
  ['chicagoReferenceCurve',Curve.plan()],
  ['chicagoReferenceExtension',R16.plan()],
  ['chicagoReferenceLoop',R17.plan()],
  ['chicagoReferenceBridge',R18.plan()],
- ['chicagoReferenceArterial',R20.plan()]
+ ['chicagoReferenceArterial',R20.plan()],
+ ['chicagoReferenceNorthCandidateR23',R23.plan()]
 ];
 function city(){
  const o={preset:{id:'chicago'},buildingBoxes:[],
@@ -22,12 +24,13 @@ function city(){
  for(const [key,plan] of road)o[key]=plan;
  return o;
 }
-test('R22 combines eight surveyed street corridors and one proposed grid feeder',()=>{
+test('R22 combines nine surveyed/source-candidate corridors and one proposed grid feeder',()=>{
  const c=city(),paths=Net.sourcePaths(c);
- assert.equal(paths.length,8);
+ assert.equal(paths.length,9);
  assert.deepEqual(paths.map(p=>p.id),[
   'curve','extension','loop','bridge','north-stem',
-  'north-continuation','north-branch','west-arterial'
+  'north-continuation','north-branch','west-arterial',
+  'western-extension-r23'
  ]);
  assert(paths.every(p=>p.provenance==='PS1-surface-reference-adapted'));
  const [link]=Net.connectionPlan(c);
@@ -54,7 +57,7 @@ test('building before the branch prevents adding decorative unsafe road',()=>{
  const r=Net.build(c);
  assert.equal(r.connectorsAccepted,0);
  assert.equal(r.connectorsRejected[0].reason,'collision');
- assert.equal(r.radarPaths.length,8);
+ assert.equal(r.radarPaths.length,9);
  assert.equal(r.missionsMigrated,false);
  assert.equal(r.wholePS1MapCertified,false);
  assert.equal(Net.build(c),r,'multiple calls cannot duplicate connectors');
@@ -63,9 +66,9 @@ test('source paths remain unmodified when simplifying the minimap',()=>{
  const c=city();
  const original=JSON.stringify(R20.plan().points);
  const p=Net.build(c);
- assert.equal(p.sourceCorridors,8);
+ assert.equal(p.sourceCorridors,9);
  assert.equal(p.connectorsAccepted,1);
- assert.equal(p.radarPaths.length,9);
+ assert.equal(p.radarPaths.length,10);
  assert.equal(JSON.stringify(R20.plan().points),original);
  for(const path of p.radarPaths)assert(path.points.length>=2);
  const r=Net.simplify(R20.plan().points,1.15);
@@ -80,7 +83,7 @@ test('radar uses original source paths and distinguishes inferred connector',()=
   beginPath(){},moveTo(){},lineTo(){},
   stroke(){this.strokes.push(this.strokeStyle)}};
  const n=Net.drawRadar(render,c,{x:-300,z:310},.5,480,480);
- assert(n>2&&n<=9);
+ assert(n>2&&n<=10);
  assert.equal(render.saved,1);
  assert.equal(render.restored,1);
  assert(render.strokes.includes('#8fa1aa'));
