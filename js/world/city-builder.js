@@ -149,6 +149,7 @@
                 this.chicagoReferenceNorthNetwork=null;
                 this.chicagoReferenceArterial=null;
                 this.chicagoReferenceNorthCandidateR23=null;
+                this.chicagoReferenceEasternForkR25=null;
                 this.chicagoPS1StreetNetwork=null;
                 this.chicagoSourceGround=null;
                 this.chicagoReferenceNorthStem=null;
@@ -451,6 +452,11 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoPS1NorthCandidateR23!=='undefined')
                     DriverChicagoPS1NorthCandidateR23.prepare(this);
+                // R25: continuação física leste/nordeste com 3 arestas PS1
+                // conectadas, após validar água e AABB como R15–R23.
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoPS1EasternForkR25!=='undefined')
+                    DriverChicagoPS1EasternForkR25.prepare(this);
                 // R22: liga a bifurcação observada ao eixo viário da
                 // cidade só se todo o corredor estiver livre e seco.
                 if(this.preset.id==='chicago' &&
