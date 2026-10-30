@@ -79,3 +79,48 @@ node tests/chicago-r25-eastern-fork-browser.cjs
 O workflow `Driver 2 - QA visual das quatro cidades` verifica a
 dirigibilidade real, os limites da pista, os nove corredores anteriores,
 a bifurcação R25 e a ausência de regressões nas quatro cidades.
+
+## R26 — alturas verdadeiras dos 54 GLBs e conflitos de viadutos
+
+A R26 deixa de presumir que duas superfícies próximas em X/Z se cruzam
+fisicamente. `tools/chicago-r26-grade-audit.cjs` lê **1.544.872 triângulos**
+dos **54 setores originais GLB** e amostra a altura Y apenas em triângulos
+compatíveis com materiais de pavimento. Os resultados são cruzados com os
+3.230 nós e 4.279 arestas da rede do PS1, sem alterar a malha da Chicago jogável.
+
+Resultado reproduzido em 30/10/2026:
+
+| Categoria de evidência | Quantidade |
+| --- | ---: |
+| Células com pavimento sobreposto em alturas diferentes | 596 |
+| Nós com sobreposição de nível | 15 |
+| Arestas com conflito de nível | 55 |
+| Arestas com observação incompleta | 1.559 |
+| Arestas com uma altura consistente observada | 2.665 |
+| Arestas elegíveis após **duplo filtro** de altura R26 + largura/pavimento R24 | **218** |
+
+**Atenção:** conflito de altura NÃO significa automaticamente ponte ou
+viaduto. Rampas, materiais incompletos, calçadas, telhados baixos ou geometria
+duplicada também podem causar conflitos. As 218 candidatas NÃO foram aprovadas
+para o sistema de trânsito; necessitam inspeção do traçado real e das faixas.
+
+Os segmentos R23 `1650` e `1557` apresentam conflito de altura.
+A R25 apresenta observação de altura incompleta nas suas três arestas.
+Ambas permanecem jogáveis como *adaptações* no Undercover, mas não têm
+posicionamento ou nível PS1 certificados.
+
+Para reproduzir o resultado:
+```sh
+node --test tests/chicago-r26-grade-guard.test.cjs
+node tools/chicago-r26-grade-audit.cjs qa-artifacts/chicago-r26/grade-evidence.json
+```
+
+A lista completa de 4.279 arestas, as amostras de altura e as rotas R23/R25
+estão no artefato do workflow **Driver 2 - Chicago R26 - Alturas e cruzamentos
+originais PS1**. Uma versão resumida, `reference-grade-r26.json`, mantém
+os 55 IDs conflitantes e os 15 nós sobrepostos disponíveis no GitHub Pages.
+
+Na [visualização do mapa original](../chicago-original-preview.html), usar
+**Mostrar conflitos de altura** para visualizar as arestas projetadas em
+vermelho e os nós em laranja. O overlay é somente diagnóstico, não cria
+colisores, não troca missões e não conecta ruas de alturas diferentes.
