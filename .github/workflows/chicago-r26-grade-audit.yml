@@ -11,6 +11,8 @@ on:
       - 'js/world/chicago-grade-guard-r26.js'
       - 'tools/chicago-r26-grade-audit.cjs'
       - 'tests/chicago-r26-*'
+      - 'chicago/reference-grade-r26.json'
+      - 'chicago-original-preview.html'
       - '.github/workflows/chicago-r26-grade-audit.yml'
   pull_request:
     paths:
@@ -21,6 +23,8 @@ on:
       - 'js/world/chicago-grade-guard-r26.js'
       - 'tools/chicago-r26-grade-audit.cjs'
       - 'tests/chicago-r26-*'
+      - 'chicago/reference-grade-r26.json'
+      - 'chicago-original-preview.html'
       - '.github/workflows/chicago-r26-grade-audit.yml'
 permissions:
   contents: read
@@ -58,6 +62,23 @@ jobs:
             candidates:a.gradeGuardCandidates.length
           }));
           JS
+      - name: Instalar Chromium para verificar visualização PS1
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir a Chicago original localmente
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/chicago-r26-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/chicago-original-preview.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-r26-http.log
+          exit 1
+      - name: Mostrar cruzamentos conflitantes, ocultar e testar o mapa original
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r26-grade-overlay-browser.cjs
       - name: Preservar mapa de alturas, cruzamentos incertos e classificação de ruas
         if: always()
         uses: actions/upload-artifact@v4
