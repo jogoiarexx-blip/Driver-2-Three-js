@@ -49,3 +49,11 @@ Não há base para dar um percentual confiável de fidelidade total ou afirmar e
 Primeira etapa iniciada: `tools/chicago-r30-sector-inventory.cjs` gera `chicago/sector-inventory-r30.json` e a [planta dos 54 setores projetados](setores-originais-r30.svg). Cada setor reúne limites da fonte, quatro cantos transformados, hash do setor fornecido, triângulos classificados por textura e quantidades de caixas de segmentos candidatos sobrepostas. Essas quantidades não são extensões de rua e podem contar o mesmo segmento em mais de um setor. O gerador verifica a correspondência do hash do levantamento com as entradas de grafo, recuperação R29 e curva R15. Os hashes de setores são os registrados pelo levantamento; o inventário não relê os GLBs para verificá-los.
 
 Validação: 710 testes Node passaram, incluindo rejeição de levantamento incompatível. Os arquivos gerados são reproduzíveis byte a byte. Esta etapa não adiciona ruas jogáveis; a classificação de pavimento, construção dos setores, testes de direção e posterior mudança das missões continuam pendentes.
+
+## Execução R31 — interseções geométricas por setor
+
+`tools/chicago-r31-sector-candidates.cjs` cruza as polilinhas das 263 arestas de revisão R29 com os retângulos originais dos 54 setores usando interseção de segmentos. O resultado em `chicago/sector-candidates-r31.json` guarda os IDs exatos por setor, os hashes dos sete arquivos de entrada e a transformação validada contra a R30. A [planta de candidatos](candidatos-setores-r31.svg) mostra os traçados em amarelo.
+
+O cruzamento real resultou em 316 associações entre segmentos e setores, ante 319 associações por caixas aproximadas da R30; 46 setores têm candidatos, ante 47 na aproximação anterior. As contagens podem repetir segmentos em setores sobrepostos ou adjacentes. Os candidatos continuam sem certificação de rua ou de tráfego. Na extremidade da R25 (nó 752), as alternativas 972 e 1018 permanecem em revisão: os filtros de largura/altura não autorizam considerá-las conexão validada. Não foram construídos novos trechos jogáveis ou movidas missões nesta etapa.
+
+Validação local: 715 testes Node passaram; teste específico cobre passagens com extremos fora do setor, cantos, segmentos degenerados, lista completa e hashes. Arquivos gerados reproduzidos byte a byte.
