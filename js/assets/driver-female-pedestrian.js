@@ -109,7 +109,8 @@ class DriverFemalePedestrian {
         if(!ped?.mesh)return false;
         if(this.current===ped)return true;
         this.release();
-        // O corpo procedural continua na memória como fallback, mas invisível.
+        this.manager.uploadedCrowd?.releaseSlot(0);
+        // Slots agora contêm somente os modelos GLB do usuário.
         for(const child of ped.mesh.children) child.visible=false;
         ped.mesh.add(this.container);
         ped.glbFemale=true;
