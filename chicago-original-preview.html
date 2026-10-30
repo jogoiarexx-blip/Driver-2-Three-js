@@ -9,7 +9,7 @@ small{color:#a8b7c6}button{background:#1e4571;border:1px solid #3f7295;color:whi
 </style></head><body><div id="view"></div>
 <section id="panel"><b>CHICAGO • ORIGINAL PS1</b><div>Pré-visualização geográfica da geometria enviada pelo usuário. Não é a cidade jogável nem altera as missões e a física do clone.</div>
 <small>Arraste para orbitar • Roda para zoom • WASD/setas para mover • Tecla 1: centro • Tecla 2: vista superior.</small>
-<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button><button id="review27" type="button">Revisar alertas R27</button><button id="routes28" type="button">Ver rotas por nível R28</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="review27-audit" aria-live="polite" style="font-size:12px;color:#d6b4d7;margin-top:7px">R27: revisão de alturas no mesmo X/Z. Nenhum viaduto certificado.</div><div id="routes28-audit" aria-live="polite" style="font-size:12px;color:#98d7bf;margin-top:7px">R28: revisão de conectividade 3D sem ativar trânsito.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
+<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button><button id="review27" type="button">Revisar alertas R27</button><button id="routes28" type="button">Ver rotas por nível R28</button><button id="recover29" type="button">Ver recuperação R29</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="review27-audit" aria-live="polite" style="font-size:12px;color:#d6b4d7;margin-top:7px">R27: revisão de alturas no mesmo X/Z. Nenhum viaduto certificado.</div><div id="routes28-audit" aria-live="polite" style="font-size:12px;color:#98d7bf;margin-top:7px">R28: revisão de conectividade 3D sem ativar trânsito.</div><div id="recover29-audit" aria-live="polite" style="font-size:12px;color:#c5c3f7;margin-top:7px">R29: análise de falhas de altura com triângulos próximos, sem ativar tráfego.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
 <div id="footer">OBJ dividido em 54 setores • carregamento sob demanda • material faltante em roxo</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -324,6 +324,97 @@ routes28Button.addEventListener('click',async()=>{
   routes28Button.textContent='Tentar novamente';
  }finally{routes28Loading=false;routes28Button.disabled=false;}
 });
+// R29: audited nearby-source-height recovery; never auto-merge traffic layers.
+let recover29Overlay=null,recover29Loading=false;
+const recover29Button=document.getElementById('recover29'),
+      recover29Status=document.getElementById('recover29-audit');
+recover29Button.addEventListener('click',async()=>{
+ if(recover29Overlay){
+  recover29Overlay.visible=!recover29Overlay.visible;
+  recover29Button.textContent=recover29Overlay.visible?
+    'Ocultar recuperação R29':'Ver recuperação R29';
+  return;
+ }
+ if(recover29Loading)return;
+ recover29Loading=true;recover29Button.disabled=true;
+ recover29Status.textContent='Verificando 54 setores originais e arestas recuperadas…';
+ try{
+  const [graph,audit]=await Promise.all([
+    './chicago/reference-network.json',
+    './chicago/reference-recovery-r29.json'
+  ].map(async url=>{
+    const response=await fetch(url);
+    if(!response.ok)throw Error('HTTP '+response.status+': '+url);
+    return response.json();
+  }));
+  if(audit.sourceSHA256!==graph.sourceSHA256||
+     audit.previousCandidateCount!==216||
+     audit.combinedCandidateCount!==audit.combinedCandidateIds?.length||
+     audit.combinedCandidateCount!==
+       audit.previousCandidateCount+audit.recoveredEdgeCount)
+    throw Error('R29 não corresponde ao grafo 3D ou R28');
+  const newIds=new Set(audit.recoveredEdges.map(e=>e.id));
+  const connected=new Set(audit.topComponents?.[0]?.samplePath?.edgeIds||[]);
+  const layers={original:[],recovered:[],route:[]};
+  for(const id of audit.combinedCandidateIds){
+    const edge=graph.edges[id];
+    if(!edge)throw Error('Aresta não encontrada na fonte: '+id);
+    const points=edge.pointsOBJ;
+    const list=newIds.has(id)?layers.recovered:layers.original;
+    for(let i=1;i<points.length;i++){
+      for(const p of [points[i-1],points[i]])
+        list.push(p[0],.34,p[1]);
+    }
+    if(connected.has(id)){
+      for(let i=1;i<points.length;i++)
+        for(const p of [points[i-1],points[i]])
+          layers.route.push(p[0],.42,p[1]);
+    }
+  }
+  recover29Overlay=new THREE.Group();
+  recover29Overlay.name='chicago-r29-no-invented-height-recovery';
+  recover29Overlay.userData={
+    visualOnly:true,addedSourceEdges:newIds.size,trafficEnabled:false
+  };
+  for(const [key,positions,color,order] of [
+    ['original',layers.original,0x4e92ac,15],
+    ['recovered',layers.recovered,0xba86e0,16],
+    ['route',layers.route,0xfbd084,17]
+  ]){
+    if(!positions.length)continue;
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',
+      new THREE.Float32BufferAttribute(positions,3));
+    const lines=new THREE.LineSegments(geometry,
+      new THREE.LineBasicMaterial({
+        color,depthTest:false,transparent:true,opacity:1
+      }));
+    lines.name='r29-'+key;lines.renderOrder=order;
+    recover29Overlay.add(lines);
+  }
+  stream.root.add(recover29Overlay);
+  for(const [group,button,label] of [
+    [evidenceOverlay,roadsButton,'Mostrar vias candidatas'],
+    [gradeOverlay,gradeButton,'Mostrar conflitos de altura'],
+    [review27Overlay,review27Button,'Revisar alertas R27'],
+    [routes28Overlay,routes28Button,'Ver rotas por nível R28']
+  ]){
+    if(group)group.visible=false;
+    button.textContent=label;
+  }
+  recover29Button.textContent='Ocultar recuperação R29';
+  recover29Status.textContent='R29: '+audit.previousCandidateCount+
+    ' arestas anteriores (azul), '+audit.recoveredEdgeCount+
+    ' recuperadas com altura local (roxo), '+
+    audit.combinedCandidateCount+
+    ' candidatas no total. Caminho de exemplo em amarelo. '+
+    'Nenhuma rua ou ponte certificada e nenhum trânsito alterado.';
+ }catch(error){
+  recover29Status.textContent='Falha na auditoria R29: '+
+    String(error.message||error);
+  recover29Button.textContent='Tentar novamente';
+ }finally{recover29Loading=false;recover29Button.disabled=false;}
+});
 let drag=false,px=0,py=0;
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);
@@ -352,7 +443,7 @@ let then=performance.now();function frame(now){requestAnimationFrame(frame);
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 addEventListener('pagehide',()=>{
- for(const group of [evidenceOverlay,gradeOverlay,review27Overlay,routes28Overlay]){
+ for(const group of [evidenceOverlay,gradeOverlay,review27Overlay,routes28Overlay,recover29Overlay]){
   if(!group)continue;
   group.traverse(obj=>{obj.geometry?.dispose?.();obj.material?.dispose?.();});
   group.parent?.remove(group);
