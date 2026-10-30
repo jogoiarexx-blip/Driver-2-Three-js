@@ -124,3 +124,47 @@ Na [visualização do mapa original](../chicago-original-preview.html), usar
 **Mostrar conflitos de altura** para visualizar as arestas projetadas em
 vermelho e os nós em laranja. O overlay é somente diagnóstico, não cria
 colisores, não troca missões e não conecta ruas de alturas diferentes.
+
+## R27 — revisão individual dos 55 alertas de desnível do PS1
+
+A nova auditoria usa **as alturas reais dos 54 setores GLB (1.544.872 triângulos)**
+para separar alertas anteriores da R26 que não podiam ser interpretados automaticamente
+como viadutos. Usa uma medida da persistência da diferença de alturas no entorno,
+comparando o material pavimentado em diversas células da grade original.
+
+| Resultado reproduzível da R27 | Arestas |
+| --- | ---: |
+| Evidência persistente de grande separação entre camadas (diferença superior a 0,45 OBJ e repetição em células próximas) | **0** |
+| Sobreposição pontual ou ambígua | **50** |
+| Conflito projetado herdado de nó sem sobreposição direta na amostra da aresta | **5** |
+| **Total analisado** | **55** |
+
+**Interpretação cuidadosa:** o resultado de 0 não exclui a existência de viadutos
+no jogo original — o limiar de 0,45 OBJ é apenas um filtro conservador.
+Uma diferença menor pode ser uma rampa, uma calçada elevada, geometria
+sobreposta, uma ponte baixa ou um artefato de extração. Por isso, **nenhum dos
+55 casos foi automaticamente liberado para o trânsito ou certificado como
+cruzamento no mesmo nível**.
+
+A R23 permaneceu dirigível no Undercover, mas suas arestas **1650** e **1557**
+ainda têm sobreposições locais de **0,1561** e **0,1323** unidades OBJ,
+respectivamente, que não comprovam a existência de viadutos. As três arestas
+da R25 permanecem com cobertura incompleta de altura. Nenhuma missão
+foi migrada nem foram alterados veículos, colisões ou as outras cidades.
+
+O arquivo [`reference-grade-r27.json`](reference-grade-r27.json) contém os
+55 IDs classificados, diferenças de alturas e amostras específicas.
+Na [visualização 3D da Chicago original](../chicago-original-preview.html),
+usar **Revisar alertas R27**: laranja = sobreposições locais, roxo =
+alertas só no nó. O controle é apenas diagnóstico.
+
+Reprodução:
+```sh
+node --test tests/chicago-r27-height-overlap.test.cjs
+node tools/chicago-r27-review-conflicts.cjs qa-artifacts/chicago-r27/height-review.json
+```
+
+O workflow `Driver 2 - Chicago R27 - Revisão dos 55 cruzamentos PS1` salva
+o JSON detalhado, a revisão compacta e a captura de tela do Chromium. O passo
+seguinte será analisar altura e textura de cada segmento de interseção,
+com atenção à conectividade real de rampas e pontes, antes da migração física.
