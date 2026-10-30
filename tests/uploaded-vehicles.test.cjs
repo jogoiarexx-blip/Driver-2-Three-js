@@ -7,9 +7,7 @@ test('todos os veículos enviados possuem GLB local válido',()=>{
  assert.equal(Object.keys(Roster.DEFINITIONS).length,5);
  for(const [id,definition] of Object.entries(Roster.DEFINITIONS)){
   const filename=decodeURIComponent(definition.url.slice(2));
-  // O ônibus é opcional até o upload do arquivo GLB no repositório.
-  // Os quatro arquivos publicados anteriormente seguem obrigatórios.
-  if(id==='school-bus'&&!fs.existsSync(filename))continue;
+  // Todos os GLBs, incluindo o ônibus escolar, são obrigatórios agora.
   const bytes=fs.readFileSync(filename);
   assert.equal(bytes.toString('ascii',0,4),'glTF');assert.equal(bytes.readUInt32LE(8),bytes.length);
   const gltf=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());assert(gltf.meshes.length>0);
@@ -29,14 +27,18 @@ test('ônibus escolar usa o GLB enviado na vaga do ônibus original',()=>{
  assert.equal(physics.dimensions({bodyStyle:'bus'}).width,2.72);
  assert.equal(Roster.DEFINITIONS['school-bus'].z,undefined,'ônibus não cria uma segunda frota estacionada');
 });
-test('GLB binário do ônibus (executa automaticamente após upload)',{
- skip:!fs.existsSync('assets/vehicles/onibus escolar.glb')
-},()=>{
+test('GLB binário do ônibus tem malha, textura e eixos esperados',()=>{
  const data=fs.readFileSync('assets/vehicles/onibus escolar.glb');
  assert.equal(data.toString('ascii',0,4),'glTF');
  assert.equal(data.readUInt32LE(8),data.length);
  const gltf=JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString());
  assert(gltf.meshes.length>0);assert(gltf.images.length>0);
+ assert.equal(gltf.animations?.length||0,0,'sem animações intrínsecas: física comanda o movimento');
+ const accessor=gltf.accessors?.[gltf.meshes[0].primitives[0].attributes.POSITION];
+ assert(accessor?.min&&accessor?.max,'arquivo precisa de bounds na malha');
+ const extent=accessor.max.map((v,i)=>v-accessor.min[i]);
+ assert(extent[0]>extent[1]&&extent[0]>extent[2],
+  'comprimento do ônibus está no eixo X, portanto requer rotação de 90°');
 });
 test('carregamento é serial, único por modelo e preserva fallback quando falha',async()=>{
  const callbacks=[],requests=[];
