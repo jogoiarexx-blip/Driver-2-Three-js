@@ -225,14 +225,18 @@ test('bloqueio horizontal posiciona agentes nas calçadas transversais',()=>{
     assert.equal(ped.roadblockOfficers.length,2);
     assert.ok(ped.roadblockOfficers.every(o=>Math.abs(o.mesh.position.z)>=12));
 });
-test('policiais sinalizam parar durante a animação',()=>{
-    const ped=manager();
+test('policiais sinalizam parar usando o rig GLB, sem braços procedurais',()=>{
+    const ped=manager(),calls=[];
+    ped.uploadedCrowd={
+        attachOfficer:officer=>calls.push(['attach',officer]),
+        animateOfficer:(officer,dt)=>calls.push(['animate',officer,dt])
+    };
     ped.spawnPoliceRoadblocks({}, {dynamic:true,locations:[{x:0,z:90,axis:'z'}]});
     const officer=ped.roadblockOfficers[0];
-    const first=officer.arms[0].rotation.z;
-    ped.updateRoadblockOfficers(0.16, null);
-    assert.notEqual(officer.arms[0].rotation.z,first);
-    assert.ok(officer.arms[0].rotation.z < -0.4);
+    assert.equal(officer.arms.length,0);
+    assert.equal(officer.mesh.children.length,0,'nenhuma malha humana procedural');
+    ped.updateRoadblockOfficers(0.16,null);
+    assert(calls.some(call=>call[0]==='animate'&&call[1]===officer));
 });
 test('policiais recuam em direção ao acostamento quando Tanner se aproxima',()=>{
     const ped=manager();
