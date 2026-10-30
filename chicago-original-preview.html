@@ -9,7 +9,7 @@ small{color:#a8b7c6}button{background:#1e4571;border:1px solid #3f7295;color:whi
 </style></head><body><div id="view"></div>
 <section id="panel"><b>CHICAGO • ORIGINAL PS1</b><div>Pré-visualização geográfica da geometria enviada pelo usuário. Não é a cidade jogável nem altera as missões e a física do clone.</div>
 <small>Arraste para orbitar • Roda para zoom • WASD/setas para mover • Tecla 1: centro • Tecla 2: vista superior.</small>
-<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button><button id="review27" type="button">Revisar alertas R27</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="review27-audit" aria-live="polite" style="font-size:12px;color:#d6b4d7;margin-top:7px">R27: revisão de alturas no mesmo X/Z. Nenhum viaduto certificado.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
+<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button><button id="review27" type="button">Revisar alertas R27</button><button id="routes28" type="button">Ver rotas por nível R28</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="review27-audit" aria-live="polite" style="font-size:12px;color:#d6b4d7;margin-top:7px">R27: revisão de alturas no mesmo X/Z. Nenhum viaduto certificado.</div><div id="routes28-audit" aria-live="polite" style="font-size:12px;color:#98d7bf;margin-top:7px">R28: revisão de conectividade 3D sem ativar trânsito.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
 <div id="footer">OBJ dividido em 54 setores • carregamento sob demanda • material faltante em roxo</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -244,6 +244,86 @@ review27Button.addEventListener('click',async()=>{
    review27Button.textContent='Tentar novamente';
  }finally{review27Loading=false;review27Button.disabled=false;}
 });
+// R28: separate, safe-height review graph. Absolutely no vehicle router.
+let routes28Overlay=null,routes28Loading=false;
+const routes28Button=document.getElementById('routes28'),
+      routes28Status=document.getElementById('routes28-audit');
+routes28Button.addEventListener('click',async()=>{
+ if(routes28Overlay){
+  routes28Overlay.visible=!routes28Overlay.visible;
+  routes28Button.textContent=routes28Overlay.visible?
+    'Ocultar rotas R28':'Ver rotas por nível R28';
+  return;
+ }
+ if(routes28Loading)return;
+ routes28Loading=true;routes28Button.disabled=true;
+ routes28Status.textContent='Lendo os IDs de vias candidatas e níveis PS1…';
+ try{
+  const [graph,audit]=await Promise.all([
+    './chicago/reference-network.json',
+    './chicago/reference-layered-r28.json'
+  ].map(async url=>{
+    const result=await fetch(url);
+    if(!result.ok)throw Error('HTTP '+result.status+': '+url);
+    return result.json();
+  }));
+  if(graph.sourceSHA256!==audit.sourceSurveySHA256||
+     audit.candidateCount!==216||
+     audit.candidateEdgeIds.length!==audit.candidateCount)
+    throw Error('Relatório R28 não corresponde à fonte PS1');
+  const vertex=[],highlight=[];
+  const ids=new Set(audit.candidateEdgeIds);
+  for(const id of ids){
+    const path=graph.edges[id]?.pointsOBJ;
+    if(!path)throw Error('ID não pertence ao PS1: '+id);
+    for(let j=1;j<path.length;j++)
+      for(const p of [path[j-1],path[j]])
+        vertex.push(p[0],.33,p[1]);
+  }
+  const sample=audit.components[0]?.sampleRoute;
+  for(const id of sample?.edgeIds||[]){
+    if(!ids.has(id))throw Error('Exemplo atravessa rua bloqueada');
+    const path=graph.edges[id].pointsOBJ;
+    for(let j=1;j<path.length;j++)
+      for(const p of [path[j-1],path[j]])
+        highlight.push(p[0],.39,p[1]);
+  }
+  routes28Overlay=new THREE.Group();
+  routes28Overlay.name='chicago-r28-layered-safe-review-candidates';
+  routes28Overlay.userData={diagnosticsOnly:true,trafficEnabled:false,
+    certifiedRoads:0,sourceEdgeCount:ids.size};
+  function layer(vertices,color,name,order){
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+    const lines=new THREE.LineSegments(g,new THREE.LineBasicMaterial({
+      color,transparent:true,opacity:1,depthTest:false
+    }));
+    lines.name=name;lines.renderOrder=order;
+    routes28Overlay.add(lines);
+  }
+  layer(vertex,0x51d5b2,'r28-height-compatible-candidates',13);
+  if(highlight.length)
+    layer(highlight,0xffd47c,'r28-example-connected-route',14);
+  stream.root.add(routes28Overlay);
+  for(const [overlay,button,show] of [
+    [evidenceOverlay,roadsButton,'Mostrar vias candidatas'],
+    [gradeOverlay,gradeButton,'Mostrar conflitos de altura'],
+    [review27Overlay,review27Button,'Revisar alertas R27']
+  ]){
+    if(overlay)overlay.visible=false;
+    button.textContent=show;
+  }
+  routes28Button.textContent='Ocultar rotas R28';
+  routes28Status.textContent='R28: '+ids.size+
+    ' segmentos com evidência de pavimento e nível (verde-água). '+
+    'O exemplo amarelo conecta '+(sample?.edgeIds.length||0)+
+    ' arestas. Rede fragmentada; sem trânsito ou faixas certificadas.';
+ }catch(error){
+  routes28Status.textContent='Falha ao abrir rotas R28: '+
+    String(error.message||error);
+  routes28Button.textContent='Tentar novamente';
+ }finally{routes28Loading=false;routes28Button.disabled=false;}
+});
 let drag=false,px=0,py=0;
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);
@@ -272,7 +352,7 @@ let then=performance.now();function frame(now){requestAnimationFrame(frame);
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 addEventListener('pagehide',()=>{
- for(const group of [evidenceOverlay,gradeOverlay,review27Overlay]){
+ for(const group of [evidenceOverlay,gradeOverlay,review27Overlay,routes28Overlay]){
   if(!group)continue;
   group.traverse(obj=>{obj.geometry?.dispose?.();obj.material?.dispose?.();});
   group.parent?.remove(group);
