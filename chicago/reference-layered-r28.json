@@ -1,0 +1,409 @@
+{
+  "format": "Driver2ChicagoLayeredReviewRoutesR28",
+  "sourceSurveySHA256": "a94e6e47cb22066f671abe2d5547cf9f96391b874c5fb08229ed4773cc25ba50",
+  "sourceGeometrySectors": 54,
+  "sourceTriangles": 1544872,
+  "sourceGraphNodes": 3230,
+  "sourceGraphEdges": 4279,
+  "candidateEdgeIds": [
+    15,
+    16,
+    22,
+    88,
+    115,
+    140,
+    172,
+    190,
+    194,
+    198,
+    243,
+    295,
+    372,
+    384,
+    439,
+    470,
+    473,
+    481,
+    490,
+    504,
+    515,
+    526,
+    534,
+    535,
+    544,
+    594,
+    600,
+    604,
+    654,
+    667,
+    683,
+    687,
+    722,
+    728,
+    734,
+    762,
+    781,
+    783,
+    800,
+    837,
+    840,
+    863,
+    872,
+    882,
+    888,
+    918,
+    919,
+    935,
+    938,
+    942,
+    1001,
+    1003,
+    1007,
+    1068,
+    1069,
+    1129,
+    1132,
+    1146,
+    1172,
+    1173,
+    1175,
+    1194,
+    1195,
+    1211,
+    1252,
+    1253,
+    1260,
+    1269,
+    1280,
+    1346,
+    1376,
+    1377,
+    1415,
+    1420,
+    1440,
+    1487,
+    1549,
+    1563,
+    1567,
+    1578,
+    1581,
+    1598,
+    1611,
+    1625,
+    1705,
+    1722,
+    1726,
+    1727,
+    1749,
+    1753,
+    1769,
+    1777,
+    1781,
+    1816,
+    1822,
+    1823,
+    1836,
+    1860,
+    1861,
+    1862,
+    1870,
+    1882,
+    1885,
+    1905,
+    1909,
+    1938,
+    1947,
+    1978,
+    1991,
+    1998,
+    1999,
+    2008,
+    2036,
+    2041,
+    2043,
+    2052,
+    2059,
+    2066,
+    2082,
+    2106,
+    2134,
+    2153,
+    2219,
+    2220,
+    2257,
+    2287,
+    2345,
+    2350,
+    2354,
+    2383,
+    2448,
+    2550,
+    2569,
+    2571,
+    2573,
+    2575,
+    2576,
+    2579,
+    2580,
+    2582,
+    2625,
+    2628,
+    2631,
+    2634,
+    2637,
+    2642,
+    2655,
+    2680,
+    2688,
+    2698,
+    2747,
+    2766,
+    2768,
+    2799,
+    2803,
+    2854,
+    2890,
+    2929,
+    2999,
+    3006,
+    3007,
+    3022,
+    3060,
+    3065,
+    3090,
+    3099,
+    3102,
+    3220,
+    3222,
+    3311,
+    3321,
+    3340,
+    3377,
+    3445,
+    3449,
+    3452,
+    3462,
+    3484,
+    3485,
+    3521,
+    3571,
+    3573,
+    3607,
+    3617,
+    3623,
+    3633,
+    3634,
+    3653,
+    3668,
+    3696,
+    3699,
+    3704,
+    3709,
+    3754,
+    3776,
+    3800,
+    3821,
+    3822,
+    3847,
+    3885,
+    3912,
+    3932,
+    3958,
+    3964,
+    3967,
+    3999,
+    4003,
+    4007,
+    4015,
+    4050,
+    4088,
+    4117,
+    4141,
+    4186,
+    4199,
+    4236
+  ],
+  "candidateCount": 216,
+  "filteredEdgeCounts": {
+    "paving": 3954,
+    "grade": 107,
+    "node": 0,
+    "endpoint": 0,
+    "slope": 2,
+    "degenerate": 0
+  },
+  "components": [
+    {
+      "nodes": 3,
+      "edges": 2,
+      "totalLengthOBJ": 17.126,
+      "sampleRoute": {
+        "nodeIds": [
+          1551,
+          1889,
+          2061
+        ],
+        "edgeIds": [
+          2106,
+          2550
+        ],
+        "lengthOBJ": 17.126
+      }
+    },
+    {
+      "nodes": 2,
+      "edges": 1,
+      "totalLengthOBJ": 16.375,
+      "sampleRoute": {
+        "nodeIds": [
+          2560,
+          2805
+        ],
+        "edgeIds": [
+          3445
+        ],
+        "lengthOBJ": 16.375
+      }
+    },
+    {
+      "nodes": 5,
+      "edges": 4,
+      "totalLengthOBJ": 14.371,
+      "sampleRoute": {
+        "nodeIds": [
+          787,
+          1000,
+          1047,
+          999
+        ],
+        "edgeIds": [
+          1069,
+          1377,
+          1376
+        ],
+        "lengthOBJ": 12.496
+      }
+    },
+    {
+      "nodes": 6,
+      "edges": 5,
+      "totalLengthOBJ": 13.005,
+      "sampleRoute": {
+        "nodeIds": [
+          1907,
+          1908,
+          1909,
+          1915,
+          1910,
+          1911
+        ],
+        "edgeIds": [
+          2569,
+          2571,
+          2573,
+          2575,
+          2576
+        ],
+        "lengthOBJ": 13.005
+      }
+    },
+    {
+      "nodes": 4,
+      "edges": 3,
+      "totalLengthOBJ": 11.42,
+      "sampleRoute": {
+        "nodeIds": [
+          824,
+          1027,
+          1044,
+          1071
+        ],
+        "edgeIds": [
+          1129,
+          1415,
+          1440
+        ],
+        "lengthOBJ": 11.42
+      }
+    },
+    {
+      "nodes": 2,
+      "edges": 1,
+      "totalLengthOBJ": 10.884,
+      "sampleRoute": {
+        "nodeIds": [
+          446,
+          448
+        ],
+        "edgeIds": [
+          594
+        ],
+        "lengthOBJ": 10.884
+      }
+    }
+  ],
+  "referencePaths": {
+    "r23": [
+      {
+        "id": 1822,
+        "qualified": true,
+        "grade": "single-level-evidence",
+        "paving": "medium"
+      },
+      {
+        "id": 1777,
+        "qualified": true,
+        "grade": "single-level-evidence",
+        "paving": "medium"
+      },
+      {
+        "id": 1762,
+        "qualified": false,
+        "grade": "single-level-evidence",
+        "paving": "review"
+      },
+      {
+        "id": 1650,
+        "qualified": false,
+        "grade": "multi-level-conflict",
+        "paving": "medium"
+      },
+      {
+        "id": 1557,
+        "qualified": false,
+        "grade": "multi-level-conflict",
+        "paving": "medium"
+      },
+      {
+        "id": 1550,
+        "qualified": false,
+        "grade": "incomplete-observation",
+        "paving": "review"
+      }
+    ],
+    "r25": [
+      {
+        "id": 1520,
+        "qualified": false,
+        "grade": "incomplete-observation",
+        "paving": "review"
+      },
+      {
+        "id": 1437,
+        "qualified": false,
+        "grade": "incomplete-observation",
+        "paving": "medium"
+      },
+      {
+        "id": 1017,
+        "qualified": false,
+        "grade": "incomplete-observation",
+        "paving": "review"
+      }
+    ]
+  },
+  "roadCertified": false,
+  "trafficEnabled": false,
+  "missionLocationsMigrated": false,
+  "notes": "Source pavement includes yards/sidewalks. True grade/traffic/lane direction is not certified. Routing is a segregated diagnostics graph only."
+}
