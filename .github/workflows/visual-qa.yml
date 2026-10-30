@@ -123,6 +123,10 @@ jobs:
           done
           cat /tmp/driver-http.log
           exit 1
+      - name: Certificar 28 pedestres GLB reais antes dos testes de mapa
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/male-pedestrian-visual.cjs
       - name: R22 dirigir pelo acesso norte e certificar radar da Chicago
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
@@ -151,10 +155,6 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r38-east-return-browser.cjs
-      - name: Validar cinco modelos de pedestres e troca Chicago/Havana
-        env:
-          DRIVER_QA_URL: http://127.0.0.1:4173/
-        run: node tests/male-pedestrian-visual.cjs
       - name: Validar carregamento do mapa original de Chicago na raiz
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
