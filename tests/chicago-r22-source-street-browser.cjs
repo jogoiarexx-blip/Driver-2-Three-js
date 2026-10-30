@@ -1,0 +1,82 @@
+'use strict';
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
+(async()=>{
+ const browser=await chromium.launch({headless:true,args:[
+  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl',
+  '--ignore-gpu-blocklist','--enable-unsafe-swiftshader'
+ ]});
+ const page=await browser.newPage({viewport:{width:1280,height:720}});
+ const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ try{
+  await page.addInitScript(()=>localStorage.setItem('driver2-menu-preferences-v1',
+   JSON.stringify({models:false,scanlines:false,reducedMotion:true})));
+  await page.goto(process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/',
+   {waitUntil:'domcontentloaded',timeout:60000});
+  await page.waitForFunction(()=>window.DriverBoot&&window.THREE);
+  assert(await page.evaluate(()=>window.DriverBoot.start('ride')));
+  await page.waitForFunction(()=>window.DriverBoot?.sessionReady&&
+   window.DriverGame?.city?.ready&&
+   window.DriverGame?.city?.chicagoPS1StreetNetwork,
+   null,{timeout:120000});
+  const report=await page.evaluate(()=>{
+   const g=window.DriverGame,city=g.city,
+    r=city.chicagoPS1StreetNetwork,
+    link=r.links[0],
+    source=city.chicagoReferenceNorthNetwork.segments.branch.points.at(-1);
+   g.isPaused=true;g.mode='driving';
+   g.playerCar.speed=0;g.playerCar.x=source.x;
+   g.playerCar.z=source.z;g.playerCar.y=0;
+   g.playerCar.heading=Math.PI/2;g.playerCar.updateTransform();
+   g.radarWide=true;g.drawRadar();
+   const width=link.width,dx=link.to.x-link.from.x,
+     dz=link.to.z-link.from.z,len=Math.hypot(dx,dz),
+     nx=-dz/len,nz=dx/len;
+   const points=[];
+   for(let i=0;i<=16;i++){
+    const t=i/16,x=link.from.x+dx*t,z=link.from.z+dz*t;
+    for(const offset of [-width/2+.65,0,width/2-.65])
+     points.push({x:x+nx*offset,z:z+nz*offset,
+      water:city.isWaterAt(x+nx*offset,z+nz*offset),
+      blocked:city.isPointBlocked(x+nx*offset,z+nz*offset,.6,0)});
+   }
+   const radar=DriverChicagoPS1StreetNetwork.drawRadar(
+    g.radarCtx,city,{x:source.x,z:source.z,heading:0},
+    .5,g.radarCanvas.width,g.radarCanvas.height);
+   return {
+    sourceCorridors:r.sourceCorridors,connectorsPlanned:r.connectorsPlanned,
+    connectorsAccepted:r.connectorsAccepted,
+    meshParent:link.mesh?.parent===city.cityGroup,
+    meshName:link.mesh?.name||null,
+    startToSurveyEnd:Math.hypot(link.from.x-source.x,link.from.z-source.z),
+    safeSamples:points.length,
+    blocked:points.filter(p=>p.blocked).length,
+    submerged:points.filter(p=>p.water).length,
+    radarPaths:r.radarPaths.length,radarDrawn:radar,
+    stillAtChicago:g.currentCityKey==='chicago',
+    wholePS1MapCertified:r.wholePS1MapCertified,
+    missionsMigrated:r.missionsMigrated
+   };
+  });
+  console.log('CHICAGO_R22_ROAD_BROWSER',JSON.stringify(report));
+  fs.writeFileSync('qa-artifacts/chicago-r22-street-network.json',
+   JSON.stringify({report,errors},null,2));
+  assert.equal(report.sourceCorridors,8);
+  assert.equal(report.connectorsAccepted,1);
+  assert(report.meshParent);
+  assert.equal(report.startToSurveyEnd,0);
+  assert.equal(report.blocked,0);
+  assert.equal(report.submerged,0);
+  assert(report.safeSamples>=45);
+  assert.equal(report.radarPaths,9);
+  assert(report.radarDrawn>1);
+  assert(report.stillAtChicago);
+  assert.equal(report.wholePS1MapCertified,false);
+  assert.equal(report.missionsMigrated,false);
+  assert.equal(errors.length,0,errors.join('\n'));
+  const canvas=await page.evaluate(()=>document.getElementById(
+   window.DriverGame.radarCanvas.id)?.id||null);
+  if(canvas)await page.locator('#'+canvas).screenshot({
+   path:'qa-artifacts/chicago-r22-radar.png'});
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
