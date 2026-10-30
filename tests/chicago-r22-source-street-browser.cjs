@@ -96,14 +96,14 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
   console.log('CHICAGO_R22_ROAD_BROWSER',JSON.stringify(report));
   fs.writeFileSync('qa-artifacts/chicago-r22-street-network.json',
    JSON.stringify({report,errors},null,2));
-  assert.equal(report.sourceCorridors,8);
+  assert.equal(report.sourceCorridors,9);
   assert.equal(report.connectorsAccepted,1);
   assert(report.meshParent);
   assert.equal(report.startToSurveyEnd,0);
   assert.equal(report.blocked,0);
   assert.equal(report.submerged,0);
   assert(report.safeSamples>=45);
-  assert.equal(report.radarPaths,9);
+  assert.equal(report.radarPaths,10);
   assert(report.radarDrawn>1);
   assert(report.physicalDrive.toDistance<3.4,
     'real car could not reach the north grid via the new street: '+
