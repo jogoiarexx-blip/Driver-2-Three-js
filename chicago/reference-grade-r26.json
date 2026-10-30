@@ -1,0 +1,144 @@
+{
+  "format": "Driver2ChicagoPS1GradeEvidenceR26",
+  "sourceSurveySHA256": "a94e6e47cb22066f671abe2d5547cf9f96391b874c5fb08229ed4773cc25ba50",
+  "sourceTriangles": 1544872,
+  "sourceSectors": 54,
+  "cellsStacked": 596,
+  "nodeCounts": {
+    "single-surface": 2683,
+    "nearby": 488,
+    "unknown": 44,
+    "stacked": 15
+  },
+  "edgeCounts": {
+    "incomplete-observation": 1559,
+    "single-level-evidence": 2665,
+    "multi-level-conflict": 55
+  },
+  "pavingCounts": {
+    "strong": 8,
+    "medium": 317,
+    "review": 2866,
+    "reject": 1088
+  },
+  "gradeGuardCandidateCount": 218,
+  "conflictEdgeIds": [
+    281,
+    292,
+    317,
+    319,
+    320,
+    360,
+    365,
+    367,
+    368,
+    744,
+    819,
+    821,
+    874,
+    891,
+    896,
+    906,
+    974,
+    989,
+    1014,
+    1015,
+    1016,
+    1083,
+    1085,
+    1557,
+    1650,
+    1748,
+    1766,
+    1778,
+    1782,
+    1783,
+    1903,
+    1952,
+    1953,
+    2006,
+    2031,
+    2032,
+    2053,
+    2054,
+    2058,
+    2142,
+    2147,
+    2148,
+    2149,
+    2150,
+    2170,
+    2171,
+    2172,
+    2987,
+    3582,
+    3610,
+    3654,
+    3655,
+    4241,
+    4243,
+    4244
+  ],
+  "stackedNodeIds": [
+    230,
+    274,
+    601,
+    668,
+    751,
+    1304,
+    1308,
+    1429,
+    1511,
+    1584,
+    1585,
+    1598,
+    1599,
+    2713,
+    3197
+  ],
+  "existingReferenceRoutes": {
+    "r23": [
+      {
+        "id": 1822,
+        "status": "single-level-evidence"
+      },
+      {
+        "id": 1777,
+        "status": "single-level-evidence"
+      },
+      {
+        "id": 1762,
+        "status": "single-level-evidence"
+      },
+      {
+        "id": 1650,
+        "status": "multi-level-conflict"
+      },
+      {
+        "id": 1557,
+        "status": "multi-level-conflict"
+      },
+      {
+        "id": 1550,
+        "status": "incomplete-observation"
+      }
+    ],
+    "r25": [
+      {
+        "id": 1520,
+        "status": "incomplete-observation"
+      },
+      {
+        "id": 1437,
+        "status": "incomplete-observation"
+      },
+      {
+        "id": 1017,
+        "status": "incomplete-observation"
+      }
+    ]
+  },
+  "junctionsCertified": false,
+  "wholeMapCertified": false,
+  "note": "Conflicts from coincident source pavement at multiple heights; may include non-road surfaces. Do not create a navigable 2D intersection."
+}
