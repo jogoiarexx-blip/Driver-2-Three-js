@@ -17,6 +17,7 @@ on:
       - 'tests/chicago-r7-real-driving-replay.cjs'
       - 'tests/chicago-r22-*'
       - 'tests/chicago-r23-*'
+      - 'tests/chicago-r25-*'
       - 'tests/chicago-r7-junctions-browser.cjs'
       - 'js/world/chicago-goose-island-junctions.js'
       - 'js/world/chicago-goose-island-north-yard.js'
@@ -90,6 +91,8 @@ jobs:
         run: node --test tests/chicago-r22-source-street-network.test.cjs
       - name: R23 verificar seis arestas originais, escala e emenda à R20
         run: node --test tests/chicago-r23-source-extension.test.cjs
+      - name: R25 verificar ramificação leste, largura e origem da malha PS1
+        run: node --test tests/chicago-r25-eastern-fork.test.cjs
       - name: Certificar desempenho e descarte de chunks
         run: node --test tests/district-visibility.test.cjs
       - name: Certificar Driving Games, missões de Vegas e Rio e spatial hash
@@ -128,6 +131,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r23-source-driving-browser.cjs
+      - name: R25 percorrer a bifurcação PS1 e validar carro, água e colisões
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r25-eastern-fork-browser.cjs
       - name: Validar cinco modelos de pedestres e troca Chicago/Havana
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
