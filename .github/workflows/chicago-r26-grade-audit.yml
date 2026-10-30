@@ -1,0 +1,67 @@
+name: Driver 2 - Chicago R26 - Alturas e cruzamentos originais PS1
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'chicago/chunks/**'
+      - 'chicago/manifest.json'
+      - 'chicago/reference-network.json'
+      - 'chicago/reference-street-survey.json'
+      - 'js/world/chicago-grade-guard-r26.js'
+      - 'tools/chicago-r26-grade-audit.cjs'
+      - 'tests/chicago-r26-*'
+      - '.github/workflows/chicago-r26-grade-audit.yml'
+  pull_request:
+    paths:
+      - 'chicago/chunks/**'
+      - 'chicago/manifest.json'
+      - 'chicago/reference-network.json'
+      - 'chicago/reference-street-survey.json'
+      - 'js/world/chicago-grade-guard-r26.js'
+      - 'tools/chicago-r26-grade-audit.cjs'
+      - 'tests/chicago-r26-*'
+      - '.github/workflows/chicago-r26-grade-audit.yml'
+permissions:
+  contents: read
+jobs:
+  source-grades:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: R26 testar conflitos de viadutos e rampas no grafo 2D
+        run: node --test tests/chicago-r26-grade-guard.test.cjs
+      - name: Ler 54 GLBs reais e cruzar alturas com 4279 conexões
+        run: node tools/chicago-r26-grade-audit.cjs qa-artifacts/chicago-r26/grade-evidence.json
+      - name: Verificar integridade do relatório e das rotas R23/R25
+        run: |
+          node - <<'JS'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const a=JSON.parse(fs.readFileSync('qa-artifacts/chicago-r26/grade-evidence.json'));
+          assert.equal(a.tilesRead,54);
+          assert.equal(a.graphEdges,4279);
+          assert.equal(a.graphNodes,3230);
+          assert.equal(a.sourceRaster.trianglesRead,1544872);
+          assert.equal(a.existingReferenceRoutes.r23.length,6);
+          assert.equal(a.existingReferenceRoutes.r25.length,3);
+          assert(!a.gradedIntersectionsCertified);
+          assert(!a.sourceRoadCertified);
+          assert(!a.trafficRewired);
+          assert(a.sourceRaster.cellsOccupied>1000);
+          console.log('R26 verification',JSON.stringify({
+            pixels:a.sourceRaster.cellsOccupied,stacked:a.sourceRaster.cellsStacked,
+            nodes:a.nodeCounts,edges:a.edgeCounts,
+            candidates:a.gradeGuardCandidates.length
+          }));
+          JS
+      - name: Preservar mapa de alturas, cruzamentos incertos e classificação de ruas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r26-ps1-original-height-audit
+          path: qa-artifacts/chicago-r26/
+          retention-days: 30
