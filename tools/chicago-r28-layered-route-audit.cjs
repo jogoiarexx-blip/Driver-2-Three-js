@@ -77,6 +77,7 @@ function build(output='qa-artifacts/chicago-r28/layered-review-routes.json'){
         certifiedRoads:0,
         output:path.relative(root,destination)
     }));
+    console.log('CHICAGO_R28_COMPACT '+JSON.stringify(compact));
     return {payload,compact};
 }
 if(require.main===module)build(process.argv[2]||
