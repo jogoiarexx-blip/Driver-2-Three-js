@@ -90,8 +90,11 @@ class DriverVehicleMount {
             from,near,seat,stand,originalCar:engine.playerCar
         };
         if(kind==='enter')engine.tanner.setVisible(true);
-        else engine.tanner.setVisible(bike&&
-            engine.tanner.motorcycleVehicle===vehicle);
+        else {
+            engine.tanner.setVisible(bike&&
+                engine.tanner.motorcycleVehicle===vehicle);
+            if(bike)engine.tanner.motorcycleExitBlend=1;
+        }
         return true;
     }
     static setActor(engine,p,heading,style,kind,t,dt,side=-1,groundClamp=true){
@@ -177,6 +180,10 @@ class DriverVehicleMount {
                 }else engine.tanner.setVisible(false);
             }
         }else{
+            // Suaviza a liberação das mãos/pés sem atravessar o banco.
+            if(s.bike&&t<.16&&
+                engine.tanner.motorcycleVehicle===s.vehicle)
+                engine.tanner.motorcycleExitBlend=1-this.ease(t/.16);
             if(t>=.16&&s.bike&&
                 engine.tanner.motorcycleVehicle===s.vehicle)
                 engine.tanner.detachFromMotorcycle?.();
