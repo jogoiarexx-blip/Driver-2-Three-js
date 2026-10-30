@@ -125,7 +125,7 @@ function inspectTile(file,raster){
     raster.pixelsHit+=hit;
     return {triangles,selected:accepted,overdrawCells:hit};
 }
-function build(root=Root,outFile='qa-artifacts/chicago-r26/grade-evidence.json'){
+function build(root=Root,outFile='qa-artifacts/chicago-r26/grade-evidence.json',opts={}){
     const manifest=JSON.parse(fs.readFileSync(path.join(root,'chicago/manifest.json'),'utf8'));
     const graph=JSON.parse(fs.readFileSync(path.join(root,'chicago/reference-network.json'),'utf8'));
     const survey=JSON.parse(fs.readFileSync(path.join(root,'chicago/reference-street-survey.json'),'utf8'));
@@ -214,7 +214,7 @@ function build(root=Root,outFile='qa-artifacts/chicago-r26/grade-evidence.json')
         junctionsCertified:false,wholeMapCertified:false,
         note:'Conflicts from coincident source pavement at multiple heights; may include non-road surfaces. Do not create a navigable 2D intersection.'
     }));
-    return summary;
+    return opts.includeRaster?{summary,raster:r,grade,paving:paved}:summary;
 }
 if(require.main===module)build(Root,process.argv[2]||
     'qa-artifacts/chicago-r26/grade-evidence.json');
