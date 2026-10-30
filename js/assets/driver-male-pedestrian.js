@@ -198,6 +198,7 @@ class DriverMalePedestrian {
         if(this.current===ped)return true;
         if(ped.glbFemale||ped.glbMale||ped.glbVariant)return false;
         this.release();
+        this.manager.uploadedCrowd?.releaseSlot(this.config.pedestrianIndex);
         for(const child of ped.mesh.children)child.visible=false;
         ped.mesh.add(this.container);
         ped[this.config.tag]=true;
