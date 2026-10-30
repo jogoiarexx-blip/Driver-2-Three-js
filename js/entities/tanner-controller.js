@@ -14,6 +14,8 @@
                 this.motorcycleVehicle=null;
                 this.motorcycleDynamics=null;
                 this.motorcycleContactReport=null;
+                this.motorcycleContactBlend=0;
+                this.motorcycleExitBlend=1;
 
                 this.buildTannerMesh();
                 this.loadPlayerModel();
@@ -203,6 +205,8 @@
                 this.motorcycleVehicle=vehicle;
                 this.motorcycleDynamics=null;
                 this.motorcycleContactReport=null;
+                this.motorcycleContactBlend=0;
+                this.motorcycleExitBlend=1;
                 this.group.userData.driverPlayerRider=true;
                 this.group.visible=true;
                 this.applyVehicleTransitionPose('motorcycle','ride',1,0);
@@ -216,8 +220,14 @@
                 if(typeof DriverMotorcycleContactIK!=='undefined'){
                     this.motorcycleDynamics=DriverMotorcycleContactIK.signals(
                         this.motorcycleDynamics,this.motorcycleVehicle,seconds);
+                    // A postura de pilotagem entra em ~240ms e é retirada
+                    // gradualmente antes da perna deixar o banco.
+                    this.motorcycleContactBlend=Math.min(1,
+                        (this.motorcycleContactBlend||0)+seconds*4.2);
                     this.motorcycleContactReport=DriverMotorcycleContactIK.apply(
-                        this,this.motorcycleVehicle,this.motorcycleDynamics);
+                        this,this.motorcycleVehicle,this.motorcycleDynamics,
+                        this.motorcycleContactBlend*
+                        Math.max(0,Math.min(1,this.motorcycleExitBlend)));
                 }
             }
 
@@ -231,6 +241,8 @@
                 this.motorcycleVehicle=null;
                 this.motorcycleDynamics=null;
                 this.motorcycleContactReport=null;
+                this.motorcycleContactBlend=0;
+                this.motorcycleExitBlend=1;
                 this.group.rotation.set(0,0,0);
                 this.group.visible=false;
                 return true;
