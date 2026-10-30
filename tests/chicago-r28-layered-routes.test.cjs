@@ -59,6 +59,8 @@ test('R28 rejects noisy or unknown node heights instead of inferring a road',()=
 test('R28 rejects excessive grade slope even if below absolute endpoint limit',()=>{
     const {graph,grade,paving}=fixture();
     grade.nodes[1].yMin=.15;grade.nodes[1].yMax=.15;
+    // Only the 0->1 segment is a steep slope; 1->2 is level.
+    grade.nodes[2].yMin=.15;grade.nodes[2].yMax=.15;
     const m=Routes.build(graph,grade,paving,{maxSlope:.04});
     assert.equal(m.rejected.slope,1);
     assert.equal(Routes.route(m,0,2),null);
