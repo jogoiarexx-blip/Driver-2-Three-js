@@ -143,6 +143,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r36-north-link-browser.cjs
+      - name: R37 dirigir pelo ramal norte
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r37-north-branch-browser.cjs
       - name: Validar cinco modelos de pedestres e troca Chicago/Havana
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/

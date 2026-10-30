@@ -18,6 +18,11 @@ class DriverChicagoNorthRoadsideR32 {
      for(const side of [-1,1]){
       const x=cx-side*dz/len*17,z=cz+side*dx/len*17,half=5.5;
       if(z-half<440||x-half<bounds.minX||x+half>bounds.maxX||z-half<bounds.minZ||z+half>bounds.maxZ)continue;
+      const junction=city.chicagoReferenceNorthBranchR37;
+      if(junction?.junctionRadius){const j=junction.points[0];
+       const distance=Math.hypot(Math.max(0,Math.abs(x-j.x)-half),Math.max(0,Math.abs(z-j.z)-half));
+       if(distance<=junction.junctionRadius+1)continue;
+      }
       const probes=[[x,z],[x-half,z-half],[x-half,z+half],[x+half,z-half],[x+half,z+half]];
       if((city.buildingBoxes||[]).some(b=>x+half>b.minX&&x-half<b.maxX&&z+half>b.minZ&&z-half<b.maxZ))continue;
       if(probes.some(([px,pz])=>city.isPointBlocked(px,pz,1,0)))continue;

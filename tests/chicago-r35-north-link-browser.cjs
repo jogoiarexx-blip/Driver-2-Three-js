@@ -140,7 +140,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
    JSON.stringify({report,errors},null,2)+'\n');
   assert(report.loaded);
   assert.deepEqual(report.sourceEdgeIds,require('../chicago/reference-north-link-r35.json').sourceEdgeIds);
-  assert.equal(report.sourceCorridors,12);
+  assert.equal(report.sourceCorridors,13);
   assert.equal(report.classificationCertified,false);
   assert.equal(report.originalPlacementCertified,false);
   assert(report.footprint.samples>100);

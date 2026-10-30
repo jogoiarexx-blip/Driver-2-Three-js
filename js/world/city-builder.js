@@ -152,6 +152,7 @@
                 this.chicagoReferenceEasternForkR25=null;
                 this.chicagoReferenceNorthLinkR35=null;
                 this.chicagoReferenceNorthLinkR36=null;
+                this.chicagoReferenceNorthBranchR37=null;
                 this.chicagoPS1StreetNetwork=null;
                 this.chicagoSourceGround=null;
                 this.chicagoReferenceNorthStem=null;
@@ -463,6 +464,8 @@
                     DriverChicagoNorthLinkR35.prepare(this);
                 if(this.preset.id==='chicago' && typeof DriverChicagoNorthLinkR36!=='undefined')
                     DriverChicagoNorthLinkR36.prepare(this);
+                if(this.preset.id==='chicago' && typeof DriverChicagoNorthBranchR37!=='undefined')
+                    DriverChicagoNorthBranchR37.prepare(this);
                 // R22: liga a bifurcação observada ao eixo viário da
                 // cidade só se todo o corredor estiver livre e seco.
                 if(this.preset.id==='chicago' &&

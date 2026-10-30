@@ -26,3 +26,4 @@ test('corredor norte recebe ocupação contínua sem lotes sobrepostos',()=>{
  const lots=Blocks.plan(city,paths);assert(lots.length>=26,`poucos lotes: ${lots.length}`);
  for(let i=0;i<lots.length;i++)for(let j=0;j<i;j++)assert(!(Math.abs(lots[i].x-lots[j].x)<11&&Math.abs(lots[i].z-lots[j].z)<11));
 });
+test('lotes deixam livre o pavimento alargado do novo entroncamento',()=>{const city={preset:{id:'chicago'},isWaterAt:()=>false,isPointBlocked:()=>false,buildingBoxes:[],chicagoReferenceNorthBranchR37:{junctionRadius:11,points:[{x:0,z:465}]}};const lots=Blocks.plan(city,[{points:[{x:0,z:440},{x:0,z:540}],width:8}]);for(const l of lots){const d=Math.hypot(Math.max(0,Math.abs(l.x)-5.5),Math.max(0,Math.abs(l.z-465)-5.5));assert(d>12);}});
