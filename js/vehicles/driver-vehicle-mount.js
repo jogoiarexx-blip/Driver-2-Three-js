@@ -48,10 +48,17 @@ class DriverVehicleMount {
         const projection=actor?
             (actor.x-vehicle.x)*Math.cos(h)-(actor.z-vehicle.z)*Math.sin(h):0;
         const first=kind==='enter'?(projection>=0?1:-1):-1;
+        // Procura também junto às partes dianteira/traseira do veículo.
+        // Em vagas apertadas, limitar a busca ao meio da porta prendia o
+        // jogador no carro, apesar de existir calçada desimpedida.
         for(const side of [first,-first]){
             for(const extra of [0,.55,1.1]){
-                const pt=this.position(vehicle,side,distance+extra,motorcycle?-.18:0);
-                if(this.permitted(engine.city,pt))return {...pt,side};
+                for(const forwardOffset of [0,-.85,.85,-1.75,1.75]){
+                    const forward=(motorcycle?-.18:0)+forwardOffset;
+                    const pt=this.position(vehicle,side,distance+extra,forward);
+                    if(this.permitted(engine.city,pt))
+                        return {...pt,side,forwardOffset};
+                }
             }
         }
         return null;
@@ -70,7 +77,8 @@ class DriverVehicleMount {
             {x:source.x,y:source.y,z:source.z,heading:engine.tanner.heading}:
             (bike?this.ridingSeat(vehicle):
                 this.position(vehicle,stand.side,.28,.15));
-        const near=this.position(vehicle,stand.side,bike?.68:1.18,bike?-.32:.12);
+        const near=this.position(vehicle,stand.side,bike?.68:1.18,
+            (bike?-.32:.12)+(stand.forwardOffset||0)*.55);
         const seat=bike?this.ridingSeat(vehicle):
             this.position(vehicle,stand.side,.16,.12);
         vehicle.speed=0;
