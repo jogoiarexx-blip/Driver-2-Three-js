@@ -9,7 +9,7 @@ small{color:#a8b7c6}button{background:#1e4571;border:1px solid #3f7295;color:whi
 </style></head><body><div id="view"></div>
 <section id="panel"><b>CHICAGO • ORIGINAL PS1</b><div>Pré-visualização geográfica da geometria enviada pelo usuário. Não é a cidade jogável nem altera as missões e a física do clone.</div>
 <small>Arraste para orbitar • Roda para zoom • WASD/setas para mover • Tecla 1: centro • Tecla 2: vista superior.</small>
-<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
+<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button><button id="review27" type="button">Revisar alertas R27</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="review27-audit" aria-live="polite" style="font-size:12px;color:#d6b4d7;margin-top:7px">R27: revisão de alturas no mesmo X/Z. Nenhum viaduto certificado.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
 <div id="footer">OBJ dividido em 54 setores • carregamento sob demanda • material faltante em roxo</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -163,6 +163,87 @@ gradeButton.addEventListener('click',async()=>{
    gradeButton.textContent='Tentar novamente';
  }finally{gradeLoading=false;gradeButton.disabled=false;}
 });
+// R27: separate confirmed source height evidence from only shared node IDs.
+let review27Overlay=null,review27Loading=false;
+const review27Button=document.getElementById('review27'),
+      review27Status=document.getElementById('review27-audit');
+review27Button.addEventListener('click',async()=>{
+ if(review27Overlay){
+  review27Overlay.visible=!review27Overlay.visible;
+  review27Button.textContent=review27Overlay.visible?
+    'Ocultar revisão R27':'Revisar alertas R27';
+  return;
+ }
+ if(review27Loading)return;
+ review27Loading=true;review27Button.disabled=true;
+ review27Status.textContent='Lendo os 55 casos investigados da geometria PS1…';
+ try{
+   const [graph,data]=await Promise.all([
+     './chicago/reference-network.json',
+     './chicago/reference-grade-r27.json'
+   ].map(async url=>{
+      const res=await fetch(url);
+      if(!res.ok)throw Error('HTTP '+res.status+': '+url);
+      return res.json();
+   }));
+   if(data.sourceSurveySHA256!==graph.sourceSHA256)
+     throw Error('Dados R27 e rede original têm origens diferentes');
+   if(data.records?.length!==55)
+     throw Error('O inventário R27 não inclui os 55 conflitos');
+   const kinds={
+     'localized-or-ambiguous-overlap':[],
+     'shared-node-conflict-without-edge-overlap':[],
+     'sustained-separated-height-evidence':[]
+   };
+   for(const record of data.records){
+     const output=kinds[record.kind];
+     if(!output)throw Error('Classe R27 desconhecida: '+record.kind);
+     const points=graph.edges[record.id]?.pointsOBJ||[];
+     for(let j=1;j<points.length;j++)
+       for(const p of [points[j-1],points[j]])
+         output.push(p[0],.31,p[1]);
+   }
+   review27Overlay=new THREE.Group();
+   review27Overlay.name='chicago-r27-original-height-review';
+   review27Overlay.userData.visualOnly=true;
+   review27Overlay.userData.certifiedOverpasses=0;
+   const colors={
+     'localized-or-ambiguous-overlap':0xffba70,
+     'shared-node-conflict-without-edge-overlap':0xbb86e7,
+     'sustained-separated-height-evidence':0xf47171
+   };
+   for(const [kind,positions] of Object.entries(kinds)){
+     if(!positions.length)continue;
+     const geo=new THREE.BufferGeometry();
+     geo.setAttribute('position',
+       new THREE.Float32BufferAttribute(positions,3));
+     const lines=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({
+       color:colors[kind],depthTest:false,transparent:true,opacity:.96
+     }));
+     lines.name='r27-'+kind;lines.renderOrder=12;
+     review27Overlay.add(lines);
+   }
+   stream.root.add(review27Overlay);
+   // The layers describe the same edges. Avoid multiple competing colors.
+   if(gradeOverlay?.visible){
+      gradeOverlay.visible=false;
+      gradeButton.textContent='Mostrar conflitos de altura';
+   }
+   review27Button.textContent='Ocultar revisão R27';
+   const counts=data.conflictBreakdown;
+   review27Status.textContent='R27: '+counts.localizedOrAmbiguous+
+     ' sobreposições locais (laranja), '+
+     counts.sharedNodeNoLocalOverlap+
+     ' alertas somente no nó (roxo), '+
+     counts.sustainedSeparatedHeight+
+     ' separações persistentes. R23 e R25 continuam sem homologação de nível. '+
+     'Nenhum viaduto ou cruzamento certificado.';
+ }catch(error){
+   review27Status.textContent='Falha ao abrir análise R27: '+
+     String(error.message||error);
+   review27Button.textContent='Tentar novamente';
+ }finally{review27Loading=false;review27Button.disabled=false;}
+});
 let drag=false,px=0,py=0;
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);
@@ -191,7 +272,7 @@ let then=performance.now();function frame(now){requestAnimationFrame(frame);
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 addEventListener('pagehide',()=>{
- for(const group of [evidenceOverlay,gradeOverlay]){
+ for(const group of [evidenceOverlay,gradeOverlay,review27Overlay]){
   if(!group)continue;
   group.traverse(obj=>{obj.geometry?.dispose?.();obj.material?.dispose?.();});
   group.parent?.remove(group);
