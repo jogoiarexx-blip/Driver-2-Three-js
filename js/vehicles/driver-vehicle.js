@@ -369,10 +369,17 @@
 
                 // Ajuste ao chassi físico, sem criar um segundo carro sobre o original.
                 const bike=this.bodyStyle==='motorcycle';
-                const width = bike?1.05:2.45;
-                const length = bike?2.8:this.bodyStyle === 'truck' ? 6.6 : 5.15;
-                const height = bike?1.5:this.bodyStyle === 'truck' ? 3.3 : 2.05;
+                const bus=this.bodyStyle==='bus';
+                const width = bike?1.05:bus?2.72:2.45;
+                const length = bike?2.8:bus?8.00:this.bodyStyle === 'truck' ? 6.6 : 5.15;
+                const height = bike?1.5:bus?3.45:this.bodyStyle === 'truck' ? 3.3 : 2.05;
+                // O GLB do ônibus enviado é mais curto nas proporções
+                // originais: encaixar largura, altura e comprimento no collider
+                // existente evita atravessar paredes ou rodas afundadas.
                 const scale = Math.min(width / size.x, length / size.z, height / size.y);
+                const sx=bus?width/size.x:scale;
+                const sy=bus?height/size.y:scale;
+                const sz=bus?length/size.z:scale;
                 const preserved = [this.sirenAssembly, this.targetMarker,
                     this.lightsGroup, this.damageGroup,
                     ...this.chassisTilt.children.filter(
@@ -393,11 +400,12 @@
                 this.frontBumperMesh=null;
                 this.rearBumperMesh=null;
                 this.chassisTilt.scale.set(1, 1, 1);
-                modelScene.scale.setScalar(scale);
+                if(bus)modelScene.scale.set(sx,sy,sz);
+                else modelScene.scale.setScalar(scale);
                 modelScene.position.set(
-                    -(box.min.x + box.max.x) * 0.5 * scale,
-                    (bike||this.uploadedModel?0.03:0.34) - box.min.y * scale,
-                    -(box.min.z + box.max.z) * 0.5 * scale
+                    -(box.min.x + box.max.x) * 0.5 * sx,
+                    (bike||this.uploadedModel?0.03:0.34) - box.min.y * sy,
+                    -(box.min.z + box.max.z) * 0.5 * sz
                 );
                 modelScene.traverse(obj => {
                     if (obj.isMesh) {
