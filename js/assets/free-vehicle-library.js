@@ -30,7 +30,8 @@ class FreeVehicleAssets {
         if (vehicle.isSecret) return 'race.glb';
         if (vehicle === this.engine.playerCar) return 'sedan-sports.glb';
         if (vehicle.bodyStyle === 'truck') return 'truck.glb';
-        // Os modelos especiais de ônibus e limusine continuam procedurais.
+        // O ônibus escolar é carregado via DriverUploadedVehicles.
+        // Em ausência do GLB, sua própria malha física continua disponível.
         if (vehicle.bodyStyle === 'bus' || vehicle.bodyStyle === 'limo') return null;
         if (vehicle.name.includes('COUPE')) return 'hatchback-sports.glb';
         return 'sedan.glb';
