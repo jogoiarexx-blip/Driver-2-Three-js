@@ -41,10 +41,17 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
       parent:g.tanner.group.parent===g.scene,
       rigApplied:originalRig.applied,
       phase:g.vehicleMountTransition?.progress};
-   for(let i=0;i<70;i++){
+   for(let i=0;i<37;i++){
     DriverVehicleMount.update(g,1/60);
     DriverUploadedVehicles.updateRiders(g);
    }
+   const beforeRide=g.tanner.group.getWorldPosition(new THREE.Vector3());
+   for(let i=0;i<35;i++){
+    DriverVehicleMount.update(g,1/60);
+    DriverUploadedVehicles.updateRiders(g);
+   }
+   const afterRide=g.tanner.group.getWorldPosition(new THREE.Vector3());
+   const mountPositionSnap=beforeRide.distanceTo(afterRide);
    const high=originalRig.found.rightUpLeg;
    const delta=Math.abs(high.node.quaternion.x-high.rotation.x)+
        Math.abs(high.node.quaternion.z-high.rotation.z);
@@ -53,7 +60,7 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
       riderHidden:!v.motorcycleRider.visible,
       TannerVisible:g.tanner.group.visible,
       owner:g.tanner.group.parent===v.chassisTilt,
-      rigDelta:delta
+      rigDelta:delta,mountPositionSnap
    };
    const hip=originalRig.found.hips;
    const hipBefore=hip.node.position.y;
@@ -87,7 +94,16 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
    const exit=DriverVehicleMount.start(g,v,'exit');
    const riderVisibleAtExitStart=g.tanner.group.visible;
    const attachedAtStart=g.tanner.group.parent===v.chassisTilt;
-   for(let i=0;i<17;i++){
+   for(let i=0;i<12;i++){
+    DriverVehicleMount.update(g,1/60);
+    DriverUploadedVehicles.updateRiders(g);
+   }
+   const beforeSwing=g.tanner.group.getWorldPosition(new THREE.Vector3());
+   DriverVehicleMount.update(g,1/60);
+   DriverUploadedVehicles.updateRiders(g);
+   const afterSwing=g.tanner.group.getWorldPosition(new THREE.Vector3());
+   const dismountPositionSnap=beforeSwing.distanceTo(afterSwing);
+   for(let i=0;i<4;i++){
     DriverVehicleMount.update(g,1/60);
     DriverUploadedVehicles.updateRiders(g);
    }
@@ -97,7 +113,7 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
     DriverUploadedVehicles.updateRiders(g);
    }
    const dismounted={exit,attachedAtStart,riderVisibleAtExitStart,
-      detachedDuringSwing,mode:g.mode,
+      detachedDuringSwing,dismountPositionSnap,mode:g.mode,
       parent:g.tanner.group.parent===g.scene,visible:g.tanner.group.visible,
       noRider:!v.motorcycleRider.visible&&g.tanner.motorcycleVehicle===null,
       restored:Math.abs(hip.node.position.y-hip.position.y)<1e-5};
@@ -112,6 +128,8 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
   assert(result.mounted.attached&&result.mounted.owner&&result.mounted.TannerVisible);
   assert(result.mounted.riderHidden,'must not draw a second procedural Tanner');
   assert(result.mounted.rigDelta>.05,'right leg needs real skeletal rotation');
+  assert(result.mounted.mountPositionSnap<.15,
+    'world position jumps when changing from mounting to riding');
   assert(result.mounted.drift<1e-4,'repeated ride poses accumulated deformation');
   assert(result.mounted.contactsImproved>=2,
     'IK must measurably move hands/feet closer to controls: '+JSON.stringify(result.mounted.contactReport));
@@ -119,6 +137,8 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
   assert(result.mounted.braking>.01,'rider must react to braking');
   assert(result.mounted.survivedRebuild&&result.mounted.replacementAccepted&&
     result.mounted.survivedGLBSwap,'rider must survive vehicle mesh replacement');
+  assert(result.dismounted.dismountPositionSnap<.22,
+    'world position jumps at dismount leg release');
   assert(result.dismounted.exit&&result.dismounted.attachedAtStart&&
     result.dismounted.riderVisibleAtExitStart&&result.dismounted.detachedDuringSwing);
   assert.equal(result.dismounted.mode,'on_foot');
