@@ -30,13 +30,14 @@ class DriverChicagoNeighborhoods {
         canvas.width=512;canvas.height=128;
         const ctx=canvas.getContext('2d');
         if(!ctx)return null;
-        ctx.fillStyle='rgba(9,20,35,0.90)';
+        // Placa urbana discreta; evitar os letreiros flutuantes e cores
+        // neon que não pertencem à Chicago do PS1.
+        ctx.fillStyle='rgba(26,35,39,0.94)';
         ctx.fillRect(2,14,508,100);
-        ctx.fillStyle='#'+color.toString(16).padStart(6,'0');
-        ctx.fillRect(2,14,10,100);
+        ctx.fillStyle='#a5b6b0';
         ctx.fillRect(2,14,508,4);
         ctx.fillRect(2,110,508,4);
-        ctx.fillStyle='#f8fafc';
+        ctx.fillStyle='#f2eee2';
         ctx.font='bold '+(text.length>14?29:35)+'px sans-serif';
         ctx.textAlign='center';ctx.textBaseline='middle';
         ctx.fillText(text,266,63,470);
@@ -46,7 +47,7 @@ class DriverChicagoNeighborhoods {
             map:texture,transparent:true,depthWrite:false
         }));
         sprite.name='chicago-sign-'+text.toLowerCase().replace(/[^a-z0-9]+/g,'-');
-        sprite.scale.set(42,10.5,1);
+        sprite.scale.set(15.5,3.6,1);
         sprite.userData.chicagoVisualOnly=true;
         return sprite;
     }
@@ -55,12 +56,14 @@ class DriverChicagoNeighborhoods {
         const parts=[];
         let labels=0;
         for(const d of this.DISTRICTS) {
-            // Sinal suspenso, sem collider e fora das zonas de missão.
-            parts.push([d.x,4.2,d.z,.85,8.0,.85,d.color,true]);
-            parts.push([d.x,8.35,d.z,3.8,.48,3.8,d.color,true]);
+            // No canto da quadra: placa baixa de bairro, não um farol
+            // colorido de 14 m no centro da avenida.
+            const x=d.x+18,z=d.z+18;
+            parts.push([x,2.4,z,.17,4.7,.17,0x637475,false]);
+            parts.push([x,4.85,z,3.2,.13,.32,0xb2b9b4,false]);
             const label=this.label(d.name,d.color);
             if(label){
-                label.position.set(d.x,14,d.z);
+                label.position.set(x,5.25,z);
                 root.add(label);
                 labels++;
             }
@@ -110,8 +113,8 @@ class DriverChicagoNeighborhoods {
         DriverSpecialStructures.pack(root,parts,'chicago-wrigley-visual-trim');
         const title=this.label('WRIGLEY FIELD',0x86efac);
         if(title){
-            title.position.set(x,19.5,z-19);
-            title.scale.set(35,8,1);
+            title.position.set(x,7.1,z-19.75);
+            title.scale.set(18,4.1,1);
             root.add(title);
         }
         return {x,z,enhanced:true};
@@ -165,8 +168,8 @@ class DriverChicagoNeighborhoods {
         }
         const title=this.label('NAVY PIER',0x38bdf8);
         if(title){
-            title.position.set(370,35,-40);
-            title.scale.set(32,8,1);
+            title.position.set(344,5.7,-32.0);
+            title.scale.set(17,3.8,1);
             root.add(title);
         }
         return {x:379,z:-40,wheel,parts:parts.length};
