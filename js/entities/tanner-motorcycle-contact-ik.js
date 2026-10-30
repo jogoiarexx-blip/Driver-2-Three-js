@@ -89,16 +89,17 @@ class DriverMotorcycleContactIK {
         end.getWorldPosition(e);
         return {before:initialDistance,after:e.distanceTo(target),skipped:false};
     }
-    static apply(tanner,vehicle,signals){
+    static apply(tanner,vehicle,signals,blend=1){
         const rig=tanner?.vehicleBoneRig;
         if(!rig||!vehicle?.chassisTilt||
            typeof THREE==='undefined')return null;
         const worldTarget=new THREE.Vector3();
         const contacts=this.contacts(vehicle,signals);
-        this.bend(rig,'spine',signals.pitch*.36,0,signals.lean*.45);
-        this.bend(rig,'spine1',signals.pitch*.34,0,signals.lean*.50);
-        this.bend(rig,'spine2',signals.pitch*.30,0,signals.lean*.35);
-        this.bend(rig,'hips',-signals.pitch*.2,0,-signals.lean*.22);
+        const weight=this.clamp(blend,0,1);
+        this.bend(rig,'spine',signals.pitch*.36*weight,0,signals.lean*.45*weight);
+        this.bend(rig,'spine1',signals.pitch*.34*weight,0,signals.lean*.50*weight);
+        this.bend(rig,'spine2',signals.pitch*.30*weight,0,signals.lean*.35*weight);
+        this.bend(rig,'hips',-signals.pitch*.2*weight,0,-signals.lean*.22*weight);
         // Keep handlebars and pegs in the vehicle's coordinate frame even
         // when chassis suspension, tilt or root heading changes.
         const pairs=[
@@ -112,13 +113,13 @@ class DriverMotorcycleContactIK {
             worldTarget.set(point.x,point.y,point.z);
             vehicle.chassisTilt.localToWorld(worldTarget);
             report[roles[2]]=this.solve(rig,roles,worldTarget,
-                tanner.group,weight);
+                tanner.group,weight*blend);
         }
         // Small wrist/ankle finish; no free-standing hand or foot meshes.
-        this.bend(rig,'leftHand',0,0,-signals.steer*.035);
-        this.bend(rig,'rightHand',0,0,-signals.steer*.035);
-        this.bend(rig,'leftFoot',signals.brake*.035,0,0);
-        this.bend(rig,'rightFoot',signals.brake*.035,0,0);
+        this.bend(rig,'leftHand',0,0,-signals.steer*.035*weight);
+        this.bend(rig,'rightHand',0,0,-signals.steer*.035*weight);
+        this.bend(rig,'leftFoot',signals.brake*.035*weight,0,0);
+        this.bend(rig,'rightFoot',signals.brake*.035*weight,0,0);
         return report;
     }
 }
