@@ -84,9 +84,22 @@ class DriverChicagoCityPlan {
         const district=this.districtAt(x,z),kind=district.kind;
         if(['park','pier','airfield'].includes(kind))return [];
         const r=this.random(x,z,9),lots=[];
-        const add=(dx,dz,w,d,h)=>lots.push({x:x+dx,z:z+dz,width:w,
-            depth:d,height:h,palette:Math.floor(r*4)%4,
-            kind,district:district.id,planned:true});
+        // A textura principal segue o bairro: tijolo nos quarteirões
+        // residenciais/industriais e pedra/aço nos prédios do Loop.
+        const localPalettes={
+            residential:[2,2,1,2],
+            industrial:[2,1,2,1],
+            commercial:[2,0,2,1],
+            apartment:[1,0,1,3],
+            tower:[0,3,1,0]
+        };
+        const add=(dx,dz,w,d,h)=>{
+            const choices=localPalettes[kind]||localPalettes.residential;
+            const variation=Math.floor(this.random(x+dx,z+dz,45)*choices.length);
+            lots.push({x:x+dx,z:z+dz,width:w,
+                depth:d,height:h,palette:choices[variation],
+                kind,district:district.id,planned:true});
+        };
         if(kind==='residential'){
             // Dois conjuntos de casas geminadas e um pátio atravessável.
             for(const dx of [-13.5,0,13.5]){
