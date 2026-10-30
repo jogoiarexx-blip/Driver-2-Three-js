@@ -21,7 +21,7 @@ class DriverTannerGarage {
             name:str(item.name)||'VEÍCULO',
             color,
             bodyStyle,
-            uploadedModel:['pickup-new','pickup-old','motorcycle'].includes(item.uploadedModel)?item.uploadedModel:null,
+            uploadedModel:['pickup-new','pickup-old','motorcycle','school-bus'].includes(item.uploadedModel)?item.uploadedModel:null,
             maxSpeed:Math.max(18,Math.min(90,Number(item.maxSpeed)||52)),
             accel:Math.max(8,Math.min(60,Number(item.accel)||28)),
             custom:item.custom===true,
