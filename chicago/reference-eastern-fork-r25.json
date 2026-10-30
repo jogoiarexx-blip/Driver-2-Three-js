@@ -78,5 +78,6 @@
   "gradedJunctionsCertified": false,
   "missionsMigrated": false,
   "wholeMapCertified": false,
-  "caveat": "Extracted surface skeleton can include pavement other than roads; physical route is an adapted game-world reconstruction only. No source coordinates or overpass grades certified."
+  "caveat": "Extracted surface skeleton can include pavement other than roads; physical route is an adapted game-world reconstruction only. No source coordinates or overpass grades certified.",
+  "sourcePixels": []
 }
