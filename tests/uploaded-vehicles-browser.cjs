@@ -4,7 +4,9 @@ const DIR='qa-artifacts';fs.mkdirSync(DIR,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader']});
  const page=await browser.newPage({viewport:{width:1152,height:720}}),errors=[],requests=[],reports=[];
- page.on('pageerror',e=>errors.push(String(e)));page.on('request',r=>{if(/caminhonete|moto-otimizada|barco%20de%20pesca/.test(r.url()))requests.push(r.url());});
+ const hasBusAsset=fs.existsSync('assets/vehicles/onibus escolar.glb');
+ const verifyIds=['pickup-new','pickup-old','motorcycle',...(hasBusAsset?['school-bus']:[])];
+ page.on('pageerror',e=>errors.push(String(e)));page.on('request',r=>{if(/caminhonete|moto-otimizada|barco%20de%20pesca|onibus%20escolar/.test(r.url()))requests.push(r.url());});
  page.setDefaultTimeout(120000);
  try{
   await page.addInitScript(()=>localStorage.setItem('driver2-menu-preferences-v1',JSON.stringify({models:false,scanlines:false,reducedMotion:true})));
@@ -17,17 +19,20 @@ const DIR='qa-artifacts';fs.mkdirSync(DIR,{recursive:true});
    if(reports.length){assert(await page.evaluate(c=>window.DriverGame.requestCityChange(c),city));await page.waitForFunction(c=>window.DriverGame.currentCityKey===c&&window.DriverGame.city.ready,city);}
    await page.evaluate(()=>{window.DriverGame.isPaused=true;window.DriverGame.freeVehicleAssets.decorateFleet();});
    console.log('CITY',city,await page.evaluate(()=>({enabled:window.DriverGame.freeVehicleAssets.enabled,slots:window.DriverGame.vehicles.filter(v=>v.uploadedModel).map(v=>v.uploadedModel)})));
-   await page.waitForFunction(()=>window.DriverGame.vehicles.filter(v=>v.uploadedModel).length===3&&window.DriverGame.vehicles.filter(v=>v.uploadedModel).every(v=>v._uploadedCustomModel===v.uploadedModel));
+   await page.waitForFunction(ids=>{
+    const vehicles=window.DriverGame.vehicles.filter(v=>ids.includes(v.uploadedModel));
+    return vehicles.length===ids.length&&vehicles.every(v=>v._uploadedCustomModel===v.uploadedModel);
+   },verifyIds);
    if(city==='chicago')await page.waitForFunction(()=>window.DriverGame.freeVehicleAssets.uploaded.boat?.parent===window.DriverGame.city.cityGroup);
-   const report=await page.evaluate(()=>{
+   const report=await page.evaluate(hasBusAsset=>{
     const g=window.DriverGame,roster=g.freeVehicleAssets.uploaded;
     return {city:g.currentCityKey,states:{...roster.states},boat:roster.boat?.parent===g.city.cityGroup,
-     models:g.vehicles.filter(v=>v.uploadedModel).map(v=>{
+     models:g.vehicles.filter(v=>v.uploadedModel && (v.uploadedModel!=='school-bus'||hasBusAsset)).map(v=>{
       let maxTexture=0,meshes=0;v.chassisTilt.traverse(n=>{if(n.isMesh)meshes++;for(const m of (Array.isArray(n.material)?n.material:[n.material]).filter(Boolean))for(const t of Object.values(m))if(t?.isTexture&&t.image)maxTexture=Math.max(maxTexture,t.image.width||0,t.image.height||0);});
       return {id:v.uploadedModel,style:v.bodyStyle,meshes,maxTexture,blocked:g.city.isPointBlocked(v.x,v.z,1.55),water:g.city.isWaterAt(v.x,v.z),dimensions:DriverVehicleCollisions.dimensions(v)};
      })};
-   });
-   assert.equal(report.models.length,3);for(const m of report.models){assert(m.meshes>0);assert(m.maxTexture>0&&m.maxTexture<=1024);assert(!m.water&&!m.blocked,JSON.stringify(m));}
+   },hasBusAsset);
+   assert.equal(report.models.length,verifyIds.length);for(const m of report.models){assert(m.meshes>0);assert(m.maxTexture>0&&m.maxTexture<=1024);assert(!m.water&&!m.blocked,JSON.stringify(m));}
    assert.equal(report.boat,city==='chicago');reports.push(report);
    for(const id of ['pickup-new','pickup-old','motorcycle']){
     const drive=await page.evaluate(id=>{
@@ -54,11 +59,11 @@ const DIR='qa-artifacts';fs.mkdirSync(DIR,{recursive:true});
     await page.screenshot({path:`${DIR}/uploaded-${id}-${city}-${reports.length}.png`});
    }
    await page.evaluate(()=>{const g=window.DriverGame;for(const v of g.vehicles)v.root.visible=true;g.freeVehicleAssets.toggle();});
-   assert(await page.evaluate(()=>window.DriverGame.vehicles.filter(v=>v.uploadedModel).every(v=>!v._uploadedCustomModel)));
+   assert(await page.evaluate(ids=>window.DriverGame.vehicles.filter(v=>ids.includes(v.uploadedModel)).every(v=>!v._uploadedCustomModel),verifyIds));
    await page.evaluate(()=>window.DriverGame.freeVehicleAssets.toggle());
-   await page.waitForFunction(()=>window.DriverGame.vehicles.filter(v=>v.uploadedModel).every(v=>v._uploadedCustomModel===v.uploadedModel));
+   await page.waitForFunction(ids=>window.DriverGame.vehicles.filter(v=>ids.includes(v.uploadedModel)).every(v=>v._uploadedCustomModel===v.uploadedModel),verifyIds);
   }
-  assert.equal(requests.length,4,'Uploads must be downloaded once across toggles and city changes');assert.equal(new Set(requests).size,4);assert.equal(errors.length,0,errors.join('\n'));
+  assert.equal(requests.length,5,'Cinco GLBs conhecidos são solicitados no máximo uma vez durante trocas de mapa');assert.equal(new Set(requests).size,5);assert.equal(errors.length,0,errors.join('\n'));
   fs.writeFileSync(`${DIR}/uploaded-vehicles-report.json`,JSON.stringify({status:'PASS',reports,requests,errors},null,2));console.log(JSON.stringify({status:'PASS',reports,downloads:requests.length}));
  }catch(error){console.error('DIAGNOSTIC',JSON.stringify(await page.evaluate(()=>{const g=window.DriverGame;return {city:g?.currentCityKey,enabled:g?.freeVehicleAssets.enabled,states:g?.freeVehicleAssets.uploaded.states,vehicles:g?.vehicles.filter(v=>v.uploadedModel).map(v=>({id:v.uploadedModel,applied:v._uploadedCustomModel,custom:v._userCustomModel})),errors:[]};}).catch(()=>({unavailable:true}))));throw error;}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
