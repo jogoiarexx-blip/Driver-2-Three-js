@@ -1,0 +1,67 @@
+name: Driver 2 - Chicago R28 - Rotas 3D sem cruzamentos falsos
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-layered-routes-r28.js'
+      - 'tools/chicago-r28-layered-route-audit.cjs'
+      - 'tests/chicago-r28-*'
+      - 'chicago/reference-layered-r28.json'
+      - 'chicago-original-preview.html'
+      - '.github/workflows/chicago-r28-layered-routes.yml'
+  pull_request:
+    paths:
+      - 'js/world/chicago-layered-routes-r28.js'
+      - 'tools/chicago-r28-layered-route-audit.cjs'
+      - 'tests/chicago-r28-*'
+      - 'chicago/reference-layered-r28.json'
+      - 'chicago-original-preview.html'
+      - '.github/workflows/chicago-r28-layered-routes.yml'
+permissions:
+  contents: read
+jobs:
+  source-layer-routing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar rotas separadas por nível e bloqueio de rampas
+        run: node --test tests/chicago-r28-layered-routes.test.cjs
+      - name: Recalcular alturas dos 54 GLBs e grafo 3D de evidência
+        run: node tools/chicago-r28-layered-route-audit.cjs qa-artifacts/chicago-r28/layered-review-routes.json
+      - name: Validar que somente nós originais se conectam e o trânsito não foi alterado
+        run: |
+          node - <<'JS'
+          const assert=require('node:assert/strict'),fs=require('node:fs');
+          const a=JSON.parse(fs.readFileSync(
+            'qa-artifacts/chicago-r28/layered-review-routes.json'));
+          assert.equal(a.sourceGeometrySectors,54);
+          assert.equal(a.sourceTriangles,1544872);
+          assert.equal(a.sourceGraphEdges,4279);
+          assert.equal(a.sourceGraphNodes,3230);
+          assert.equal(a.candidateEdgeCount,a.candidateEdges.length);
+          assert.equal(a.candidateEdgeCount,a.candidateEdgeIds.length);
+          assert.equal(a.certifiedRoads,0);
+          assert.equal(a.autoTrafficRouting,false);
+          assert.equal(a.originalLayeredRoadsCertified,false);
+          assert.equal(a.trafficAndMissionsUnchanged,true);
+          const allowed=new Set(a.candidateEdgeIds);
+          for(const c of a.components)for(const id of c.sampleRoute.edgeIds)
+            assert(allowed.has(id),'Example path includes forbidden edge');
+          console.log('R28 verified',JSON.stringify({
+             candidates:a.candidateEdgeCount,
+             rejections:a.filteredEdgeCounts,
+             largest:a.components[0]
+          }));
+          JS
+      - name: Preservar relatório completo, níveis e exemplos de rotas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r28-3d-source-route-audit
+          path: qa-artifacts/chicago-r28/
+          retention-days: 30
