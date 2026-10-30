@@ -4,12 +4,39 @@ const read=p=>fs.readFileSync(p,'utf8');
 const source=read('js/assets/uploaded-vehicles.js');
 const Roster=vm.runInNewContext(source+';DriverUploadedVehicles');
 test('todos os veículos enviados possuem GLB local válido',()=>{
- assert.equal(Object.keys(Roster.DEFINITIONS).length,4);
- for(const definition of Object.values(Roster.DEFINITIONS)){
-  const bytes=fs.readFileSync(decodeURIComponent(definition.url.slice(2)));
+ assert.equal(Object.keys(Roster.DEFINITIONS).length,5);
+ for(const [id,definition] of Object.entries(Roster.DEFINITIONS)){
+  const filename=decodeURIComponent(definition.url.slice(2));
+  // O ônibus é opcional até o upload do arquivo GLB no repositório.
+  // Os quatro arquivos publicados anteriormente seguem obrigatórios.
+  if(id==='school-bus'&&!fs.existsSync(filename))continue;
+  const bytes=fs.readFileSync(filename);
   assert.equal(bytes.toString('ascii',0,4),'glTF');assert.equal(bytes.readUInt32LE(8),bytes.length);
   const gltf=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());assert(gltf.meshes.length>0);
  }
+});
+test('ônibus escolar usa o GLB enviado na vaga do ônibus original',()=>{
+ assert.equal(Roster.DEFINITIONS['school-bus'].url,'./assets/vehicles/onibus%20escolar.glb');
+ assert.equal(Roster.DEFINITIONS['school-bus'].bodyStyle,'bus');
+ const engine=read('js/engine/driver2-game-engine.js');
+ const vehicle=read('js/vehicles/driver-vehicle.js');
+ assert.match(engine,/name: 'ÔNIBUS ESCOLAR'.*uploadedModel:'school-bus'/);
+ assert.match(engine,/uploadedModel: c\.uploadedModel \|\| null/);
+ assert.match(vehicle,/const bus=this\.bodyStyle==='bus'/);
+ assert.match(vehicle,/if\(bus\)modelScene\.scale\.set\(sx,sy,sz\)/);
+ const physics=vm.runInNewContext(read('js/physics/vehicle-collisions.js')+';DriverVehicleCollisions');
+ assert.equal(physics.dimensions({bodyStyle:'bus'}).length,8);
+ assert.equal(physics.dimensions({bodyStyle:'bus'}).width,2.72);
+ assert.equal(Roster.DEFINITIONS['school-bus'].z,undefined,'ônibus não cria uma segunda frota estacionada');
+});
+test('GLB binário do ônibus (executa automaticamente após upload)',{
+ skip:!fs.existsSync('assets/vehicles/onibus escolar.glb')
+},()=>{
+ const data=fs.readFileSync('assets/vehicles/onibus escolar.glb');
+ assert.equal(data.toString('ascii',0,4),'glTF');
+ assert.equal(data.readUInt32LE(8),data.length);
+ const gltf=JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString());
+ assert(gltf.meshes.length>0);assert(gltf.images.length>0);
 });
 test('carregamento é serial, único por modelo e preserva fallback quando falha',async()=>{
  const callbacks=[],requests=[];
@@ -36,7 +63,7 @@ test('moto tem massa e colisão próprias e mantém identidade na garagem',()=>{
  assert.equal(Collisions.dimensions(bike).width,1.05);assert.equal(Physics.mass(bike),280);
  const garage=new Garage({getItem(){return null},setItem(){}});assert(garage.store(bike));
  assert.equal(garage.take(0).uploadedModel,'motorcycle');
- for(const id of ['pickup-new','pickup-old'])assert.equal(Garage.sanitize({...bike,bodyStyle:'truck',uploadedModel:id}).uploadedModel,id);
+ for(const id of ['pickup-new','pickup-old','school-bus'])assert.equal(Garage.sanitize({...bike,bodyStyle:id==='school-bus'?'bus':'truck',uploadedModel:id}).uploadedModel,id);
  assert.equal(Garage.sanitize({...bike,uploadedModel:'arbitrary.glb'}).uploadedModel,null);
 });
 test('download tardio não sobrescreve importação manual nem veículo removido',async()=>{
