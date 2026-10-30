@@ -24,7 +24,7 @@ class DriverChicagoPS1StreetNetwork {
     static sourcePaths(city){
         const result=[];
         for(const [id,key] of this.SOURCE_NAMES){
-            const data=id.startsWith('north-')?
+            const data=['north-stem','north-continuation','north-branch'].includes(id)?
                 city?.chicagoReferenceNorthNetwork?.segments?.[id.slice(6)]:
                 city?.[key];
             if(data?.points?.length>1)
