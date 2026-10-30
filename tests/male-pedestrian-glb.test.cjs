@@ -134,8 +134,12 @@ test('game wires the model without replacing all pedestrians',()=>{
     assert(MANAGER.includes('this.malePedestrian?.release()'));
     assert(MANAGER.includes('this.malePedestrian?.load()'));
     assert(MANAGER.includes('this.malePedestrian?.update(p,dt,moving,crossing)'));
-    assert(MANAGER.includes('!p.glbFemale&&!p.glbMale'));
-    assert(MANAGER.includes('(p.glbFemale||p.glbMale||p.glbVariant)?0'));
+    assert(MANAGER.includes('this.uploadedCrowd?.fill()'));
+    assert(MANAGER.includes('this.uploadedCrowd?.update(p,dt,moving,crossing,dist)'));
+    assert(!MANAGER.includes('const torsoGeo='),
+        'não construir torsos procedurais para civis');
+    assert(!MANAGER.includes('const uniform = new THREE.MeshLambertMaterial'),
+        'não construir agentes policiais procedurais');
     assert(MANAGER.includes('for(let i=0;i<28;i++)'));
 });
 test('missing GLTF loader preserves default procedural male',async()=>{
