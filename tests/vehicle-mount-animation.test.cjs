@@ -153,3 +153,16 @@ test('seat pose is not clamped to pavement during the leg sweep',()=>{
  assert(tanner.group.position.y<1,
     'seat phase should not jump up to sidewalk/pavement height');
 });
+
+test('tight parking still permits a clear forward/backward motorcycle exit',()=>{
+ const city={isWaterAt:()=>false,
+   isPointBlocked:(x,z)=>Math.abs(z)<1.2};
+ const {engine,bike}=harness('motorcycle',city);
+ engine.mode='driving';engine.playerCar=bike;
+ const stand=Mount.chooseStandPoint(engine,bike,'exit');
+ assert(stand&&Math.abs(stand.forwardOffset)>1.2);
+ assert.equal(city.isPointBlocked(stand.x,stand.z),false);
+ assert(Mount.start(engine,bike,'exit'));
+ run(engine);
+ assert.equal(engine.mode,'on_foot');
+});
