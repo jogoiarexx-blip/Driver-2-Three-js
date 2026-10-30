@@ -4,6 +4,9 @@ class DriverUploadedVehicles {
         'pickup-new':{url:'./assets/vehicles/caminhonete-nova-otimizada.glb',name:'CAMINHONETE NOVA',bodyStyle:'truck',z:-38},
         'pickup-old':{url:'./assets/vehicles/caminhonete%20velha.glb',name:'CAMINHONETE ANTIGA',bodyStyle:'truck',z:-58},
         motorcycle:{url:'./assets/vehicles/moto-otimizada.glb',name:'MOTO',bodyStyle:'motorcycle',z:-78},
+        // Esse ônibus substitui o ônibus civil já existente, não cria outro.
+        'school-bus':{url:'./assets/vehicles/onibus%20escolar.glb',
+            name:'ÔNIBUS ESCOLAR',bodyStyle:'bus'},
         boat:{url:'./assets/barco%20de%20pesca.glb'}
     };
     constructor(engine,library){
@@ -12,7 +15,7 @@ class DriverUploadedVehicles {
     }
     static spawn(engine){
         for(const [id,d] of Object.entries(this.DEFINITIONS)){
-            if(id==='boat')continue;
+            if(id==='boat'||id==='school-bus')continue;
             const x=9,z=d.z;
             if(engine.city.isWaterAt(x,z)||engine.city.isPointBlocked(x,z,1.55))continue;
             if(engine.vehicles.some(v=>Math.hypot(v.x-x,v.z-z)<9))continue;
@@ -97,6 +100,8 @@ class DriverUploadedVehicles {
             if(!template||!this.library.enabled||!this.engine.vehicles.includes(vehicle)||
                 !vehicle.root.parent||vehicle._userCustomModel||vehicle._uploadedCustomModel===id)return;
             const wrapped=new THREE.Group(),clone=template.clone(true);
+            // No GLB de veículos, o comprimento vem no eixo X.
+            // +90° alinha o comprimento ao eixo Z da física do Driver 2.
             clone.rotation.y=Math.PI/2;wrapped.add(clone);wrapped.updateMatrixWorld(true);
             vehicle._userCustomModel=false;
             if(vehicle.applyCC0Model(wrapped,true)===false)return;
