@@ -213,3 +213,49 @@ não modifica as missões e não homologa rampas ou viadutos. A próxima
 etapa útil é investigar os limites de altura por aresta com rastros
 visuais e validar um corredor contínuo individualmente antes de
 inseri-lo no mapa jogável.
+
+## R29 — recuperação conservadora de amostras de altura faltantes
+
+A R29 investiga por que a R28 tinha rotas fragmentadas: muitas amostras de
+um ponto do esqueleto PS1 não encontram um triângulo de asfalto **exatamente
+no centro do pixel** do raster de altura. Em vez de inferir uma ponte, o
+novo auditor tenta recuperar Y **somente dos quatro pixels adjacentes**,
+que devem concordar em altura numa faixa de até **0,045 unidade OBJ**.
+Ele também bloqueia sobreposição de níveis, rampas abruptas, lacunas,
+nós sem suporte, trechos com mais de 60% de altura recuperada e ruas
+reprovadas pela classificação de pavimento R24.
+
+Resultados medidos sobre os mesmos 54 GLBs (1.544.872 triângulos):
+
+| Critério | R28 | R29 |
+| --- | ---: | ---: |
+| Arestas candidatas à revisão, não certificadas | 216 | **263** |
+| Arestas adicionadas pela nova evidência local | — | **47** |
+| Maior componente por comprimento no grafo diagnóstico | 17,126 OBJ | **22,082 OBJ** |
+| Número de arestas nesse componente | 2 | **3** |
+
+Uma aresta importante recuperada é a **1437 da R25**, enquanto
+1520 e 1017 ainda ficam pendentes. A R23 mantém apenas 1822 e 1777
+nos filtros conservadores de fonte. A recuperação **não autoriza
+automaticamente o trânsito ou as missões**, não conecta vias
+visualmente sobrepostas e **não cria novos nós**. Os números são
+*evidência de possível piso dirigível*, não taxa de conversão do
+mapa jogável nem homologação do relevo original.
+
+O auditor e os testes:
+
+```sh
+node --test tests/chicago-r29-height-recovery.test.cjs
+node tools/chicago-r29-height-recovery.cjs qa-artifacts/chicago-r29/local-height-recovery.json
+```
+
+O catálogo [`reference-recovery-r29.json`](reference-recovery-r29.json)
+registra os 263 IDs, as 47 novas arestas e a origem de cada recuperação,
+inclusive quantas amostras diretas e quantas adjacentes foram utilizadas.
+No [mapa PS1 original](../chicago-original-preview.html), clique
+**Ver recuperação R29**: os 216 trechos anteriores aparecem em azul,
+os 47 recuperados em roxo e o caminho conectado de exemplo em amarelo.
+
+Próxima etapa: certificar visual e geometricamente um corredor mais longo
+e contínuo, com seus acessos, largura e níveis, e somente então migrá-lo
+fisicamente para Chicago Undercover e permitir trânsito nele.
