@@ -864,12 +864,28 @@
                         bulb.setMatrixAt(i, mat.makeTranslation(loc.x, 4.05 - k * 0.4, loc.z + 0.30));
                     });
                 });
+                // R50: carcaça com viseira e pedestal, mantendo os
+                // sinais antigos e a lógica de mudança de cores.
+                const feet=new THREE.InstancedMesh(
+                    new THREE.CylinderGeometry(.28,.38,.55,6),
+                    new THREE.MeshLambertMaterial({color:0x535b62}),count
+                );
+                const visors=new THREE.InstancedMesh(
+                    new THREE.BoxGeometry(.86,.13,.70),
+                    new THREE.MeshLambertMaterial({color:0x212933}),count
+                );
+                locations.forEach((loc,i)=>{
+                    feet.setMatrixAt(i,mat.makeTranslation(loc.x,.28,loc.z));
+                    visors.setMatrixAt(i,mat.makeTranslation(loc.x,4.35,loc.z+.13));
+                });
+                feet.instanceMatrix.needsUpdate=true;
+                visors.instanceMatrix.needsUpdate=true;
                 poles.instanceMatrix.needsUpdate = true;
                 housings.instanceMatrix.needsUpdate = true;
                 bulbs.forEach(b => { b.instanceMatrix.needsUpdate = true; });
                 this.signalBulbs = bulbs;
                 this.signalPositions = locations;
-                this.cityGroup.add(poles, housings, ...bulbs);
+                this.cityGroup.add(poles, housings, feet, visors, ...bulbs);
                 this.refreshTrafficLights(true);
             }
 
