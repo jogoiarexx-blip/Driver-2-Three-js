@@ -46,6 +46,9 @@ const url=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
      water:!!g.dayNight?.rain,
      wet:state?.wet,patches:state?.puddles,
      visible:state?.mesh?.visible,
+     wetBatchCount:g.city.cityGroup.children.filter(o=>
+      o.name==='chicago-r5-asphalt-wet-patches').length,
+     wetBatchCapacity:state?.mesh?.count,
      roadRGB:state?.roadMesh?.material?.color?.r,
      calls:g.renderer.info.render.calls,
      tris:g.renderer.info.render.triangles,
@@ -92,8 +95,11 @@ const url=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
   assert(wet.patches>0,'procedural puddle mesh should be populated');
   assert(wet.visible,'puddles should render in rain');
   assert.equal(wet.city,'chicago');
-  // Single additional wet-asphalt draw call at a fixed set of 48 instances.
-  assert(wet.calls<dry.calls+24,'rain effect generated too many draw calls');
+  // LOD pode carregar dezenas de prédios enquanto dirigimos. Validar o
+  // orçamento REAL da R5, não a soma variável de draw calls da cidade.
+  assert.equal(wet.wetBatchCount,1,'R5 must use one shared instanced batch');
+  assert.equal(wet.wetBatchCapacity,48,'fixed instance budget exceeded');
+  assert(wet.calls<dry.calls+90,'unexpected city-wide drawcall explosion');
   await page.evaluate(()=>window.DriverGame.setWeather('night'));
   await page.waitForFunction(previous=>window.DriverGame?.city?.
    chicagoWetAsphalt?.wet<previous-.15,wet.wet,
