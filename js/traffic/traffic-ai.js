@@ -200,9 +200,20 @@ class DriverTrafficAI {
             // completar a curva até z≈185; só depois mirar o cruzamento
             // norte. Do contrário uma diagonal cortaria os galpões.
             if(route.islandPhase==='entry'){
-                route.target=DriverChicagoGooseIslandStreet.lanePosition(
+                // R47: não direcionar o carro através de galpões ou canais
+                // quando o ponto intermediário ainda não é alcançável.
+                // A navegação normal reavalia a curva no próximo ciclo.
+                const next=DriverChicagoGooseIslandStreet.lanePosition(
                     route.sign,DriverChicagoGooseIslandStreet.NORTH_Z);
+                if(typeof DriverRoadGeometry==='undefined' ||
+                   !DriverRoadGeometry.segmentDrivable(this.city,
+                       car.x,car.z,next.x,next.z,1.55)){
+                    route.reverseTimer=.85;
+                    return;
+                }
+                route.target=next;
                 route.islandPhase='traverse';
+                route.reverseTimer=0;
                 return;
             }
             const z=route.sign>0?
