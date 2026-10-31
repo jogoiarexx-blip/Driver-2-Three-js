@@ -11,6 +11,7 @@ const Nav=require('../js/traffic/chicago-mixed-navigation-r49.js');
 global.DriverChicagoMixedNavigationR49=Nav;
 const Traffic=require('../js/traffic/chicago-mixed-traffic-r49.js');
 const Telemetry=require('../js/engine/driver-traffic-telemetry-r50.js');
+const Water=require('../js/render/chicago-water-r50.js');
 function three(){
     class O{
         constructor(){this.children=[];this.userData={};
@@ -127,4 +128,52 @@ test('R50 scripts and HUD remain connected to game engine in both modes',()=>{
     assert(city.includes('DriverChicagoConnectorsR50.build(this)'));
     assert(engine.includes('this.trafficTelemetry?.sample(this,dt,rawDt)'));
     assert(engine.includes("this.startMission('freeroam')"));
+});
+
+test('R50 water texture is small, shared, gently animated and recreated after city reload',()=>{
+    const savedDocument=global.document,savedThree=global.THREE;
+    let allocated=0,uploaded=0;
+    global.document={createElement(){
+        return {width:0,height:0,getContext(){
+            return {createImageData(w,h){allocated++;
+                    return {data:new Uint8ClampedArray(w*h*4)};},
+                putImageData(){uploaded++;}};
+        }};
+    }};
+    global.THREE={
+        CanvasTexture:class{
+            constructor(canvas){this.image=canvas;this.offset={x:0,y:0};
+                this.repeat={set(){}};}
+        },
+        RepeatWrapping:1,LinearFilter:1,LinearMipmapLinearFilter:1
+    };
+    try{
+        const a=Water.make(),b=Water.make();
+        assert.equal(a,b);
+        assert.equal(a.image.width,96);
+        assert.equal(a.image.height,96);
+        assert.equal(allocated,1);
+        assert.equal(uploaded,1);
+        Water.update(.05);
+        assert(a.offset.x>0);
+        Water.reset();
+        assert.notEqual(a,Water.make());
+        assert.equal(allocated,2);
+    }finally{
+        Water.reset();
+        if(savedDocument===undefined)delete global.document;
+        else global.document=savedDocument;
+        if(savedThree===undefined)delete global.THREE;
+        else global.THREE=savedThree;
+    }
+});
+test('R50 street furniture and traffic signals use instanced geometry and dispose their broken meshes',()=>{
+    const street=fs.readFileSync('js/world/street-furniture.js','utf8');
+    const city=fs.readFileSync('js/world/city-builder.js','utf8');
+    assert(street.includes('armMesh:arm,baseMesh:base'));
+    assert(street.includes('prop.armMesh?.setMatrixAt('));
+    assert(street.includes('new THREE.CylinderGeometry(.28,.38,.7,6)'));
+    assert(city.includes('feet.instanceMatrix.needsUpdate=true'));
+    assert(city.includes('visors.instanceMatrix.needsUpdate=true'));
+    assert(city.includes('chicago-station-ramp-safety-treads'));
 });
