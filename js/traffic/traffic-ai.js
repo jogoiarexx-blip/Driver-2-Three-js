@@ -386,6 +386,17 @@ class DriverTrafficAI {
     }
 
     getInput(car, dt, vehicles, playerPos, felony) {
+        // Chicago's source-adapted blocks are not aligned with the legacy
+        // 80m grid. Only our two civilian circuit cars use this AI branch.
+        // Police, player, missions, Goose Island and other cities stay on
+        // the existing routes and controls.
+        if(!car.scriptedDrive && !car.isPolice && !car.isTarget &&
+            !car.isMafia && !car.isSecret &&
+            typeof DriverChicagoNeighborhoodTraffic!=='undefined'){
+            const local=DriverChicagoNeighborhoodTraffic.getInput(
+                this.city,car,vehicles);
+            if(local)return local;
+        }
         const route = this.getRoute(car);
         const scripted = car.scriptedDrive || null;
         // Aberturas cinematográficas: o suspeito aguarda Tanner entrar
