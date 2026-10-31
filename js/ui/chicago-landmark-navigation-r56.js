@@ -16,7 +16,7 @@ class DriverChicagoLandmarkNavigationR56 {
         return game?.currentCityKey==='chicago'&&
             !game.loadingActive&&!game.interiorPlace&&
             !game.missionActive&&game.missionType==='freeroam'&&
-            !game.inReplayMode;
+            !game.inReplayMode&&!game.navigationHome;
     }
     static getRoute(id) {
         if(typeof DriverChicagoLandmarkAccessR55==='undefined')return null;
@@ -66,7 +66,7 @@ class DriverChicagoLandmarkNavigationR56 {
         s.target=id==='clear'?null:id;
         s.path=null;s.reason=null;s.plannedPosition=null;
         s.lastPlanAt=-Infinity;
-        if(s.target)this.plan(game,true);
+        if(s.target){game.navigationHome=false;this.plan(game,true);}
         this.renderUI(game);
         return true;
     }
@@ -86,8 +86,9 @@ class DriverChicagoLandmarkNavigationR56 {
         const traveled=s.plannedPosition?
             Math.hypot(player.x-s.plannedPosition.x,
                 player.z-s.plannedPosition.z):Infinity;
-        if(!force&&s.build===build&&s.raised===raised&&
-            now-s.lastPlanAt<3200&&traveled<32)return s.path;
+        if(!force&&s.build===build&&s.raised===raised&&traveled<32&&
+            (s.path!==null||now-s.lastPlanAt<10000))return s.path;
+        if(!force&&now-s.lastPlanAt<2200)return s.path;
         s.build=build;s.raised=raised;s.lastPlanAt=now;
         s.plannedPosition={x:player.x,z:player.z};
         s.path=null;s.reason='Rota não validada';
@@ -147,10 +148,13 @@ class DriverChicagoLandmarkNavigationR56 {
             text.textContent=message;
         }
         text.classList.toggle('hidden',!message);
-        document.querySelectorAll('[data-chicago-landmark-r56]').forEach(button=>{
-            const active=s.target===button.dataset.chicagoLandmarkR56;
-            button.setAttribute('aria-pressed',String(active));
-        });
+        if(s.lastAriaTarget!==s.target){
+            s.lastAriaTarget=s.target;
+            document.querySelectorAll('[data-chicago-landmark-r56]').forEach(button=>{
+                const active=s.target===button.dataset.chicagoLandmarkR56;
+                button.setAttribute('aria-pressed',String(active));
+            });
+        }
     }
     static drawRadar(ctx,game,pos,scale) {
         if(game?.currentCityKey!=='chicago'||game.interiorPlace ||
