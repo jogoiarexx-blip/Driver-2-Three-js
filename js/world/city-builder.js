@@ -180,6 +180,7 @@
                 this.chicagoLocalRoadNetwork=null;
                 this.chicagoConnectorsR48=null;
                 this.chicagoConnectorsR50=null;
+                this.chicagoGooseEastR52=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -393,6 +394,12 @@
                             typeof DriverChicagoConnectorsR50!=='undefined' &&
                             DriverChicagoConnectorsR50.isCarvedBlock(blockX,blockZ))
                             return;
+                        // R52: lift four eastern Goose Island blocks before
+                        // their sidewalks/buildings create phantom collisions.
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoGooseEastR52!=='undefined' &&
+                            DriverChicagoGooseEastR52.isCarvedBlock(blockX,blockZ))
+                            return;
 
                         // Nenhum quarteirão novo sobre o lago: a costa física
                         // é a mesma usada pelos carros e pelo parcelamento.
@@ -592,6 +599,8 @@
                         DriverChicagoConnectorsR48.build(this);
                     if(typeof DriverChicagoConnectorsR50!=='undefined')
                         DriverChicagoConnectorsR50.build(this);
+                    if(typeof DriverChicagoGooseEastR52!=='undefined')
+                        DriverChicagoGooseEastR52.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
