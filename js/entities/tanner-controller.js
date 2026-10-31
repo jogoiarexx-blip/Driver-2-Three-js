@@ -17,6 +17,10 @@
                 this.motorcycleContactBlend=0;
                 this.motorcycleExitBlend=1;
 
+                if(typeof DriverFakeShadows!=='undefined') {
+                    this.contactShadow=DriverFakeShadows.create(1.25,1.8);
+                    this.group.add(this.contactShadow);
+                }
                 this.buildTannerMesh();
                 this.loadPlayerModel();
                 this.scene.add(this.group);
@@ -198,6 +202,7 @@
                 if(!vehicle?.chassisTilt||!this.vehicleBoneRig||
                     !this.playerModel||this.motorcycleVehicle)return false;
                 this.resetVehicleTransitionPose();
+                if(this.contactShadow)this.contactShadow.visible=false;
                 vehicle.chassisTilt.add(this.group);
                 this.group.position.set(0,0,-.30);
                 this.group.rotation.set(0,0,0);
@@ -237,6 +242,7 @@
                 // Scene.add restaura a propriedade da entidade Tanner e evita
                 // que o descarte do veículo libere seu material/esqueleto.
                 this.scene.add(this.group);
+                if(this.contactShadow)this.contactShadow.visible=true;
                 delete this.group.userData.driverPlayerRider;
                 this.motorcycleVehicle=null;
                 this.motorcycleDynamics=null;

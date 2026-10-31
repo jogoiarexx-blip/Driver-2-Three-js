@@ -43,7 +43,7 @@ class DriverBootFlow {
         }
     }
     readSettings() {
-        const defaults={models:true,scanlines:true,
+        const defaults={models:true,scanlines:true,shadows:true,
             reducedMotion:false,playerColor:'#d53934'};
         try {
             const raw=localStorage.getItem('driver2-menu-preferences-v1');
@@ -136,6 +136,7 @@ class DriverBootFlow {
         }
         const settingIds={
             models:'d2-opt-models',
+            shadows:'d2-opt-shadows',
             scanlines:'d2-opt-scanlines',
             reducedMotion:'d2-opt-reduced-motion'
         };
@@ -175,6 +176,8 @@ class DriverBootFlow {
             '. A campanha Undercover começa em Chicago.';
     }
     applySettings() {
+        if(typeof DriverFakeShadows!=='undefined')
+            DriverFakeShadows.setEnabled(this.settings.shadows);
         const scanlines=document.getElementById('scanline-overlay');
         if(scanlines)scanlines.style.display=this.settings.scanlines?'':'none';
         document.body.classList.toggle('d2-reduced-motion',this.settings.reducedMotion);
