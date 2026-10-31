@@ -77,7 +77,9 @@ test('R48: road graph passes physical clearance audit and rejects water or block
 test('R48: build replaces cleared blocks with drivable roads, actual junction markings and collision lots',()=>{
     global.THREE=three();
     try{
-        const c=city(),plan=R48.build(c);
+        const c=city();
+        c.chicagoPS1StreetNetwork={radarPaths:[{id:'existing-map-road'}]};
+        const plan=R48.build(c);
         assert(plan.ready,JSON.stringify(plan.blocked));
         assert(plan.visualReady);
         assert.equal(plan.corridorsBuilt,5);
@@ -88,6 +90,8 @@ test('R48: build replaces cleared blocks with drivable roads, actual junction ma
         assert.equal(plan.crosswalkStripes,96);
         assert.equal(c.buildingBoxes.length,12);
         assert.equal(c.cityGroup.children.length,1);
+        assert.equal(c.chicagoPS1StreetNetwork.radarPaths.length,6);
+        assert.equal(c.chicagoPS1StreetNetwork.radarPaths[0].id,'existing-map-road');
         assert.equal(R48.build(c),plan); // idempotent, no duplicate colliders
         assert.equal(c.buildingBoxes.length,12);
         assert(R48.audit(c).ready);
