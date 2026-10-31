@@ -11,6 +11,7 @@ const Nav=require('../js/traffic/chicago-mixed-navigation-r49.js');
 global.DriverChicagoMixedNavigationR49=Nav;
 const Mixed=require('../js/traffic/chicago-mixed-traffic-r49.js');
 const Source=require('../js/traffic/chicago-source-traffic-r51.js');
+const Telemetry=require('../js/engine/driver-traffic-telemetry-r50.js');
 
 const r43=[
  {x:320,z:-160},{x:480,z:-160},{x:480,z:-40},
@@ -106,4 +107,37 @@ test('R51 changed script and engine load only source traffic in Chicago',()=>{
  assert(engine.includes('DriverChicagoSourceTrafficR51.spawnSpecs('));
  assert(engine.includes('car.chicagoMixedTrafficGoalsR51=spec.goals'));
  assert(engine.includes('this.spawnAllVehicles();'));
+});
+
+test('R51 commuter keeps forward district direction through next intersection',()=>{
+ const c=city(),spec=Source.spawnSpecs(c)[0];
+ assert(spec);
+ const at=spec.goals[spec.goalIndex];
+ const car={...spec,x:at.x,z:at.z,speed:0,
+   chicagoMixedTrafficR49:true,
+   chicagoMixedTrafficGoalsR51:spec.goals,
+   chicagoMixedTrafficGoalIndex:spec.goalIndex};
+ const controls=Mixed.getInput(c,car,[car],.033,[]);
+ assert(controls&&typeof controls.left==='boolean');
+ assert.equal(car.chicagoMixedTrafficStatusR49.destination,2);
+});
+test('R51 F8 telemetry exposes extended road graph and timed A-star failures',()=>{
+ const c=city(),g=Nav.compile(c);
+ assert(Nav.plan(c,{x:240,z:-160},{x:480,z:-40}));
+ assert.equal(Nav.plan(c,{x:240,z:-160},{x:900,z:850}),null);
+ assert(g.planStats.planned>=2);
+ assert(g.planStats.failed>=1);
+ assert(Number.isFinite(g.planStats.worstMs));
+ const diag=new Telemetry();
+ const game={city:c,vehicles:[],playerCar:null,
+   currentCityKey:'chicago',missionType:'freeroam'};
+ assert.equal(diag.sample(game,.6,.07),null);
+ const report=diag.sample(game,.5,.02);
+ assert.equal(report.sourceCorridors,2);
+ assert.equal(report.sourceEdges,g.sourceEdges);
+ assert.equal(report.graphNodes,g.nodes.size);
+ assert.equal(report.graphEdges,g.edges);
+ assert(report.planned>=2);
+ assert(report.pathFailures>=1);
+ assert(Number.isFinite(report.routeWorstMs));
 });
