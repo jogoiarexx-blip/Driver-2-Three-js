@@ -177,6 +177,7 @@
                 this.chicagoGooseIslandJunctions=null;
                 this.chicagoLocalRoadNetwork=null;
                 this.chicagoConnectorsR48=null;
+                this.chicagoConnectorsR50=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -386,6 +387,10 @@
                             typeof DriverChicagoConnectorsR48!=='undefined' &&
                             DriverChicagoConnectorsR48.isCarvedBlock(blockX,blockZ))
                             return;
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoConnectorsR50!=='undefined' &&
+                            DriverChicagoConnectorsR50.isCarvedBlock(blockX,blockZ))
+                            return;
 
                         // Nenhum quarteirão novo sobre o lago: a costa física
                         // é a mesma usada pelos carros e pelo parcelamento.
@@ -583,6 +588,8 @@
                     // transversais à grade, em ambos os modos de Chicago.
                     if(typeof DriverChicagoConnectorsR48!=='undefined')
                         DriverChicagoConnectorsR48.build(this);
+                    if(typeof DriverChicagoConnectorsR50!=='undefined')
+                        DriverChicagoConnectorsR50.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
