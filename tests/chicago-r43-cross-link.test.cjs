@@ -68,7 +68,8 @@ test('R43 é carregada antes da construção de Chicago e registrada para pintur
  assert(html.indexOf('chicago-cross-link-r43.js')<html.indexOf('js/world/city-builder.js'));
  assert(builder.includes('this.chicagoReferenceCrossLinkR43=null;'));
  assert(builder.includes('DriverChicagoCrossLinkR43.prepare(this);'));
- assert(builder.includes('this.chicagoReferenceCrossLinkR43\n'));
+ const paintList=builder.split('DriverChicagoNorthMarkingsR33.build(this,[')[1]?.split('].filter(Boolean)')[0];
+ assert(paintList&&paintList.includes('this.chicagoReferenceCrossLinkR43'));
  const list=network.sourcePaths({chicagoReferenceCrossLinkR43:road.plan()});
  assert.equal(list.length,1);assert.equal(list[0].id,'cross-link-r43');
  assert(network.SOURCE_NAMES.some(([id])=>id==='cross-link-r43'));
