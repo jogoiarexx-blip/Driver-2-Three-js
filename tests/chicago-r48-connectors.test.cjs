@@ -91,6 +91,7 @@ test('R48: build replaces cleared blocks with drivable roads, actual junction ma
         assert.equal(R48.build(c),plan); // idempotent, no duplicate colliders
         assert.equal(c.buildingBoxes.length,12);
         assert(R48.audit(c).ready);
+        assert.equal(Object.keys(plan.loops).length,4);
         for(const loop of Object.values(plan.loops)){
             assert.equal(loop.closed,0);
             for(const p of loop.points){
@@ -104,9 +105,10 @@ test('R48: civilians are spawned on both new loops in same lane direction, other
     const c=city();
     c.chicagoConnectorsR48={ready:true,loops:R48.loops()};
     const specs=Traffic.spawnSpecs(c);
-    assert.equal(specs.length,4);
+    assert.equal(specs.length,6);
     assert.deepEqual(specs.map(s=>s.id),[
-        'r48-outer','r48-outer','r48-east','r48-east']);
+        'r48-outer','r48-outer','r48-east','r48-east',
+        'r48-grid-west','r48-grid-east']);
     assert(specs.every(s=>s.reverse===false));
     assert(specs.every(s=>s.maxSpeed===12));
     assert.equal(Traffic.spawnSpecs({...c,preset:{id:'vegas'}}).length,0);
