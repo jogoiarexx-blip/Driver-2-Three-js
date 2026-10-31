@@ -63,3 +63,33 @@ test('o reposicionamento nao mexe nas vagas humanas nem num cão ausente',()=>{
     assert.equal(m.pedestrians[0],before);
     assert.equal(m.pedestrians[8].x,500);
 });
+
+test('aproximação do jogador e travessia não fazem cachorro sumir',()=>{
+    const m=make(),focus={x:0,z:0};
+    for(const [i,d] of [3,19,200].entries()){
+        const p=m.pedestrians[i+7];
+        p.x=d;p.z=0;p.mesh.visible=true;
+        p.crossing={x:d,z:10};
+    }
+    const permitted=nav.permitted;
+    // Durante uma travessia real a posição não é uma calçada permitida.
+    nav.permitted=(_city,x,z)=>z!==0 && permitted(_city,x,z);
+    try {
+        assert.equal(m.placeNearbyDogs(focus),0);
+        assert.deepEqual(m.pedestrians.slice(7,10).map(p=>p.x),[3,19,200]);
+        assert(m.pedestrians.slice(7,10).every(p=>p.mesh.visible));
+        assert(m.pedestrians.slice(7,10).every(p=>p.crossing));
+    } finally {nav.permitted=permitted;}
+});
+
+test('somente cão fora do raio de exibição é realocado',()=>{
+    const m=make(),focus={x:0,z:0};
+    const distances=[234,250,261];
+    for(const [i,d] of distances.entries()){
+        const p=m.pedestrians[i+7];p.x=d;p.z=0;p.mesh.visible=true;
+    }
+    assert.equal(m.placeNearbyDogs(focus),1);
+    assert.equal(m.pedestrians[7].x,234);
+    assert.equal(m.pedestrians[8].x,250);
+    assert(Math.hypot(m.pedestrians[9].x,m.pedestrians[9].z)<=105);
+});
