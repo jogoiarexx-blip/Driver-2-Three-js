@@ -87,9 +87,15 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
       progress=Math.max(progress,Math.min(progress+3,nearest.progress));
       const nextJunction=junctions.find(d=>d>=progress-1)??length;
       const cornerDistance=nextJunction-progress;
-      const speedTarget=cornerDistance<10?2.05:
-                         cornerDistance<19?3.0:4.35;
-      const lookAhead=cornerDistance<9?4.5:6.2;
+      // Keep slowing *after* a 90-degree junction too: the rear axle
+      // must finish the turn before the pilot accelerates on the next leg.
+      const previousJunction=[...junctions].reverse()
+       .find(d=>d<=progress)??0;
+      const exitDistance=progress-previousJunction;
+      const turning=Math.min(cornerDistance,exitDistance);
+      const speedTarget=turning<12?1.8:
+                         turning<20?2.8:4.15;
+      const lookAhead=turning<12?3.9:5.8;
       const target=sample(progress+lookAhead);
       const desired=Math.atan2(target.x-car.x,target.z-car.z);
       const delta=Math.atan2(Math.sin(desired-car.heading),
