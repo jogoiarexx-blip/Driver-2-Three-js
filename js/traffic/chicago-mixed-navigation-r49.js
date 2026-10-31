@@ -77,8 +77,11 @@ class DriverChicagoMixedNavigationR49 {
         const r52=city.chicagoGooseEastR52?.ready &&
             typeof DriverChicagoGooseEastR52!=='undefined'?
             DriverChicagoGooseEastR52.topology():null;
+        const r53=city.chicagoWestCanalR53?.ready &&
+            typeof DriverChicagoWestCanalR53!=='undefined'?
+            DriverChicagoWestCanalR53.topology():null;
         const secondary=[...(r48?.edges||[]),...(r50?.edges||[]),
-            ...(r52?.edges||[])];
+            ...(r52?.edges||[]),...(r53?.edges||[])];
         const gateways=secondary.flatMap(e=>[e.from,e.to]);
         // Subdivide existing 80-unit arteries where an R48 gateway joins.
         // Without splitting, a local road would end at a disconnected node.
@@ -141,10 +144,11 @@ class DriverChicagoMixedNavigationR49 {
         const graph={nodes,adj,edges:edges.size,stamp,build,count,
             sourceStamp,buckets,bucketSize,
             secondaryNodes:(r48?.nodes.length||0)+(r50?.nodes.length||0)+
-                (r52?.nodes.length||0),
+                (r52?.nodes.length||0)+(r53?.nodes.length||0),
             gateways:(r48?.gridExits||0)+(r50?.gridExits||0)+
-                (r52?.gridExits||0),
+                (r52?.gridExits||0)+(r53?.gridExits||0),
             gooseEastLinks:r52?.edges.length||0,
+            westCanalLinks:r53?.edges.length||0,
             sourceCorridors:sources.length,sourcePoints,sourceEdges};
         this.cache.set(city,graph);
         return graph;
