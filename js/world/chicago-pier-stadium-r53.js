@@ -50,6 +50,14 @@ class DriverChicagoPierStadiumR53 {
         return mesh;
     }
 
+    static collider(city, state, name, x, z, w, d) {
+        // As arquibancadas instanciadas já são a geometria visível.
+        const aabb={minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2,
+            chicagoR53:name};
+        city.buildingBoxes.push(aabb);
+        state.colliders.push(aabb);
+    }
+
     static instances(parent, name, segments, mat) {
         if (!segments.length) return null;
         const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1), mat, segments.length);
@@ -212,11 +220,10 @@ class DriverChicagoPierStadiumR53 {
         state.seats=seatSegments.length;
         // O campo é acessível; a colisão das arquibancadas não cobre o gramado.
         for(const side of [-1,1])
-            this.solid(city,state,'wrigley-side-stands-'+side,
-                sx+side*16.5,1.45,sz,3.8,2.9,27.4,
-                this.material(0x63747b));
-        this.solid(city,state,'wrigley-back-stands',
-            sx,1.4,sz-16.3,29,2.8,3.9,this.material(0x63747b));
+            this.collider(city,state,'wrigley-side-stands-'+side,
+                sx+side*15.575,sz,4.9,27.75);
+        this.collider(city,state,'wrigley-back-stands',
+            sx,sz-15.575,27.75,4.9);
         const paint=this.material(0xede9d1);
         for(const side of [-1,1]){
             const foul=this.box(root,'wrigley-foul-line',
@@ -248,6 +255,17 @@ class DriverChicagoPierStadiumR53 {
             tickets.position.set(sx+30,4.9,sz+25);
             tickets.scale.set(8,1.9,1);
             root.add(tickets);
+        }
+        // O segundo estádio do mapa original fica ao sul do Museum Campus.
+        // Seu volume e seus colliders são construídos no CityBuilder.
+        const soldier=city.chicagoSoldierField;
+        if(soldier){
+            const label=DriverChicagoNeighborhoods.label('SOLDIER FIELD',0xfde68a);
+            if(label){
+                label.position.set(soldier.x,8.9,soldier.z-19.55);
+                label.scale.set(14,3.1,1);
+                root.add(label);
+            }
         }
         city._pierStadiumR53=state;
         neighborhood.pier.enhanced=true;
@@ -282,6 +300,8 @@ class DriverChicagoPierStadiumR53 {
             wheel:!!s?.wheel,seats:s?.seats||0,bulbs:s?.bulbs||0,
             visibleColliderCount:s?.colliders.length||0,
             gatePreserved:!!city?.chicagoStadium?.gate,
+            soldierFieldAt:city?.chicagoSoldierField?
+                [city.chicagoSoldierField.x,city.chicagoSoldierField.z]:null,
             pierDry:typeof DriverChicagoPS1Coastline!=='undefined'?
                 !DriverChicagoPS1Coastline.waterAt(379,-40):null};
     }
