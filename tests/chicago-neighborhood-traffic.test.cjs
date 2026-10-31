@@ -20,6 +20,9 @@ test('tráfego civil usa dois ciclos fechados reais sem inventar conexão fora d
  const city=world(),specs=Traffic.spawnSpecs(city);
  assert.equal(specs.length,2);
  assert.deepEqual(specs.map(s=>s.id),['r43','r44']);
+ // As duas quadras compartilham R42: sentidos opostos causavam
+ // deadlock físico mesmo quando a IA evitava a colisão.
+ assert(specs.every(spec=>spec.reverse===false));
  assert(specs.every(s=>s.bodyStyle==='sedan'&&s.maxSpeed===12));
  assert(Math.hypot(specs[0].x-specs[1].x,specs[0].z-specs[1].z)>18);
  for(const spec of specs){
