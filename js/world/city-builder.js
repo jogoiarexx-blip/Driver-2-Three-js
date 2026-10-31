@@ -2083,6 +2083,13 @@
 
             getGroundHeightAt(x,z,referenceY=null,forVehicle=false) {
                 if(this.interiorFloorAt?.(x,z))return 0;
+                // R54: a superfície física do píer acompanha o deck de
+                // madeira e a nova rampa, sem flutuação das rodas.
+                if(this.preset?.id==='chicago' &&
+                    typeof DriverChicagoPierStadiumR53!=='undefined'){
+                    const pierDeck=DriverChicagoPierStadiumR53.deckHeightAt(x,z);
+                    if(pierDeck!==null)return pierDeck;
+                }
                 if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceBridge!=='undefined'){
                     const deck=DriverChicagoPS1ReferenceBridge.deckHeight(x,z);
