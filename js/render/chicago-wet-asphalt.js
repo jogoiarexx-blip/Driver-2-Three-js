@@ -107,7 +107,7 @@ class DriverChicagoWetAsphalt {
         state.lastX=baseX;state.lastZ=baseZ;
         const dummy=new THREE.Object3D();
         let count=0;
-        for(let ix=-8;ix<=8;ix++)for(let iz=-8;iz<=8;iz++){
+        search: for(let ix=-8;ix<=8;ix++)for(let iz=-8;iz<=8;iz++){
             const x=baseX+ix*this.GRID,z=baseZ+iz*this.GRID;
             if(Math.hypot(x-focus.x,z-focus.z)>94)continue;
             const chance=this.hash(Math.floor(x/this.GRID),Math.floor(z/this.GRID));
@@ -122,7 +122,7 @@ class DriverChicagoWetAsphalt {
             dummy.updateMatrix();
             state.mesh.setMatrixAt(count,dummy.matrix);
             count++;
-            if(count===this.MAX_PATCHES)break;
+            if(count===this.MAX_PATCHES)break search;
         }
         // InstancedMesh.count é fixo: ocultar slots vazios fora da câmera.
         for(let i=count;i<this.MAX_PATCHES;i++){
