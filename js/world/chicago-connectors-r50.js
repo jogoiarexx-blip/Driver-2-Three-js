@@ -91,7 +91,7 @@ class DriverChicagoConnectorsR50 {
             'r50-outer':this.rectangleLoop(40,200,200,280),
             'r50-east':this.rectangleLoop(120,200,200,280),
             // These two circuits cross the existing main-grid streets
-            // x=0/240 and z=-160, proving neighborhood-to-grid traffic.
+            // x=0/240 and z=160/320, proving neighborhood-to-grid traffic.
             'r50-grid-west':this.rectangleLoop(0,120,160,280),
             'r50-grid-east':this.rectangleLoop(120,240,160,280)
         };
@@ -108,7 +108,7 @@ class DriverChicagoConnectorsR50 {
             return report;
         }
         const group=new THREE.Group();
-        group.name='chicago-r50-south-loop-street-grid';
+        group.name='chicago-r50-north-river-street-grid';
         group.userData.proceduralApproximation=true;
         group.userData.originalPS1PlacementCertified=false;
         const roadMaterial=new THREE.MeshLambertMaterial({color:0x3b4146});
