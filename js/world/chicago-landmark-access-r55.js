@@ -7,7 +7,7 @@
 class DriverChicagoLandmarkAccessR55 {
     static ROUTES=[
         {id:'navy-pier',name:'NAVY PIER',from:[320,-40],to:[359,-40],
-            width:6.4,sign:[327,-51],signColor:0x67d9f0},
+            width:5.6,sign:[327,-51],signColor:0x67d9f0},
         {id:'wrigley',name:'WRIGLEY FIELD',from:[-280,240],to:[-280,222.5],
             width:6.6,sign:[-268,227],signColor:0x9dcb90},
         {id:'soldier',name:'SOLDIER FIELD',from:[280,-240],to:[280,-267],
@@ -92,8 +92,9 @@ class DriverChicagoLandmarkAccessR55 {
             const bl=[b.x+nx*w,b.z+nz*w],
                 br=[b.x-nx*w,b.z-nz*w];
             // A subdivisão acompanha rampas e diferenças de nível locais.
-            vertex(...al);vertex(...ar);vertex(...bl);
-            vertex(...ar);vertex(...br);vertex(...bl);
+            // Facing +Y: normais do pavimento recebem a luz do dia.
+            vertex(...al);vertex(...bl);vertex(...ar);
+            vertex(...ar);vertex(...bl);vertex(...br);
         }
         const geo=new THREE.BufferGeometry();
         geo.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
