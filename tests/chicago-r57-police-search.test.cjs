@@ -181,3 +181,31 @@ test('R57 browser script caches police controller and F8 report in both city mod
     assert(engine.includes('this.startMission(\'freeroam\')'));
     assert(engine.includes('this.trafficAI.getInput('));
 });
+
+test('R57 queued civilians: officer keeps safe headway throughout repeated search ticks',()=>{
+    global.THREE=three();
+    try{
+        const c=city(),officer=police({x:-116,z:236,heading:0});
+        const queue=[6,12,18,24].map(offset=>({
+            x:-116,z:236+offset,y:0,speed:0,heading:0
+        }));
+        const ai=new TrafficAI(c),vehicles=[officer,...queue];
+        for(let i=0;i<60;i++){
+            const control=ai.getInput(officer,.05,vehicles,
+                {x:120,z:-120},85);
+            Physics.update(officer,.05,
+                control.up?1:control.down?-1:0,
+                control.right?1:control.left?-1:0,
+                control.handbrake,false);
+            const dx=(Math.sin(officer.heading)*officer.speed+
+                Math.cos(officer.heading)*officer.lateralVelocity)*.05;
+            const dz=(Math.cos(officer.heading)*officer.speed-
+                Math.sin(officer.heading)*officer.lateralVelocity)*.05;
+            officer.x+=dx;officer.z+=dz;
+            assert(queue.every(other=>Math.hypot(
+                officer.x-other.x,officer.z-other.z)>=3.4));
+            assert.equal(officer.chicagoPoliceSearchStatusR57?.waiting,
+                'traffic');
+        }
+    }finally{delete global.THREE}
+});
