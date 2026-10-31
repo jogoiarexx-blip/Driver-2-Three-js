@@ -108,7 +108,11 @@ test('R52 fixed east Goose Island bridge is drivable; the water to either side i
                 'bridge path crosses water or building');
         const crossing=Nav.plan(c,{x:-200,z:200},{x:-40,z:200});
         assert(crossing);
-        assert(crossing.some(p=>p.x===-160&&p.z===240));
+        // The A* may choose the older fixed z=160 bridge instead of z=240.
+        // Both are valid; never require a longer route just to use R52.
+        assert(crossing.some(p=>p.x===-160&&[160,240].includes(p.z)));
+        for(let i=1;i<crossing.length;i++)
+            assert(Nav.clear(c,crossing[i-1],crossing[i]));
     }finally{delete global.THREE}
 });
 test('R52 audit rejects a blocked fixed bridge instead of putting AI on a wall',()=>{
