@@ -1,0 +1,48 @@
+name: Driver 2 - Chicago R41 - transversal oeste
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'chicago/reference-west-lateral-r41.*'
+      - 'js/world/chicago-west-lateral-r41.js'
+      - 'tests/chicago-r41-west-lateral*'
+      - '.github/workflows/chicago-r41-west-lateral.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-physical-drive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir origem, traçado e emenda com R39
+        run: node --test tests/chicago-r41-west-lateral.test.cjs
+      - name: Preparar Chromium e WebGL em software
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir o jogo em localhost
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Dirigir R41 real nos dois sentidos
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r41-west-lateral-browser.cjs
+      - name: Publicar dados do QA
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chicago-r41-west-lateral-qa
+          path: qa-artifacts/
+          retention-days: 14
