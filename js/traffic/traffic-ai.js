@@ -573,7 +573,12 @@ class DriverTrafficAI {
         // corners and struck R52 shop colliders. These limits apply
         // ONLY to lost-sight, graph-routed, non-scripted officers.
         let policeCornerBrakeR57=false;
-        if(wanted&&!scripted&&policeGraphGuidance){
+        // R57: limit the extra corner braking to the compact R52
+        // Goose East streets. A global police speed cap caused new
+        // wall contacts in other districts during differential replay.
+        if(wanted&&!scripted&&policeGraphGuidance&&
+           this.city.chicagoGooseEastR52?.ready &&
+           car.x>=-142&&car.x<=-22&&car.z>=150&&car.z<=310){
             const distance=policeGraphGuidance.cornerDistance??Infinity;
             policeCornerBrakeR57=(
                 (policeGraphGuidance.cornerAngle||0)>.55&&distance<45
@@ -633,6 +638,7 @@ class DriverTrafficAI {
             }
         }
         if (stopForRed || stopForCar) maxSpeed = 0;
+        if(policeGraphBlockedR57)route.reverseTimer=0;
         if(wanted&&!scripted){
             car.chicagoPoliceSearchStatusR57={
                 active:!!policeGraphGuidance||policeGraphBlockedR57,
