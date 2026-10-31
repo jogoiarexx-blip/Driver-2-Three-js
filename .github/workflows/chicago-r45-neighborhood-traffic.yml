@@ -1,0 +1,49 @@
+name: Driver 2 - Chicago R45 - trafego das duas quadras
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/traffic/chicago-neighborhood-traffic.js'
+      - 'js/traffic/traffic-ai.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'tests/chicago-neighborhood-traffic*'
+      - '.github/workflows/chicago-r45-neighborhood-traffic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  integrated-traffic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar rotas reais, spawn e isolamento das quatro cidades
+        run: node --test tests/chicago-neighborhood-traffic.test.cjs tests/chicago-r43-block-loop.test.cjs tests/chicago-r44-block-loop.test.cjs
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir o jogo localmente
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Dirigir os dois civis com a IA real por 4200 frames
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-neighborhood-traffic-browser.cjs
+      - name: Salvar telemetria
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r45-traffic
+          path: qa-artifacts/chicago-neighborhood-traffic.json
+          retention-days: 14
