@@ -446,6 +446,10 @@ class DriverTrafficAI {
         const pursuitTarget = wanted ?
             this.pursuitInformation(car,dt,playerPos,felony) :
             (hostile && playerPos ? playerPos : null);
+        // R57: only unscripted officers searching for the last-known
+        // position use this graph safety state; mission routes and police
+        // with direct visual contact preserve their previous behaviour.
+        let policeGraphGuidance=null,policeGraphBlockedR57=false;
         // R5: entrada efetiva na malha local quando o visitante cruza
         // a cabeceira oeste. A checagem valida o segmento completo na
         // física, e nenhuma missão ou outra cidade é redirecionada.
@@ -515,11 +519,19 @@ class DriverTrafficAI {
                 typeof DriverChicagoMixedNavigationR49!=='undefined'?
                 DriverChicagoMixedNavigationR49.follow(
                     this.city,car,pursuitTarget,route.policeNavHolder,dt):null;
-            const policePath=mixed && !mixed.blocked ? mixed :
-                DriverPursuitNavigation.follow(
-                    this.city,car,destination,route.policeNavHolder,dt);
-            if(policePath.target && !policePath.blocked)
+            // A known, built mixed road must not silently fall back to
+            // the 80m grid when a canal/bridge makes it unreachable.
+            // Fall back to legacy pursuit only where mixed navigation
+            // isn't installed (other cities or unbuilt environments).
+            const policePath=mixed||DriverPursuitNavigation.follow(
+                this.city,car,destination,route.policeNavHolder,dt);
+            if(policePath.target&&!policePath.blocked){
                 target=policePath.target;
+                if(mixed)policeGraphGuidance=mixed;
+            }else if(mixed){
+                policeGraphBlockedR57=true;
+                target={x:car.x,z:car.z};
+            }
         }
 
         const desiredHeading = Math.atan2(target.x - car.x, target.z - car.z);
@@ -557,6 +569,22 @@ class DriverTrafficAI {
             route.localTurnSpeed=null;
         }
         if (maneuver) maxSpeed=Math.min(maxSpeed,maneuver.speedLimit);
+        // R57: 40-unit/s police search previously cut 17m side-road
+        // corners and struck R52 shop colliders. These limits apply
+        // ONLY to lost-sight, graph-routed, non-scripted officers.
+        let policeCornerBrakeR57=false;
+        if(wanted&&!scripted&&policeGraphGuidance){
+            const distance=policeGraphGuidance.cornerDistance??Infinity;
+            policeCornerBrakeR57=(
+                (policeGraphGuidance.cornerAngle||0)>.55&&distance<45
+            )||turn>.42;
+            if(policeCornerBrakeR57){
+                const cornerLimit=distance<14?3.8:distance<28?6.2:12;
+                maxSpeed=Math.min(maxSpeed,cornerLimit);
+                if(turn>.42)maxSpeed=Math.min(maxSpeed,5.2);
+            }
+        }
+        if(policeGraphBlockedR57)maxSpeed=0;
         if (scripted) maxSpeed=scripted.done||missionRoute?.blocked?0:
             Math.min(maxSpeed,scripted.maxSpeed||23);
         car.policeManeuver = maneuver ? maneuver.mode : null;
@@ -605,6 +633,15 @@ class DriverTrafficAI {
             }
         }
         if (stopForRed || stopForCar) maxSpeed = 0;
+        if(wanted&&!scripted){
+            car.chicagoPoliceSearchStatusR57={
+                active:!!policeGraphGuidance||policeGraphBlockedR57,
+                blocked:policeGraphBlockedR57,
+                cornerBrake:policeCornerBrakeR57,
+                waiting:policeGraphBlockedR57?'route':stopForCar?'traffic':null,
+                speedLimit:maxSpeed
+            };
+        }
 
         // Saída de encalhe após colisão, sem teleportes pela cidade.
         const moved = Math.hypot(car.x - route.previousX, car.z - route.previousZ);
