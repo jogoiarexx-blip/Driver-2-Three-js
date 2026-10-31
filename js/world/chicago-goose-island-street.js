@@ -125,6 +125,33 @@ class DriverChicagoGooseIslandStreet {
             building.position.set(x,height/2,200);
             building.name='goose-island-r4-warehouse-'+(i+1);
             group.add(building);
+            // R46: fachadas industriais legíveis à distância, mantendo
+            // exatamente o mesmo volume físico dos galpões existentes.
+            // Materiais e geometrias reaproveitados entre os dois lotes.
+            const facadeMaterial=new THREE.MeshLambertMaterial({
+                color:i?0x87918e:0x88786c
+            });
+            const darkMaterial=new THREE.MeshLambertMaterial({
+                color:0x293137
+            });
+            const facadeGeometry=new THREE.BoxGeometry(w*.72,5,.12);
+            const doorGeometry=new THREE.BoxGeometry(w*.58,4,.13);
+            const windowGeometry=new THREE.BoxGeometry(w*.23,1.4,.14);
+            for(const side of [-1,1]){
+                const faceZ=200+side*20;
+                const facade=new THREE.Mesh(facadeGeometry,facadeMaterial);
+                facade.position.set(x,3.3,faceZ+side*.09);
+                facade.name='goose-island-warehouse-loading-front';
+                group.add(facade);
+                const door=new THREE.Mesh(doorGeometry,darkMaterial);
+                door.position.set(x,2.05,faceZ+side*.18);
+                door.name='goose-island-warehouse-loading-door';
+                group.add(door);
+                const window=new THREE.Mesh(windowGeometry,darkMaterial);
+                window.position.set(x,height-2.3,faceZ+side*.18);
+                window.name='goose-island-warehouse-upper-window';
+                group.add(window);
+            }
             const box={minX:lot.minX,maxX:lot.maxX,
                 minZ:180,maxZ:220};
             city.buildingBoxes.push(box);
