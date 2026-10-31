@@ -140,6 +140,7 @@
                 this.chicagoStadium=null;
                 this.chicagoSoldierField=null;
                 this._pierStadiumR53=null;
+                this.chicagoAccessR55=null;
                 this.chicagoNeighborhoods=null;
                 this.chicagoNightState=null; // evita reutilizar halos/meshes descartados ao trocar de cidade
                 this.chicagoBridgeClock=0;
