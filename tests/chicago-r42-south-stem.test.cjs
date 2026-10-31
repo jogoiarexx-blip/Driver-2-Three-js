@@ -68,7 +68,8 @@ test('carregamento, radar, pintura e inicialização física incluem R42',()=>{
  assert(html.indexOf('chicago-south-stem-r42.js')<html.indexOf('js/world/city-builder.js'));
  assert(builder.includes('this.chicagoReferenceSouthStemR42=null;'));
  assert(builder.includes('DriverChicagoSouthStemR42.prepare(this);'));
- assert(builder.includes('this.chicagoReferenceSouthStemR42\n'));
+ const paintList=builder.split('DriverChicagoNorthMarkingsR33.build(this,[')[1]?.split('].filter(Boolean)')[0];
+ assert(paintList&&paintList.includes('this.chicagoReferenceSouthStemR42'));
  const paths=Network.sourcePaths({chicagoReferenceSouthStemR42:Road.plan()});
  assert.equal(paths.length,1);
  assert.equal(paths[0].id,'south-stem-r42');
