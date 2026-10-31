@@ -129,8 +129,13 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
                const cfg=model.config;
                let meshes=0;
                model.root?.traverse(node=>{if(node.isMesh)meshes++;});
-               const height=model.root?
-                  new THREE.Box3().setFromObject(model.root).getSize(new THREE.Vector3()).y:0;
+               const box=model.root?
+                  new THREE.Box3().setFromObject(model.root):null;
+               const skinned=cfg.species==='dog'&&model.root?
+                  DriverMalePedestrian.animatedSkinnedBounds(model.root):null;
+               const height=skinned?
+                  skinned.getSize(new THREE.Vector3()).y:
+                  (box?.getSize(new THREE.Vector3()).y||0);
                return {id:cfg.id,species:cfg.species,targetHeight:cfg.height,height,
                   state:model.state,meshes,slot:m.pedestrians.indexOf(model.current),
                   error:model.error};

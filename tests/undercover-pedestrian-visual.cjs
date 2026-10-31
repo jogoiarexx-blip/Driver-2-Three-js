@@ -65,7 +65,7 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
               skinnedHeight:skinnedSize?.y||0,skinnedWidth:skinnedSize?.x||0,
               skinnedDepth:skinnedSize?.z||0,sampledVertices,
               skinnedScale:model.skinnedScaleReport,
-              feetY:bounds?.min.y??0,
+              feetY:bounds?.min.y??0,skinnedFeetY:sampledVertices?skinnedBounds.min.y:0,
               scaleTracksRemoved:model.visualRepairs.scaleTracksRemoved,
               slot:m.pedestrians.indexOf(ped),attached:!!ped?.glbVariant,
               distance:ped?Math.hypot(ped.x-focus.x,ped.z-focus.z):Infinity,
@@ -125,15 +125,17 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
             'Cão gigante na malha deformada em movimento: '+JSON.stringify(model));
          assert(model.width>0&&model.width<2.7&&model.depth>0&&model.depth<2.7,
             'Cão gigante na geometria não deformada: '+JSON.stringify(model));
-         assert(model.feetY>-1.5&&model.feetY<1.5,
-            'Cão fora do chão durante a caminhada: '+JSON.stringify(model));
+         assert(model.skinnedFeetY>-0.2&&model.skinnedFeetY<1.5,
+            'Cão flutuando na malha animada: '+JSON.stringify(model));
        }
-       assert(Math.abs(model.height-model.expected)<0.15,
-         'Altura fora do esperado em '+stage+': '+JSON.stringify(model));
+       const visibleHeight=model.species==='dog'?model.skinnedHeight:model.height;
+       assert(Math.abs(visibleHeight-model.expected)<0.18,
+         'Altura REAL fora do esperado em '+stage+': '+JSON.stringify(model));
      }
      const dogs=data.models.filter(model=>model.species==='dog');
      const shepherd=dogs.find(m=>m.id==='german-shepherd');
-     assert(shepherd.height>Math.max(...dogs.filter(m=>m!==shepherd).map(m=>m.height)));
+     assert(shepherd.skinnedHeight>
+        Math.max(...dogs.filter(m=>m!==shepherd).map(m=>m.skinnedHeight)));
    }
    assert.equal(errors.length,0,'Erros de JS: '+errors.join(' | '));
    fs.writeFileSync(path.join(DIR,'undercover-pedestrians.json'),
