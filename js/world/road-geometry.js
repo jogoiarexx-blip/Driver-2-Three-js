@@ -27,7 +27,7 @@ class DriverRoadGeometry {
             [city.chicagoGooseEastR52,-120,200,2,2,24,12.5,.273]
         ];
         for(const [result,originX,originZ,nx,nz,offset,half,height] of districts){
-            if(!result?.visualReady)return 0; // avoid inactive districts
+            if(!result?.visualReady)continue; // ignore inactive districts
             const ix=Math.round((x-originX)/80),iz=Math.round((z-originZ)/80);
             if(ix<0||ix>=nx||iz<0||iz>=nz)continue;
             const cx=originX+80*ix,cz=originZ+80*iz;
