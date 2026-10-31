@@ -2,8 +2,9 @@
  * Chicago R53 — real connection on the western bank of Goose Island.
  *
  * The -240/-80 crossing is ALREADY a fixed bridge in the Chicago R2
- * river system. The east channel at x=-160,z=-80 has NO bridge; therefore
- * no road is drawn or routed through that water. Other cities unchanged.
+ * river system. The separate eastern branch at x=-160 exists only north
+ * of z=94: at z=-80 the continuation is dry land, not another bridge.
+ * Other cities remain unchanged.
  *
  * Adapted procedural geometry, not PS1-certificated road placement.
  */
@@ -25,7 +26,7 @@ class DriverChicagoWestCanalR53 {
                 from:{x,z:-160},to:{x,z:0}})),
             // Cross the ONLY existing fixed west-channel bridge at z=-80.
             {id:'fixed-west-bridge',axis:'x',
-                from:{x:-320,z:-80},to:{x:-200,z:-80}},
+                from:{x:-320,z:-80},to:{x:-160,z:-80}},
             ...this.BLOCK_Z.map(z=>({id:'west-arterial-feeder-'+z,
                 axis:'x',from:{x:-320,z},to:{x:-280,z}}))
         ];
@@ -36,12 +37,12 @@ class DriverChicagoWestCanalR53 {
         for(const x of this.BLOCK_X)
             for(let i=1,z=[-160,-120,-80,-40,0];i<z.length;i++)
                 add('spine-'+x+'-'+z[i-1],{x,z:z[i-1]},{x,z:z[i]});
-        for(const [a,b] of [[-320,-280],[-280,-240],[-240,-200]])
+        for(const [a,b] of [[-320,-280],[-280,-240],[-240,-200],[-200,-160]])
             add('west-bridge-'+a,{x:a,z:-80},{x:b,z:-80});
         for(const z of this.BLOCK_Z)
             add('west-grid-'+z,{x:-320,z},{x:-280,z});
-        // Three west-grid feeders, four N/S grid ends.
-        return {nodes,edges,gridExits:7,internalEdges:6,
+        // Three west-grid feeders, four N/S ends and one dry east outlet.
+        return {nodes,edges,gridExits:8,internalEdges:6,
             reusedFixedBridge:true};
     }
     static clear(city,from,to){
@@ -70,12 +71,13 @@ class DriverChicagoWestCanalR53 {
             this.BLOCK_X.filter(x=>
                 typeof DriverChicagoCityPlan!=='undefined' &&
                 DriverChicagoCityPlan.isProtected(x,z)).map(x=>({x,z})));
-        // Guard against a fictional bridge over the EAST branch at -160.
-        const eastChannelBridgeExists=
-            !city.isWaterAt?.(-160,-80);
+        // This latitude lies south of the east branch. Crossing here is
+        // only enabled while the existing world reports the endpoint dry.
+        const dryEastOutlet=!city.isWaterAt?.(-160,-80);
         return {...topology,blocked,protectedBlocks,
-            eastChannelBridgeExists,
-            ready:blocked.length===0&&protectedBlocks.length===0 &&
+            dryEastOutlet,
+            ready:blocked.length===0&&dryEastOutlet&&
+                protectedBlocks.length===0 &&
                 !!city.chicagoPS1RiverBranches,
             originalPS1Certified:false};
     }
