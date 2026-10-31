@@ -10,7 +10,7 @@ const Roster=vm.runInNewContext(rosterSource+'\nDriverPedestrianVariants',{});
 
 test('only woman 3 opts into skeletal deformation repair',()=>{
  const cfg=Roster.DEFINITIONS;
- assert.equal(cfg.length,3);
+ assert.equal(cfg.length,13);
  assert.equal(cfg.find(x=>x.id==='woman-3').repairSkinDeformation,true);
  assert.equal(cfg.find(x=>x.id==='woman-2').repairSkinDeformation,undefined);
  assert.equal(cfg.find(x=>x.id==='mendigo').repairSkinDeformation,undefined);
