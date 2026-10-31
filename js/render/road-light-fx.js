@@ -1,7 +1,7 @@
 /**
  * Chicago R4 — faróis desenhados no pavimento e reflexos leves de chuva.
  * Não cria SpotLight/PointLight, não altera geometria, física ou colisões.
- * Duas InstancedMesh fixas: fachos e reflexos (máximo 7 veículos próximos).
+ * Três lotes fixos: fachos, reflexos e brilho (máximo 7 veículos próximos).
  */
 class DriverRoadLightFX {
     static MAX_VEHICLES=7;
@@ -30,9 +30,25 @@ class DriverRoadLightFX {
             side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,
             blending:THREE.AdditiveBlending
         });
-        const makeMesh=(mat,name)=>{
+        this.glowMaterial=new THREE.MeshBasicMaterial({
+            map:wetMap,color:0xffe9b3,transparent:true,opacity:0,
+            depthWrite:false,depthTest:true,side:THREE.DoubleSide,
+            blending:THREE.AdditiveBlending
+        });
+        // O WebP é opcional: o gradiente permanece se houver erro de rede.
+        if(typeof THREE.TextureLoader==='function'){
+            new THREE.TextureLoader().load('./assets/effects/headlight-beam.webp',
+                texture=>{
+                    texture.encoding=THREE.sRGBEncoding;
+                    const fallback=this.lightMaterial.map;
+                    this.lightMaterial.map=texture;
+                    this.lightMaterial.needsUpdate=true;
+                    fallback.dispose();
+                },undefined,()=>{});
+        }
+        const makeMesh=(mat,name,ground=true)=>{
             const geo=new THREE.PlaneGeometry(1,1);
-            geo.rotateX(-Math.PI/2);
+            if(ground)geo.rotateX(-Math.PI/2);
             const mesh=new THREE.InstancedMesh(
                 geo,mat,DriverRoadLightFX.MAX_VEHICLES*2
             );
@@ -46,9 +62,11 @@ class DriverRoadLightFX {
         };
         this.beams=makeMesh(this.lightMaterial,'chicago-r4-ground-headlights');
         this.reflections=makeMesh(this.wetMaterial,'chicago-r4-wet-road-reflections');
+        this.glows=makeMesh(this.glowMaterial,'driver2-headlight-glows',false);
         this.dummy=new THREE.Object3D();
         this.hideUnused(this.beams,0);
         this.hideUnused(this.reflections,0);
+        this.hideUnused(this.glows,0);
     }
     makeTexture(wet){
         const canvas=document.createElement('canvas');
@@ -124,7 +142,14 @@ class DriverRoadLightFX {
     update(dt=0){
         this.elapsed+=Math.max(0,Math.min(.05,Number(dt)||0));
         const game=this.game,city=game.city;
-        const enabled=city?.preset?.id==='chicago'&&!!city.ready;
+        const enabled=!!city?.preset?.id&&!!city.ready;
+        // O cone antigo é mantido como reserva quando este efeito não está
+        // disponível, mas não se sobrepõe ao novo facho na partida normal.
+        const syncCone=v=>{
+            if(v?.headlightBeams)v.headlightBeams.visible=!enabled&&!!v.headlightsOn;
+        };
+        syncCone(game.playerCar);
+        for(const v of game.vehicles||[])syncCone(v);
         const clock=game.dayNight;
         const angle=clock?(clock.time-.25)*Math.PI*2:0;
         const sunHeight=clock?Math.sin(angle):1;
@@ -136,6 +161,7 @@ class DriverRoadLightFX {
         if(!enabled||light<.012||!focus){
             this.beams.visible=false;
             this.reflections.visible=false;
+            this.glows.visible=false;
             this.lastLevel=0;
             this.adjustStreetPools(city,rain,0);
             return {active:0,wet:false};
@@ -169,20 +195,39 @@ class DriverRoadLightFX {
                 this.dummy.scale.set(1.55,1,10.6);
                 this.dummy.updateMatrix();
                 this.reflections.setMatrixAt(used,this.dummy.matrix);
+                // Um pequeno halo por farol, sempre virado para a câmera.
+                const dims=typeof DriverVehicleCollisions!=='undefined'?
+                    DriverVehicleCollisions.dimensions(v):null;
+                const nose=(dims?.length||5.15)*.5+.13;
+                const lampOffset=Math.min(.95,(dims?.width||2.45)*.31);
+                this.dummy.position.set(
+                    v.x+sx*nose+rightX*side*lampOffset,
+                    (Number(v.y)||0)+.8,
+                    v.z+sz*nose+rightZ*side*lampOffset);
+                if(this.dummy.quaternion?.copy && game.camera?.quaternion)
+                    this.dummy.quaternion.copy(game.camera.quaternion);
+                this.dummy.scale.set(.9,.9,1);
+                this.dummy.updateMatrix();
+                this.glows.setMatrixAt(used,this.dummy.matrix);
                 used++;
             }
         }
         if(!used){
             this.beams.visible=false;
             this.reflections.visible=false;
+            this.glows.visible=false;
             this.adjustStreetPools(city,rain,light);
             return {active:0,wet:rain};
         }
         this.hideUnused(this.beams,used);
+        this.hideUnused(this.glows,used);
         if(rain)this.hideUnused(this.reflections,used);
         this.beams.visible=true;
         this.beams.instanceMatrix.needsUpdate=true;
         this.lightMaterial.opacity=Math.min(.70,light*(rain ? .49 : .32));
+        this.glows.visible=true;
+        this.glows.instanceMatrix.needsUpdate=true;
+        this.glowMaterial.opacity=Math.min(.55,light*.48);
         this.reflections.visible=rain;
         this.wetMaterial.opacity=rain?
             Math.min(.47,light*(.23+.04*Math.sin(this.elapsed*1.2))):0;
