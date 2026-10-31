@@ -280,9 +280,23 @@ class DriverChicagoMixedNavigationR49 {
             }
             return {target:null,blocked:!state.path};
         }
-        while(state.index<state.path.length-1 &&
-            this.distance(car,state.path[state.index])<11)
+        // R56: right-angle corners on 17m streets and narrow bridges
+        // must be entered close to the junction; the old 11m radius
+        // started the turn before the front wheels reached the crossing.
+        const cornerAngle=index=>{
+            const path=state.path;
+            if(index<1||index>=path.length-1)return 0;
+            const a=path[index-1],b=path[index],c=path[index+1];
+            const x0=b.x-a.x,z0=b.z-a.z,
+                x1=c.x-b.x,z1=c.z-b.z;
+            return Math.abs(Math.atan2(x0*z1-z0*x1,x0*x1+z0*z1));
+        };
+        while(state.index<state.path.length-1){
+            const corner=cornerAngle(state.index);
+            const threshold=state.index===0?11:corner>.55?4.5:8;
+            if(this.distance(car,state.path[state.index])>=threshold)break;
             state.index++;
+        }
         let target=state.path[state.index];
         state.check+=Math.max(0,dt);
         if(state.check>=.6){
@@ -296,8 +310,10 @@ class DriverChicagoMixedNavigationR49 {
                 target=state.path[0];
             }
         }
+        const corner=cornerAngle(state.index);
         return {target,blocked:false,graph:true,
-            remaining:state.path.length-state.index-1};
+            remaining:state.path.length-state.index-1,
+            cornerAngle:corner,cornerDistance:this.distance(car,target)};
     }
 }
 if(typeof module!=='undefined'&&module.exports)
