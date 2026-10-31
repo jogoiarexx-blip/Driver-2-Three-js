@@ -141,6 +141,7 @@
                 this.chicagoSoldierField=null;
                 this._pierStadiumR53=null;
                 this.chicagoAccessR55=null;
+                this.chicagoLandmarkDistrictR57=null;
                 this.chicagoNeighborhoods=null;
                 this.chicagoNightState=null; // evita reutilizar halos/meshes descartados ao trocar de cidade
                 this.chicagoBridgeClock=0;
@@ -618,6 +619,10 @@
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
+                    // R57: vias secundárias conectadas, margem e parking,
+                    // construídos só após os colliders principais da cidade.
+                    if(typeof DriverChicagoLandmarkDistrictR57!=='undefined')
+                        DriverChicagoLandmarkDistrictR57.build(this);
                 }
                 if(this.preset.id==='rio' &&
                     typeof DriverRioOverhaul!=='undefined')
@@ -1895,6 +1900,9 @@
                 this.refreshTrafficLights();
                 if(typeof DriverCoastalVisuals!=='undefined')
                     DriverCoastalVisuals.update(this,dt,focusPosition);
+                if(typeof DriverChicagoLandmarkDistrictR57!=='undefined')
+                    DriverChicagoLandmarkDistrictR57.update(
+                        this,focusPosition,dt);
                 if(this.caineBridgeGate)
                     this.caineBridgeGate.visible=!!this.caineBridgeClosed;
                 const targetAngle = this.bridgeRaised ? THREE.MathUtils.degToRad(38) : 0.08;
