@@ -140,7 +140,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
    JSON.stringify({report,errors},null,2)+'\n');
   assert(report.loaded);
   assert.deepEqual(report.sourceEdgeIds,require('../chicago/reference-east-return-r38.json').sourceEdgeIds);
-  assert.equal(report.sourceCorridors,14);
+  assert.equal(report.sourceCorridors,require('../js/world/chicago-ps1-street-network-r22.js').SOURCE_NAMES.length);
   assert.equal(report.classificationCertified,false);
   assert.equal(report.originalPlacementCertified,false);
   assert(report.footprint.samples>100);
