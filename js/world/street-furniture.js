@@ -11,8 +11,12 @@ class DriverStreetFurniture {
         dummy.updateMatrix();
         prop.poleMesh.setMatrixAt(prop.instanceIndex,dummy.matrix);
         prop.lampMesh.setMatrixAt(prop.instanceIndex,dummy.matrix);
+        prop.armMesh?.setMatrixAt(prop.instanceIndex,dummy.matrix);
+        prop.baseMesh?.setMatrixAt(prop.instanceIndex,dummy.matrix);
         prop.poleMesh.instanceMatrix.needsUpdate=true;
         prop.lampMesh.instanceMatrix.needsUpdate=true;
+        if(prop.armMesh)prop.armMesh.instanceMatrix.needsUpdate=true;
+        if(prop.baseMesh)prop.baseMesh.instanceMatrix.needsUpdate=true;
         if(typeof DriverChicagoNightLights!=='undefined')
             DriverChicagoNightLights.hidePole(prop);
         prop.hidden=true;
@@ -94,13 +98,27 @@ class DriverStreetFurniture {
                 color:city.preset.id==='vegas'?0xfacc15:0xffe4a3
             }),positions.length
         );
+        // R50: postes de concreto/metálicos com pedestal e braço
+        // horizontal. Geometria compartilhada, sem luzes dinâmicas.
+        const base=new THREE.InstancedMesh(
+            new THREE.CylinderGeometry(.28,.38,.7,6),
+            new THREE.MeshLambertMaterial({color:0x50585d}),positions.length
+        );
+        const arm=new THREE.InstancedMesh(
+            new THREE.BoxGeometry(1.15,.13,.17),
+            new THREE.MeshLambertMaterial({color:0x78838a}),positions.length
+        );
         positions.forEach(([x,z],i)=>{
             obj.rotation.set(0,0,0);obj.scale.set(1,1,1);
             obj.position.set(x,2.9,z);obj.updateMatrix();pole.setMatrixAt(i,obj.matrix);
             obj.position.set(x,5.85,z);obj.updateMatrix();bulb.setMatrixAt(i,obj.matrix);
+            obj.position.set(x,.35,z);obj.updateMatrix();base.setMatrixAt(i,obj.matrix);
+            obj.position.set(x+.53,5.65,z);obj.updateMatrix();arm.setMatrixAt(i,obj.matrix);
         });
         pole.instanceMatrix.needsUpdate=true;
         bulb.instanceMatrix.needsUpdate=true;
+        base.instanceMatrix.needsUpdate=true;
+        arm.instanceMatrix.needsUpdate=true;
         // Uma referência sem alterar o registro de colisões original.
         if(city?.preset?.id==='chicago'){
             city.streetLampPositions=positions;
@@ -113,7 +131,7 @@ class DriverStreetFurniture {
             city.destructibleProps.push({
                 type:'pole',x,z,hit:false,shattered:false,
                 instanceIndex:index,poleMesh:pole,lampMesh:bulb,
-                mesh:null
+                armMesh:arm,baseMesh:base,mesh:null
             });
         });
 
@@ -154,7 +172,7 @@ class DriverStreetFurniture {
         }
 
         // Sem sombras/luzes físicas adicionais para preservar desempenho móvel.
-        for (const mesh of [stripe,pole,bulb]) {
+        for (const mesh of [stripe,pole,bulb,base,arm]) {
             mesh.frustumCulled=false;
             mesh.castShadow=false;
             city.cityGroup.add(mesh);
