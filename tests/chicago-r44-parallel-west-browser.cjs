@@ -71,33 +71,57 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
    const effects={addSkidMark(){},spawnTireSmoke(){},
      spawnImpactSparks(){},spawnCarBreakaway(){},
      spawnWaterSplash(){},ejectHubcap(){}};
-   let progress=0,offroadFrames=0,maxOffset=0,peakOffset=null,maxDamage=0,
+   const cum=[0];
+    for(let i=1;i<pts.length;i++)
+     cum.push(cum.at(-1)+Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z));
+    const length=cum.at(-1);
+    const sample=(dist)=>{
+     const at=Math.max(0,Math.min(length,dist));
+     for(let i=1;i<pts.length;i++)if(cum[i]>=at-1e-6){
+      const t=(at-cum[i-1])/(cum[i]-cum[i-1]||1);
+      return {x:pts[i-1].x+(pts[i].x-pts[i-1].x)*t,
+              z:pts[i-1].z+(pts[i].z-pts[i-1].z)*t};
+     }
+     return pts.at(-1);
+    };
+    const project=(x,z,progress)=>{
+     let best={dist:Infinity,progress};
+     for(let i=1;i<pts.length;i++){
+      if(cum[i]<progress-7||cum[i-1]>progress+15)continue;
+      const a=pts[i-1],b=pts[i],dx=b.x-a.x,dz=b.z-a.z;
+      const t=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1)));
+      const dist=Math.hypot(x-a.x-dx*t,z-a.z-dz*t);
+      const pos=cum[i-1]+t*(cum[i]-cum[i-1]);
+      if(dist<best.dist)best={dist,progress:pos};
+     }
+     return best;
+    };
+    let progress=0,offroadFrames=0,maxOffset=0,peakOffset=null,maxDamage=0,
        waterFrames=0,blockedFrames=0,frames=0,
        finalDistance=Infinity;
    const samples=[];
    try{
     for(let frame=0;frame<7200;frame++){
-     // Progresso monotônico até o ponto próximo, alvo > 7m à frente.
-     let closest=progress,nearest=Infinity;
-     for(let i=progress;i<pts.length;i++){
-      const d=Math.hypot(car.x-pts[i].x,car.z-pts[i].z);
-      if(d<nearest){nearest=d;closest=i;}
-     }
-     progress=Math.max(progress,closest);
-     let target=pts.at(-1),distance=0;
-     for(let i=progress+1;i<pts.length;i++){
-      distance+=Math.hypot(pts[i].x-pts[i-1].x,
-        pts[i].z-pts[i-1].z);
-      if(distance>3.8){target=pts[i];break;}
-     }
-     const desired=Math.atan2(target.x-car.x,target.z-car.z),
-       delta=Math.atan2(Math.sin(desired-car.heading),
-         Math.cos(desired-car.heading));
-     const steering=delta>.035?1:delta<-.035?-1:0;
-     const remaining=Math.hypot(car.x-last.x,car.z-last.z);
-     // O piloto de QA desacelera antes da curva e do ponto final.
-     const targetSpeed=remaining<14?2.8:remaining<30?3.4:4.5;
-     const input={
+      // Project onto the road centerline, then anticipate both broad
+      // and tight bends using a lookahead adapted to local curvature.
+      const nearest=project(car.x,car.z,progress);
+      progress=Math.max(progress,Math.min(progress+3,nearest.progress));
+      const before=sample(progress-6),here=sample(progress+3),
+        ahead=sample(progress+15);
+      const headingA=Math.atan2(here.x-before.x,here.z-before.z),
+        headingB=Math.atan2(ahead.x-here.x,ahead.z-here.z),
+        turn=Math.abs(Math.atan2(Math.sin(headingB-headingA),
+             Math.cos(headingB-headingA)));
+      const remaining=length-progress;
+      const lookAhead=turn>.18?11.5:6.2;
+      const target=sample(progress+lookAhead);
+      const desired=Math.atan2(target.x-car.x,target.z-car.z),
+        delta=Math.atan2(Math.sin(desired-car.heading),
+          Math.cos(desired-car.heading));
+      const steering=delta>.035?1:delta<-.035?-1:0;
+      const targetSpeed=(turn>.18||Math.abs(delta)>.2)?2.7:
+        remaining<19?3.0:4.3;
+      const input={
       up:car.speed<targetSpeed-.15,
       down:car.speed>targetSpeed+.15,
       left:steering<0,right:steering>0,handbrake:false
@@ -121,7 +145,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
        speed:+car.speed.toFixed(2),offset:+offset.toFixed(2),
        toEnd:+finalDistance.toFixed(2)
      });
-     if(finalDistance<3.7)break;
+     if(progress>=length-3.5&&finalDistance<3.7)break;
     }
    }finally{
     game.scene.remove(car.root);
