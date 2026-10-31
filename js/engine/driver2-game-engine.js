@@ -3220,6 +3220,8 @@
                 const clearInputs = () => {
                     Object.keys(this.input).forEach(key => { this.input[key] = false; });
                     this.lookBackActive = false;
+                    const action = document.getElementById('touch-action');
+                    if (action) delete action.dataset.pressed;
                 };
                 window.addEventListener('blur', clearInputs);
                 document.addEventListener('visibilitychange', () => {
@@ -3406,6 +3408,10 @@
                         e.preventDefault();
                         if (touchAction.dataset.pressed) return;
                         touchAction.dataset.pressed = '1';
+                        // Recebe a soltura mesmo se o dedo sair do botão.
+                        if (touchAction.setPointerCapture) {
+                            touchAction.setPointerCapture(e.pointerId);
+                        }
                         this.toggleVehicleEnterExit();
                     });
                     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(eventName => {
