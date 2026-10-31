@@ -46,15 +46,20 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
     return best;
    };
    const footprint={samples:0,water:0,blocked:0};
-   for(let i=0;i<pts.length;i++){
-    const prev=pts[Math.max(0,i-1)],next=pts[Math.min(pts.length-1,i+1)];
-    const dx=next.x-prev.x,dz=next.z-prev.z,
+   // 3m pitch checks long straight stretches as well as polyline vertices.
+   // Vertex-only probes were too sparse for the simplified R42 pavement.
+   for(let i=1;i<pts.length;i++){
+    const a=pts[i-1],b=pts[i],dx=b.x-a.x,dz=b.z-a.z,
       len=Math.hypot(dx,dz)||1,nx=-dz/len,nz=dx/len;
-    for(const offset of [-2.3,0,2.3]){
-     const x=pts[i].x+nx*offset,z=pts[i].z+nz*offset;
-     footprint.samples++;
-     if(city.isWaterAt(x,z))footprint.water++;
-     if(city.isPointBlocked(x,z,1.55,0))footprint.blocked++;
+    const steps=Math.max(1,Math.ceil(len/3));
+    for(let j=0;j<=steps;j++){
+     const t=j/steps,cx=a.x+dx*t,cz=a.z+dz*t;
+     for(const offset of [-2.3,0,2.3]){
+      const x=cx+nx*offset,z=cz+nz*offset;
+      footprint.samples++;
+      if(city.isWaterAt(x,z))footprint.water++;
+      if(city.isPointBlocked(x,z,1.55,0))footprint.blocked++;
+     }
     }
    }
    const car=new DriverVehicle(game.scene,{
