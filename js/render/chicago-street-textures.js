@@ -153,7 +153,9 @@ class DriverChicagoStreetTextures {
                 const tex=this.createShopSignTexture(index);
                 city.districtTextureCache.set(key,tex);
                 material=new THREE.MeshLambertMaterial({
-                    map:tex,side:THREE.DoubleSide,transparent:false
+                    map:tex,side:THREE.DoubleSide,transparent:false,
+                    emissive:0x8b643f,
+                    emissiveIntensity:.56*(city.chicagoNightState?.level||0)
                 });
                 city.districtMaterialCache.set(key,material);
             }

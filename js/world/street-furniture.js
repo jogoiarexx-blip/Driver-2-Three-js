@@ -13,6 +13,8 @@ class DriverStreetFurniture {
         prop.lampMesh.setMatrixAt(prop.instanceIndex,dummy.matrix);
         prop.poleMesh.instanceMatrix.needsUpdate=true;
         prop.lampMesh.instanceMatrix.needsUpdate=true;
+        if(typeof DriverChicagoNightLights!=='undefined')
+            DriverChicagoNightLights.hidePole(prop);
         prop.hidden=true;
         return true;
     }
@@ -99,6 +101,11 @@ class DriverStreetFurniture {
         });
         pole.instanceMatrix.needsUpdate=true;
         bulb.instanceMatrix.needsUpdate=true;
+        // Uma referência sem alterar o registro de colisões original.
+        if(city?.preset?.id==='chicago'){
+            city.streetLampPositions=positions;
+            city.streetLampBulb=bulb;
+        }
         // Postes visuais instanciados continuam em apenas duas draw calls.
         // O registro individual permite derrubar somente a instância
         // atingida, sem recalcular nem esconder os demais postes.
