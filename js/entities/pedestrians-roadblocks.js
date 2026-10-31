@@ -115,10 +115,11 @@
                     if(!p||(p.preferredSpecies!=='dog'&&p.species!=='dog'))
                         continue;
                     const previous=Math.hypot(p.x-focus.x,p.z-focus.z);
-                    // Só realocar quando longe, ou na troca de cidade/missão.
-                    // Nunca movimentar artificialmente um cão já perto.
-                    if(!force&&previous>=20&&previous<=115&&
-                       nav.permitted(this.city,p.x,p.z)){
+                    // A travessia pode não ser uma calçada permitida e o
+                    // jogador pode chegar a menos de 20m. Nenhuma dessas
+                    // situações deve teleportar um cão que ainda está perto.
+                    // O limite é maior que o raio de visibilidade (235m).
+                    if(!force&&previous<260){
                         occupied.push({x:p.x,z:p.z});
                         continue;
                     }
