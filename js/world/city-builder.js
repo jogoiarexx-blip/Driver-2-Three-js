@@ -2091,6 +2091,14 @@
                     const pierDeck=DriverChicagoPierStadiumR53.deckHeightAt(x,z);
                     if(pierDeck!==null)return pierDeck;
                 }
+                // R55: o gramado deve receber as rodas/pés na mesma
+                // altura das malhas, sem reutilizar a calçada do quarteirão.
+                if(this.preset?.id==='chicago' &&
+                    typeof DriverChicagoLandmarkAccessR55!=='undefined'){
+                    const field=DriverChicagoLandmarkAccessR55.stadiumGroundAt(
+                        this,x,z);
+                    if(field!==null)return field;
+                }
                 if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceBridge!=='undefined'){
                     const deck=DriverChicagoPS1ReferenceBridge.deckHeight(x,z);
