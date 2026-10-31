@@ -308,7 +308,7 @@
                     { name: 'SEDAN AZUL', color: 0x2563eb, bodyStyle: 'muscle', x: -130, z: 4, heading: -Math.PI / 2, maxSpeed: 48, accel: 27 },
                     { name: 'TÁXI AMARELO', color: 0xeab308, bodyStyle: 'muscle', x: 84, z: -148, heading: 0, maxSpeed: 48, accel: 26 }
                 ];
-                civilSpecs.forEach(c => {
+                civilSpecs.forEach((c,index) => {
                     const civ = new DriverVehicle(this.scene, {
                         name: c.name,
                         color: c.color,
@@ -319,6 +319,15 @@
                         maxSpeed: c.maxSpeed,
                         accel: c.accel
                     });
+                    // R49: existing ordinary sedans join the inter-district
+                    // network; school bus, heavy trucks and mission vehicles
+                    // preserve their original driving controller.
+                    if(this.currentCityKey==='chicago' &&
+                       c.bodyStyle==='muscle' && !c.uploadedModel){
+                        civ.chicagoMixedTrafficR49=true;
+                        civ.chicagoMixedTrafficGoalIndex=
+                            (index*3)%DriverChicagoMixedTrafficR49.GOALS.length;
+                    }
                     this.vehicles.push(civ);
                 });
 
@@ -398,6 +407,24 @@
                         car.chicagoNeighborhoodTrafficId=spec.id;
                         car.chicagoNeighborhoodTrafficPhase=spec.distance;
                         car.chicagoNeighborhoodTrafficReverse=spec.reverse;
+                        this.vehicles.push(car);
+                    }
+                }
+
+                // R49: additional civilian cars choose streets from the
+                // actual connected graph instead of repeating fixed laps.
+                if(this.currentCityKey==='chicago' &&
+                   typeof DriverChicagoMixedTrafficR49!=='undefined'){
+                    for(const spec of DriverChicagoMixedTrafficR49.spawnSpecs(
+                        this.city,this.vehicles)){
+                        const car=new DriverVehicle(this.scene,{
+                            name:spec.name,color:spec.color,
+                            bodyStyle:spec.bodyStyle,x:spec.x,z:spec.z,
+                            heading:spec.heading,maxSpeed:spec.maxSpeed,
+                            accel:spec.accel
+                        });
+                        car.chicagoMixedTrafficR49=true;
+                        car.chicagoMixedTrafficGoalIndex=spec.goalIndex;
                         this.vehicles.push(car);
                     }
                 }
