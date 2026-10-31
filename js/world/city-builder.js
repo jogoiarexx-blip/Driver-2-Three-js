@@ -621,7 +621,7 @@
                     if(!this.districtMaterialCache.has(palette)){
                         const pal=this.preset.palettes[palette];
                         const texture=PS1TextureFactory.createBuildingTexture(
-                            pal.wall,pal.win);
+                            pal.wall,pal.win,this.preset.id,palette);
                         this.districtTextureCache.set(palette,texture);
                         this.districtMaterialCache.set(palette,
                             new THREE.MeshLambertMaterial({map:texture}));
