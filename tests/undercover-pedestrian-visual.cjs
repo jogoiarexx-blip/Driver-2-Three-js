@@ -18,6 +18,7 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
  page.on('pageerror',e=>errors.push(String(e)));
  const takeSnapshot=()=>page.evaluate(()=>{
     const game=window.DriverGame,m=game.pedManager;
+    const focus=game.getPlayerPosition();
     const models=m.variantPedestrians.models.filter(model=>
        ['child','dog'].includes(model.config.species));
     return {
@@ -32,6 +33,7 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
           return {id:model.config.id,state:model.state,
               species:model.config.species,expected:model.config.height,
               height,slot:m.pedestrians.indexOf(ped),attached:!!ped?.glbVariant,
+              distance:ped?Math.hypot(ped.x-focus.x,ped.z-focus.z):Infinity,
               speciesOnPed:ped?.species,
               rootId:model.root?.uuid,error:model.error};
        })
@@ -72,6 +74,9 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
        assert(model.attached && model.slot>=5&&model.slot<=9,
          'Modelo não ativado em '+stage+': '+JSON.stringify(model));
        assert.equal(model.speciesOnPed,model.species);
+       if(model.species==='dog')
+         assert(model.distance>=20&&model.distance<=115,
+            'Cão fora do alcance visual do jogador: '+JSON.stringify(model));
        assert(Math.abs(model.height-model.expected)<0.15,
          'Altura fora do esperado em '+stage+': '+JSON.stringify(model));
      }

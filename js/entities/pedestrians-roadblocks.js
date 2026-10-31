@@ -41,6 +41,7 @@
                 this.city=city;
                 if(city)city.activePedestrianCrossings=[];
                 this.pedestrianClock=0;
+                this.currentFocus={x:focus.x,z:focus.z};
 
                 const blocks=typeof DriverPedestrianSidewalks!=='undefined'?
                     DriverPedestrianSidewalks.pick(city,focus,28):[];
@@ -66,6 +67,9 @@
                     this.group.add(pedGroup);
                     this.pedestrians.push({
                         mesh:pedGroup,x,z,route,block,nextCorner:(edge+1)%4,
+                        // A vaga visual de cada cão é preservada ao reiniciar
+                        // a cidade ou missão; nenhum NPC extra é criado.
+                        preferredSpecies:i>=7&&i<=9?'dog':null,
                         walkSpeed:2.2+(i%5)*.22,
                         waitTimer:0,diveTimer:0,diveVx:0,diveVz:0,
                         walkPhase:i*.9,dir:i%2?1:-1,arms:[],legs:[],
@@ -75,6 +79,9 @@
                         sleepTick:0,visibleTime:0
                     });
                 }
+                // Diferentemente das vagas genéricas, os três cães começam
+                // em passeios realmente próximos ao ponto inicial do jogo.
+                this.placeNearbyDogs(focus,blocks,true);
                 // As cinco fontes usam suas vagas originais; o restante é
                 // clonado com rig independente, nunca um humano procedural.
                 // O catálogo vai preenchendo as vagas conforme cada GLB chega.
@@ -88,6 +95,73 @@
                 populate();
             }
 
+            /**
+             * Mantém os três GLBs caninos encontráveis, sem teleporte próximo
+             * ao veículo ou criação de entidades adicionais. As calçadas são
+             * selecionadas pelo mesmo sistema seguro usado pelos pedestres.
+             * A função funciona tanto em Take a Ride quanto em Undercover.
+             */
+            placeNearbyDogs(focus,blocks=null,force=false){
+                if(typeof DriverPedestrianSidewalks==='undefined'||
+                   !Number.isFinite(focus?.x)||!Number.isFinite(focus?.z))
+                    return 0;
+                const nav=DriverPedestrianSidewalks;
+                const candidates=(blocks||nav.pick(this.city,focus,28)).slice(0,18);
+                if(!candidates.length)return 0;
+                const occupied=[];
+                let moved=0;
+                for(const [n,index] of [7,8,9].entries()){
+                    const p=this.pedestrians[index];
+                    if(!p||(p.preferredSpecies!=='dog'&&p.species!=='dog'))
+                        continue;
+                    const previous=Math.hypot(p.x-focus.x,p.z-focus.z);
+                    // Só realocar quando longe, ou na troca de cidade/missão.
+                    // Nunca movimentar artificialmente um cão já perto.
+                    if(!force&&previous>=20&&previous<=115&&
+                       nav.permitted(this.city,p.x,p.z)){
+                        occupied.push({x:p.x,z:p.z});
+                        continue;
+                    }
+                    let best=null,bestScore=Infinity;
+                    // Avaliar apenas rotas de quadras próximas, com distâncias
+                    // e espaço suficiente em relação ao jogador e outros cães.
+                    for(let k=0;k<candidates.length;k++){
+                        const block=candidates[k],route=nav.route(block);
+                        for(let edge=0;edge<4;edge++){
+                            const point=nav.point(route,edge,.3+(n%2)*.3);
+                            const d=Math.hypot(point.x-focus.x,point.z-focus.z);
+                            if(d<28||d>105||
+                               occupied.some(q=>Math.hypot(q.x-point.x,q.z-point.z)<22))
+                                continue;
+                            if(!nav.permitted(this.city,point.x,point.z))continue;
+                            const score=Math.abs(d-(55+n*12))+k*.45;
+                            if(score<bestScore){
+                                bestScore=score;
+                                best={point,block,route,edge};
+                            }
+                        }
+                    }
+                    if(!best){
+                        // Sem calçada segura: manter o cão onde estava.
+                        occupied.push({x:p.x,z:p.z});
+                        continue;
+                    }
+                    const {point,block,route,edge}=best;
+                    p.block=block;p.route=route;p.nextCorner=(edge+1)%4;
+                    p.x=point.x;p.z=point.z;
+                    p.waitTimer=.35;p.diveTimer=0;
+                    p.crossing=null;p.waitingCrossingPlan=null;
+                    p.walkCorners=0;p.signalWaitElapsed=0;
+                    p.mesh.position.set(p.x,
+                        this.city?.getSidewalkHeightAt?.(p.x,p.z)??.35,p.z);
+                    // A atualização normal de distância reativa a visibilidade.
+                    p.mesh.visible=false;
+                    occupied.push({x:p.x,z:p.z});
+                    moved++;
+                }
+                return moved;
+            }
+
             recycleDistantPedestrians(focus,dt){
                 this.pedestrianClock=(this.pedestrianClock||0)+Math.max(0,dt);
                 if(this.pedestrianClock<1.1||
@@ -95,6 +169,8 @@
                 this.pedestrianClock=0;
                 if(!Number.isFinite(focus?.x)||!Number.isFinite(focus?.z))
                     return 0;
+                this.currentFocus={x:focus.x,z:focus.z};
+                const dogMoves=this.placeNearbyDogs(focus);
                 // Mantém somente 28 meshes, realocando alguns que já
                 // estão fora da câmera para bairros próximos do jogador.
                 const candidates=DriverPedestrianSidewalks.pick(
@@ -102,10 +178,11 @@
                         const d=Math.hypot(b.x-focus.x,b.z-focus.z);
                         return d>95&&d<205;
                     });
-                if(!candidates.length)return 0;
+                if(!candidates.length)return dogMoves;
                 let changed=0;
                 for(const p of this.pedestrians){
                     if(changed>=3)break;
+                    if(p.preferredSpecies==='dog')continue;
                     if(Math.hypot(p.x-focus.x,p.z-focus.z)<260)continue;
                     const block=candidates[
                         (this.relocationCursor||0)%candidates.length
@@ -127,7 +204,7 @@
                     p.mesh.visible=false;
                     changed++;
                 }
-                return changed;
+                return changed+dogMoves;
             }
 
             spawnPoliceRoadblocks(preset, options = {}) {
