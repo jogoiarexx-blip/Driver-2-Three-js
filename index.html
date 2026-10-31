@@ -346,7 +346,19 @@
         <div class="flex justify-between items-end w-full">
             
             <!-- BOTTOM-LEFT: Minimapa / Radar Rotativo Driver 2 -->
-            <div class="flex items-end gap-3">
+            <div class="flex items-end gap-3 relative">
+                <div id="driver-landmarks-r56" class="pointer-events-auto" aria-label="Destinos turísticos de Chicago">
+                    <button id="driver-landmarks-r56-toggle" type="button" aria-haspopup="true"
+                        aria-expanded="false" aria-controls="driver-landmarks-r56-menu"
+                        title="Mostrar destinos: Navy Pier, Wrigley Field, Soldier Field">LOCAIS</button>
+                    <div id="driver-landmarks-r56-menu" class="hidden" role="group" aria-label="Escolher destino de navegação">
+                        <button type="button" data-chicago-landmark-r56="navy-pier" aria-pressed="false">Navy Pier</button>
+                        <button type="button" data-chicago-landmark-r56="wrigley" aria-pressed="false">Wrigley Field</button>
+                        <button type="button" data-chicago-landmark-r56="soldier" aria-pressed="false">Soldier Field</button>
+                        <button type="button" data-chicago-landmark-r56="clear" aria-pressed="false">Limpar rota</button>
+                    </div>
+                    <div id="driver-landmarks-r56-status" class="hidden" aria-live="off"></div>
+                </div>
                 <div id="radar-container">
                     <canvas id="radar-canvas" width="150" height="150" class="w-full h-full block"></canvas>
                     <div class="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-extrabold bg-black/80 px-1 rounded text-amber-400 border border-slate-700">N</div>
@@ -1110,7 +1122,8 @@ git push -u origin main</pre>
     <script src="./js/ui/driver-load-scheduler.js"></script>
     <script src="./js/ui/driver-boot-flow.js"></script>
     <script src="./js/engine/driver-traffic-telemetry-r50.js?v=r53-west-bridge"></script>
-    <script src="./js/engine/driver2-game-engine.js?v=r53-west-bank-cars"></script>
+    <script src="./js/ui/chicago-landmark-navigation-r56.js?v=chicago-r56-landmarks"></script>
+    <script src="./js/engine/driver2-game-engine.js?v=chicago-r56-navigation"></script>
     <div id="d2-traffic-telemetry" class="hidden" role="status" aria-live="off"></div>
 </body>
 </html>
