@@ -431,6 +431,26 @@
                     }
                 }
 
+                // R51: source-adapted R43/R44 roads are genuine existing
+                // geometry. New commuters use graph-verified endpoints and
+                // preserve all original mission and police vehicles.
+                if(this.currentCityKey==='chicago' &&
+                   typeof DriverChicagoSourceTrafficR51!=='undefined'){
+                    for(const spec of DriverChicagoSourceTrafficR51.spawnSpecs(
+                        this.city,this.vehicles)){
+                        const car=new DriverVehicle(this.scene,{
+                            name:spec.name,color:spec.color,
+                            bodyStyle:spec.bodyStyle,x:spec.x,z:spec.z,
+                            heading:spec.heading,maxSpeed:spec.maxSpeed,
+                            accel:spec.accel
+                        });
+                        car.chicagoMixedTrafficR49=true;
+                        car.chicagoSourceTrafficR51=true;
+                        car.chicagoMixedTrafficGoalsR51=spec.goals;
+                        car.chicagoMixedTrafficGoalIndex=spec.goalIndex;
+                        this.vehicles.push(car);
+                    }
+                }
                 if(typeof DriverUploadedVehicles!=='undefined')DriverUploadedVehicles.spawn(this);
                 this.tanner.setVisible(false);
                 const lowLight=this.dayNight?this.dayNight.isDark():
