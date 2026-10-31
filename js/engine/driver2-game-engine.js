@@ -3417,6 +3417,15 @@
                     return;
                 }
 
+                const checkFootVehicles=this.mode==='on_foot' &&
+                    !this.interiorPlace && !this.policeDoorTransition &&
+                    !this.vehicleMountTransition && !this.gameEnded &&
+                    this.tanner.group.visible;
+                const footBefore=checkFootVehicles ? {
+                    x:this.tanner.group.position.x,z:this.tanner.group.position.z
+                } : null;
+                const carsBefore=checkFootVehicles ? new Map(
+                    this.vehicles.map(v=>[v,{x:v.x,z:v.z}])) : null;
                 if(this.policeDoorTransition&&
                     typeof DriverPoliceDoorRig!=='undefined'){
                     DriverPoliceDoorRig.update(
@@ -3454,6 +3463,11 @@
                     if(meter && meter.textContent!==value)meter.textContent=value;
                 }
                 this.updateAIAndCollisions(dt);
+                if(footBefore && this.mode==='on_foot' && !this.interiorPlace &&
+                    !this.policeDoorTransition && !this.vehicleMountTransition &&
+                    typeof DriverTannerVehicleCollisions!=='undefined')
+                    DriverTannerVehicleCollisions.resolve(
+                        this.tanner,this.vehicles,this.city,footBefore,carsBefore);
                 this._riderDelta=dt;
                 if(typeof DriverUploadedVehicles!=='undefined')DriverUploadedVehicles.updateRiders(this);
                 this.city.update(dt,this.vehicles,(car,prop,speed)=>{
@@ -3542,4 +3556,3 @@
         window.onload = function () {
             window.DriverBoot = new DriverBootFlow();
         };
-    
