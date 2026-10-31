@@ -1,0 +1,44 @@
+name: Driver 2 - Chicago R5 asfalto molhado no Chromium
+on:
+  pull_request:
+    paths:
+      - 'js/render/chicago-wet-asphalt.js'
+      - 'tests/chicago-wet-asphalt-visual.cjs'
+      - '.github/workflows/chicago-wet-r5-visual.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chicago-r5-wet-weather:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar regressões de asfalto molhado
+        run: node --test tests/chicago-wet-asphalt-r5.test.cjs
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir jogo real com Three.js
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-r5-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Jogar Chicago no dia, chuva e noite e capturar imagens
+        run: node tests/chicago-wet-asphalt-visual.cjs
+      - name: Guardar screenshots e medições do Chromium
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver2-chicago-wet-r5
+          path: qa-artifacts/chicago-wet-r5/
+          if-no-files-found: warn

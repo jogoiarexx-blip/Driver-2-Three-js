@@ -56,6 +56,7 @@
                 this.districtTextureCache=new Map();
                 this.districtMaterialCache=new Map();
                 this.chicagoNightState=null;
+                this.chicagoWetAsphalt=null;
                 this.streetLampPositions=null;
                 this.streetLampBulb=null;
                 this.lodStats=null;
