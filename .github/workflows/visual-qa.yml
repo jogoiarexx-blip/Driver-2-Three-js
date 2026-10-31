@@ -180,6 +180,14 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r43-cross-link-browser.cjs
+      - name: R43 completar a quadra R41-R42-R43-R39 em ambos os sentidos
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r43-block-loop-browser.cjs
+      - name: R44 percorrer a rua oeste paralela e conferir a segunda quadra
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r44-parallel-west-browser.cjs
       - name: Validar carregamento do mapa original de Chicago na raiz
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
