@@ -115,6 +115,8 @@
                 materials.forEach(material => material.dispose());
                 geometries.forEach(geometry => geometry.dispose());
                 this.cityGroup.clear();
+                if(typeof DriverChicagoWaterR50!=='undefined')
+                    DriverChicagoWaterR50.reset();
                 this.buildingBoxes = [];
                 this.sidewalkGrid = new Set();
                 this.districtBuildings = [];
