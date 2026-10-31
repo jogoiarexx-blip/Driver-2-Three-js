@@ -92,6 +92,9 @@
                 this.radarWide = false;
                 this.lookBackActive = false;
                 this.weatherMode = 'default';
+                // Ciclo visual independente da geometria das cidades.
+                this.dayNight=typeof DriverDayNightCycle!=='undefined'?
+                    new DriverDayNightCycle(this):null;
                 this.felony = 0;
                 this.roadblocksSpawned = false;
                 this.missionType = 'freeroam';
@@ -196,6 +199,7 @@
                 this.scene.background.setHex(preset.skyColor);
                 this.scene.fog.color.setHex(preset.skyColor);
                 this.sunLight.color.setHex(preset.sunColor);
+                if(this.dayNight)this.dayNight.apply(0,true);
 
                 if(this.trainLine)this.trainLine.setCity(this.city);
 
@@ -376,7 +380,8 @@
 
                 if(typeof DriverUploadedVehicles!=='undefined')DriverUploadedVehicles.spawn(this);
                 this.tanner.setVisible(false);
-                const lowLight = this.weatherMode === 'night' || this.weatherMode === 'rain';
+                const lowLight=this.dayNight?this.dayNight.isDark():
+                    this.weatherMode==='night'||this.weatherMode==='rain';
                 this.vehicles.forEach(v => {
                     v.wetRoad=this.weatherMode==='rain';
                     VehicleVisuals.setHeadlights(v, lowLight);
@@ -388,6 +393,11 @@
 
             setWeather(mode) {
                 this.weatherMode = mode;
+                if(this.dayNight){
+                    // Botões e missões escolhem o horário, mas o relógio segue.
+                    this.dayNight.setWeather(mode);
+                    return;
+                }
                 if (this.vehicles) {
                     const lowLight = mode === 'night' || mode === 'rain';
                     this.vehicles.forEach(v => {
@@ -3478,6 +3488,7 @@
                     DriverRegionalMissions.animate(this,dt);
                 this.updateFelonyAndMissions(dt);
                 this.updateCamera(dt);
+                if(this.dayNight)this.dayNight.update(dt);
                 this.recordReplayFrame();
 
                 const speedKmh = (this.mode === 'driving' && this.playerCar) ? this.playerCar.speed * 3.4 : 0;

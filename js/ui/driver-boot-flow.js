@@ -178,6 +178,9 @@ class DriverBootFlow {
     applySettings() {
         if(typeof DriverFakeShadows!=='undefined')
             DriverFakeShadows.setEnabled(this.settings.shadows);
+        // A mesma opção controla as sombras leves e a projeção solar.
+        if(this.game?.dayNight)
+            this.game.dayNight.setShadowsEnabled(this.settings.shadows);
         const scanlines=document.getElementById('scanline-overlay');
         if(scanlines)scanlines.style.display=this.settings.scanlines?'':'none';
         document.body.classList.toggle('d2-reduced-motion',this.settings.reducedMotion);

@@ -85,7 +85,8 @@ class DriverRoadSurface {
         mesh.instanceMatrix.needsUpdate=true;
         mesh.frustumCulled=false; // one giant merged city-wide batch
         mesh.castShadow=false;
-        mesh.receiveShadow=false;
+        // Iluminação direcional próxima do jogador usa esta pista como receptor.
+        mesh.receiveShadow=true;
         mesh.name='driver2-road-asphalt-'+city.preset.id;
         city.cityGroup.add(mesh);
         city.roadSurfaceStats={regions:tiles.length,intersectionCount:81,
