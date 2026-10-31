@@ -178,6 +178,27 @@ class DriverChicagoGooseEastR52 {
         });
         walks.instanceMatrix.needsUpdate=true;
         walks.name='r52-zebra-crossings';group.add(walks);
+        // Six roadside luminaires, two instanced draw calls and no dynamic
+        // shadow/light source. Posts are off the 17m lanes, near each curb.
+        const lamps=report.nodes.map(n=>({x:n.x+12,z:n.z+12}));
+        const supports=new THREE.InstancedMesh(
+            new THREE.CylinderGeometry(.12,.17,5.7,6),
+            new THREE.MeshLambertMaterial({color:0x66747a}),lamps.length);
+        const bulbs=new THREE.InstancedMesh(
+            new THREE.BoxGeometry(.8,.3,.8),
+            new THREE.MeshBasicMaterial({color:0xf2d7a5}),lamps.length);
+        lamps.forEach((p,i)=>{
+            dummy.position.set(p.x,2.85,p.z);
+            dummy.rotation.set(0,0,0);dummy.updateMatrix();
+            supports.setMatrixAt(i,dummy.matrix);
+            dummy.position.set(p.x,5.76,p.z);dummy.updateMatrix();
+            bulbs.setMatrixAt(i,dummy.matrix);
+        });
+        supports.instanceMatrix.needsUpdate=true;
+        bulbs.instanceMatrix.needsUpdate=true;
+        supports.name='r52-roadside-lamp-posts';
+        bulbs.name='r52-roadside-lamp-glow';
+        group.add(supports,bulbs);
         city.cityGroup.add(group);
         const radar=city.chicagoPS1StreetNetwork?.radarPaths;
         if(Array.isArray(radar))for(const st of this.streets()){
@@ -192,7 +213,8 @@ class DriverChicagoGooseEastR52 {
             crossingsBuilt:report.nodes.length,buildingsBuilt:lots,
             sidewalksBuilt:sidewalkPositions.length,
             pedestrianStripes:crossings.length,
-            laneMarkings:dash.length,visualReady:true,group});
+            laneMarkings:dash.length,lampCount:lamps.length,
+            visualReady:true,group});
         city.chicagoGooseEastR52=report;
         return report;
     }
