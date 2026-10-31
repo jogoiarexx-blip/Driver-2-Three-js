@@ -7,7 +7,10 @@ class DriverChicagoMixedTrafficR49 {
     static GOALS=[
         {x:200,z:-120},{x:240,z:-160},{x:40,z:-40},
         {x:0,z:-80},{x:160,z:-240},{x:120,z:-120},
-        {x:240,z:-40},{x:40,z:-160}
+        {x:240,z:-40},{x:40,z:-160},
+        // Northern R50 district and bridge-connected destinations.
+        {x:40,z:200},{x:200,z:280},{x:120,z:200},
+        {x:0,z:160},{x:240,z:320},{x:120,z:280}
     ];
     static isEligible(city,car){
         return city?.preset?.id==='chicago' &&
@@ -32,15 +35,27 @@ class DriverChicagoMixedTrafficR49 {
             {x:196,z:-60,heading:Math.PI,
                 name:'SEDÃ R49 ENTRE BAIRROS',color:0x789177}
         ];
+        if(city.chicagoConnectorsR50?.ready)candidates.push(
+            {x:84,z:196,heading:Math.PI/2,
+                name:'SEDÃ R50 RIO NORTE',color:0x537f91},
+            {x:164,z:284,heading:-Math.PI/2,
+                name:'TÁXI R50 BAIRRO NORTE',color:0xd6b14d},
+            {x:44,z:236,heading:0,
+                name:'COUPÉ R50 TRAVESSIA',color:0x9a726c},
+            {x:196,z:260,heading:Math.PI,
+                name:'SEDÃ R50 MARGEM LESTE',color:0x698b78}
+        );
         const result=[];
         for(const [index,c] of candidates.entries()){
             if(city.isWaterAt?.(c.x,c.z)||
                city.isPointBlocked?.(c.x,c.z,1.8,0))continue;
             if([...vehicles,...result].some(other=>
                 Math.hypot(other.x-c.x,other.z-c.z)<18))continue;
-            const goal=this.GOALS[(index*2+1)%this.GOALS.length];
+            const goalIndex=index<4?
+                (index*2+1)%8 : 8+(index-4)%6;
+            const goal=this.GOALS[goalIndex];
             if(!DriverChicagoMixedNavigationR49.plan(city,c,goal))continue;
-            result.push({...c,goalIndex:(index*2+1)%this.GOALS.length,
+            result.push({...c,goalIndex,
                 maxSpeed:29,accel:20,bodyStyle:'sedan'});
         }
         return result;
