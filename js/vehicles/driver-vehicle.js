@@ -83,6 +83,8 @@
                     typeof DriverPoliceDoorRig!=='undefined')
                     DriverPoliceDoorRig.cancel(this);
                 this.policeDoorRig=null;
+                this.entryDoorsR58=null;
+                this.motorcycleSteerGroup=null;
                 this._cc0ModelApplied = false;
                 this._userCustomModel = false;
                 this._uploadedCustomModel = null;
@@ -309,6 +311,10 @@
                     this.root.add(wMesh);
                     this.wheels.push(wMesh);
                 });
+                // R58: visible hinged doors for the native car body.
+                // Imported GLBs keep their own hinges; do not cut custom skin.
+                if(typeof DriverVehicleDoorsR58!=='undefined')
+                    DriverVehicleDoorsR58.attach(this,bodyMat,glassMat);
                 VehicleDamageFX.attach(this);
                 VehicleVisuals.setHeadlights(this, this.headlightsOn);
                 if(realRider)this.chassisTilt.add(realRider);
@@ -326,6 +332,52 @@
                     const wheel=new THREE.Mesh(geo,tire);wheel.position.set(0,.4,z);
                     this.root.add(wheel);this.wheels.push(wheel);
                 }
+                // R58: recognizable compact motorcycle instead of a
+                // single rectangular chassis. Shared low-poly primitives;
+                // none of these parts alter the collision footprint.
+                const steel=new THREE.MeshLambertMaterial({color:0x9ca3af});
+                const dark=new THREE.MeshLambertMaterial({color:0x20252c});
+                const saddle=new THREE.MeshLambertMaterial({color:0x15171b});
+                const light=new THREE.MeshBasicMaterial({color:0xf0e1b1});
+                const engine=new THREE.Mesh(new THREE.BoxGeometry(.46,.37,.45),steel);
+                engine.position.set(0,.69,-.08);this.chassisTilt.add(engine);
+                const seat=new THREE.Mesh(new THREE.BoxGeometry(.53,.115,.93),saddle);
+                seat.position.set(0,1.18,-.42);this.chassisTilt.add(seat);
+                const tank=new THREE.Mesh(new THREE.SphereGeometry(.43,10,7),mat);
+                tank.scale.set(.79,.53,1.12);
+                tank.position.set(0,1.16,.31);this.chassisTilt.add(tank);
+                const tail=new THREE.Mesh(new THREE.BoxGeometry(.50,.16,.58),mat);
+                tail.position.set(0,1.18,-.99);this.chassisTilt.add(tail);
+                const exhaust=new THREE.Mesh(new THREE.CylinderGeometry(.068,.08,1.20,7),steel);
+                exhaust.rotation.x=Math.PI/2;
+                exhaust.position.set(.37,.62,-.42);this.chassisTilt.add(exhaust);
+                for(const side of [-1,1]){
+                    const peg=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.30,6),dark);
+                    peg.rotation.z=Math.PI/2;
+                    peg.position.set(side*.31,.67,-.17);
+                    this.chassisTilt.add(peg);
+                }
+                const steering=new THREE.Group();
+                steering.name='motorcycle-steering-r58';
+                steering.position.set(0,0,1.00);
+                for(const side of [-1,1]){
+                    const fork=new THREE.Mesh(new THREE.CylinderGeometry(.055,.069,1.02,7),steel);
+                    fork.position.set(side*.22,.82,0);
+                    steering.add(fork);
+                    const grip=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.27,7),dark);
+                    grip.rotation.z=Math.PI/2;
+                    grip.position.set(side*.34,1.47,-.26);
+                    steering.add(grip);
+                }
+                const bar=new THREE.Mesh(new THREE.CylinderGeometry(.046,.046,.80,7),steel);
+                bar.rotation.z=Math.PI/2;bar.position.set(0,1.47,-.26);
+                steering.add(bar);
+                const lamp=new THREE.Mesh(new THREE.CylinderGeometry(.19,.17,.22,12),light);
+                lamp.rotation.x=Math.PI/2;
+                lamp.position.set(0,1.16,.25);
+                steering.add(lamp);
+                this.motorcycleSteerGroup=steering;
+                this.chassisTilt.add(steering);
                 this.mountMotorcycleRider();
             }
 
@@ -403,6 +455,8 @@
                 this.wheels = [];
                 this.hubcapMeshes=[];
                 this.wheelRig=null;
+                this.entryDoorsR58=null;
+                this.motorcycleSteerGroup=null;
                 this.frontBumperMesh=null;
                 this.rearBumperMesh=null;
                 this.chassisTilt.scale.set(1, 1, 1);
@@ -726,6 +780,8 @@
             updateTransform() {
                 this.root.position.set(this.x, this.y, this.z);
                 this.root.rotation.y = this.heading;
+                if(this.motorcycleSteerGroup)
+                    this.motorcycleSteerGroup.rotation.y=this.steerAngle*.9;
                 if (this.wheels.length >= 2) {
                     this.wheels.forEach(w => { w.rotation.x = this.wheelSpin; });
                     this.wheels[0].rotation.y = this.steerAngle;
