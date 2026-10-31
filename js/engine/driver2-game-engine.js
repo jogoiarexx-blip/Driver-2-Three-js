@@ -38,6 +38,8 @@
                 this.city = new CityBuilder(this.scene, this.currentCityKey,
                     !config.deferCityBuild);
                 this.trafficAI = new DriverTrafficAI(this.city);
+                this.trafficTelemetry = typeof DriverTrafficTelemetryR50!=='undefined'?
+                    new DriverTrafficTelemetryR50():null;
                 this.collisionSystem = new DriverVehicleCollisions();
                 this.pursuitChapter = new DriverPursuitChapter();
                 this.dropDirector=new DriverTailingDropMission();
@@ -3453,7 +3455,8 @@
                 requestAnimationFrame(() => this.animate());
 
                 const now = performance.now();
-                const dt = Math.min(0.05, (now - this.lastTime) / 1000);
+                const rawDt=(now-this.lastTime)/1000;
+                const dt = Math.min(0.05, rawDt);
                 this.lastTime = now;
 
                 this.frames++;
@@ -3605,6 +3608,7 @@
                 if(typeof DriverChicagoMissionGuidance!=='undefined')
                     DriverChicagoMissionGuidance.render(this);
                 this.updateHUD();
+                this.trafficTelemetry?.sample(this,dt,rawDt);
                 const context=document.getElementById('driver-mission-context');
                 if(context){
                     const title=document.getElementById('mission-title')?.
