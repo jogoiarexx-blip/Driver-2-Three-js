@@ -27,7 +27,8 @@ class DriverChicagoPS1StreetNetwork {
         ['east-lateral-r40','chicagoReferenceEastLateralR40'],
         ['west-lateral-r41','chicagoReferenceWestLateralR41'],
         ['south-stem-r42','chicagoReferenceSouthStemR42'],
-        ['cross-link-r43','chicagoReferenceCrossLinkR43']
+        ['cross-link-r43','chicagoReferenceCrossLinkR43'],
+        ['parallel-west-r44','chicagoReferenceParallelWestR44']
     ];
     static sourcePaths(city){
         const result=[];
