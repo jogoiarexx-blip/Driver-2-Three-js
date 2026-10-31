@@ -1495,6 +1495,22 @@
                     new THREE.MeshLambertMaterial({color:0x9ca3af}));
                 ramp.rotation.x=incline;
                 ramp.position.set(-14,p.height/2,-231.5);
+                ramp.name='chicago-station-pedestrian-ramp';
+                // Non-slip tread markings, instanced on the actual sloped
+                // surface. They inherit its tilt without extra collisions.
+                const tread=new THREE.InstancedMesh(
+                    new THREE.BoxGeometry(5.25,.026,.19),
+                    new THREE.MeshBasicMaterial({color:0xc5ad60}),9
+                );
+                const stepDummy=new THREE.Object3D();
+                for(let i=0;i<9;i++){
+                    stepDummy.position.set(0,.176,-12+i*3);
+                    stepDummy.updateMatrix();
+                    tread.setMatrixAt(i,stepDummy.matrix);
+                }
+                tread.instanceMatrix.needsUpdate=true;
+                tread.name='chicago-station-ramp-safety-treads';
+                ramp.add(tread);
                 this.cityGroup.add(ramp);
                 for(const x of [-17.2,-10.8]){
                     const rail=new THREE.Mesh(new THREE.BoxGeometry(.16,.36,
