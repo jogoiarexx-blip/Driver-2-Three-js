@@ -139,6 +139,9 @@
                 this.lastTime = performance.now();
                 this.frames = 0;
                 this.fpsTimer = 0;
+                // Constante em memória entre mudanças de cidade, sem recriar materiais.
+                this.roadLightFx=typeof DriverRoadLightFX!=='undefined'?
+                    new DriverRoadLightFX(this):null;
             }
 
             updateChapterMenu() {
@@ -396,6 +399,9 @@
                 if(this.dayNight){
                     // Botões e missões escolhem o horário, mas o relógio segue.
                     this.dayNight.setWeather(mode);
+                    if(Array.isArray(this.vehicles))
+                        for(const v of this.vehicles)v.wetRoad=!!this.dayNight.rain;
+                    if(this.roadLightFx)this.roadLightFx.update(0);
                     return;
                 }
                 if (this.vehicles) {
@@ -3489,6 +3495,7 @@
                 this.updateFelonyAndMissions(dt);
                 this.updateCamera(dt);
                 if(this.dayNight)this.dayNight.update(dt);
+                if(this.roadLightFx)this.roadLightFx.update(dt);
                 this.recordReplayFrame();
 
                 const speedKmh = (this.mode === 'driving' && this.playerCar) ? this.playerCar.speed * 3.4 : 0;
