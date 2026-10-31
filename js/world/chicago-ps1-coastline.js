@@ -68,6 +68,8 @@ class DriverChicagoPS1Coastline {
             color:0x1c6479,side:THREE.DoubleSide,
             transparent:true,opacity:.97,depthWrite:true
         });
+        if(typeof DriverChicagoWaterR50!=='undefined')
+            DriverChicagoWaterR50.apply(material);
         const mesh=new THREE.Mesh(geometry,material);
         mesh.name='chicago-ps1-lake-michigan';
         mesh.userData.chicagoPS1Coastline=true;
