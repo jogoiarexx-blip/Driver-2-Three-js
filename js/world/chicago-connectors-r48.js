@@ -89,7 +89,11 @@ class DriverChicagoConnectorsR48 {
     static loops(){
         return {
             'r48-outer':this.rectangleLoop(40,200,-120,-40),
-            'r48-east':this.rectangleLoop(120,200,-120,-40)
+            'r48-east':this.rectangleLoop(120,200,-120,-40),
+            // These two circuits cross the existing main-grid streets
+            // x=0/240 and z=-160, proving neighborhood-to-grid traffic.
+            'r48-grid-west':this.rectangleLoop(0,120,-160,-40),
+            'r48-grid-east':this.rectangleLoop(120,240,-160,-40)
         };
     }
     static build(city){
