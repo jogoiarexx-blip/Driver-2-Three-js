@@ -213,6 +213,8 @@
                 const groundMat = new THREE.MeshLambertMaterial({ map: asphTex });
                 const ground = new THREE.Mesh(groundGeo, groundMat);
                 ground.position.set(terrainX,0,terrainZ);
+                // Sombra solar real no solo, sem novos colisores.
+                ground.receiveShadow=true;
                 this.cityGroup.add(ground);
                 if(typeof DriverChicagoSourceWorld!=='undefined')DriverChicagoSourceWorld.buildGrass(this);
 
@@ -561,6 +563,7 @@
                     });
                     sidewalks.instanceMatrix.needsUpdate=true;
                     sidewalks.frustumCulled=false;
+                    sidewalks.receiveShadow=true;
                     this.cityGroup.add(sidewalks);
                 }
 
