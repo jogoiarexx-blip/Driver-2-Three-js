@@ -157,6 +157,25 @@ test('R57: LOD lazy-build with hysteresis and no duplicate or collision change',
  assert.equal(state.sections['navy-pier'].near,root);
  assert.equal(c.buildingBoxes.length,count);
 });
+test('R57: distant original pier/stadium detail batches are culled but solid silhouettes remain',()=>{
+ const c=createWorld(),count=c.buildingBoxes.length;
+ R57.update(c,{x:700,z:-40},.2);
+ const extras=c._pierStadiumR53.lodExtras;
+ assert.ok(extras.pier.meshes.length>0);
+ assert.ok(extras.wrigley.meshes.length>0);
+ assert.equal(extras.pier.visible,false);
+ assert.equal(extras.wrigley.visible,false);
+ assert.equal(extras.pier.meshes.every(m=>m.visible===false),true);
+ const rail=c._pierStadiumR53.root.children.find(m=>
+  m.name==='pier-side-guard--1');
+ assert.ok(rail);
+ assert.notEqual(rail.visible,false);
+ assert.equal(c.buildingBoxes.length,count);
+ R57.update(c,{x:379,z:-40},.2);
+ assert.equal(extras.pier.visible,true);
+ assert.equal(extras.pier.meshes.every(m=>m.visible===true),true);
+ assert.equal(c.buildingBoxes.length,count);
+});
 test('R57: does not build foreign-city content or unsafe routes',()=>{
  const c=createWorld();
  assert.equal(R57.verifyLine(c,[320,-40],[500,-40],1.55).ok,false);
