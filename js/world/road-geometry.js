@@ -116,3 +116,5 @@ class DriverRoadGeometry {
             Math.hypot(v.x-x,v.z-z)<5);
     }
 }
+if(typeof module!=='undefined'&&module.exports)
+    module.exports=DriverRoadGeometry;
