@@ -134,7 +134,9 @@ class DriverChicagoNeighborhoodTraffic {
         const specs=[
             {id:'r43',distance:24,reverse:false,
                 name:'SEDÃ CHICAGO QUADRA LESTE',color:0x8d9eaf},
-            {id:'r44',distance:107,reverse:true,
+            // Both circuits travel southbound on their shared R42 lane.
+            // Opposite directions created a head-on deadlock at z≈850.
+            {id:'r44',distance:107,reverse:false,
                 name:'COUPÉ CHICAGO QUADRA OESTE',color:0xb9a282}
         ];
         const result=[];
