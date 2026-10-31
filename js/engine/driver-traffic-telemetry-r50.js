@@ -43,6 +43,7 @@ class DriverTrafficTelemetryR50 {
         let eastBridgeVehicles=0,gooseEastStalls=0;
         let westBridgeVehicles=0,westBankStalls=0,blockedRoutes=0;
         let waitingTraffic=0,waitingSignals=0,replans=0;
+        let brakingForCorner=0;
         for(const car of vehicles){
             if(!car||!Number.isFinite(car.x)||!Number.isFinite(car.z))continue;
             const before=this.vehicles.get(car)||{
@@ -62,6 +63,7 @@ class DriverTrafficTelemetryR50 {
             if(status?.waiting==='traffic')waitingTraffic++;
             if(status?.waiting==='signal')waitingSignals++;
             if(status?.replans)replans+=status.replans;
+            if(status?.cornerBrake)brakingForCorner++;
             if(stalled>=2.5){
                 stuck++;
                 if(car.x>=-215&&car.x<=15&&car.z>=152&&car.z<=330)
@@ -93,7 +95,7 @@ class DriverTrafficTelemetryR50 {
             stuck,damageEvents,stationCarLift,
             eastBridgeVehicles,gooseEastStalls,
             westBridgeVehicles,westBankStalls,blockedRoutes,
-            waitingTraffic,waitingSignals,replans,
+            waitingTraffic,waitingSignals,replans,brakingForCorner,
             westCanalRoads:game.city?.chicagoWestCanalR53?.corridorsBuilt||0,
             westCanalCars:vehicles.filter(v=>v.chicagoWestTrafficR53).length,
             streetsR52:game.city?.chicagoGooseEastR52?.corridorsBuilt||0,
@@ -145,7 +147,8 @@ class DriverTrafficTelemetryR50 {
                 'Rotas bloqueadas: '+report.blockedRoutes+
                     ' | aguardando veículos: '+report.waitingTraffic,
                 'Aguardando semáforo: '+report.waitingSignals+
-                    ' | replanejamentos: '+report.replans
+                    ' | replanejamentos: '+report.replans,
+                'Redução preventiva nas curvas: '+report.brakingForCorner
             ].join('\n');
         }
         return report;
