@@ -79,12 +79,12 @@ function makeGame({cityKey='chicago',time=.95,rain=false}={}){
     };
     return game;
 }
-test('two fixed instanced draw batches, no dynamic lights or colliders',()=>{
+test('three fixed instanced draw batches, no dynamic lights or colliders',()=>{
     const game=makeGame();
     const before=JSON.stringify(game.city.buildingBoxes);
     const shadows=Array.from(game.city.sidewalkGrid);
     const fx=new FX(game);
-    assert.equal(game.scene.objects.length,2);
+    assert.equal(game.scene.objects.length,3);
     assert.equal(fx.beams.count,FX.MAX_VEHICLES*2);
     assert.equal(fx.reflections.count,FX.MAX_VEHICLES*2);
     assert(!game.scene.objects.some(x=>x.isLight));
@@ -168,15 +168,46 @@ test('nearest 7 active cars only; safe when switching city or loading',()=>{
     let result=fx.update(.016);
     assert.equal(result.active,FX.MAX_VEHICLES);
     assert(fx.beams.instanceMatrix.needsUpdate);
-    assert.equal(game.scene.objects.length,2);
+    assert.equal(game.scene.objects.length,3);
     game.city.preset.id='rio';
     result=fx.update(.016);
-    assert.equal(result.active,0);
-    assert.equal(fx.beams.visible,false);
+    assert.equal(result.active,FX.MAX_VEHICLES);
+    assert.equal(fx.beams.visible,true);
     game.city.preset.id='chicago';game.city.ready=false;
     result=fx.update(.016);
     assert.equal(result.active,0);
     assert.equal(fx.reflections.visible,false);
+});
+test('o facho WebP troca o gradiente quando carrega e conserva reserva em erro',()=>{
+    const queued=[];
+    THREE.TextureLoader=class{load(url,ok,progress,fail){queued.push({url,ok,fail});}};
+    THREE.CanvasTexture.prototype.dispose=function(){this.disposed=true;};
+    try {
+        const fx=new FX(makeGame());
+        assert.equal(queued[0].url,'./assets/effects/headlight-beam.webp');
+        const old=fx.lightMaterial.map,texture={};
+        queued[0].ok(texture);
+        assert.equal(fx.lightMaterial.map,texture);
+        assert.equal(old.disposed,true);
+        const fx2=new FX(makeGame()),fallback=fx2.lightMaterial.map;
+        queued[1].fail();assert.equal(fx2.lightMaterial.map,fallback);
+        const data=fs.readFileSync(path.join(root,'assets/effects/headlight-beam.webp'));
+        assert.equal(data.toString('ascii',0,4),'RIFF');
+        assert.equal(data.toString('ascii',8,12),'WEBP');
+        assert(data.length<20000);
+    } finally {delete THREE.TextureLoader;}
+});
+test('halo e cone antigo acompanham farol e estado de carregamento',()=>{
+    const game=makeGame(),fx=new FX(game);
+    game.playerCar.headlightBeams={visible:true};
+    fx.update(.016);
+    assert.equal(game.playerCar.headlightBeams.visible,false);
+    assert.equal(fx.glows.visible,true);
+    assert.equal(fx.glows.matrices[2].s[0],0);
+    game.playerCar.headlightsOn=false;fx.update(.016);
+    assert.equal(fx.glows.visible,false);
+    game.city.ready=false;game.playerCar.headlightsOn=true;fx.update(.016);
+    assert.equal(game.playerCar.headlightBeams.visible,true);
 });
 test('R4 integrates after camera and clock, rain state preserved on vehicles',()=>{
     const game=fs.readFileSync(path.join(root,'js/engine/driver2-game-engine.js'),'utf8');
