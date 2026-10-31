@@ -19,7 +19,11 @@
                 this.cameraRig = new DriverCameraRig();
                 this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+                // R58: desktop anti-aliased edges can use extra actual
+                // pixels; keep the smaller mobile budget to protect FPS.
+                const coarse=window.matchMedia?.('(pointer: coarse)').matches;
+                this.renderer.setPixelRatio(Math.min(
+                    Number(window.devicePixelRatio)||1,coarse?1.5:1.85));
 
                 this.ambientLight = new THREE.AmbientLight(0xf1f5f9, 0.75);
                 this.sunLight = new THREE.DirectionalLight(0xfde68a, 0.85);
@@ -3224,6 +3228,9 @@
                 window.addEventListener('resize', () => {
                     this.camera.aspect = window.innerWidth / window.innerHeight;
                     this.camera.updateProjectionMatrix();
+                    const coarse=window.matchMedia?.('(pointer: coarse)').matches;
+                    this.renderer.setPixelRatio(Math.min(
+                        Number(window.devicePixelRatio)||1,coarse?1.5:1.85));
                     this.renderer.setSize(window.innerWidth, window.innerHeight);
                 });
 
