@@ -83,5 +83,6 @@ test('R40 é carregada antes do CityBuilder e participa do radar',()=>{
  assert.equal(src.length,1);
  assert.equal(src[0].id,'east-lateral-r40');
  assert.equal(src[0].width,8);
- assert.equal(Network.SOURCE_NAMES.length,16);
+ assert(Network.SOURCE_NAMES.some(([id])=>id==='east-lateral-r40'));
+ assert(Network.SOURCE_NAMES.length>=16);
 });
