@@ -10,7 +10,10 @@ class DriverChicagoMixedTrafficR49 {
         {x:240,z:-40},{x:40,z:-160},
         // Northern R50 district and bridge-connected destinations.
         {x:40,z:200},{x:200,z:280},{x:120,z:200},
-        {x:0,z:160},{x:240,z:320},{x:120,z:280}
+        {x:0,z:160},{x:240,z:320},{x:120,z:280},
+        // R52 east bank and the existing Goose Island fixed bridge.
+        {x:-120,z:200},{x:-40,z:280},{x:-120,z:240},
+        {x:-160,z:240},{x:-200,z:240}
     ];
     static isEligible(city,car){
         return city?.preset?.id==='chicago' &&
@@ -45,6 +48,16 @@ class DriverChicagoMixedTrafficR49 {
             {x:196,z:260,heading:Math.PI,
                 name:'SEDÃ R50 MARGEM LESTE',color:0x698b78}
         );
+        if(city.chicagoGooseEastR52?.ready)candidates.push(
+            {x:-84,z:196,heading:Math.PI/2,
+                name:'SEDÃ GO OESTE R52',color:0x67869b},
+            {x:-44,z:284,heading:-Math.PI/2,
+                name:'TÁXI PONTE LESTE R52',color:0xd3b25a},
+            {x:-116,z:236,heading:Math.PI,
+                name:'COUPÉ TRAVESSIA R52',color:0x92756a},
+            {x:-44,z:244,heading:-Math.PI/2,
+                name:'SEDÃ CONEXÃO GO R52',color:0x778f80}
+        );
         const result=[];
         for(const [index,c] of candidates.entries()){
             if(city.isWaterAt?.(c.x,c.z)||
@@ -52,7 +65,8 @@ class DriverChicagoMixedTrafficR49 {
             if([...vehicles,...result].some(other=>
                 Math.hypot(other.x-c.x,other.z-c.z)<18))continue;
             const goalIndex=index<4?
-                (index*2+1)%8 : 8+(index-4)%6;
+                (index*2+1)%8 : index<8?8+(index-4)%6:
+                14+(index-8)%5;
             const goal=this.GOALS[goalIndex];
             if(!DriverChicagoMixedNavigationR49.plan(city,c,goal))continue;
             result.push({...c,goalIndex,
