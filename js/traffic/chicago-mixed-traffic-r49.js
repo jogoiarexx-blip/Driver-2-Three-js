@@ -13,7 +13,10 @@ class DriverChicagoMixedTrafficR49 {
         {x:0,z:160},{x:240,z:320},{x:120,z:280},
         // R52 east bank and the existing Goose Island fixed bridge.
         {x:-120,z:200},{x:-40,z:280},{x:-120,z:240},
-        {x:-160,z:240},{x:-200,z:240}
+        {x:-160,z:240},{x:-200,z:240},
+        // R53 west bank and the fixed west-channel bridge.
+        {x:-280,z:-120},{x:-200,z:-80},{x:-160,z:-80},
+        {x:-280,z:-40},{x:-320,z:-80}
     ];
     static isEligible(city,car){
         return city?.preset?.id==='chicago' &&
@@ -58,6 +61,16 @@ class DriverChicagoMixedTrafficR49 {
             {x:-44,z:244,heading:-Math.PI/2,
                 name:'SEDÃ CONEXÃO GO R52',color:0x778f80}
         );
+        if(city.chicagoWestCanalR53?.ready)candidates.push(
+            {x:-284,z:-124,heading:Math.PI/2,
+                name:'SEDÃ R53 MARGEM OESTE',color:0x68899a},
+            {x:-204,z:-44,heading:Math.PI,
+                name:'TÁXI R53 CANAL OESTE',color:0xdcb65c},
+            {x:-284,z:-84,heading:Math.PI/2,
+                name:'COUPÉ R53 PONTE FIXA',color:0x9b776d},
+            {x:-204,z:-84,heading:-Math.PI/2,
+                name:'SEDÃ R53 INTERBAIRROS',color:0x78927e}
+        );
         const result=[];
         for(const [index,c] of candidates.entries()){
             if(city.isWaterAt?.(c.x,c.z)||
@@ -66,7 +79,7 @@ class DriverChicagoMixedTrafficR49 {
                 Math.hypot(other.x-c.x,other.z-c.z)<18))continue;
             const goalIndex=index<4?
                 (index*2+1)%8 : index<8?8+(index-4)%6:
-                14+(index-8)%5;
+                index<12?14+(index-8)%5:19+(index-12)%5;
             const goal=this.GOALS[goalIndex];
             if(!DriverChicagoMixedNavigationR49.plan(city,c,goal))continue;
             result.push({...c,goalIndex,
@@ -79,7 +92,8 @@ class DriverChicagoMixedTrafficR49 {
         const state=car.chicagoMixedTrafficStateR49||{
             index:Number.isInteger(car.chicagoMixedTrafficGoalIndex)?
                 car.chicagoMixedTrafficGoalIndex:0,
-            holder:{},lastX:car.x,lastZ:car.z,stuck:0
+            holder:{},lastX:car.x,lastZ:car.z,
+            stuck:0,noRoute:0,replans:0
         };
         car.chicagoMixedTrafficStateR49=state;
         const goals=Array.isArray(car.chicagoMixedTrafficGoalsR51) &&
@@ -96,7 +110,23 @@ class DriverChicagoMixedTrafficR49 {
         }
         let navigation=DriverChicagoMixedNavigationR49.follow(
             city,car,goal,state.holder,dt);
-        if(navigation.blocked||!navigation.target)return null;
+        if(navigation.blocked||!navigation.target){
+            // An unreachable destination must not switch into a generic
+            // grid route that can drive through the canal.
+            state.noRoute=(state.noRoute||0)+Math.max(0,dt);
+            if(state.noRoute>=2){
+                state.index=(state.index+1)%goals.length;
+                state.holder={};state.noRoute=0;
+                state.replans=(state.replans||0)+1;
+            }
+            car.chicagoMixedTrafficStatusR49={
+                destination:state.index,blocked:true,speedLimit:0,
+                replans:state.replans||0,waiting:'route'
+            };
+            return {up:false,down:car.speed>.35,left:false,right:false,
+                handbrake:Math.abs(car.speed)<2,sprint:false};
+        }
+        state.noRoute=0;
         const target=navigation.target;
         const heading=Math.atan2(target.x-car.x,target.z-car.z);
         const delta=Math.atan2(
@@ -105,15 +135,26 @@ class DriverChicagoMixedTrafficR49 {
         let speedLimit=bend>.5?4.2:bend>.22?6.5:11.2;
         const fx=Math.sin(car.heading),fz=Math.cos(car.heading);
         const brakingGap=8+Math.max(0,car.speed)*.32;
+        let waitingForTraffic=false,waitingForSignal=false,
+            waitingForCrossing=false;
         for(const other of vehicles){
             if(other===car||other.missionParked||
                Math.abs((other.y||0)-(car.y||0))>3.2)continue;
             const dx=other.x-car.x,dz=other.z-car.z;
             const forward=dx*fx+dz*fz;
             const lateral=Math.abs(dx*fz-dz*fx);
-            if(forward>0&&forward<22&&lateral<3.8)
-                speedLimit=Math.min(speedLimit,
-                    forward<brakingGap?0:Math.max(2,(forward-brakingGap)*.9));
+            if(forward>0&&forward<22&&lateral<3.8){
+                const aligned=!Number.isFinite(other.heading)||
+                    Math.cos(other.heading-car.heading)>.45;
+                // Do not mistake perpendicular crossing traffic for
+                // a leading car unless its actual footprint is close.
+                if(!aligned&&Math.hypot(dx,dz)>7)continue;
+                const safeSpeed=forward<brakingGap?0:
+                    Math.max(2,(forward-brakingGap)*.9);
+                if(safeSpeed<speedLimit){
+                    speedLimit=safeSpeed;waitingForTraffic=true;
+                }
+            }
         }
         for(const block of roadblocks||[]){
             if(block.destroyed||block.disabled||!Number.isFinite(block.x)||
@@ -121,8 +162,10 @@ class DriverChicagoMixedTrafficR49 {
             const dx=block.x-car.x,dz=block.z-car.z;
             const forward=dx*fx+dz*fz;
             const lateral=Math.abs(dx*fz-dz*fx);
-            if(forward>0&&forward<28&&lateral<7)
+            if(forward>0&&forward<28&&lateral<7){
                 speedLimit=Math.min(speedLimit,forward<15?0:4);
+                waitingForTraffic=true;
+            }
         }
         // Signals only exist on the original grid. Off-grid R48 crossings
         // have marked zebra walks but no fictitious traffic lights.
@@ -132,29 +175,39 @@ class DriverChicagoMixedTrafficR49 {
         if(nearGrid&&dist>7&&dist<20&&
            typeof city.isTrafficGreen==='function'){
             const axis=Math.abs(target.x-car.x)>Math.abs(target.z-car.z)?'x':'z';
-            if(!city.isTrafficGreen(axis))speedLimit=0;
+            if(!city.isTrafficGreen(axis)){
+                speedLimit=0;waitingForSignal=true;
+            }
         }
         if(typeof DriverPedestrianSidewalks!=='undefined'){
             const p=DriverPedestrianSidewalks.approachingCrossing(
                 car,city.activePedestrianCrossings||[],23);
-            if(p<20)speedLimit=Math.min(speedLimit,p<9?0:4);
+            if(p<20){
+                speedLimit=Math.min(speedLimit,p<9?0:4);
+                waitingForCrossing=true;
+            }
         }
         const moving=Math.hypot(car.x-state.lastX,car.z-state.lastZ);
         state.lastX=car.x;state.lastZ=car.z;
-        if(speedLimit>1&&car.speed<1&&moving<.04)
+        if(speedLimit>1&&!waitingForTraffic&&!waitingForSignal&&
+           !waitingForCrossing&&car.speed<1&&moving<.04)
             state.stuck+=Math.max(0,dt);
         else state.stuck=0;
         if(state.stuck>3.5){
             // Never teleport; choose another destination and replan.
             state.index=(state.index+1)%goals.length;
             state.holder={};
+            state.replans=(state.replans||0)+1;
             state.stuck=0;
         }
         car.chicagoMixedTrafficStatusR49={
             destination:state.index,
             target:{x:target.x,z:target.z},
             remaining:navigation.remaining,
-            blocked:false,speedLimit
+            blocked:false,speedLimit,
+            replans:state.replans||0,
+            waiting:waitingForSignal?'signal':waitingForCrossing?
+                'pedestrian':waitingForTraffic?'traffic':null
         };
         return {up:car.speed<speedLimit-.35,
             down:car.speed>speedLimit+.35,
