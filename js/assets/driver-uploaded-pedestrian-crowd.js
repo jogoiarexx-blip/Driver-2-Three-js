@@ -120,8 +120,16 @@ class DriverUploadedPedestrianCrowd {
                 continue;
             }
             const preferred=all[i%all.length];
-            const model=ready.includes(preferred)?preferred:
-                ready.length?ready[i%ready.length]:null;
+            // Nunca preencher uma vaga de cão com humano, nem distribuir
+            // cães nas demais vagas durante o carregamento gradual dos GLBs.
+            // Crianças também devem usar somente modelos infantis quando
+            // sua vaga reservada ainda estiver aguardando o arquivo.
+            const expectedSpecies=ped.preferredSpecies||
+                (i===5||i===6?'child':'adult');
+            const eligible=ready.filter(source=>
+                (source.config?.species||'adult')===expectedSpecies);
+            const model=eligible.includes(preferred)?preferred:
+                eligible.length?eligible[i%eligible.length]:null;
             const existing=this.instances.get(i);
             if(existing?.source===model)continue;
             this.releaseSlot(i);
