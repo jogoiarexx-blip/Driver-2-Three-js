@@ -170,6 +170,13 @@ class DriverChicagoMixedNavigationR49 {
     static plan(city,from,goal){
         const graph=this.compile(city);
         if(!graph)return null;
+        const started=typeof performance!=='undefined'&&performance.now?
+            performance.now():Date.now();
+        const stats=graph.planStats||(graph.planStats={
+            planned:0,failed:0,lastMs:0,worstMs:0
+        });
+        let success=false;
+        try{
         const first=this.nearest(city,graph,from);
         const last=this.nearest(city,graph,goal);
         if(!first||!last)return null;
@@ -227,7 +234,16 @@ class DriverChicagoMixedNavigationR49 {
         if(this.distance(path.at(-1),goal)>1 &&
            this.clear(city,path.at(-1),goal,false))
             path.push({x:goal.x,z:goal.z});
+        success=true;
         return path;
+        }finally{
+            const ms=(typeof performance!=='undefined'&&performance.now?
+                performance.now():Date.now())-started;
+            stats.planned++;
+            if(!success)stats.failed++;
+            stats.lastMs=+Math.max(0,ms).toFixed(2);
+            stats.worstMs=Math.max(stats.worstMs,stats.lastMs);
+        }
     }
     static follow(city,car,goal,holder,dt){
         if(!goal||!holder||city?.preset?.id!=='chicago')
