@@ -1,7 +1,7 @@
 /**
  * Civis exclusivamente GLB enviados pelo criador do jogo.
  * Mantém 28 vagas lógicas, uma IA/colisor por pedestre e reusa geometria e
- * texturas dos cinco modelos. Clona somente o esqueleto por personagem.
+ * texturas de todos os modelos cadastrados. Clona só o esqueleto por personagem.
  * Nenhum humano procedural é usado quando faltar um arquivo.
  */
 class DriverUploadedPedestrianCrowd {
@@ -93,7 +93,12 @@ class DriverUploadedPedestrianCrowd {
         this.detach(record);
         this.instances.delete(index);
         const ped=this.manager.pedestrians[index];
-        if(ped){ped.glbCrowd=false;delete ped.crowdId;}
+        if(ped){
+            ped.glbCrowd=false;
+            delete ped.crowdId;
+            delete ped.species;
+            if(Number.isFinite(ped.baseWalkSpeed))ped.walkSpeed=ped.baseWalkSpeed;
+        }
     }
 
     release() {
@@ -102,7 +107,7 @@ class DriverUploadedPedestrianCrowd {
         this.officers.clear();
     }
 
-    /** Distribuição circular: todos os 5 modelos aparecem no mapa.
+    /** Distribuição circular: todos os modelos cadastrados aparecem no mapa.
      * Se um modelo falhar, as vagas recebem outro GLB real já carregado.
      */
     fill() {
@@ -126,6 +131,10 @@ class DriverUploadedPedestrianCrowd {
                 this.instances.set(i,record);
                 ped.glbCrowd=true;
                 ped.crowdId=record.sourceId;
+                ped.species=model.config?.species||'adult';
+                if(!Number.isFinite(ped.baseWalkSpeed))
+                    ped.baseWalkSpeed=ped.walkSpeed;
+                ped.walkSpeed=model.config?.walkSpeed||ped.baseWalkSpeed;
             }catch(e){
                 this.lastError=String(e?.message||e);
                 // Nunca introduzir um personagem procedural como fallback.
@@ -219,6 +228,13 @@ class DriverUploadedPedestrianCrowd {
             waitingSlots:Math.max(0,this.manager.pedestrians.length-filled),
             proceduralCivilians:0,
             officerModels:this.officers.size,
+            speciesCount:this.manager.pedestrians.reduce((count,p)=>{
+                if(p.glbFemale||p.glbMale||p.glbVariant||p.glbCrowd){
+                    const species=p.species||'adult';
+                    count[species]=(count[species]||0)+1;
+                }
+                return count;
+            },{}),
             models:this.sources().map(m=>({id:m?.config?.id||
                 (m===this.manager.femalePedestrian?'female':'unknown'),
                 state:m?.state||'unavailable',error:m?.error||''})),

@@ -14,7 +14,8 @@ class DriverMalePedestrian {
 
     constructor(manager,options={}){
         this.config={url:DriverMalePedestrian.ASSET_URL,pedestrianIndex:DriverMalePedestrian.PEDESTRIAN_INDEX,
-            height:DriverMalePedestrian.HEIGHT_METERS,tag:'glbMale',id:'male',textureMaxSize:0,...options};
+            height:DriverMalePedestrian.HEIGHT_METERS,tag:'glbMale',id:'male',species:'adult',
+            textureMaxSize:0,allowAnyAnimation:false,allowStatic:false,...options};
         this.resizedTextures=0;
         this.manager=manager;
         this.promise=null;
@@ -46,21 +47,29 @@ class DriverMalePedestrian {
             new THREE.GLTFLoader().load(
                 this.config.url,gltf=>{
                     try{
-                        if(!gltf?.scene||!gltf?.animations?.length)
-                            throw new Error('Cena ou animações ausentes no GLB');
-                        // Modelos Meshy podem trazer keyframes de escala nos ossos
-                        // que deformam braços/rosto durante a caminhada. A correção
-                        // é opt-in somente para a personagem mulher 3.
-                        this.repairRigAndAnimations(gltf.scene,gltf.animations);
-                        const walk=gltf.animations.find(clip=>clip.name===this.config.walkName)||
-                            gltf.animations.find(clip=>
-                            /^(walking|walk)$/i.test(clip.name))||
-                            gltf.animations.find(clip=>
-                                /walk|andar/i.test(clip.name));
-                        const run=gltf.animations.find(clip=>
-                            /^(running|run)$/i.test(clip.name))||null;
-                        if(!walk?.tracks?.length)
-                            throw new Error('O GLB não possui animação Walking válida');
+                        if(!gltf?.scene)
+                            throw new Error('Cena ausente no GLB');
+                        const clips=Array.isArray(gltf.animations)?gltf.animations:[];
+                        // Reparação opcional de deformações nos modelos Meshy.
+                        this.repairRigAndAnimations(gltf.scene,clips);
+                        const usable=clips.filter(clip=>clip?.tracks?.length);
+                        let walk=usable.find(clip=>clip.name===this.config.walkName)||
+                            usable.find(clip=>/^(walking|walk)$/i.test(clip.name))||
+                            usable.find(clip=>/walk|andar|trot|locomotion/i.test(clip.name));
+                        // Os GLBs novos podem usar nomes de animação diferentes.
+                        if(!walk&&this.config.allowAnyAnimation)
+                            walk=usable.find(clip=>/run|move|gait/i.test(clip.name))||
+                                usable.find(clip=>/idle|stand/i.test(clip.name))||usable[0];
+                        let staticPose=false;
+                        if(!walk&&this.config.allowStatic&&
+                           typeof THREE.AnimationClip==='function'){
+                            walk=new THREE.AnimationClip('Static_Pose',1,[]);
+                            staticPose=true;
+                        }
+                        if(!walk||(!staticPose&&!walk.tracks?.length))
+                            throw new Error('GLB sem caminhada ou pose utilizável');
+                        const run=usable.find(clip=>
+                            /^(running|run)$/i.test(clip.name)&&clip!==walk)||null;
 
                         const root=gltf.scene;
                         root.updateMatrixWorld(true);
@@ -101,7 +110,8 @@ class DriverMalePedestrian {
                         this.runAction=run?.tracks?.length?
                             this.mixer.clipAction(run):null;
                         this.runAction?.setLoop(THREE.LoopRepeat,Infinity);
-                        this.animationNames=gltf.animations.map(a=>a.name);
+                        this.animationNames=clips.map(a=>a.name);
+                        this.staticPose=staticPose;
                         this.walkAction.reset().play();
                         this.walkAction.paused=true;
                         this.action=this.walkAction;
@@ -183,6 +193,9 @@ class DriverMalePedestrian {
                 child.visible=true;
             this.current[this.config.tag]=false;
             if(this.config.tag==='glbVariant')delete this.current.variantId;
+            if(Number.isFinite(this.current.baseWalkSpeed))
+                this.current.walkSpeed=this.current.baseWalkSpeed;
+            delete this.current.species;
             this.current=null;
         }
         this.lastMoving=false;
@@ -203,6 +216,10 @@ class DriverMalePedestrian {
         ped.mesh.add(this.container);
         ped[this.config.tag]=true;
         if(this.config.tag==='glbVariant')ped.variantId=this.config.id;
+        if(!Number.isFinite(ped.baseWalkSpeed))
+            ped.baseWalkSpeed=ped.walkSpeed;
+        ped.walkSpeed=this.config.walkSpeed||ped.baseWalkSpeed;
+        ped.species=this.config.species||'adult';
         this.current=ped;
         this.walkAction.reset().play();
         this.walkAction.paused=true;
@@ -239,7 +256,8 @@ class DriverMalePedestrian {
         return {state:this.state,active:!!this.current,
             pedestrianIndex:this.config.pedestrianIndex,
             id:this.config.id,assetUrl:this.config.url,resizedTextures:this.resizedTextures,
-            animated:!!this.walkAction,
+            animated:!!this.walkAction,staticPose:!!this.staticPose,
+            species:this.config.species||'adult',height:this.config.height,
             animations:this.animationNames.slice(),
             originalHeight:this.originalHeight,visualRepairs:{...this.visualRepairs},error:this.error,
             pedestrianCount:this.manager?.pedestrians?.length||0};
