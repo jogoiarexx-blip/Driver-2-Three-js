@@ -2,6 +2,8 @@
 
 Recriação experimental de Driver 2 para navegador, baseada em Three.js. O projeto foi organizado em arquivos estáticos para funcionar diretamente no **GitHub Pages**, sem Node.js, npm ou compilação.
 
+> **Checklist permanente do desenvolvimento:** [AUDITORIA-MESTRA-DRIVER2.md](AUDITORIA-MESTRA-DRIVER2.md). Contém avaliação de Chicago, gameplay, física, GLBs, performance, arquitetura, QA e prioridades P0–P3. **Consultar e atualizar em toda revisão**, com testes antes/depois, evidências, pendências e deploy. A auditoria inicial identificou QA geral ainda vermelho (920/940 no run 41253703197); implantação bem-sucedida no Pages não equivale a jogo certificado.
+
 ## Executar
 
 Abra a página publicada em **https://jogoiarexx-blip.github.io/Driver-2-Three-js/**.
