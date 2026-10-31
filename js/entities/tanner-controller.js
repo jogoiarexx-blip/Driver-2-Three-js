@@ -237,7 +237,9 @@
                 this.resetVehicleTransitionPose();
                 if(this.contactShadow)this.contactShadow.visible=false;
                 vehicle.chassisTilt.add(this.group);
-                this.group.position.set(0,0,-.30);
+                // Align the skeleton pelvis with the 1.18m motorcycle
+                // saddle instead of sinking through it by ~22cm.
+                this.group.position.set(0,.22,-.30);
                 this.group.rotation.set(0,0,0);
                 this.heading=0;
                 this.motorcycleVehicle=vehicle;
