@@ -163,3 +163,50 @@ test('R56 building AABBs have physically usable turn clearance; R53 slabs match 
         }
     }finally{delete global.THREE}
 });
+
+test('R56 five-minute simultaneous traffic replay keeps four NPCs moving safely',()=>{
+    global.THREE=three();
+    try{
+        const c=build(),specs=Traffic.spawnSpecs(c,[]);
+        const cars=[0,4,8,12].map(index=>{
+            const s=specs[index];
+            return {...s,y:0,speed:0,steerAngle:0,lateralVelocity:0,
+                damage:0,wheelSpin:0,chassisTilt:{rotation:{}},
+                chicagoMixedTrafficR49:true,
+                chicagoMixedTrafficGoalIndex:s.goalIndex};
+        });
+        const travelled=[0,0,0,0];
+        const collisions=[0,0,0,0];
+        let carContacts=0,blocked=0;
+        const dt=.05;
+        for(let tick=0;tick<6000;tick++){
+            for(let i=0;i<cars.length;i++){
+                const car=cars[i];
+                const input=Traffic.getInput(c,car,cars,dt,[]);
+                assert(input);
+                if(car.chicagoMixedTrafficStatusR49.blocked)blocked++;
+                Physics.update(car,dt,input.up?1:input.down?-1:0,
+                    input.right?1:input.left?-1:0,input.handbrake,false);
+                const vx=Math.sin(car.heading)*car.speed+
+                    Math.cos(car.heading)*car.lateralVelocity;
+                const vz=Math.cos(car.heading)*car.speed-
+                    Math.sin(car.heading)*car.lateralVelocity;
+                const nx=car.x+vx*dt,nz=car.z+vz*dt;
+                if(c.isWaterAt(nx,nz)||c.isPointBlocked(nx,nz,1.55)){
+                    collisions[i]++;car.speed=0;
+                }else{
+                    travelled[i]+=Math.hypot(nx-car.x,nz-car.z);
+                    car.x=nx;car.z=nz;
+                }
+                if(cars.some((other,j)=>j!==i &&
+                    Math.hypot(other.x-car.x,other.z-car.z)<3.4))
+                    carContacts++;
+            }
+        }
+        assert.deepEqual(collisions,[0,0,0,0]);
+        assert.equal(carContacts,0);
+        assert.equal(blocked,0);
+        assert(travelled.every(m=>m>1800),
+            'Traffic progress too low: '+JSON.stringify(travelled));
+    }finally{delete global.THREE}
+});
