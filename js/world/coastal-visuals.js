@@ -148,6 +148,9 @@ class DriverCoastalVisuals {
         mesh.instanceMatrix.needsUpdate=true;
     }
     static update(city,dt,focus=null){
+        if(city.preset?.id==='chicago' &&
+           typeof DriverChicagoWaterR50!=='undefined')
+            DriverChicagoWaterR50.update(dt);
         if(!city.waterFoamMaterial)return;
         city.waterVisualClock=(city.waterVisualClock||0)+
             Math.min(.08,Math.max(0,dt));
