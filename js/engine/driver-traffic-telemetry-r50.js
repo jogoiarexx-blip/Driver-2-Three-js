@@ -40,6 +40,7 @@ class DriverTrafficTelemetryR50 {
         const vehicles=game.vehicles||[];
         const tick=Math.min(2,this.elapsed);
         let stuck=0,damageEvents=0,stationCarLift=0;
+        let eastBridgeVehicles=0,gooseEastStalls=0;
         for(const car of vehicles){
             if(!car||!Number.isFinite(car.x)||!Number.isFinite(car.z))continue;
             const before=this.vehicles.get(car)||{
@@ -54,7 +55,13 @@ class DriverTrafficTelemetryR50 {
             const expectedToMove=Number.isFinite(requested)&&requested>2;
             const stalled=expectedToMove && Math.abs(car.speed||0)<1.5 &&
                 displacement<.5 ?before.stalled+tick:0;
-            if(stalled>=2.5)stuck++;
+            if(stalled>=2.5){
+                stuck++;
+                if(car.x>=-215&&car.x<=15&&car.z>=152&&car.z<=330)
+                    gooseEastStalls++;
+            }
+            if(car.x>=-200&&car.x<=-120&&
+               Math.abs(car.z-240)<=9)eastBridgeVehicles++;
             if((car.damage||0)>before.damage+1.5)damageEvents++;
             if(game.city?.trainStation &&
                car.y>2&&car.y<game.city.trainStation.platform.height-2 &&
@@ -73,6 +80,11 @@ class DriverTrafficTelemetryR50 {
             vehicles:vehicles.length,
             activeNPC:vehicles.filter(v=>v!==game.playerCar&&!v.missionParked).length,
             stuck,damageEvents,stationCarLift,
+            eastBridgeVehicles,gooseEastStalls,
+            streetsR52:game.city?.chicagoGooseEastR52?.corridorsBuilt||0,
+            r52Cars:vehicles.filter(v=>v.chicagoMixedTrafficR49 &&
+                v.chicagoMixedTrafficGoalIndex>=14 &&
+                !v.chicagoSourceTrafficR51).length,
             fps:Math.round(this.frames/this.elapsed),
             avgFrameMs:+(this.frameTotal/this.frames).toFixed(1),
             peakFrameMs:+this.framePeak.toFixed(1),
@@ -108,7 +120,10 @@ class DriverTrafficTelemetryR50 {
                 'NPCs presos >2.5s: '+report.stuck,
                 'Dano novo (carros): '+report.damageEvents,
                 'Carros suspensos na estação: '+report.stationCarLift,
-                'Rede norte R50: '+(report.roadsR50?'sim':'não')
+                'Rede norte R50: '+(report.roadsR50?'sim':'não'),
+                'Ponte Goose East R52: '+report.streetsR52+
+                    ' ruas | '+report.eastBridgeVehicles+' carros',
+                'Parados na zona da ponte: '+report.gooseEastStalls
             ].join('\n');
         }
         return report;
