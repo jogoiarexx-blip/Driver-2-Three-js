@@ -270,6 +270,38 @@ class DriverChicagoLandmarkDistrictR57 {
         if(city._spatialCollisions)city._spatialCollisions.boxes=null;
         return state;
     }
+    // R57: suppress detail-only R53 meshes at distance without ever hiding
+    // physical rails, collision-matched kiosks, wheels, ramps or stadium walls.
+    static applyLegacyLOD(city,focus) {
+        const state=city?._pierStadiumR53;
+        if(!state?.root?.children)return;
+        if(!state.lodExtras) {
+            const selects=[
+                ['pier',/^(pier-plank-joints|pier-walkway-marks|pier-kiosk-(window|sign)|pier-night-light-pool)/],
+                ['wrigley',/^(wrigley-bleachers|wrigley-foul-line|wrigley-home-plate|wrigley-score-lights|wrigley-floodlight)/]
+            ];
+            state.lodExtras={};
+            for(const [id,pattern]of selects)
+                state.lodExtras[id]={
+                    meshes:state.root.children.filter(x=>pattern.test(x.name||'')),
+                    visible:true
+                };
+        }
+        const locations={
+            pier:{x:379,z:-40,near:190,far:250},
+            wrigley:{x:city.chicagoStadium?.x??-280,
+                z:city.chicagoStadium?.z??200,near:210,far:280}
+        };
+        for(const [id,opts]of Object.entries(locations)){
+            const g=state.lodExtras[id];
+            const d=Math.hypot(focus.x-opts.x,focus.z-opts.z);
+            const visible=g.visible?d<opts.far:d<opts.near;
+            if(visible===g.visible)continue;
+            g.visible=visible;
+            for(const mesh of g.meshes)mesh.visible=visible;
+        }
+    }
+
     static update(city,focus,dt) {
         const state=city?.chicagoLandmarkDistrictR57;
         if(!state||state.root.parent!==city.cityGroup||
@@ -277,6 +309,7 @@ class DriverChicagoLandmarkDistrictR57 {
         state.clock+=(Number.isFinite(dt)?Math.max(0,dt):.016);
         if(state.clock<.16)return;
         state.clock=0;
+        this.applyLegacyLOD(city,focus);
         const tasks=[];
         for(const s of Object.values(state.sections)){
             const distance=Math.hypot(focus.x-s.x,focus.z-s.z);
@@ -318,7 +351,12 @@ class DriverChicagoLandmarkDistrictR57 {
             graphEdges:s?.links.length||0,
             lod:s?Object.values(s.sections).map(v=>({
                 id:v.id,level:v.level,nearBuilt:v.nearBuilt})):[],
-            lodSwitches:s?.lodSwitches||0};
+            lodSwitches:s?.lodSwitches||0,
+            legacyDetails:city?._pierStadiumR53?.lodExtras?
+                Object.fromEntries(Object.entries(
+                    city._pierStadiumR53.lodExtras).map(([id,v])=>[
+                        id,{visible:v.visible,meshes:v.meshes.length}
+                    ])):null};
     }
 }
 if(typeof window!=='undefined')
