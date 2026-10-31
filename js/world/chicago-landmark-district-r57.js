@@ -251,17 +251,18 @@ class DriverChicagoLandmarkDistrictR57 {
         for(const lot of this.PARKING)
             state.parking.push(this.makeParking(city,state,lot,asphalt,white));
         state.coast=this.shoreline(city,state,steel,pave);
-        // Far silhouettes: 3 batches, near details allocate only when needed.
+        // Far terrain-color patches stay flush to ground (not fake solid
+        // walls with no collision). Near detail is allocated on demand.
         for(const section of Object.values(state.sections)){
             const pieces=[];
             if(section.id==='navy-pier'){
                 for(const r of section.railPoints.filter((_,i)=>i%3===0))
-                    pieces.push([r.x-2.5,1,r.z,3,2,5.5]);
+                    pieces.push([r.x-2.5,.085,r.z,3,.13,5.5]);
             } else {
                 const s=section.id==='wrigley'?
                     [[-301,225],[-260,226]]:[[262,-248],[300,-248]];
                 for(const [x,z]of s)
-                    pieces.push([x,.45,z,3,.9,5]);
+                    pieces.push([x,.075,z,3,.13,5]);
             }
             this.instances(section.far,'r57-far-streetscape-'+section.id,
                 pieces,steel);
