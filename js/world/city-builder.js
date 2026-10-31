@@ -163,6 +163,7 @@
                 this.chicagoReferenceWestLateralR41=null;
                 this.chicagoReferenceSouthStemR42=null;
                 this.chicagoReferenceCrossLinkR43=null;
+                this.chicagoReferenceParallelWestR44=null;
                 this.chicagoR43BlockLoop=null;
                 this.chicagoPS1StreetNetwork=null;
                 this.chicagoSourceGround=null;
@@ -498,6 +499,8 @@
                     DriverChicagoSouthStemR42.prepare(this);
                 if(this.preset.id==='chicago' && typeof DriverChicagoCrossLinkR43!=='undefined')
                     DriverChicagoCrossLinkR43.prepare(this);
+                if(this.preset.id==='chicago' && typeof DriverChicagoParallelWestR44!=='undefined')
+                    DriverChicagoParallelWestR44.prepare(this);
                 if(this.preset.id==='chicago' && typeof DriverChicagoR43BlockLoop!=='undefined')
                     this.chicagoR43BlockLoop=DriverChicagoR43BlockLoop.fromCity(this);
                 // R22: liga a bifurcação observada ao eixo viário da
@@ -520,7 +523,8 @@
                         this.chicagoReferenceEastLateralR40,
                         this.chicagoReferenceWestLateralR41,
                         this.chicagoReferenceSouthStemR42,
-                        this.chicagoReferenceCrossLinkR43
+                        this.chicagoReferenceCrossLinkR43,
+                        this.chicagoReferenceParallelWestR44
                     ].filter(Boolean));
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
                 this.buildInteriorRooms();
