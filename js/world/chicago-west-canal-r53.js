@@ -112,9 +112,13 @@ class DriverChicagoWestCanalR53 {
         const pavement=[];
         const dummy=new THREE.Object3D();
         for(const z of this.BLOCK_Z)for(const x of this.BLOCK_X){
-            const px=x===-280?-304:-184;
+            // R56: place both shops and slabs at the centre of their
+            // dry infill, away from the tight z=-80 bridge junction.
+            // Before: x=-304,z=-64 led to repeated tyre/AABB contacts
+            // when an NPC turned; the building is kept, not uncollided.
+            const px=x===-280?-300:-180;
             for(const side of [-1,1])
-                pavement.push({x:px,z:z+side*24,halfX:x===-280?10:7});
+                pavement.push({x:px,z:z+side*20,halfX:x===-280?10:7});
         }
         const sidewalk=new THREE.InstancedMesh(
             new THREE.BoxGeometry(1,.27,15),sidewalkMat,pavement.length);
