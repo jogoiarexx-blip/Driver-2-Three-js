@@ -71,9 +71,12 @@ class DriverChicagoMixedTrafficR49 {
         const goals=Array.isArray(car.chicagoMixedTrafficGoalsR51) &&
             car.chicagoMixedTrafficGoalsR51.length>=3?
             car.chicagoMixedTrafficGoalsR51:this.GOALS;
+        // Source districts are cyclic roads: traverse each waypoint in
+        // forward order. Inner-city R49 cars keep their previous schedule.
+        const nextGoalStep=goals===this.GOALS?3:1;
         let goal=goals[state.index%goals.length];
         if(Math.hypot(car.x-goal.x,car.z-goal.z)<14){
-            state.index=(state.index+3)%goals.length;
+            state.index=(state.index+nextGoalStep)%goals.length;
             state.holder={};
             goal=goals[state.index];
         }
