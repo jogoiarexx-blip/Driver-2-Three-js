@@ -5,6 +5,8 @@ on:
     paths:
       - 'js/world/chicago-pier-stadium-r53.js'
       - 'js/world/chicago-landmark-access-r55.js'
+      - 'js/world/chicago-landmark-district-r57.js'
+      - 'js/traffic/chicago-mixed-navigation-r49.js'
       - 'js/ui/chicago-landmark-navigation-r56.js'
       - 'js/engine/driver2-game-engine.js'
       - 'index.html'
@@ -15,11 +17,14 @@ on:
       - 'tests/chicago-r54-physics.test.cjs'
       - 'tests/chicago-r55-landmark-access.test.cjs'
       - 'tests/chicago-r56-landmark-navigation.test.cjs'
+      - 'tests/chicago-r57-landmark-district.test.cjs'
       - '.github/workflows/chicago-landmarks-qa.yml'
   pull_request:
     paths:
       - 'js/world/chicago-pier-stadium-r53.js'
       - 'js/world/chicago-landmark-access-r55.js'
+      - 'js/world/chicago-landmark-district-r57.js'
+      - 'js/traffic/chicago-mixed-navigation-r49.js'
       - 'js/ui/chicago-landmark-navigation-r56.js'
       - 'js/engine/driver2-game-engine.js'
       - 'index.html'
@@ -30,6 +35,7 @@ on:
       - 'tests/chicago-r54-physics.test.cjs'
       - 'tests/chicago-r55-landmark-access.test.cjs'
       - 'tests/chicago-r56-landmark-navigation.test.cjs'
+      - 'tests/chicago-r57-landmark-district.test.cjs'
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -42,4 +48,4 @@ jobs:
         with:
           node-version: '22'
       - name: Verify source and Navy Pier physics
-        run: node --test tests/chicago-r54-physics.test.cjs tests/chicago-r55-landmark-access.test.cjs tests/chicago-r56-landmark-navigation.test.cjs
+        run: node --test tests/chicago-r54-physics.test.cjs tests/chicago-r55-landmark-access.test.cjs tests/chicago-r56-landmark-navigation.test.cjs tests/chicago-r57-landmark-district.test.cjs
