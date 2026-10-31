@@ -381,6 +381,27 @@
                     }
                 }
 
+                // Two civilian cars use the actual R43/R44 closed asphalt
+                // blocks, not the unrelated grid route through buildings.
+                // Existing campaign, police and Goose Island paths remain.
+                if(this.currentCityKey==='chicago' &&
+                    typeof DriverChicagoNeighborhoodTraffic!=='undefined'){
+                    const specs=DriverChicagoNeighborhoodTraffic.spawnSpecs(
+                        this.city,this.vehicles);
+                    for(const spec of specs){
+                        const car=new DriverVehicle(this.scene,{
+                            name:spec.name,color:spec.color,
+                            bodyStyle:spec.bodyStyle,x:spec.x,z:spec.z,
+                            heading:spec.heading,maxSpeed:spec.maxSpeed,
+                            accel:spec.accel
+                        });
+                        car.chicagoNeighborhoodTrafficId=spec.id;
+                        car.chicagoNeighborhoodTrafficPhase=spec.distance;
+                        car.chicagoNeighborhoodTrafficReverse=spec.reverse;
+                        this.vehicles.push(car);
+                    }
+                }
+
                 if(typeof DriverUploadedVehicles!=='undefined')DriverUploadedVehicles.spawn(this);
                 this.tanner.setVisible(false);
                 const lowLight=this.dayNight?this.dayNight.isDark():
