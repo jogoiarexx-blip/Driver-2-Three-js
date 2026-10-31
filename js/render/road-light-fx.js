@@ -130,7 +130,7 @@ class DriverRoadLightFX {
         const sunHeight=clock?Math.sin(angle):1;
         const rain=!!(clock?.rain||game.effects?.rainEnabled);
         const night=1-DriverRoadLightFX.smooth(-.12,.34,sunHeight);
-        const light=Math.max(night,rain?.66:0);
+        const light=Math.max(night,rain ? .66 : 0);
         const focus=typeof game.getPlayerPosition==='function'?
             game.getPlayerPosition():null;
         if(!enabled||light<.012||!focus){
@@ -182,7 +182,7 @@ class DriverRoadLightFX {
         if(rain)this.hideUnused(this.reflections,used);
         this.beams.visible=true;
         this.beams.instanceMatrix.needsUpdate=true;
-        this.lightMaterial.opacity=Math.min(.70,light*(rain?.49:.32));
+        this.lightMaterial.opacity=Math.min(.70,light*(rain ? .49 : .32));
         this.reflections.visible=rain;
         this.wetMaterial.opacity=rain?
             Math.min(.47,light*(.23+.04*Math.sin(this.elapsed*1.2))):0;
