@@ -1,6 +1,6 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),
-  fs=require('node:fs');
+  fs=require('node:fs'),vm=require('node:vm');
 const Road=require('../js/world/road-geometry.js');
 const R48=require('../js/world/chicago-connectors-r48.js');
 const R50=require('../js/world/chicago-connectors-r50.js');
@@ -140,4 +140,28 @@ test('R51 F8 telemetry exposes extended road graph and timed A-star failures',()
  assert(report.planned>=2);
  assert(report.pathFailures>=1);
  assert(Number.isFinite(report.routeWorstMs));
+});
+
+test('R51 train station car passage: ground remains level through entire ramp and platform',()=>{
+ const City=vm.runInNewContext(
+  fs.readFileSync('js/world/city-builder.js','utf8')+'\nCityBuilder');
+ const station={
+  ramp:{minX:-17,maxX:-11,startZ:-217,endZ:-246},
+  platform:{minX:-22,maxX:-6,minZ:-282,maxZ:-246,height:11.3}
+ };
+ const world={preset:{id:'chicago'},bridgeAngle:.08,worldLimit:410,
+  interiorFloorAt:()=>false,interiorArea:()=>false,
+  trainStation:station,buildingBoxes:[],
+  getSidewalkHeightAt:()=>0,isWaterAt:()=>false};
+ for(const x of [-20,-17.2,-14,-10.8,-8]){
+  for(let z=-284;z<=-214;z+=2){
+   const ground=City.prototype.getGroundHeightAt.call(world,x,z,0,true);
+   assert.equal(ground,0,'car climbed platform at '+x+','+z);
+   assert.equal(City.prototype.isPointBlocked.call(world,x,z,1.55,0),
+    false,'phantom vehicle wall at '+x+','+z);
+  }
+ }
+ assert(City.prototype.getGroundHeightAt.call(world,-14,-234,0,false)>0);
+ assert.equal(City.prototype.getGroundHeightAt.call(
+   world,-14,-260,11.3,false),11.3);
 });
