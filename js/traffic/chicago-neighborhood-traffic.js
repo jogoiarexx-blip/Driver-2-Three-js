@@ -3,7 +3,7 @@
  * special police routing or mutation of the original mission waypoints.
  */
 class DriverChicagoNeighborhoodTraffic {
-    static LOOPS=['r43','r44','r48-outer','r48-east'];
+    static LOOPS=['r43','r44','r48-outer','r48-east','r48-grid-west','r48-grid-east'];
     static getLoop(city,id){
         return city?.preset?.id==='chicago'?
             (id==='r43'?city.chicagoR43BlockLoop:
@@ -105,6 +105,10 @@ class DriverChicagoNeighborhoodTraffic {
         const delta=Math.atan2(
             Math.sin(desired-car.heading),Math.cos(desired-car.heading));
         let limit=turn>.18||Math.abs(delta)>.2?2.7:4.3;
+        // O setor R48 possui faixas de 17m e trechos retos mais longos.
+        // Acelerar só sua frota civil, preservando R43/R44 e missões.
+        if(car.chicagoNeighborhoodTrafficId?.startsWith('r48-'))
+            limit=turn>.18||Math.abs(delta)>.2?3.4:7.1;
         // Simple car-following preserves shared R41/R42 intersections
         // without permitting scripted cars or emergency vehicles here.
         const fx=Math.sin(car.heading),fz=Math.cos(car.heading);
@@ -152,7 +156,11 @@ class DriverChicagoNeighborhoodTraffic {
             {id:'r48-east',distance:107,reverse:false,
                 name:'COUPÉ SOUTH LOOP LESTE',color:0x9a6159},
             {id:'r48-east',distance:242,reverse:false,
-                name:'SEDÃ SOUTH LOOP INDUSTRIAL',color:0x6c8a79}
+                name:'SEDÃ SOUTH LOOP INDUSTRIAL',color:0x6c8a79},
+            {id:'r48-grid-west',distance:31,reverse:false,
+                name:'TÁXI CONEXÃO OESTE',color:0xe6c159},
+            {id:'r48-grid-east',distance:196,reverse:false,
+                name:'SEDÃ CONEXÃO AVENIDA',color:0x7695af}
         ];
         const result=[];
         for(const spec of specs){
