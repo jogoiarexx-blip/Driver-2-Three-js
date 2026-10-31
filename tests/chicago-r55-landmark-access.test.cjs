@@ -148,7 +148,7 @@ test('R55: reuse one city layer, update nocturnal trim, retain R54 wheel',()=>{
     c.chicagoNightState.level=1;
     Access.update(c);
     for(const mat of c.chicagoAccessR55.lights)
-        assert.equal(mat.opacity,.78);
+        assert.ok(Math.abs(mat.opacity-.78)<1e-8);
     const wheel=Pier.audit(c);
     assert.equal(wheel.visibleColliderCount,13);
     assert.equal(wheel.bulbs,48);
