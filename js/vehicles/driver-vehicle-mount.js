@@ -19,12 +19,14 @@ class DriverVehicleMount {
             vehicle?.chassisTilt?.localToWorld){
             vehicle.chassisTilt.updateWorldMatrix?.(true,false);
             const p=vehicle.chassisTilt.localToWorld(
-                new THREE.Vector3(0,0,-.30));
+                new THREE.Vector3(0,.22,-.30));
             if(Number.isFinite(p.x)&&Number.isFinite(p.y)&&
                 Number.isFinite(p.z))
                 return {x:p.x,y:p.y,z:p.z,heading:vehicle.heading};
         }
-        return this.position(vehicle,1,0,-.30);
+        const fallback=this.position(vehicle,1,0,-.30);
+        fallback.y+=.22;
+        return fallback;
     }
     static position(vehicle,side,distance,forward=0){
         const h=Number(vehicle.heading)||0;
