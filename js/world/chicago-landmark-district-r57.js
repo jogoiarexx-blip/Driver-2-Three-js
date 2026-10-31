@@ -9,11 +9,11 @@
 class DriverChicagoLandmarkDistrictR57 {
     static APPROACHES=[
         {id:'pier-service',district:'navy-pier',width:5.6,
-            points:[[320,-80],[320,-56],[328,-51],[328,-40],[341,-40]]},
+            points:[[320,-80],[320,-62],[335,-61],[335,-54],[329,-49],[329,-40],[341,-40]]},
         {id:'wrigley-west',district:'wrigley',width:5.8,
             points:[[-320,240],[-301,240],[-301,227],[-289,227],[-280,225]]},
         {id:'soldier-east',district:'soldier',width:5.8,
-            points:[[320,-240],[297,-240],[296,-255],[282,-255],[280,-255]]}
+            points:[[320,-240],[305,-240],[305,-258],[282,-258],[280,-257]]}
     ];
     static PARKING=[
         {id:'pier-south',district:'navy-pier',x:307,z:-64,w:14,d:9,spaces:4},
