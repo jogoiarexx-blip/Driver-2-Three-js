@@ -98,3 +98,31 @@ test('index carrega fonte dos clips antes do Tanner e invalida cache',()=>{
     html.indexOf('tanner-controller.js'));
   assert.match(html,/tanner-controller\.js\?v=swim-retarget-r1/);
 });
+
+test('piso dos interiores tem prioridade sobre o mar de Chicago',()=>{
+  const coast={waterAt:(x)=>x>500};
+  const City=vm.runInNewContext(read('js/world/city-builder.js')+'\nCityBuilder',
+    {Math,Number,Array,DriverChicagoPS1Coastline:coast});
+  const city=Object.create(City.prototype);
+  city.preset={id:'chicago'};
+  city.interiors=[1000,1050,1120,1180].map(x=>({inside:{x,z:0}}));
+  city.getSidewalkHeightAt=()=>0;
+  for(const x of [1000,1050,1120,1180]) {
+    assert.equal(city.isWaterAt(x,-6),false);
+    assert.equal(city.getGroundHeightAt(x,-6),0);
+  }
+  assert.equal(city.isWaterAt(1015,0),true,'mar fora do cômodo permanece água');
+  assert.equal(city.getGroundHeightAt(1015,0),-4);
+  city.isPointBlocked=()=>false;
+  const {t,anim}=mock();
+  t.group.position={x:1000,y:-.76,z:-6};
+  t.isSwimming=false; // save antigo pode conter posição afundada
+  t.update(.016,{},city);
+  assert.equal(t.isSwimming,false);
+  assert.equal(t.group.position.y,0);
+  assert.equal(anim.at(-1),'idle');
+  t.update(.1,{up:true},city);
+  assert.equal(t.isSwimming,false);
+  assert.equal(anim.at(-1),'walk');
+  assert(t.group.position.z>-6);
+});

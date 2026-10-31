@@ -374,7 +374,9 @@
                     this.leftArm.rotation.x=-0.7-kick;
                     this.rightArm.rotation.x=-0.7+kick;
                 } else {
-                    if(wasSwimming)this.group.position.y=
+                    if(wasSwimming || (this.group.position.y<0 &&
+                        cityBuilder.interiorFloorAt?.(this.group.position.x,
+                            this.group.position.z)))this.group.position.y=
                         cityBuilder.getGroundHeightAt(
                             this.group.position.x,this.group.position.z,
                             this.group.position.y);

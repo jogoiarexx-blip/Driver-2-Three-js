@@ -1663,6 +1663,14 @@
                     Math.abs(z-place.inside.z)+radius<10.4;
             }
 
+            interiorFloorAt(x,z) {
+                // Cômodos usam coordenadas fora da cidade, que podem cair
+                // dentro da máscara do mar. Seu piso tem prioridade.
+                return Array.isArray(this.interiors) && this.interiors.some(p=>
+                    p.inside && Math.abs(x-p.inside.x)<12 &&
+                    Math.abs(z-p.inside.z)<11);
+            }
+
             spawnDestructibleProp(x, z, type) {
                 let mesh;
                 if (type === 'cone') {
@@ -1880,6 +1888,7 @@
             }
 
             isWaterAt(x,z){
+                if(this.interiorFloorAt?.(x,z))return false;
                 if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceBridge!=='undefined' &&
                     DriverChicagoPS1ReferenceBridge.isBridgeDeck(x,z))return false;
@@ -1960,6 +1969,7 @@
             }
 
             getGroundHeightAt(x,z,referenceY=null) {
+                if(this.interiorFloorAt?.(x,z))return 0;
                 if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceBridge!=='undefined'){
                     const deck=DriverChicagoPS1ReferenceBridge.deckHeight(x,z);
