@@ -47,11 +47,11 @@ test('R51 incorporates built PS1-adapted pavement outside legacy 320-unit grid',
  assert(!g.nodes.has('1200,100'));
  assert(g.buckets instanceof Map);
  assert(g.buckets.size>0);
- const route=Nav.plan(c,{x:240,z:-160},{x:520,z:-100});
+ const route=Nav.plan(c,{x:240,z:-160},{x:480,z:-40});
  assert(route&&route.length>10);
  assert(route.some(p=>p.x>400));
- assert.equal(route.at(-1).x,520);
- assert.equal(route.at(-1).z,-100);
+ assert.equal(route.at(-1).x,480);
+ assert.equal(route.at(-1).z,-40);
  for(let i=1;i<route.length;i++)
   assert(Nav.clear(c,route[i-1],route[i],true,1.7));
 });
