@@ -94,6 +94,9 @@ test('R48: build replaces cleared blocks with drivable roads, actual junction ma
         assert.equal(Object.keys(plan.loops).length,4);
         for(const loop of Object.values(plan.loops)){
             assert.equal(loop.closed,0);
+            for(let i=1;i<loop.points.length;i++)
+                assert(R48.laneClear(c,loop.points[i-1],loop.points[i]),
+                    'civilian circuit must stay on collision-free road');
             for(const p of loop.points){
                 assert(!c.isWaterAt(p.x,p.z));
                 assert(!c.isPointBlocked(p.x,p.z,1.8));
