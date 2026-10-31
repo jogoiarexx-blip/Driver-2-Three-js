@@ -133,6 +133,8 @@
 
                 this.input = { up: false, down: false, left: false, right: false, handbrake: false, sprint: false };
                 this.bindEvents();
+                if(typeof DriverChicagoLandmarkNavigationR56!=='undefined')
+                    DriverChicagoLandmarkNavigationR56.bind(this);
                 this.updateChapterMenu();
 
                 this.currentVFSFile = 'assets/AssetManifest.json';
@@ -199,6 +201,8 @@
 
             activateCityPreset(cityKey) {
                 this.currentCityKey = cityKey;
+                if(typeof DriverChicagoLandmarkNavigationR56!=='undefined')
+                    DriverChicagoLandmarkNavigationR56.cityChanged(this);
                 const preset = CITY_PRESETS[cityKey];
 
                 this.scene.background.setHex(preset.skyColor);
@@ -2528,6 +2532,8 @@
 
                 this.updateGarageProximity();
                 this.updateCityNavigation();
+                if(typeof DriverChicagoLandmarkNavigationR56!=='undefined')
+                    DriverChicagoLandmarkNavigationR56.update(this);
                 if(this.playerCar&&this.debugVehiclePhysics &&
                     typeof DriverVehicleWheelRig!=='undefined')
                     DriverVehicleWheelRig.setDebug(this.playerCar,true);
@@ -3023,6 +3029,12 @@
                     ctx.arc(mx, mz, 4.5, 0, Math.PI * 2);
                     ctx.fill();
                 }
+
+                // R56: pontos turísticos e rota viária opcional em Chicago.
+                // Desenhados antes da indicação da missão para preservar prioridade.
+                if(typeof DriverChicagoLandmarkNavigationR56!=='undefined')
+                    DriverChicagoLandmarkNavigationR56.drawRadar(
+                        ctx,this,pos,scale);
 
                 // Alvo atual da etapa (veículo, estação ou saída);
                 // mesma matriz do radar para não espelhar os marcadores.
