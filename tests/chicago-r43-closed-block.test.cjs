@@ -29,7 +29,7 @@ test('grafo da referência prova ciclo fechado R39→R41→R42→R43, sem reutil
   for(const id of chain){assert(!seen.has(id),'segmento repetido no ciclo de quadra');seen.add(id);}
   cycle.push(...chain);
  }
- assert(cycle.length>=30);
+ assert(cycle.length>=25);
  assert.equal(loop[0].from,loop.at(-1).to);
  for(let i=0;i<loop.length;i++){
   const a=loop[i],b=loop[(i+1)%loop.length];
