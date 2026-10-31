@@ -59,6 +59,9 @@ class DriverTrafficTelemetryR50 {
                 x:car.x,z:car.z,damage:car.damage||0,stalled
             });
         }
+        const nav=game.currentCityKey==='chicago' &&
+            typeof DriverChicagoMixedNavigationR49!=='undefined'?
+            DriverChicagoMixedNavigationR49.compile(game.city):null;
         const report={
             city:game.currentCityKey||'unknown',
             mode:game.missionType||'freeroam',
@@ -70,6 +73,13 @@ class DriverTrafficTelemetryR50 {
             peakFrameMs:+this.framePeak.toFixed(1),
             slowFrames:this.slowFrames,
             r49:vehicles.filter(v=>v.chicagoMixedTrafficR49).length,
+            sourceCars:vehicles.filter(v=>v.chicagoSourceTrafficR51).length,
+            graphNodes:nav?.nodes.size||0,graphEdges:nav?.edges||0,
+            sourceCorridors:nav?.sourceCorridors||0,
+            sourceEdges:nav?.sourceEdges||0,
+            planned:nav?.planStats?.planned||0,
+            pathFailures:nav?.planStats?.failed||0,
+            routeWorstMs:nav?.planStats?.worstMs||0,
             roadsR50:!!game.city?.chicagoConnectorsR50?.ready
         };
         this.lastReport=report;
@@ -84,7 +94,13 @@ class DriverTrafficTelemetryR50 {
                     ' ms | pico: '+report.peakFrameMs+' ms',
                 'Quadros >45ms: '+report.slowFrames,
                 'Veículos: '+report.vehicles+' | NPCs: '+report.activeNPC,
-                'Rotas R49: '+report.r49+' | presos >2.5s: '+report.stuck,
+                'Rotas mistas: '+report.r49+' | fonte R51: '+report.sourceCars,
+                'Grafo: '+report.graphNodes+' nós / '+report.graphEdges+' conexões',
+                'Fonte adaptada: '+report.sourceCorridors+' vias / '+
+                    report.sourceEdges+' segmentos válidos',
+                'A*: '+report.planned+' planos / '+report.pathFailures+
+                    ' falhas | pior: '+report.routeWorstMs+'ms',
+                'NPCs presos >2.5s: '+report.stuck,
                 'Dano novo (carros): '+report.damageEvents,
                 'Carros suspensos na estação: '+report.stationCarLift,
                 'Rede norte R50: '+(report.roadsR50?'sim':'não')
