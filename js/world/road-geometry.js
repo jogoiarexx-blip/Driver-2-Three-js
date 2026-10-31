@@ -14,6 +14,31 @@ class DriverRoadGeometry {
     static roadDistance(value){
         return Math.abs(value-this.nearestAxis(value));
     }
+    // R52: match physical foot/tyre height with instanced sidewalk quarters.
+    // R48/R50/R52 previously drew raised slabs without a matching floor
+    // height, causing pedestrians to sink their feet into the geometry.
+    // O(1) lookup per district; no AABB scan and no mesh raycasting.
+    static localPavementHeight(city,x,z){
+        if(city?.preset?.id!=='chicago' ||
+           !Number.isFinite(x)||!Number.isFinite(z))return 0;
+        const districts=[
+            [city.chicagoConnectorsR48,40,-120,3,2,23,12,.28],
+            [city.chicagoConnectorsR50,40,200,3,2,23,12,.28],
+            [city.chicagoGooseEastR52,-120,200,2,2,24,12.5,.273]
+        ];
+        for(const [result,originX,originZ,nx,nz,offset,half,height] of districts){
+            if(!result?.visualReady)return 0; // avoid inactive districts
+            const ix=Math.round((x-originX)/80),iz=Math.round((z-originZ)/80);
+            if(ix<0||ix>=nx||iz<0||iz>=nz)continue;
+            const cx=originX+80*ix,cz=originZ+80*iz;
+            const px=cx+(x<cx?-offset:offset);
+            const pz=cz+(z<cz?-offset:offset);
+            const edge=Math.min(half-Math.abs(x-px),
+                half-Math.abs(z-pz));
+            if(edge>0)return height*Math.min(1,edge/.65);
+        }
+        return 0;
+    }
     static inDrivingLane(x,z,vehicleRadius=1.55){
         return this.roadDistance(x)<this.ROAD_HALF+vehicleRadius ||
             this.roadDistance(z)<this.ROAD_HALF+vehicleRadius;
