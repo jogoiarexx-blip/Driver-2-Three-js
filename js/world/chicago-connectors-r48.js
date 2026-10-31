@@ -212,6 +212,18 @@ class DriverChicagoConnectorsR48 {
         crossings.instanceMatrix.needsUpdate=true;
         crossings.name='r48-zebra-crosswalks';group.add(crossings);
         city.cityGroup.add(group);
+        // Mostrar os cinco corredores também no minimapa do Undercover e
+        // do Take a Ride, sem confundi-los com trechos extraídos do PS1.
+        const radar=city.chicagoPS1StreetNetwork?.radarPaths;
+        if(Array.isArray(radar)){
+            for(const street of this.streets()){
+                const id='r48-'+street.id;
+                if(!radar.some(item=>item.id===id))
+                    radar.push({id,points:[street.from,street.to],
+                        width:this.WIDTH,
+                        provenance:'procedural-r48-local-grid'});
+            }
+        }
         const after=this.audit(city);
         Object.assign(report,{
             ready:after.ready,blocked:after.blocked,
