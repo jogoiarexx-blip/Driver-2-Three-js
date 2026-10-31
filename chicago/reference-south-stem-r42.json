@@ -1,0 +1,73 @@
+{
+  "format": "Driver2ChicagoAdaptedSouthStemR42",
+  "sourceSHA256": "a94e6e47cb22066f671abe2d5547cf9f96391b874c5fb08229ed4773cc25ba50",
+  "predecessor": "R41",
+  "sourceJoinNodeId": 576,
+  "sourceEndNodeId": 1187,
+  "sourceEdgeIds": [
+    788,
+    831,
+    942,
+    1040,
+    1086,
+    1162,
+    1253,
+    1591
+  ],
+  "sourceNodeIds": [
+    576,
+    611,
+    694,
+    768,
+    799,
+    846,
+    911,
+    1161,
+    1187
+  ],
+  "pointsOBJ": [
+    [
+      -38.725,
+      166.632
+    ],
+    [
+      -37.85,
+      165.757
+    ],
+    [
+      -37.85,
+      160.132
+    ],
+    [
+      -37.975,
+      156.507
+    ],
+    [
+      -37.975,
+      155.757
+    ],
+    [
+      -38.725,
+      155.132
+    ],
+    [
+      -37.85,
+      154.257
+    ],
+    [
+      -37.975,
+      145.882
+    ],
+    [
+      -37.975,
+      143.132
+    ]
+  ],
+  "sourcePixels": [],
+  "originalPlacementCertified": false,
+  "roadClassificationCertified": false,
+  "gradedJunctionsCertified": false,
+  "wholeMapCertified": false,
+  "missionsMigrated": false,
+  "limitations": "8 connected unclaimed original pavement-skeleton edges adapted as flat world road. Not certified PS1 original road, grade, or position."
+}
