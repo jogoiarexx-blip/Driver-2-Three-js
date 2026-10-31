@@ -147,8 +147,11 @@ class DriverVehicleMount {
             this.badge(engine,s.bike?'NA MOTO':
                 s.vehicle.isSecret?'CARRO SECRETO!':'NO VOLANTE (V8)',true);
         }else{
-            if(s.bike&&s.vehicle.motorcycleRider)
-                s.vehicle.motorcycleRider.visible=false;
+            if(s.bike){
+                engine.tanner.pendingMotorcycleVehicle=null;
+                if(s.vehicle.motorcycleRider)
+                    s.vehicle.motorcycleRider.visible=false;
+            }
             engine.mode='on_foot';
             const ground=engine.city?.getGroundHeightAt?.(
                 s.stand.x,s.stand.z,s.stand.y);
@@ -198,6 +201,10 @@ class DriverVehicleMount {
                 }else if(!s.bike)engine.tanner.setVisible(false);
             }
         }else{
+            // During dismount, replace the fallback rider with Tanner
+            // exactly when the seat-to-ground animation becomes visible.
+            if(s.bike&&t>=.16&&s.vehicle.motorcycleRider)
+                s.vehicle.motorcycleRider.visible=false;
             // Suaviza a liberação das mãos/pés sem atravessar o banco.
             if(s.bike&&t<.16&&
                 engine.tanner.motorcycleVehicle===s.vehicle)
