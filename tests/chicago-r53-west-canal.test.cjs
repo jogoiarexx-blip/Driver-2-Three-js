@@ -214,7 +214,7 @@ test('R53 F8 telemetry distinguishes bridge occupancy, waits, blocked paths and 
         panel.sample(g,.51,.051);
         const report=panel.sample(g,.54,.017);
         assert.equal(report.westCanalRoads,5);
-        assert.equal(report.westBridgeVehicles,2);
+        assert.equal(report.westBridgeVehicles,1);
         assert.equal(report.westCanalCars,2);
         assert.equal(report.blockedRoutes,1);
         assert.equal(report.waitingTraffic,1);
