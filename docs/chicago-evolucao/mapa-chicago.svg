@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="1120" viewBox="0 0 900 1120">
-<rect width="900" height="1120" fill="#101923"/><text x="45" y="52" fill="#fff" font-family="sans-serif" font-size="26" font-weight="bold">Chicago Undercover — planta de planejamento</text><text x="45" y="80" fill="#b6cbd7" font-family="sans-serif" font-size="16">Evolução R43 • envelope de planejamento e corredores derivados da fonte • norte (+Z) ↑</text>
+<rect width="900" height="1120" fill="#101923"/><text x="45" y="52" fill="#fff" font-family="sans-serif" font-size="26" font-weight="bold">Chicago Undercover — planta de planejamento</text><text x="45" y="80" fill="#b6cbd7" font-family="sans-serif" font-size="16">Evolução R44 • envelope de planejamento e corredores derivados da fonte • norte (+Z) ↑</text>
 <g transform="translate(135 110)"><rect x="0" y="0" width="565" height="930" fill="#243a2c" stroke="#bdd7c0" stroke-width="3"/><text x="12" y="27" fill="#d9eadb" font-family="sans-serif" font-size="15">Terreno reservado: X −576…448 / Z −448…1408</text>
 <rect x="9" y="8" width="547" height="914" fill="none" stroke="#e6ce73" stroke-width="2" stroke-dasharray="7 6"/><polygon points="25,34 482,23 503,804 46,814" fill="#527a61" fill-opacity=".42" stroke="#91c7aa" stroke-width="3"/><text x="115" y="155" fill="#ebfff2" font-family="sans-serif" font-size="17">Projeção do envelope da fonte</text><text x="115" y="180" fill="#ebfff2" font-family="sans-serif" font-size="14">Área interna inclui regiões ainda não reconstruídas</text>
 <rect x="86" y="494" width="463" height="420" fill="#75838b" fill-opacity=".27" stroke="#a8bbc3" stroke-width="2"/><text x="245" y="740" fill="#f1f5f7" font-family="sans-serif" font-size="15">Cenário anterior</text><text x="245" y="762" fill="#f1f5f7" font-family="sans-serif" font-size="14">aprox. X/Z ±420</text>
@@ -32,6 +32,10 @@
 <circle cx="364.8" cy="302.8" r="5" fill="#ea8cd6" stroke="#ffffff" stroke-width="1.7"/>
 <circle cx="397.3" cy="301.1" r="5" fill="#ea8cd6" stroke="#ffffff" stroke-width="1.7"/>
 <text x="338" y="287" fill="#ffb7ea" font-family="sans-serif" font-size="14" font-weight="bold">R43 · Ligação</text>
+<path id="r44-parallel-west" d="M342.8 258.9 L345.7 261.4 L346.2 282.3 L346.3 286.4 L346.4 289.5 L344.8 290.5 L343.2 293.6 L346 296.1 L346.1 297.6 L345 298.2 L344.5 300.2 L342.3 301.8 L342.9 304.9 L356.4 304.6 L356.4 305.6 L361.5 305.5" fill="none" stroke="#f0e48b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="342.8" cy="258.9" r="5" fill="#f0e48b" stroke="#ffffff" stroke-width="1.5"/>
+<circle cx="361.5" cy="305.5" r="5" fill="#f0e48b" stroke="#ffffff" stroke-width="1.5"/>
+<text x="312" y="271" fill="#fff2ab" font-family="sans-serif" font-size="14" font-weight="bold">R44 · 2ª quadra</text>
 </g>
 <text x="10" y="950" fill="#c6d5d9" font-family="sans-serif" font-size="13">Z −448</text><text x="478" y="950" fill="#c6d5d9" font-family="sans-serif" font-size="13">X +448 →</text><text x="10" y="-12" fill="#c6d5d9" font-family="sans-serif" font-size="13">Z +1408</text></g>
-<text x="45" y="1088" fill="#c6d5d9" font-family="sans-serif" font-size="14">R35–R43: linhas da rede de superfície projetadas; curvas jogáveis foram adaptadas. Sem equivalência PS1 certificada.</text></svg>
+<text x="45" y="1088" fill="#c6d5d9" font-family="sans-serif" font-size="14">R35–R44: linhas da rede de superfície projetadas; curvas jogáveis foram adaptadas. Sem equivalência PS1 certificada.</text></svg>
