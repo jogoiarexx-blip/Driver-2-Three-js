@@ -11,9 +11,9 @@ class DriverPedestrianVariants {
         {id:'girl',url:'./assets/pedestrians/menina.glb',pedestrianIndex:5,height:1.27,species:'child',walkSpeed:2.05,textureMaxSize:1024,allowAnyAnimation:true,allowStatic:true},
         {id:'boy',url:'./assets/pedestrians/menino.glb',pedestrianIndex:6,height:1.32,species:'child',walkSpeed:2.10,textureMaxSize:1024,allowAnyAnimation:true,allowStatic:true},
         // O pastor-alemão é maior; os dois cães restantes são menores.
-        {id:'german-shepherd',url:'./assets/pedestrians/pastor%20alemao.glb',pedestrianIndex:7,height:0.87,species:'dog',walkSpeed:3.25,textureMaxSize:1024,suppressAnimatedScale:true,allowAnyAnimation:true,allowStatic:true},
-        {id:'dog-mailou',url:'./assets/pedestrians/mailou.glb',pedestrianIndex:8,height:0.59,species:'dog',walkSpeed:2.85,textureMaxSize:1024,suppressAnimatedScale:true,allowAnyAnimation:true,allowStatic:true},
-        {id:'dog-3',url:'./assets/pedestrians/cachorro%203.glb',pedestrianIndex:9,height:0.54,species:'dog',walkSpeed:2.75,textureMaxSize:1024,suppressAnimatedScale:true,allowAnyAnimation:true,allowStatic:true},
+        {id:'german-shepherd',url:'./assets/pedestrians/pastor%20alemao.glb',pedestrianIndex:7,height:0.87,species:'dog',walkSpeed:3.25,textureMaxSize:1024,normalizeSkinnedBounds:true,suppressAnimatedScale:true,allowAnyAnimation:true,allowStatic:true},
+        {id:'dog-mailou',url:'./assets/pedestrians/mailou.glb',pedestrianIndex:8,height:0.59,species:'dog',walkSpeed:2.85,textureMaxSize:1024,normalizeSkinnedBounds:true,suppressAnimatedScale:true,allowAnyAnimation:true,allowStatic:true},
+        {id:'dog-3',url:'./assets/pedestrians/cachorro%203.glb',pedestrianIndex:9,height:0.54,species:'dog',walkSpeed:2.75,textureMaxSize:1024,normalizeSkinnedBounds:true,suppressAnimatedScale:true,allowAnyAnimation:true,allowStatic:true},
         // Novos adultos/idosos, além dos cinco modelos já em uso.
         {id:'old-man',url:'./assets/pedestrians/homem%20velho.glb',pedestrianIndex:10,height:1.80,species:'adult',walkSpeed:1.95,textureMaxSize:1024,allowAnyAnimation:true,allowStatic:true},
         {id:'old-man-2',url:'./assets/velho%202.glb',pedestrianIndex:11,height:1.79,species:'adult',walkSpeed:1.95,textureMaxSize:1024,allowAnyAnimation:true,allowStatic:true},

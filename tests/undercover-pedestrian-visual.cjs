@@ -64,6 +64,7 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
               height,width:dimensions?.x||0,depth:dimensions?.z||0,
               skinnedHeight:skinnedSize?.y||0,skinnedWidth:skinnedSize?.x||0,
               skinnedDepth:skinnedSize?.z||0,sampledVertices,
+              skinnedScale:model.skinnedScaleReport,
               feetY:bounds?.min.y??0,
               scaleTracksRemoved:model.visualRepairs.scaleTracksRemoved,
               slot:m.pedestrians.indexOf(ped),attached:!!ped?.glbVariant,
@@ -116,6 +117,8 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
            skinnedDepth:model.skinnedDepth,boxHeight:model.height,
            sampledVertices:model.sampledVertices}));
          assert(model.sampledVertices>100,'Skin CPU não foi medida: '+JSON.stringify(model));
+         assert(model.skinnedScale?.framesChecked===6,
+            'GLB canino não passou pela calibração de seis poses: '+JSON.stringify(model));
          assert(model.skinnedHeight>0&&model.skinnedHeight<1.5&&
                 model.skinnedWidth>0&&model.skinnedWidth<2.8&&
                 model.skinnedDepth>0&&model.skinnedDepth<2.8,

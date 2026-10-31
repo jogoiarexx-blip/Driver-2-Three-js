@@ -33,6 +33,7 @@ class DriverMalePedestrian {
         this.lastRunning=false;
         this.originalHeight=0;
         this.visualRepairs={normalizedSkins:0,scaleTracksRemoved:0,invalidTracksRemoved:0};
+        this.skinnedScaleReport=null;
     }
 
     load(){
@@ -117,6 +118,13 @@ class DriverMalePedestrian {
                         this.animationNames=clips.map(a=>a.name);
                         this.staticPose=staticPose;
                         this.walkAction.reset().play();
+                        // Three.js r128 Box3 ignora a deformação CPU dos
+                        // SkinnedMesh. Meshy GLBs caninos dão até 67 metros
+                        // animados apesar do Box3 estático medir 0,87 m!
+                        // Normalizar com a geometria realmente deformada,
+                        // antes de anexar à vaga e antes de clonar o rig.
+                        if(this.config.normalizeSkinnedBounds)
+                            this.normalizeAnimatedSkinnedBounds();
                         this.walkAction.paused=true;
                         this.action=this.walkAction;
                         this.originalHeight=size.y;
@@ -135,6 +143,79 @@ class DriverMalePedestrian {
                 });
         });
         return this.promise;
+    }
+
+    /**
+     * Mede vértices transformados pelos ossos em Three.js r128.
+     * Box3.setFromObject lê só o atributo POSITION, sem skinning, e
+     * não representa o cão renderizado. Amostra cada malha skinned
+     * (sem alocar novos NPCs / buffers de GPU) em vários frames.
+     */
+    static animatedSkinnedBounds(root,budget=1200){
+        const box=new THREE.Box3().makeEmpty();
+        const vector=new THREE.Vector3();
+        let samples=0;
+        root.updateMatrixWorld(true);
+        root.traverse(mesh=>{
+            if(!mesh.isSkinnedMesh||
+                !mesh.geometry?.attributes?.position||
+                typeof mesh.boneTransform!=='function')return;
+            mesh.skeleton?.update();
+            const attr=mesh.geometry.attributes.position;
+            const stride=Math.max(1,Math.floor(attr.count/budget));
+            for(let i=0;i<attr.count;i+=stride){
+                vector.fromBufferAttribute(attr,i);
+                mesh.boneTransform(i,vector);
+                mesh.localToWorld(vector);
+                if(Number.isFinite(vector.x)&&Number.isFinite(vector.y)&&
+                    Number.isFinite(vector.z)){
+                    box.expandByPoint(vector);
+                    samples++;
+                }
+            }
+        });
+        return samples?box:null;
+    }
+
+    normalizeAnimatedSkinnedBounds(){
+        const clip=this.walkAction?.getClip();
+        const duration=Math.max(.01,clip?.duration||1);
+        const frames=[.05,.20,.37,.56,.76,.94];
+        let highest=0,seen=0;
+        this.walkAction.paused=false;
+        for(const fraction of frames){
+            this.mixer.setTime(duration*fraction);
+            const box=DriverMalePedestrian.animatedSkinnedBounds(this.root);
+            if(!box)continue;
+            const size=box.getSize(new THREE.Vector3());
+            if(Number.isFinite(size.y)&&size.y>highest)highest=size.y;
+            seen++;
+        }
+        if(!seen||highest<=1e-8)
+            throw new Error('GLB canino sem malha animada mensurável');
+        const factor=this.config.height/highest;
+        if(!Number.isFinite(factor)||factor<=0||factor>1e6)
+            throw new Error('Normalização real do GLB canino inválida');
+        this.root.scale.multiplyScalar(factor);
+        // Centragem e alinhamento ao piso usando a pose REAL,
+        // em vez de bounding boxes da malha sem skinning.
+        this.mixer.setTime(duration*.20);
+        const adjusted=DriverMalePedestrian.animatedSkinnedBounds(this.root);
+        if(!adjusted)throw new Error('Bounds skinned ausentes após escala');
+        const center=adjusted.getCenter(new THREE.Vector3());
+        this.root.position.x-=center.x;
+        this.root.position.z-=center.z;
+        this.root.position.y-=adjusted.min.y;
+        this.root.updateMatrixWorld(true);
+        this.skinnedScaleReport={unfixedHeight:highest,
+            factor,referenceHeight:this.config.height,
+            measuredHeight:DriverMalePedestrian.animatedSkinnedBounds(this.root)
+                ?.getSize(new THREE.Vector3()).y||0,
+            framesChecked:seen};
+        // A animação permanece pronta para quando o pedestre se mover.
+        this.walkAction.reset().play();
+        this.mixer.update(0);
+        this.walkAction.paused=true;
     }
 
     repairRigAndAnimations(root,clips){
@@ -267,7 +348,8 @@ class DriverMalePedestrian {
             animated:!!this.walkAction,staticPose:!!this.staticPose,
             species:this.config.species||'adult',height:this.config.height,
             animations:this.animationNames.slice(),
-            originalHeight:this.originalHeight,visualRepairs:{...this.visualRepairs},error:this.error,
+            originalHeight:this.originalHeight,visualRepairs:{...this.visualRepairs},
+            skinnedScale:this.skinnedScaleReport,error:this.error,
             pedestrianCount:this.manager?.pedestrians?.length||0};
     }
 }
