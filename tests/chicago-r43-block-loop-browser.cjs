@@ -92,10 +92,15 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
       const previousJunction=[...junctions].reverse()
        .find(d=>d<=progress)??0;
       const exitDistance=progress-previousJunction;
-      const turning=Math.min(cornerDistance,exitDistance);
-      const speedTarget=turning<12?1.8:
-                         turning<20?2.8:4.15;
-      const lookAhead=turning<12?3.9:5.8;
+      const approaching=cornerDistance<15;
+      const completingTurn=exitDistance<12;
+      // The physics steering rate depends on vehicle speed. Slowing to
+      // almost zero made turns wider, not tighter; pre-steer with a
+      // longer lookahead while holding enough momentum for yaw response.
+      const speedTarget=approaching||completingTurn?2.7:
+                         cornerDistance<23?3.5:4.3;
+      const lookAhead=approaching?12:
+                       completingTurn?7:6.2;
       const target=sample(progress+lookAhead);
       const desired=Math.atan2(target.x-car.x,target.z-car.z);
       const delta=Math.atan2(Math.sin(desired-car.heading),
