@@ -125,6 +125,12 @@ class DriverDayNightCycle {
         this.sky.copy(this.nightSky).lerp(this.twilightSky,horizon);
         this.sky.lerp(this.daySky,DriverDayNightCycle.smooth(.08,.55,height));
         if(this.rain)this.sky.lerp(new THREE.Color(0x303d50),.70);
+        // Luzes de Chicago seguem o mesmo sol; chuva aumenta a penumbra.
+        if(typeof DriverChicagoNightLights!=='undefined' && game.city){
+            const streetDark=1-DriverDayNightCycle.smooth(-.18,.20,height);
+            DriverChicagoNightLights.update(game.city,
+                Math.max(streetDark,this.rain?.42:0),force);
+        }
         game.scene.background.copy(this.sky);
         if(game.scene.fog?.color)game.scene.fog.color.copy(this.sky);
 
