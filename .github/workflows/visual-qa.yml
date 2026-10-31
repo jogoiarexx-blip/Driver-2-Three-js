@@ -163,6 +163,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r40-east-lateral-browser.cjs
+      - name: R41 dirigir pela transversal oeste e verificar pavimentação
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r41-west-lateral-browser.cjs
       - name: Validar carregamento do mapa original de Chicago na raiz
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
