@@ -103,8 +103,11 @@ class DriverChicagoMixedNavigationR49 {
                 }
             }
         }
+        // R57 links are narrow one-lane service roads. Their center is
+        // validated with vehicle radius; requiring ±1.7m paired lanes here
+        // can falsely disconnect a passage by an existing signpost.
         for(const edge of secondary)
-            add(edge.from,edge.to,edge.width?1.7:4);
+            add(edge.from,edge.to,edge.width?0:4);
         // R51: roads already drawn from PS1-adapted surface references.
         // The separately audited R22 feeder is the only inferred link.
         const sources=(city.chicagoPS1StreetNetwork?.radarPaths||[])
