@@ -36,13 +36,15 @@ class DriverChicagoNorthRoadsideR32 {
       // não reconstrução certificada do bairro original do PS1.
       const west=path.id==='west-lateral-r41';
       const south=path.id==='south-stem-r42';
+      const cross=path.id==='cross-link-r43';
       const shop=(west&&Math.floor((cx+480)/28)%4===0)||
-          (south&&Math.floor((cz+1408)/28)%4===0);
+          (south&&Math.floor((cz+1408)/28)%4===0)||
+          (cross&&Math.floor((cx+480)/28)%3===0);
       lots.push({x,z,width:11,depth:11,
        height:shop?7+(lots.length%3)*2:8+(lots.length%4)*3,baseY:0,
        palette:lots.length%3,planned:true,kind:shop?'commercial':'residential',
        district:'wrigleyville',adaptedR32:true,
-       sourceCorridorId:path.id||null,approximateZoning:west||south});
+       sourceCorridorId:path.id||null,approximateZoning:west||south||cross});
      }
      remaining+=28;
     }
