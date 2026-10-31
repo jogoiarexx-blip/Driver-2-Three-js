@@ -89,6 +89,9 @@ class DriverRoadSurface {
         mesh.receiveShadow=true;
         mesh.name='driver2-road-asphalt-'+city.preset.id;
         city.cityGroup.add(mesh);
+        if(city.preset.id==='chicago' &&
+            typeof DriverChicagoWetAsphalt!=='undefined')
+            DriverChicagoWetAsphalt.install(city,mesh);
         city.roadSurfaceStats={regions:tiles.length,intersectionCount:81,
             paintedInsideIntersections:0,collidersAdded:0,materials:1,
             removedWetTiles};
