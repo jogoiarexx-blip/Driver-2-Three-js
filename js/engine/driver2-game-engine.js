@@ -427,6 +427,8 @@
                         });
                         car.chicagoMixedTrafficR49=true;
                         car.chicagoMixedTrafficGoalIndex=spec.goalIndex;
+                        // R53: report the genuinely connected western bank.
+                        car.chicagoWestTrafficR53=spec.goalIndex>=19;
                         this.vehicles.push(car);
                     }
                 }
