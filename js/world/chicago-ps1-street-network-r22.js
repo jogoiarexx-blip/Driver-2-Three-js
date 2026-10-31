@@ -23,7 +23,8 @@ class DriverChicagoPS1StreetNetwork {
         ['north-link-r36','chicagoReferenceNorthLinkR36'],
         ['north-branch-r37','chicagoReferenceNorthBranchR37'],
         ['east-return-r38','chicagoReferenceEastReturnR38'],
-        ['southeast-r39','chicagoReferenceSouthEastR39']
+        ['southeast-r39','chicagoReferenceSouthEastR39'],
+        ['east-lateral-r40','chicagoReferenceEastLateralR40']
     ];
     static sourcePaths(city){
         const result=[];
