@@ -38,9 +38,32 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
           const bounds=model.root?new THREE.Box3().setFromObject(model.root):null;
           const dimensions=bounds?.getSize(new THREE.Vector3());
           const height=dimensions?.y||0;
+          const skinnedBounds=new THREE.Box3().makeEmpty();
+          let sampledVertices=0;
+          model.root?.updateMatrixWorld(true);
+          model.root?.traverse(mesh=>{
+            if(!mesh.isSkinnedMesh||!mesh.geometry?.attributes?.position)return;
+            mesh.skeleton?.update();
+            const position=mesh.geometry.attributes.position;
+            const v=new THREE.Vector3();
+            const stride=Math.max(1,Math.floor(position.count/1024));
+            for(let i=0;i<position.count;i+=stride){
+              v.fromBufferAttribute(position,i);
+              if(typeof mesh.boneTransform==='function'){
+                mesh.boneTransform(i,v);
+                mesh.localToWorld(v);
+                if(Number.isFinite(v.x)&&Number.isFinite(v.y)&&Number.isFinite(v.z)){
+                  skinnedBounds.expandByPoint(v);sampledVertices++;
+                }
+              }
+            }
+          });
+          const skinnedSize=sampledVertices?skinnedBounds.getSize(new THREE.Vector3()):null;
           return {id:model.config.id,state:model.state,
               species:model.config.species,expected:model.config.height,
               height,width:dimensions?.x||0,depth:dimensions?.z||0,
+              skinnedHeight:skinnedSize?.y||0,skinnedWidth:skinnedSize?.x||0,
+              skinnedDepth:skinnedSize?.z||0,sampledVertices,
               feetY:bounds?.min.y??0,
               scaleTracksRemoved:model.visualRepairs.scaleTracksRemoved,
               slot:m.pedestrians.indexOf(ped),attached:!!ped?.glbVariant,
@@ -88,8 +111,17 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
        if(model.species==='dog'){
          assert(model.distance>=20&&model.distance<=115,
             'Cão fora do alcance visual do jogador: '+JSON.stringify(model));
+         console.log('DOG_TRUE_SKINNING '+JSON.stringify({stage,id:model.id,
+           skinnedHeight:model.skinnedHeight,skinnedWidth:model.skinnedWidth,
+           skinnedDepth:model.skinnedDepth,boxHeight:model.height,
+           sampledVertices:model.sampledVertices}));
+         assert(model.sampledVertices>100,'Skin CPU não foi medida: '+JSON.stringify(model));
+         assert(model.skinnedHeight>0&&model.skinnedHeight<1.5&&
+                model.skinnedWidth>0&&model.skinnedWidth<2.8&&
+                model.skinnedDepth>0&&model.skinnedDepth<2.8,
+            'Cão gigante na malha deformada em movimento: '+JSON.stringify(model));
          assert(model.width>0&&model.width<2.7&&model.depth>0&&model.depth<2.7,
-            'Cão gigante na horizontal durante a caminhada: '+JSON.stringify(model));
+            'Cão gigante na geometria não deformada: '+JSON.stringify(model));
          assert(model.feetY>-1.5&&model.feetY<1.5,
             'Cão fora do chão durante a caminhada: '+JSON.stringify(model));
        }
