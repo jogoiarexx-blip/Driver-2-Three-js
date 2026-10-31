@@ -1,4 +1,4 @@
-/* Browser smoke: five uploaded, skinned GLBs fill all 28 civilian slots. */
+/* Browser smoke: 15 uploaded human/animal models share 28 civilian slots. */
 'use strict';
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
@@ -66,11 +66,11 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       assert(data.femaleActive,'Female pedestrian disappeared');
       assert(data.skinnedMeshes>=1,'GLB body is not skinned');
       assert(data.hasWalking&&data.hasRunning);
-      await page.waitForFunction(()=>window.DriverGame?.pedManager?.variantPedestrians?.models.every(model=>
+      await page.waitForFunction(()=>window.DriverGame?.pedManager?.variantPedestrians?.models.slice(0,3).every(model=>
          ['ready','error','missing','unsupported'].includes(model.state)),null,{timeout:120000});
       const variants=await page.evaluate(()=>{
          const g=window.DriverGame,m=g.pedManager;
-         return m.variantPedestrians.models.map(model=>{
+         return m.variantPedestrians.models.slice(0,3).map(model=>{
             const p=model.current;if(p)p.mesh.visible=true;
             let skins=0,maxTexture=0;
             model.root?.traverse(node=>{
@@ -97,23 +97,59 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       if(results.length)for(let i=0;i<variants.length;i++)assert.equal(variants[i].rootUUID,results[0].variants[i].rootUUID,'GLB foi recarregado ao trocar de cidade');
       await page.waitForFunction(()=>{
          const c=window.DriverGame?.pedManager?.uploadedCrowd?.status();
-         return c?.loadedModels===5 && c?.filledSlots===28;
+         return c?.loadedModels>=5 && c?.filledSlots===28;
       },null,{timeout:120000});
       const crowd=await page.evaluate(()=>{
          const m=window.DriverGame.pedManager;
-         let withSkin=0;
+         let withVisual=0;
          for(const p of m.pedestrians){
-            let hasSkin=false;
-            p.mesh.traverse(node=>{if(node.isSkinnedMesh)hasSkin=true;});
-            if(hasSkin)withSkin++;
+            let hasMesh=false;
+            p.mesh.traverse(node=>{if(node.isMesh||node.isSkinnedMesh)hasMesh=true;});
+            if(hasMesh)withVisual++;
          }
-         return {status:m.uploadedCrowd.status(),withSkin};
+         return {status:m.uploadedCrowd.status(),withVisual};
       });
       assert.equal(crowd.status.proceduralCivilians,0);
       assert.equal(crowd.status.waitingSlots,0);
-      assert.equal(crowd.withSkin,28,'nenhuma vaga pode ter corpo procedural ou ficar sem rig');
+      assert.equal(crowd.withVisual,28,'nenhuma vaga pode ficar sem GLB renderizável');
       data.crowd=crowd;
       data.variants=variants;
+      // Confirmar os dois GLBs infantis e os três cães em execução real.
+      // A fila sequencial deixa os cinco primeiros modelos adicionais prontos
+      // antes de carregar os adultos restantes.
+      if(city==='chicago'){
+         await page.waitForFunction(()=>{
+            const extra=window.DriverGame?.pedManager?.variantPedestrians?.models.slice(3,8);
+            return extra?.length===5 && extra.every(model=>
+               ['ready','error','missing','unsupported'].includes(model.state));
+         },null,{timeout:180000});
+         const youngAndDogs=await page.evaluate(()=>{
+            const m=window.DriverGame.pedManager;
+            return m.variantPedestrians.models.slice(3,8).map(model=>{
+               const cfg=model.config;
+               let meshes=0;
+               model.root?.traverse(node=>{if(node.isMesh)meshes++;});
+               const height=model.root?
+                  new THREE.Box3().setFromObject(model.root).getSize(new THREE.Vector3()).y:0;
+               return {id:cfg.id,species:cfg.species,targetHeight:cfg.height,height,
+                  state:model.state,meshes,slot:m.pedestrians.indexOf(model.current),
+                  error:model.error};
+            });
+         });
+         assert(youngAndDogs.every(row=>row.state==='ready'&&row.meshes>0),
+            'Os 5 novos modelos não carregaram: '+JSON.stringify(youngAndDogs));
+         assert.equal(youngAndDogs.filter(row=>row.species==='child').length,2);
+         assert.equal(youngAndDogs.filter(row=>row.species==='dog').length,3);
+         for(const row of youngAndDogs){
+            assert(Math.abs(row.height-row.targetHeight)<.18,
+               'Altura errada: '+JSON.stringify(row));
+            assert(row.slot>=5&&row.slot<=9);
+         }
+         const heights=youngAndDogs.filter(x=>x.species==='dog');
+         assert(heights.find(x=>x.id==='german-shepherd').height>
+            Math.max(...heights.filter(x=>x.id!=='german-shepherd').map(x=>x.height)));
+         data.youngAndDogs=youngAndDogs;
+      }
       results.push(data);
 
       // Pause gameplay so the camera can photograph the actual skinned
