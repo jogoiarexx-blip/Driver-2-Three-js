@@ -109,7 +109,8 @@ class DriverChicagoGooseEastR52 {
             for(const sx of [-1,1])for(const sz of [-1,1])
                 sidewalkPositions.push({x:x+sx*24,z:z+sz*24});
         const sidewalk=new THREE.InstancedMesh(
-            new THREE.BoxGeometry(25,.27,25),concrete,
+            // Narrower N/S slabs keep the extra z=240 cross street open.
+            new THREE.BoxGeometry(25,.27,15),concrete,
             sidewalkPositions.length);
         sidewalkPositions.forEach((p,i)=>{
             dummy.position.set(p.x,.138,p.z);dummy.rotation.set(0,0,0);
