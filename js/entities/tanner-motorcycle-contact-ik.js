@@ -32,13 +32,20 @@ class DriverMotorcycleContactIK {
         // Both targets move together with steering; the left/right offsets
         // remain symmetric in the bike's local reference frame.
         const steer=this.clamp(signals.steer||0,-.8,.8);
+        // The uploaded moto-otimizada.glb is a unified mesh with
+        // different bar/peg dimensions. Do not force Tanner's wrists
+        // toward the R58 procedural bars on a non-articulated GLB.
+        const imported=!!(vehicle?._userCustomModel||
+            vehicle?._cc0ModelApplied);
+        const handY=imported?1.26:1.47;
+        const handZ=imported?.49:.74;
+        const footY=imported?.70:.67;
+        const footZ=imported?-.09:-.17;
         return {
-            // R58: follow the physical handlebar at chassis height
-            // 1.47m / z=.74 and the two actual foot pegs at y=.67.
-            leftHand:{x:-.34-steer*.045,y:1.47,z:.74+steer*.06},
-            rightHand:{x:.34-steer*.045,y:1.47,z:.74-steer*.06},
-            leftFoot:{x:-.31,y:.67,z:-.17},
-            rightFoot:{x:.31,y:.67,z:-.17}
+            leftHand:{x:-.34-steer*.045,y:handY,z:handZ+steer*.06},
+            rightHand:{x:.34-steer*.045,y:handY,z:handZ-steer*.06},
+            leftFoot:{x:-.30,y:footY,z:footZ},
+            rightFoot:{x:.30,y:footY,z:footZ}
         };
     }
     static bend(rig,role,x=0,y=0,z=0){
