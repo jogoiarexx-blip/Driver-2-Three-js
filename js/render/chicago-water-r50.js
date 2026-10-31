@@ -38,6 +38,11 @@ class DriverChicagoWaterR50 {
         if(texture){material.map=texture;material.needsUpdate=true;}
         return material;
     }
+    static reset(){
+        // The CityBuilder disposer releases every old water material/map.
+        // Next Chicago build must allocate a fresh uploaded texture.
+        this.texture=null;
+    }
     static update(dt){
         if(!this.texture)return;
         const step=Math.min(.06,Math.max(0,dt));
