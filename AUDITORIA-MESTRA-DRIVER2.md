@@ -32,7 +32,7 @@
 | Workflows GitHub | 27 | automação extensa, manutenção complexa |
 | Assets (assets/) | 279,26 MiB | maior oportunidade de compressão/streaming |
 | Chicago (chicago/) | 103,67 MiB | 54 GLBs visuais somam 100,97 MiB |
-| Motor principal | js/engine/driver2-game-engine.js ~203 KiB | **acoplamento excessivo** |
+| Motor principal | js/engine/driver2-game-engine.js ~199 KiB | **acoplamento excessivo** |
 | Construção das cidades | js/world/city-builder.js ~120 KiB | outro gargalo estrutural |
 | Scripts HTML | 152, dos quais 149 locais | todos os 149 caminhos locais consultados existem; custo de parse/ordem |
 | Campanha declarada | 8 Chicago + 1 Havana + 3 Vegas + 3 Rio | **15 etapas descritas no fluxo**, não 15 partidas certificadas |
@@ -64,7 +64,7 @@ Links de referência dos workflows:
 | HUD/mapa/controles | radar, zoom, objetivos, controles mobile, F8 | testes em telas reais, contraste e poluição visual | **Parcial** |
 | Áudio | motor sintético, efeitos e feedback | velocidade/volume/loop, aceleração, áudio mobile e repetição | **Pendente de homologação** |
 | Save/progresso | localStorage e versão/validação | rodada completa save→reload→retomar em cada missão/cidade | **Parcial** |
-| Arquitetura | muitos módulos já separados | motor 203 KiB, CityBuilder 120 KiB, dependências globais, 149 JS | **Dívida alta** |
+| Arquitetura | muitos módulos já separados | motor ~199 KiB, CityBuilder 120 KiB, dependências globais, 149 JS | **Dívida alta** |
 | QA/CI | ampla quantidade de testes/workflows | **20 falhas reais no Node**, QA visual e veículos vermelhos | **P0** |
 
 ---
@@ -226,7 +226,7 @@ Assets particularmente grandes: caminhonete velha 24,74 MiB; barco 20,50; caminh
 
 **Não reescrever tudo nem misturar com outros projetos.** A estrutura já tem módulos corretos; o problema são os arquivos centrais superdimensionados, o HTML e a duplicidade de versões/planos/testes. Fazer mudanças pequenas com regressões.
 
-- [ ] **ARCH-01 P1** dividir js/engine/driver2-game-engine.js (~203 KiB): ciclo principal, estado/missão, entrada do jogador, HUD, carregamento, cidade e tráfego. Extrair por interface, uma responsabilidade por PR.
+- [ ] **ARCH-01 P1** dividir js/engine/driver2-game-engine.js (~199 KiB): ciclo principal, estado/missão, entrada do jogador, HUD, carregamento, cidade e tráfego. Extrair por interface, uma responsabilidade por PR.
 - [ ] **ARCH-02 P1** dividir js/world/city-builder.js (~120 KiB): construção por distrito, água/pontes, colisores, props, lifecycle e estatísticas.
 - [ ] **ARCH-03 P1** separar completamente cena visual, física, IA e estado de campanha; minimizar variáveis globais e acoplamento à ordem de scripts.
 - [ ] **ARCH-04 P1** versionar contratos de save e criar migração automática em vez de manter somente versões estritas.
