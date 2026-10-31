@@ -82,6 +82,8 @@ test('R52 builds visible roads, six crossings and real collision lots without a 
         assert.equal(r.buildingsBuilt,8);
         assert.equal(r.sidewalksBuilt,16);
         assert.equal(r.pedestrianStripes,96);
+        assert.equal(r.lampCount,6);
+        assert(r.group.children.some(x=>x.name==='r52-roadside-lamp-posts'));
         assert.equal(c.cityGroup.children.length,3);
         assert.equal(c.buildingBoxes.filter(b=>b.chicagoR52Lot).length,8);
         assert.equal(c.chicagoPS1StreetNetwork.radarPaths.length,15);
@@ -144,6 +146,9 @@ test('R52 physical sidewalks equal instanced slabs while road intersections stay
         assert(Math.abs(Road.localPavementHeight(c,-96,224)-.273)<.001);
         assert(Math.abs(Road.localPavementHeight(c,63,-97)-.28)<.001);
         assert(Math.abs(Road.localPavementHeight(c,63,223)-.28)<.001);
+        // New z=240 boulevard must not be covered by raised quarter slabs.
+        assert.equal(Road.localPavementHeight(c,-96,234),0);
+        assert(Road.localPavementHeight(c,-96,228)>.2);
         assert.equal(Road.localPavementHeight(c,-120,240),0);
         assert.equal(Road.localPavementHeight(c,-160,240),0);
         const City=vm.runInNewContext(
