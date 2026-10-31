@@ -28,11 +28,22 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
        procedural:m.uploadedCrowd.status().proceduralCivilians,
        models:models.map(model=>{
           const ped=model.current;
-          const height=model.root?new THREE.Box3().setFromObject(model.root)
-              .getSize(new THREE.Vector3()).y:0;
+          // Exercitar a animação antes da medição: alguns GLBs só
+          // ficam gigantes quando o primeiro mixer.update é executado.
+          if(model.config.species==='dog'&&ped){
+            ped.mesh.visible=true;
+            model.update(ped,.06,true,false);
+            model.update(ped,.06,true,false);
+          }
+          const bounds=model.root?new THREE.Box3().setFromObject(model.root):null;
+          const dimensions=bounds?.getSize(new THREE.Vector3());
+          const height=dimensions?.y||0;
           return {id:model.config.id,state:model.state,
               species:model.config.species,expected:model.config.height,
-              height,slot:m.pedestrians.indexOf(ped),attached:!!ped?.glbVariant,
+              height,width:dimensions?.x||0,depth:dimensions?.z||0,
+              feetY:bounds?.min.y??0,
+              scaleTracksRemoved:model.visualRepairs.scaleTracksRemoved,
+              slot:m.pedestrians.indexOf(ped),attached:!!ped?.glbVariant,
               distance:ped?Math.hypot(ped.x-focus.x,ped.z-focus.z):Infinity,
               speciesOnPed:ped?.species,
               rootId:model.root?.uuid,error:model.error};
@@ -74,9 +85,14 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
        assert(model.attached && model.slot>=5&&model.slot<=9,
          'Modelo não ativado em '+stage+': '+JSON.stringify(model));
        assert.equal(model.speciesOnPed,model.species);
-       if(model.species==='dog')
+       if(model.species==='dog'){
          assert(model.distance>=20&&model.distance<=115,
             'Cão fora do alcance visual do jogador: '+JSON.stringify(model));
+         assert(model.width>0&&model.width<2.7&&model.depth>0&&model.depth<2.7,
+            'Cão gigante na horizontal durante a caminhada: '+JSON.stringify(model));
+         assert(model.feetY>-1.5&&model.feetY<1.5,
+            'Cão fora do chão durante a caminhada: '+JSON.stringify(model));
+       }
        assert(Math.abs(model.height-model.expected)<0.15,
          'Altura fora do esperado em '+stage+': '+JSON.stringify(model));
      }

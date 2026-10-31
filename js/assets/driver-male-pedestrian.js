@@ -138,12 +138,17 @@ class DriverMalePedestrian {
     }
 
     repairRigAndAnimations(root,clips){
-        if(!this.config.repairSkinDeformation)return;
+        // Alguns GLBs caninos têm escala 0.01 no nó Armature. Uma track
+        // 'Armature.scale' da animação sobrescreve a escala importada e
+        // multiplica o cachorro por 100 ou mais enquanto ele anda.
+        // Remover somente essas tracks, mantendo translação/rotação,
+        // preserva o rig e a escala original do modelo.
+        const skinRepair=!!this.config.repairSkinDeformation;
+        const scaleLock=skinRepair||!!this.config.suppressAnimatedScale;
+        if(!scaleLock)return;
         this.visualRepairs={normalizedSkins:0,scaleTracksRemoved:0,invalidTracksRemoved:0};
-        root.traverse(node=>{
+        if(skinRepair)root.traverse(node=>{
             if(!node.isSkinnedMesh)return;
-            // WEIGHTS_0 mal normalizados causam vértices esticados, sobretudo
-            // na transição entre quadril, ombros e braços.
             if(typeof node.normalizeSkinWeights==='function'){
                 node.normalizeSkinWeights();
                 this.visualRepairs.normalizedSkins++;
@@ -156,7 +161,6 @@ class DriverMalePedestrian {
                     this.visualRepairs.scaleTracksRemoved++;
                     return false;
                 }
-                // Ignorar canais corrompidos em vez de propagar NaN ao rig.
                 if(track?.values && Array.from(track.values).some(v=>!Number.isFinite(v))){
                     this.visualRepairs.invalidTracksRemoved++;
                     return false;
