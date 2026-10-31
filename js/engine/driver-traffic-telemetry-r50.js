@@ -9,6 +9,8 @@ class DriverTrafficTelemetryR50 {
         this.frameTotal=0;this.framePeak=0;
         this.lastReport=null;this.visible=false;
         if(typeof document!=='undefined'){
+            document.getElementById('btn-traffic-telemetry-r51')?.
+                addEventListener('click',()=>this.toggle());
             document.addEventListener('keydown',event=>{
                 if(event.code!=='F8'||event.repeat)return;
                 if(['INPUT','TEXTAREA','SELECT'].includes(event.target?.tagName))
@@ -22,6 +24,9 @@ class DriverTrafficTelemetryR50 {
         const panel=typeof document!=='undefined'?
             document.getElementById('d2-traffic-telemetry'):null;
         if(panel)panel.classList.toggle('hidden',!this.visible);
+        const trigger=typeof document!=='undefined'?
+            document.getElementById('btn-traffic-telemetry-r51'):null;
+        trigger?.setAttribute('aria-pressed',String(this.visible));
         return this.visible;
     }
     sample(game,dt,rawDt=dt){
