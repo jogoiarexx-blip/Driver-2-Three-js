@@ -124,6 +124,40 @@ test('15 min for full day, with working morning noon night positions',()=>{
     assert.equal(cycle.moonSprite.name,'driver-sky-moon');
 });
 
+test('WebP solar e lunar substituem o gradiente apenas após carregarem',()=>{
+    const pending=[];
+    THREE.TextureLoader=class {load(url,onLoad,onProgress,onError){
+        pending.push({url,onLoad,onError});
+    }};
+    THREE.CanvasTexture.prototype.dispose=function(){this.disposed=true;};
+    try {
+        const {cycle}=make();
+        assert.deepEqual(pending.map(p=>p.url),[
+            './assets/sky/sun.webp','./assets/sky/moon.webp']);
+        const fallback=cycle.sunSprite.material.map;
+        const image={};pending[0].onLoad(image);
+        assert.equal(cycle.sunSprite.material.map,image);
+        assert.equal(fallback.disposed,true);
+        const lunarFallback=cycle.moonSprite.material.map;
+        pending[1].onError();
+        assert.equal(cycle.moonSprite.material.map,lunarFallback);
+        for(const kind of ['sun','moon']) {
+            const data=fs.readFileSync(path.join(root,'assets/sky',kind+'.webp'));
+            assert.equal(data.toString('ascii',0,4),'RIFF');
+            assert.equal(data.toString('ascii',8,12),'WEBP');
+            assert(data.length<100000);
+        }
+    } finally {delete THREE.TextureLoader;}
+});
+
+test('botão de céu direciona a câmera para o astro visível',()=>{
+    const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+    const engine=fs.readFileSync(path.join(root,'js/engine/driver2-game-engine.js'),'utf8');
+    assert(html.includes('id="btn-look-sky"'));
+    assert(engine.includes('this.camera.lookAt(body.position)'));
+    assert(engine.includes("skyButton.setAttribute('aria-pressed'"));
+});
+
 test('sunlight and its visual sprite use one vector, shadows point away',()=>{
     const {game,cycle}=make(.47);
     const sun=game.sunLight.position;

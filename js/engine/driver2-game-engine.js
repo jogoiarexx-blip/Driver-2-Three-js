@@ -2183,6 +2183,11 @@
                         ? 2 : this.cameraMode,
                     this.lookBackActive, this.city, dt
                 );
+                if(this.skyLook && this.dayNight && !this.interiorPlace){
+                    const body=this.dayNight.sunSprite.visible ?
+                        this.dayNight.sunSprite : this.dayNight.moonSprite;
+                    if(body.visible)this.camera.lookAt(body.position);
+                }
                 this.impactFeedback.update(dt, this.camera, this.impactFlash,
                     this.reducedMotion);
             }
@@ -3212,6 +3217,11 @@
                 });
 
                 // Botões de UI
+                const skyButton=document.getElementById('btn-look-sky');
+                if(skyButton)skyButton.addEventListener('click',()=>{
+                    this.skyLook=!this.skyLook;
+                    skyButton.setAttribute('aria-pressed',String(this.skyLook));
+                });
                 const objectiveToggle = document.getElementById('btn-objective-toggle');
                 if (objectiveToggle) {
                     objectiveToggle.addEventListener('click', () => {
