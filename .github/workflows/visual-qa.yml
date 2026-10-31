@@ -167,6 +167,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r41-west-lateral-browser.cjs
+      - name: R42 dirigir pelo ramal sul e verificar o entroncamento R41
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r42-south-stem-browser.cjs
       - name: Validar carregamento do mapa original de Chicago na raiz
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
