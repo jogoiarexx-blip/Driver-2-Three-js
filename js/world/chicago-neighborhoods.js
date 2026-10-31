@@ -127,7 +127,9 @@ class DriverChicagoNeighborhoods {
             [369,.29,-40,84,.5,16,0x9c8367,false],
             [369,.58,-46,84,.13,.5,0xd4b896,false],
             [369,.58,-34,84,.13,.5,0xd4b896,false],
-            [333,1.0,-40,5,.50,14,0x64748b,false]
+            // A antiga viga em y=1 atravessava o carro sem colisão.
+            // Agora é uma marquise alta, com pés sólidos na R54.
+            [333,4.55,-40,5,.45,14,0x64748b,false]
         ];
         for(let x=333;x<=405;x+=12){
             parts.push([x,.82,-46,.45,1.5,.45,0x587186,false]);
@@ -136,6 +138,18 @@ class DriverChicagoNeighborhoods {
             parts.push([x,-.55,-34.8,1.6,2.2,1.5,0x475569,false]);
         }
         DriverSpecialStructures.pack(root,parts,'chicago-navy-pier-deck');
+        // R54: rampa de acesso fisicamente coerente de y=0 até y=.54.
+        // Deck começa em x=327, evitando salto das rodas no asfalto.
+        const approach=new THREE.Mesh(
+            new THREE.BoxGeometry(7,.16,14.4),
+            new THREE.MeshLambertMaterial({color:0x9c8367})
+        );
+        approach.name='chicago-pier-smooth-entry-ramp';
+        approach.position.set(323.5,.19,-40);
+        approach.rotation.z=Math.atan2(.54,7);
+        approach.receiveShadow=true;
+        root.add(approach);
+
         const wheel=new THREE.Group();
         wheel.name='chicago-navy-pier-ferris-wheel';
         wheel.position.set(379,17,-40);
