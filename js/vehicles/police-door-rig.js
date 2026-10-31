@@ -112,9 +112,12 @@ class DriverPoliceDoorRig {
     }
     static progress(clock){
         // abre 0-0.38, segura 0.38-0.93, fecha 0.93-1.35s
-        if(clock<.38)return Math.max(0,Math.min(1,clock/.38));
+        const smooth=t=>{
+            t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);
+        };
+        if(clock<.38)return smooth(clock/.38);
         if(clock<.93)return 1;
-        return Math.max(0,1-(clock-.93)/.42);
+        return 1-smooth((clock-.93)/.42);
     }
     static update(vehicle,dt){
         const rig=vehicle?.policeDoorRig;
