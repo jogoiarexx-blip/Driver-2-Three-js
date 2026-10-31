@@ -3,11 +3,12 @@
  * special police routing or mutation of the original mission waypoints.
  */
 class DriverChicagoNeighborhoodTraffic {
-    static LOOPS=['r43','r44'];
+    static LOOPS=['r43','r44','r48-outer','r48-east'];
     static getLoop(city,id){
         return city?.preset?.id==='chicago'?
             (id==='r43'?city.chicagoR43BlockLoop:
-             id==='r44'?city.chicagoR44BlockLoop:null):null;
+             id==='r44'?city.chicagoR44BlockLoop:
+             city.chicagoConnectorsR48?.loops?.[id]||null):null;
     }
     static points(loop,reverse=false){
         if(!loop?.points||loop.points.length<5||loop.closed>1e-4)
@@ -140,7 +141,18 @@ class DriverChicagoNeighborhoodTraffic {
             // Both circuits travel southbound on their shared R42 lane.
             // Opposite directions created a head-on deadlock at z≈850.
             {id:'r44',distance:107,reverse:false,
-                name:'COUPÉ CHICAGO QUADRA OESTE',color:0xb9a282}
+                name:'COUPÉ CHICAGO QUADRA OESTE',color:0xb9a282},
+            // R48: four additional cars circulate along physically cleared
+            // secondary streets. Both routes use the same travel direction
+            // on shared lanes, avoiding head-on traffic regressions.
+            {id:'r48-outer',distance:22,reverse:false,
+                name:'SEDÃ SOUTH LOOP OESTE',color:0x55798c},
+            {id:'r48-outer',distance:252,reverse:false,
+                name:'TÁXI SOUTH LOOP',color:0xd7b049},
+            {id:'r48-east',distance:107,reverse:false,
+                name:'COUPÉ SOUTH LOOP LESTE',color:0x9a6159},
+            {id:'r48-east',distance:242,reverse:false,
+                name:'SEDÃ SOUTH LOOP INDUSTRIAL',color:0x6c8a79}
         ];
         const result=[];
         for(const spec of specs){
