@@ -33,7 +33,13 @@ class DriverPedestrianVariants {
         if(!this.promise)this.promise=(async()=>{
             // Modelos grandes: carregar um por vez, sem causar picos de memória.
             // Publicar cada recém-carregado imediatamente, sem esperar a fila inteira.
-            for(const model of this.models){
+            // O Undercover começa imediatamente; priorizar crianças e cães
+            // para que apareçam antes do restante do catálogo de 150+ MB.
+            // O catálogo original permanece no mesmo índice lógico.
+            const priority=model=>
+                model.config.species==='child'||model.config.species==='dog'?0:1;
+            const queue=[...this.models].sort((a,b)=>priority(a)-priority(b));
+            for(const model of queue){
                 try{await model.load();}
                 catch(error){model.state='error';model.error=String(error?.message||error);}
                 finally{this.manager.uploadedCrowd?.fill();}

@@ -25,6 +25,11 @@ das calçadas, sem adicionarem colisores nem missões.
 
 ## Carregamento e animações
 
+Os GLBs são carregados tanto no **UNDERCOVER** (entrada e missão ativa)
+quanto no **TAKE A RIDE**, usando as mesmas 28 vagas. As duas crianças e
+os três cachorros têm prioridade no carregamento para aparecerem
+rapidamente também quando a campanha começa, sem aguardar todos os adultos.
+
 Os GLBs são carregados durante a partida e reutilizados entre cidades.
 Os novos modelos são carregados **sequencialmente**, e cada GLB disponível
 preenche suas vagas assim que chega. As demais vagas usam cópias

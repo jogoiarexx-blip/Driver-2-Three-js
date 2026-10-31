@@ -50,6 +50,7 @@ on:
       - 'tests/female-walker-smoke.cjs'
       - 'tests/male-pedestrian-glb.test.cjs'
       - 'tests/male-pedestrian-visual.cjs'
+      - 'tests/undercover-pedestrian-visual.cjs'
       - 'js/assets/driver-male-pedestrian.js'
       - 'tests/pedestrian-curb-smoke.cjs'
       - 'js/entities/pedestrian-sidewalk-nav.js'
@@ -123,6 +124,10 @@ jobs:
           done
           cat /tmp/driver-http.log
           exit 1
+      - name: Certificar crianças, cachorros e pedestres no Undercover e em missão
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/undercover-pedestrian-visual.cjs
       - name: Certificar 28 pedestres GLB reais antes dos testes de mapa
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/

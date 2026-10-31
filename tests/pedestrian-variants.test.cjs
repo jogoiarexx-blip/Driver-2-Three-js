@@ -64,6 +64,8 @@ test('GLBs são entregues progressivamente e usam o mesmo adaptador de rig',asyn
     const roster=new R(manager);
     assert.equal(await roster.load(),true);
     assert.equal(loaded.length,13);
+    assert.equal(loaded.slice(0,5).join(','),
+        'girl,boy,german-shepherd,dog-mailou,dog-3');
     assert.equal(fills.length,13);
     assert.equal(fills[0],1);
     assert.equal(fills[12],13);
