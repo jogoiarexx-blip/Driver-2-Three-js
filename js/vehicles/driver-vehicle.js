@@ -440,7 +440,7 @@
                             {x:0,z:-80,heading:0};
                         this.x=safe.x;this.z=safe.z;
                         this.heading=safe.heading||0;
-                        this.y=cityBuilder.getGroundHeightAt(this.x,this.z);
+                        this.y=cityBuilder.getGroundHeightAt(this.x,this.z,this.y,true);
                         this.vy=0;this.isSubmerged=false;
                         this.prevX=this.x;this.prevZ=this.z;
                     }
@@ -517,9 +517,9 @@
                 // Referência de altura evita teleporte de carros sob a
                 // plataforma da ferrovia para o piso 11m acima.
                 const groundBefore=cityBuilder.getGroundHeightAt(
-                    this.x,this.z,this.y);
+                    this.x,this.z,this.y,true);
                 const groundHeight=cityBuilder.getGroundHeightAt(
-                    nextX,nextZ,this.y);
+                    nextX,nextZ,this.y,true);
                 const travel=Math.hypot(nextX-this.x,nextZ-this.z);
                 const steepStep=groundHeight>groundBefore+
                     (.18+travel*.57) && groundHeight>this.y+.55;
