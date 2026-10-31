@@ -20,6 +20,12 @@
                 this.root = new THREE.Group();
                 this.chassisTilt = new THREE.Group();
                 this.root.add(this.chassisTilt);
+                if(typeof DriverFakeShadows!=='undefined') {
+                    const bike=this.bodyStyle==='motorcycle';
+                    const long=this.bodyStyle==='bus' || this.bodyStyle==='truck';
+                    this.contactShadow=DriverFakeShadows.create(bike?1.5:3.4,bike?3.5:long?8.4:6.3);
+                    this.root.add(this.contactShadow);
+                }
 
                 this.x = config.x || 0;
                 this.y = 0;
@@ -425,6 +431,7 @@
 
             updatePhysics(dt, input, cityBuilder, effects, audio, isPlayer = false) {
                 if(this.isSubmerged){
+                    if(this.contactShadow)this.contactShadow.visible=false;
                     this.waterRecoveryClock=Math.max(0,this.waterRecoveryClock-dt);
                     this.speed=0;this.lateralVelocity=0;
                     this.y=Math.max(-2.7,this.y-1.4*dt);
@@ -677,6 +684,11 @@
                 }
 
                 VehicleVisuals.update(this, dt, input);
+                if(this.contactShadow) {
+                    const gap=this.y-groundHeight;
+                    this.contactShadow.visible=!this.isSubmerged && gap>=-0.1 && gap<1.5;
+                    this.contactShadow.position.y=0.045-Math.max(0,gap);
+                }
                 this.updateTransform();
             }
 
