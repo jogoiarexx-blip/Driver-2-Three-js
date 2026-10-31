@@ -163,7 +163,11 @@
                 const tex=this.makeGroundTexture(base,light,dark,83);
                 if(city==='chicago'){
                     // Rachaduras leves no asfalto, sem duplicar faixas viárias.
-                    const ctx=tex.image.getContext('2d');
+                    // CanvasTexture usa image; stubs de QA antigos usam canvas.
+                    const canvas=tex.image||tex.canvas;
+                    const ctx=canvas&&typeof canvas.getContext==='function'
+                        ?canvas.getContext('2d'):null;
+                    if(ctx){
                     let seed=0xC41CA5FA;
                     const rnd=()=>{
                         seed=(Math.imul(seed,1664525)+1013904223)>>>0;
@@ -179,6 +183,7 @@
                     }
                     ctx.globalAlpha=1;
                     tex.needsUpdate=true;
+                    }
                 }
                 return tex;
             }
