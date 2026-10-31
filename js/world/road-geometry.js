@@ -27,6 +27,19 @@ class DriverRoadGeometry {
             // R52's mid-street at z=240 requires shorter N/S slabs.
             [city.chicagoGooseEastR52,-120,200,2,2,24,24,12.5,7.5,.273]
         ];
+        // R53 west-bank parcels only have LANDWARD sidewalk slabs.
+        // Do not create fictitious foot height above the adjacent canal.
+        if(city.chicagoWestCanalR53?.visualReady){
+            for(const cx of [-280,-200])for(const cz of [-120,-40]){
+                const px=cx===-280?-304:-184;
+                const halfX=cx===-280?10:7;
+                for(const side of [-1,1]){
+                    const edge=Math.min(halfX-Math.abs(x-px),
+                        7.5-Math.abs(z-(cz+side*24)));
+                    if(edge>0)return .271*Math.min(1,edge/.65);
+                }
+            }
+        }
         for(const [result,originX,originZ,nx,nz,offsetX,offsetZ,
                    halfX,halfZ,height] of districts){
             if(!result?.visualReady)continue; // ignore inactive districts
