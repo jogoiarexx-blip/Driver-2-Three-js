@@ -408,6 +408,16 @@ class DriverTrafficAI {
                 this.city,car,vehicles);
             if(local)return local;
         }
+        // R49: ordinary Chicago civilian cars may travel between legacy
+        // arterials and the newly connected side streets. The old route
+        // remains a safe fallback when a goal is temporarily inaccessible.
+        if(!car.scriptedDrive && !car.isPolice && !car.isTarget &&
+           !car.isMafia && !car.isSecret &&
+           typeof DriverChicagoMixedTrafficR49!=='undefined'){
+            const roaming=DriverChicagoMixedTrafficR49.getInput(
+                this.city,car,vehicles,dt,this.policeRoadblocks);
+            if(roaming)return roaming;
+        }
         const route = this.getRoute(car);
         const scripted = car.scriptedDrive || null;
         // Aberturas cinematográficas: o suspeito aguarda Tanner entrar
@@ -499,8 +509,15 @@ class DriverTrafficAI {
                 z:this.nearestGrid(pursuitTarget.z)
             };
             route.policeNavHolder=route.policeNavHolder||{};
-            const policePath=DriverPursuitNavigation.follow(
-                this.city,car,destination,route.policeNavHolder,dt);
+            // R49: use secondary intersections during search only, never
+            // overwrite scripted missions or direct line-of-sight maneuvers.
+            const mixed=this.city?.chicagoConnectorsR48?.ready &&
+                typeof DriverChicagoMixedNavigationR49!=='undefined'?
+                DriverChicagoMixedNavigationR49.follow(
+                    this.city,car,pursuitTarget,route.policeNavHolder,dt):null;
+            const policePath=mixed && !mixed.blocked ? mixed :
+                DriverPursuitNavigation.follow(
+                    this.city,car,destination,route.policeNavHolder,dt);
             if(policePath.target && !policePath.blocked)
                 target=policePath.target;
         }
