@@ -28,13 +28,15 @@ class DriverChicagoNightLights {
     static materials(city) {
         const state=this.state(city);
         if(state.materials)return state.materials;
+        // LOD criado à noite deve começar iluminado imediatamente.
+        const level=Math.round(state.level*32)/32;
         state.materials=[
             new THREE.MeshBasicMaterial({
-                color:0xffc781,transparent:true,opacity:0,
+                color:0xffc781,transparent:true,opacity:.72*level,
                 depthWrite:false,side:THREE.DoubleSide
             }),
             new THREE.MeshBasicMaterial({
-                color:0xb8d6f2,transparent:true,opacity:0,
+                color:0xb8d6f2,transparent:true,opacity:.47*level,
                 depthWrite:false,side:THREE.DoubleSide
             })
         ];
