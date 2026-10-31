@@ -62,6 +62,9 @@ const Vehicle=vm.runInNewContext(source(
 const Tanner=vm.runInNewContext(source(
     'js/entities/tanner-controller.js')+
     '\nTannerController',{THREE});
+const BikeIK=vm.runInNewContext(source(
+    'js/entities/tanner-motorcycle-contact-ik.js')+
+    '\nDriverMotorcycleContactIK',{THREE});
 const PoliceDoors=vm.runInNewContext(source(
     'js/vehicles/police-door-rig.js')+
     '\nDriverPoliceDoorRig',{THREE});
@@ -241,4 +244,26 @@ test('R58 script order, cache keys and desktop AA stay compatible with mobile',(
     assert(html.includes('tanner-controller.js?v=r58'));
     assert(engine.includes('antialias: true'));
     assert(engine.includes('coarse?1.5:1.85'));
+});
+
+test('R58 seated bike coordinates match raised group root, steering bars and footrests',()=>{
+    const bike=car('motorcycle');
+    bike.chassisTilt.position.set(0,0,0);
+    const p=Mount.ridingSeat(bike);
+    assert(Math.abs(p.y-.22)<1e-8);
+    assert(Math.abs(p.z+.30)<1e-8);
+    const targets=BikeIK.contacts(bike,{steer:0});
+    assert.equal(targets.leftHand.y,1.47);
+    assert.equal(targets.rightHand.y,1.47);
+    assert.equal(targets.leftHand.z,.74);
+    assert.equal(targets.rightFoot.z,-.17);
+    assert.equal(targets.leftFoot.y,.67);
+    const t=Object.create(Tanner.prototype);
+    t.group=new Group();t.vehicleBoneRig={};
+    t.playerModel=new Group();t.motorcycleVehicle=null;
+    t.resetVehicleTransitionPose=()=>{};
+    t.applyVehicleTransitionPose=()=>{};
+    assert.equal(t.mountOnMotorcycle(bike),true);
+    assert(Math.abs(t.group.position.y-p.y)<1e-8);
+    assert(Math.abs(t.group.position.z-p.z)<1e-8);
 });
