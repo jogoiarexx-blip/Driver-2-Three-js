@@ -46,9 +46,10 @@ class DriverChicagoMixedNavigationR49 {
         if(city?.preset?.id!=='chicago')return null;
         const stamp=!!city.bridgeRaised,build=city.buildSequence||0;
         const count=city.buildingBoxes?.length||0;
+        const sourceStamp=city.chicagoPS1StreetNetwork?.radarPaths?.length||0;
         const cached=this.cache.get(city);
         if(cached&&cached.stamp===stamp&&cached.build===build &&
-            cached.count===count)return cached;
+            cached.count===count&&cached.sourceStamp===sourceStamp)return cached;
         const nodes=new Map(),adj=new Map(),edges=new Set();
         const addNode=p=>{
             const key=this.key(p);
@@ -123,7 +124,18 @@ class DriverChicagoMixedNavigationR49 {
                 }
             }
         }
+        // Spatial buckets avoid rescanning every remote R39-R44 road node
+        // whenever one NPC asks for a nearby starting intersection.
+        const buckets=new Map(),bucketSize=48;
+        for(const [id,p] of nodes){
+            if(!adj.get(id)?.length)continue;
+            const bucket=Math.floor(p.x/bucketSize)+','+
+                Math.floor(p.z/bucketSize);
+            if(!buckets.has(bucket))buckets.set(bucket,[]);
+            buckets.get(bucket).push(id);
+        }
         const graph={nodes,adj,edges:edges.size,stamp,build,count,
+            sourceStamp,buckets,bucketSize,
             secondaryNodes:(r48?.nodes.length||0)+(r50?.nodes.length||0),
             gateways:(r48?.gridExits||0)+(r50?.gridExits||0),
             sourceCorridors:sources.length,sourcePoints,sourceEdges};
@@ -133,10 +145,21 @@ class DriverChicagoMixedNavigationR49 {
     static nearest(city,graph,position,radius=68){
         if(!graph||!Number.isFinite(position?.x)||
            !Number.isFinite(position?.z))return null;
-        const candidates=[...graph.nodes.entries()].filter(([k,p])=>
-            graph.adj.get(k)?.length &&
-            this.distance(position,p)<=radius).sort((a,b)=>
-                this.distance(position,a[1])-this.distance(position,b[1]));
+        const candidates=[];
+        const size=graph.bucketSize||48;
+        for(let x=Math.floor((position.x-radius)/size);
+                x<=Math.floor((position.x+radius)/size);x++){
+            for(let z=Math.floor((position.z-radius)/size);
+                    z<=Math.floor((position.z+radius)/size);z++){
+                for(const key of graph.buckets.get(x+','+z)||[]){
+                    const p=graph.nodes.get(key);
+                    if(this.distance(position,p)<=radius)
+                        candidates.push([key,p]);
+                }
+            }
+        }
+        candidates.sort((a,b)=>
+            this.distance(position,a[1])-this.distance(position,b[1]));
         for(const [key,node] of candidates){
             if(this.distance(position,node)<.1 ||
                this.clear(city,position,node,false))
