@@ -58,6 +58,20 @@ test('rotas não teletransportam carros, persistem após várias voltas e cruzam
  assert(route.progress>total);
  assert.equal(route.laps,1);
  assert.equal(car.chicagoNeighborhoodTrafficStatus.laps,1);
+ // Regressão: a projeção não pode parar em 2 voltas (antes buscava
+ // somente cópias -L,0,+L e travava o carro ao cruzar +2L).
+ for(const laps of [2,3,5,9]){
+  route.progress=total*laps-2;
+  const next=Traffic.sample(route.points,route.measurements,total*laps+1);
+  const projected=Traffic.project(route.points,route.measurements,
+   next.x,next.z,route.progress);
+  assert(projected && Math.abs(projected.progress-(total*laps+1))<1e-5,
+   'projeção congelada na volta '+laps);
+  car.x=next.x;car.z=next.z;
+  Traffic.getInput(city,car,[]);
+  assert(route.progress>total*laps,'progresso congelado na volta '+laps);
+  assert.equal(route.laps,laps);
+ }
 });
 test('somente carros civis marcados entram nas rotas R43/R44; missão, polícia e outra cidade permanecem',()=>{
  const city=world();
