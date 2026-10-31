@@ -78,8 +78,11 @@ class DriverMalePedestrian {
                         // Cachorros podem ser exportados em centímetros
                         // ou com bounding box inferior a 50 cm. A normalização
                         // converte para a altura visual definida no cadastro.
-                        if(!Number.isFinite(size.y)||size.y<=.001)
-                            throw new Error('Altura inválida do modelo GLB');
+                        // Alguns animais do Meshy chegam em metros 0.01 x 0.01:
+                        // geometria pequena + escala da Armature 0.01. Não
+                        // descartar o GLB: normalizar o bounds para a altura alvo.
+                        if(!Number.isFinite(size.y)||size.y<=1e-10)
+                            throw new Error('Altura inexistente no modelo GLB');
 
                         // O arquivo tem aproximadamente 1,87m de altura;
                         // o pedestre do mundo terá 2,08m, sem pés flutuando.
