@@ -80,8 +80,11 @@ class DriverChicagoMixedNavigationR49 {
         const r53=city.chicagoWestCanalR53?.ready &&
             typeof DriverChicagoWestCanalR53!=='undefined'?
             DriverChicagoWestCanalR53.topology():null;
+        // R57: add only physical, dry service lanes, verified during build.
+        // Gateways split the old 80m link so new accesses are reachable.
+        const r57=city.chicagoLandmarkDistrictR57?.links||[];
         const secondary=[...(r48?.edges||[]),...(r50?.edges||[]),
-            ...(r52?.edges||[]),...(r53?.edges||[])];
+            ...(r52?.edges||[]),...(r53?.edges||[]),...r57];
         const gateways=secondary.flatMap(e=>[e.from,e.to]);
         // Subdivide existing 80-unit arteries where an R48 gateway joins.
         // Without splitting, a local road would end at a disconnected node.
@@ -100,7 +103,8 @@ class DriverChicagoMixedNavigationR49 {
                 }
             }
         }
-        for(const edge of secondary)add(edge.from,edge.to);
+        for(const edge of secondary)
+            add(edge.from,edge.to,edge.width?1.7:4);
         // R51: roads already drawn from PS1-adapted surface references.
         // The separately audited R22 feeder is the only inferred link.
         const sources=(city.chicagoPS1StreetNetwork?.radarPaths||[])
