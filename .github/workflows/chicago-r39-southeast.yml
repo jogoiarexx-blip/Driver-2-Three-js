@@ -1,0 +1,50 @@
+name: Driver 2 - Chicago R39 - corredor sudeste
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'chicago/reference-southeast-r39.*'
+      - 'js/world/chicago-southeast-r39.js'
+      - 'js/world/chicago-ps1-street-network-r22.js'
+      - 'js/world/city-builder.js'
+      - 'tests/chicago-r39-southeast*'
+      - '.github/workflows/chicago-r39-southeast.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  r39-source-and-drive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar origem, continuidade e fonte do corredor R39
+        run: node --test tests/chicago-r39-southeast.test.cjs
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Iniciar servidor estático local
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Dirigir R39 ida e volta com física arcade
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r39-southeast-browser.cjs
+      - name: Salvar dados e erros de percurso
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r39-southeast-qa
+          path: qa-artifacts/
+          retention-days: 14
