@@ -169,50 +169,39 @@ class DriverChicagoOverhaul {
         const west=cx<0,parts=[];
         const add=(...p)=>parts.push(p);
         if(west) {
-            // Estádio inspirado em Wrigley: arquibancada ao redor do
-            // gramado, vigas de fachada e placar verde com iluminação.
-            for(const s of [-1,1]){
-                for(let row=0;row<4;row++){
-                    const z=cz+s*(15.6+row*1.18);
-                    add(cx,1.65+row*.80,z,29,.33,1.12,
-                        row%2?0x7f8b91:0x6a7983,false);
+            // Entreposto ferroviário a sudoeste, sem arquibancada duplicada.
+            for(const x of [cx-16,cx+1,cx+17]){
+                for(const y of [2.6,5.1]){
+                    add(x,y,cz+12.7,2.8,1.5,.14,0x99acb9,true);
                 }
-                for(const x of [-17,17]){
-                    add(cx+x,9,cz+s*18.5,.6,3,.7,0x4b5563,false);
-                    add(cx+x,10.6,cz+s*18.5,1.1,.28,.85,0xe5c991,true);
-                }
+                add(x,8.6,cz+11,.55,2.0,.7,0x586876,false);
             }
-            for(let x=-17;x<=17;x+=4){
-                add(cx+x,7.4,cz-18.8,.35,2.4,.35,0xb4bbc0,false);
+            for(let z=-13;z<=13;z+=4){
+                add(cx+1,.48,cz+z,1,.13,2.2,0x505d66,false);
+                add(cx-17,.5,cz+z,.3,.2,2.5,0x384a58,false);
             }
-            add(cx,10.1,cz-19.1,16.8,5.5,.7,0x135f40,false);
-            add(cx,11.5,cz-19.52,12,.45,.1,0xfef3c7,true);
-            add(cx,9.2,cz-19.52,12,.32,.1,0xe5c991,true);
         } else {
-            // Píer industrial: caixotes, guindastes baixos, trilhos de
-            // carga e janelas para quebrar os antigos blocos genéricos.
-            for(const x of [cx-13,cx,cx+13]) {
-                for(const y of [3,5.0]) {
-                    add(x,y,cz+7.78,7.5,.14,.26,0x8998a6,false);
+            // Soldier Field: frisos, setores de arquibancada e fachada histórica.
+            for(const s of [-1,1]) {
+                for(let row=0;row<4;row++){
+                    const x=cx+s*(12.5+row*1.42);
+                    for(let z=-12;z<=12;z+=4){
+                        add(x,1.5+row*.81,cz+z,1.25,.36,3.65,
+                            row%2?0x7e929d:0x5b737c,false);
+                    }
                 }
-                for(const dx of [-4,4]){
-                    add(x+dx,3.6,cz-7.4,.24,6.4,.45,0x4f5865,false);
+                for(const z of [-17.3,17.3]){
+                    add(cx+s*17.9,6,cz+z,.36,3.2,.45,0xe4ded1,false);
+                    add(cx+s*17.9,7.6,cz+z,2.2,.2,.5,0xffe2a1,true);
                 }
-                add(x,7.10,cz,11,.4,17,0x57606a,false);
             }
-            for(const x of [cx-18,cx+18]){
-                add(x,5.3,cz-11,.65,10,.65,0x717b86,false);
-                add(x,10.35,cz-8,1.0,.6,7,0xa1adb5,false);
-                add(x,6.35,cz-4.8,.35,7,.35,0x6a7280,false);
-                add(x,10.2,cz-4.1,.9,.5,.9,0xf1c86d,true);
+            for(let x=-16;x<=16;x+=4){
+                add(cx+x,5.9,cz-18.95,.45,1.7,.2,0xf0ece2,false);
             }
-            for(const x of [cx-8,cx+8]){
-                add(x,.72,cz+13,5.4,1.0,3.2,0x8f6651,false);
-                add(x,1.34,cz+13,5.8,.24,3.6,0xaab4bc,false);
-            }
+            add(cx,9.3,cz-19.5,12,.24,.14,0xfde0a6,true);
         }
         return DriverSpecialStructures.pack(city.cityGroup,parts,
-            west?'chicago-wrigley-field':'chicago-industrial-pier');
+            west?'chicago-west-freight-depot':'chicago-soldier-field');
     }
 
     static buildParks(city) {
