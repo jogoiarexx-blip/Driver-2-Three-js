@@ -165,3 +165,16 @@ test('R51 train station car passage: ground remains level through entire ramp an
  assert.equal(City.prototype.getGroundHeightAt.call(
    world,-14,-260,11.3,false),11.3);
 });
+
+test('R51 mobile opens diagnostics by existing FPS label without extra HUD panel',()=>{
+ const html=fs.readFileSync('index.html','utf8');
+ const css=fs.readFileSync('css/styles.css','utf8');
+ const diag=fs.readFileSync('js/engine/driver-traffic-telemetry-r50.js','utf8');
+ assert(html.includes('id="btn-traffic-telemetry-r51"'));
+ assert(html.includes('aria-pressed="false"'));
+ assert(html.includes('id="fps-counter"'));
+ assert(css.includes('#btn-traffic-telemetry-r51:focus-visible'));
+ assert(diag.includes("addEventListener('click',()=>this.toggle())"));
+ assert(diag.includes("trigger?.setAttribute('aria-pressed',String(this.visible))"));
+ assert(diag.includes("event.code!=='F8'"));
+});
