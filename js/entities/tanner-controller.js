@@ -164,7 +164,10 @@
                 const motion=Math.sin(Math.PI*t);
                 const rise=bike?Math.sin(Math.PI*Math.max(0,Math.min(1,
                     (t-.30)/.53))):0;
-                const side=entering?-1:1;
+                // Respect the side from which Tanner approaches the bike;
+                // mounting from the right must swing the right leg, not
+                // play a mirrored-left pose over the fuel tank.
+                const side=mountSide===1?1:-1;
                 if(this.vehicleBoneRig&&
                     typeof DriverTannerVehicleRig!=='undefined')
                     DriverTannerVehicleRig.restore(this.vehicleBoneRig);
@@ -176,8 +179,9 @@
                 this.group.rotation.z=side*(bike?.19:.10)*motion;
                 this.leftArm.rotation.x=-(bike?.95:.7)*motion;
                 this.rightArm.rotation.x=-(bike?.8:.4)*motion;
-                this.leftLeg.rotation.x=(bike?1.28:.55)*Math.max(motion,rise);
-                this.rightLeg.rotation.x=-(bike?.45:.22)*motion;
+                const lift=(bike?1.20:.52)*Math.max(motion,rise);
+                this.leftLeg.rotation.x=side<0?lift:-(bike?.40:.20)*motion;
+                this.rightLeg.rotation.x=side>0?lift:-(bike?.40:.20)*motion;
                 if(this.vehicleBoneRig&&
                     typeof DriverTannerVehicleRig!=='undefined')
                     DriverTannerVehicleRig.apply(this.vehicleBoneRig,
