@@ -22,19 +22,21 @@ class DriverRoadGeometry {
         if(city?.preset?.id!=='chicago' ||
            !Number.isFinite(x)||!Number.isFinite(z))return 0;
         const districts=[
-            [city.chicagoConnectorsR48,40,-120,3,2,23,12,.28],
-            [city.chicagoConnectorsR50,40,200,3,2,23,12,.28],
-            [city.chicagoGooseEastR52,-120,200,2,2,24,12.5,.273]
+            [city.chicagoConnectorsR48,40,-120,3,2,23,23,12,12,.28],
+            [city.chicagoConnectorsR50,40,200,3,2,23,23,12,12,.28],
+            // R52's mid-street at z=240 requires shorter N/S slabs.
+            [city.chicagoGooseEastR52,-120,200,2,2,24,24,12.5,7.5,.273]
         ];
-        for(const [result,originX,originZ,nx,nz,offset,half,height] of districts){
+        for(const [result,originX,originZ,nx,nz,offsetX,offsetZ,
+                   halfX,halfZ,height] of districts){
             if(!result?.visualReady)continue; // ignore inactive districts
             const ix=Math.round((x-originX)/80),iz=Math.round((z-originZ)/80);
             if(ix<0||ix>=nx||iz<0||iz>=nz)continue;
             const cx=originX+80*ix,cz=originZ+80*iz;
-            const px=cx+(x<cx?-offset:offset);
-            const pz=cz+(z<cz?-offset:offset);
-            const edge=Math.min(half-Math.abs(x-px),
-                half-Math.abs(z-pz));
+            const px=cx+(x<cx?-offsetX:offsetX);
+            const pz=cz+(z<cz?-offsetZ:offsetZ);
+            const edge=Math.min(halfX-Math.abs(x-px),
+                halfZ-Math.abs(z-pz));
             if(edge>0)return height*Math.min(1,edge/.65);
         }
         return 0;
