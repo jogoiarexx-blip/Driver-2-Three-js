@@ -176,6 +176,7 @@
                 this.chicagoGooseIslandNorthYard=null;
                 this.chicagoGooseIslandJunctions=null;
                 this.chicagoLocalRoadNetwork=null;
+                this.chicagoConnectorsR48=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -376,6 +377,12 @@
                             typeof DriverChicagoUndercoverLakefront!=='undefined' &&
                             DriverChicagoUndercoverLakefront.isCarvedBlock(blockX,blockZ))
                             return;
+                        // R48: abrir seis células ANTES de gerar prédios e
+                        // calçadas, preservando interiores e marcos protegidos.
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoConnectorsR48!=='undefined' &&
+                            DriverChicagoConnectorsR48.isCarvedBlock(blockX,blockZ))
+                            return;
 
                         // Nenhum quarteirão novo sobre o lago: a costa física
                         // é a mesma usada pelos carros e pelo parcelamento.
@@ -569,6 +576,10 @@
                     // existentes. Apenas observação: sem alterar missões.
                     if(typeof DriverChicagoLocalRoadNetwork!=='undefined')
                         DriverChicagoLocalRoadNetwork.build(this);
+                    // R48: conectar duas avenidas secundárias e três vias
+                    // transversais à grade, em ambos os modos de Chicago.
+                    if(typeof DriverChicagoConnectorsR48!=='undefined')
+                        DriverChicagoConnectorsR48.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
