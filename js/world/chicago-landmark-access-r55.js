@@ -99,7 +99,8 @@ class DriverChicagoLandmarkAccessR55 {
         geo.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
         geo.computeVertexNormals();
         const mat=new THREE.MeshLambertMaterial({
-            color:0x50595e,side:THREE.DoubleSide,
+            color:route.id==='navy-pier'?0x756758:0x50595e,
+            side:THREE.DoubleSide,
             polygonOffset:true,polygonOffsetFactor:-2
         });
         const road=new THREE.Mesh(geo,mat);
@@ -109,32 +110,50 @@ class DriverChicagoLandmarkAccessR55 {
         const white=new THREE.MeshBasicMaterial({
             color:0xc6cfcc,side:THREE.DoubleSide,depthWrite:false});
         const amber=new THREE.MeshBasicMaterial({
-            color:0xf1c875,side:THREE.DoubleSide,depthWrite:false});
+            color:0xe6bb71,side:THREE.DoubleSide,depthWrite:false});
         const strips=[];
-        for(const t of [.12,.28,.44,.60,.76,.92]){
+        const alongX=Math.abs(dx)>Math.abs(dz);
+        // Centro descontínuo paralelo à faixa, não barras atravessadas.
+        for(const t of [.15,.30,.45,.60,.75,.90]){
             const p=this.laneCenter(route,t);
-            const perp=Math.abs(dx)>Math.abs(dz);
-            strips.push({
-                x:p.x,z:p.z,w:perp?.48:route.width*.83,
-                d:perp?route.width*.83:.48,mat:amber
-            });
+            strips.push({x:p.x,z:p.z,w:alongX?1.5:.13,
+                d:alongX?.13:1.5,mat:amber});
         }
-        // Marcadores de bordo claros que não interferem na física.
-        for(const t of [.05,.95]){
+        // Faixas de borda preservam a passagem central.
+        for(const t of [.08,.92]){
             const p=this.laneCenter(route,t);
             for(const side of [-1,1]){
-                const x=p.x+nx*(w-.22)*side,z=p.z+nz*(w-.22)*side;
-                strips.push({x,z,w:Math.abs(dx)>.1?.9:.13,
-                    d:Math.abs(dz)>.1?.9:.13,mat:white});
+                strips.push({x:p.x+nx*(w-.22)*side,
+                    z:p.z+nz*(w-.22)*side,
+                    w:alongX?1.2:.13,d:alongX?.13:1.2,mat:white});
             }
         }
-        for(const strip of strips){
-            const p=new THREE.Mesh(new THREE.PlaneGeometry(strip.w,strip.d),
-                strip.mat);
-            p.rotation.x=-Math.PI/2;
-            p.position.set(strip.x,this.height(city,strip.x,strip.z)+.051,strip.z);
-            p.name='r55-road-mark-'+route.id;
-            root.add(p);
+        // Batente pintado de aproximação: sem geometria sólida.
+        for(const side of [-2,-1,0,1,2]){
+            const p=this.laneCenter(route,.06);
+            strips.push({x:p.x+nx*side*.98,z:p.z+nz*side*.98,
+                w:alongX?.35:.56,d:alongX?.56:.35,mat:white});
+        }
+        // Duas draw calls no máximo para todas as linhas do acesso.
+        const geoMark=new THREE.PlaneGeometry(1,1);
+        geoMark.rotateX(-Math.PI/2);
+        const dummy=new THREE.Object3D();
+        for(const material of [amber,white]){
+            const entries=strips.filter(s=>s.mat===material);
+            if(!entries.length)continue;
+            const batch=new THREE.InstancedMesh(geoMark,material,entries.length);
+            batch.name='r55-road-mark-'+route.id;
+            for(let i=0;i<entries.length;i++){
+                const p=entries[i];
+                dummy.position.set(p.x,this.height(city,p.x,p.z)+.051,p.z);
+                dummy.rotation.set(0,0,0);
+                dummy.scale.set(p.w,1,p.d);
+                dummy.updateMatrix();
+                batch.setMatrixAt(i,dummy.matrix);
+            }
+            batch.instanceMatrix.needsUpdate=true;
+            batch.frustumCulled=false;
+            root.add(batch);
         }
         return {road,markCount:strips.length};
     }
@@ -143,22 +162,27 @@ class DriverChicagoLandmarkAccessR55 {
         const [x,z]=route.sign;
         if(city.isWaterAt?.(x,z)||city.isPointBlocked?.(x,z,.45,0))
             return false;
+        const base=this.height(city,x,z);
         const pole=new THREE.Mesh(new THREE.BoxGeometry(.18,3.7,.18),
             new THREE.MeshLambertMaterial({color:0x667984}));
-        pole.position.set(x,1.85,z);root.add(pole);
+        pole.position.set(x,base+1.85,z);root.add(pole);
+        // Somente o pé do poste é um obstáculo; a placa elevada não pode
+        // produzir parede invisível no trânsito.
+        city.buildingBoxes.push({minX:x-.13,maxX:x+.13,
+            minZ:z-.13,maxZ:z+.13,chicagoR55Sign:route.id});
         const backing=new THREE.Mesh(new THREE.BoxGeometry(5.8,1.45,.3),
             new THREE.MeshLambertMaterial({color:0x203b47}));
-        backing.position.set(x,3.45,z);root.add(backing);
+        backing.position.set(x,base+3.45,z);root.add(backing);
         const title=DriverChicagoNeighborhoods.label(route.name,route.signColor);
         if(title){
-            title.position.set(x,3.45,z+.18);
+            title.position.set(x,base+3.45,z+.18);
             title.scale.set(5.55,1.32,1);
             root.add(title);
         }
         const mat=new THREE.MeshBasicMaterial({
             color:0xf3d49c,transparent:true,opacity:0,depthWrite:false});
         const strip=new THREE.Mesh(new THREE.BoxGeometry(5.4,.12,.07),mat);
-        strip.position.set(x,4.27,z+.23);
+        strip.position.set(x,base+4.27,z+.23);
         root.add(strip);lights.push(mat);
         return true;
     }
@@ -185,6 +209,7 @@ class DriverChicagoLandmarkAccessR55 {
             results.push(info);
         }
         city.chicagoAccessR55={root,results,lights,lastLevel:-1};
+        if(city._spatialCollisions)city._spatialCollisions.boxes=null;
         this.update(city);
         return city.chicagoAccessR55;
     }
