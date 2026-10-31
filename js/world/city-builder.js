@@ -246,6 +246,9 @@
                 const riverGeo = new THREE.PlaneGeometry(terrainWidth, 32);
                 riverGeo.rotateX(-Math.PI / 2);
                 const riverMat = new THREE.MeshBasicMaterial({ color: this.preset.waterColor });
+                if(this.preset.id==='chicago' &&
+                   typeof DriverChicagoWaterR50!=='undefined')
+                    DriverChicagoWaterR50.apply(riverMat);
                 const river = new THREE.Mesh(riverGeo, riverMat);
                 river.position.set(terrainX, 0.06, 50);
                 this.cityGroup.add(river);
