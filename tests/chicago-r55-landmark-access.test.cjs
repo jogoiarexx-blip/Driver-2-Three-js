@@ -39,6 +39,7 @@ class BoxGeometry extends Geometry {}
 class CylinderGeometry extends Geometry {}
 class TorusGeometry extends Geometry {}
 class SphereGeometry extends Geometry {}
+class CircleGeometry extends Geometry {}
 class PlaneGeometry extends Geometry {}
 class BufferGeometry extends Geometry {}
 class Float32BufferAttribute{
@@ -46,7 +47,7 @@ class Float32BufferAttribute{
 }
 const THREE={
     Group:Node,Object3D:Node,Mesh,InstancedMesh,
-    BoxGeometry,CylinderGeometry,TorusGeometry,SphereGeometry,
+    BoxGeometry,CylinderGeometry,TorusGeometry,SphereGeometry,CircleGeometry,
     PlaneGeometry,BufferGeometry,Float32BufferAttribute,
     MeshLambertMaterial:Material,MeshBasicMaterial:Material,
     MeshPhongMaterial:Material,DoubleSide:2,
@@ -133,8 +134,8 @@ test('R55: street signs have thin physical posts, but do not close routes',()=>{
     const signs=c.buildingBoxes.filter(b=>b.chicagoR55Sign);
     assert.equal(signs.length,3);
     for(const sign of signs){
-        assert.equal(sign.maxX-sign.minX,.26);
-        assert.equal(sign.maxZ-sign.minZ,.26);
+        assert.ok(Math.abs(sign.maxX-sign.minX-.26)<1e-8);
+        assert.ok(Math.abs(sign.maxZ-sign.minZ-.26)<1e-8);
     }
     for(const route of Access.ROUTES)
         assert.equal(Access.sampleRoute(c,route).open,true,route.id);
