@@ -73,11 +73,19 @@ class DriverChicagoPS1RiverBranches {
         geometry.setAttribute('position',
             new THREE.Float32BufferAttribute(vertices,3));
         geometry.computeVertexNormals();
-        const water=new THREE.Mesh(geometry,
-            new THREE.MeshBasicMaterial({
-                color:0x286479,side:THREE.DoubleSide,
-                transparent:true,opacity:.98,depthWrite:true
-            }));
+        // UVs tiled in world space, so the 96px ripple doesn't stretch
+        // along the 600+ unit canal.
+        const uv=[];
+        for(let i=0;i<vertices.length;i+=3)
+            uv.push(vertices[i]/80,vertices[i+2]/80);
+        geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+        const material=new THREE.MeshBasicMaterial({
+            color:0x286479,side:THREE.DoubleSide,
+            transparent:true,opacity:.98,depthWrite:true
+        });
+        if(typeof DriverChicagoWaterR50!=='undefined')
+            DriverChicagoWaterR50.apply(material);
+        const water=new THREE.Mesh(geometry,material);
         water.name='chicago-ps1-branches-r2-water';
         water.userData.collidersCreated=0;
         water.userData.proceduralApproximation=true;
