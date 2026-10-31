@@ -1302,19 +1302,50 @@
                 box(45,0.36,45,id==='rio'?0xfde68a:0x64748b,cx,0.18,cz);
                 if(id==='chicago') {
                     if(west) {
-                        // Estádio inspirado em Wrigley Field.
-                        box(38,0.28,37,0x15803d,cx,0.40,cz);
-                        for(const sign of [-1,1]) {
-                            box(38,7,3,0x94a3b8,cx,3.5,cz+sign*19);
-                            box(3,7,38,0x94a3b8,cx+sign*19,3.5,cz);
+                        // Sudoeste: depósitos ferroviários, não um segundo Wrigley.
+                        box(38,.28,37,0x66727a,cx,.40,cz);
+                        box(15,8,25,0x7e5140,cx-9,4.4,cz);
+                        box(13,6.5,24,0x8a9294,cx+11,3.65,cz);
+                        box(38,.30,2.0,0x475569,cx,.42,cz+18);
+                        this.buildingBoxes.push({
+                            minX:cx-16.5,maxX:cx-1.5,
+                            minZ:cz-12.5,maxZ:cz+12.5,
+                            chicagoFreightWarehouse:true
+                        }, {
+                            minX:cx+4.5,maxX:cx+17.5,
+                            minZ:cz-12,maxZ:cz+12,
+                            chicagoFreightWarehouse:true
+                        });
+                    } else {
+                        // Soldier Field (sul): entre Grant Park e Meigs Field.
+                        // O gramado permanece livre e a entrada sul tem abertura.
+                        box(38,.24,34,0x377d4c,cx,.43,cz);
+                        box(32,.035,.19,0xf2ede1,cx,.58,cz-11.3);
+                        box(32,.035,.19,0xf2ede1,cx,.58,cz+11.3);
+                        for(const side of [-1,1]){
+                            box(3.2,5,35,0x9aa6ad,cx+side*19,2.8,cz);
+                            box(13,5,2.3,0x9aa6ad,cx+side*12.5,2.8,cz+18);
                         }
-                        box(14,8,0.6,0x166534,cx,11,cz-18.5);
-                    }else{
-                        // Píer urbano e galpões da orla.
-                        for(let i=-1;i<=1;i++)box(10,6,15,0x94a3b8,
-                            cx+i*13,3.4,cz);
-                        for(const x of [cx-16,cx+16])
-                            column(0.3,7,0x334155,x,3.5,cz+15);
+                        box(40,5,2.3,0x9aa6ad,cx,2.8,cz-18);
+                        // Colisões exatamente sob paredes visíveis.
+                        for(const side of [-1,1]){
+                            this.buildingBoxes.push({
+                                minX:cx+side*19-1.6,maxX:cx+side*19+1.6,
+                                minZ:cz-17.5,maxZ:cz+17.5,
+                                chicagoSoldierStand:true
+                            });
+                            this.buildingBoxes.push({
+                                minX:cx+side*12.5-6.5,
+                                maxX:cx+side*12.5+6.5,
+                                minZ:cz+16.85,maxZ:cz+19.15,
+                                chicagoSoldierStand:true
+                            });
+                        }
+                        this.buildingBoxes.push({
+                            minX:cx-20,maxX:cx+20,minZ:cz-19.15,
+                            maxZ:cz-16.85,chicagoSoldierStand:true
+                        });
+                        this.chicagoSoldierField={x:cx,z:cz,entrance:{x:cx,z:cz+18}};
                     }
                 }else if(id==='havana'){
                     if(west) {
@@ -1382,25 +1413,25 @@
                 };
                 if(city==='chicago') {
                     if(west){
-                        // Estádio: grades, pilares e placa sobre a entrada.
-                        for(let x=-15;x<=15;x+=6){
-                            add(false,cx+x,4,cz+20.6,.55,8,.5,0x334155);
-                            add(false,cx+x,4,cz-20.6,.55,8,.5,0x334155);
+                        // Fachadas do entreposto ferroviário (não é estádio).
+                        for(const dx of [-9,11]){
+                            for(const px of [-4,0,4])
+                                add(true,cx+dx+px,4.0,cz+12.65,2.5,1.6,.14,0xadc0c6);
+                            add(false,cx+dx,8.4,cz,15,.5,24,0x4d5962);
                         }
-                        for(let z=-12;z<=12;z+=6) {
-                            add(false,cx+20.6,4,cz+z,.5,8,.55,0x334155);
-                            add(false,cx-20.6,4,cz+z,.5,8,.55,0x334155);
-                        }
-                        add(false,cx,9.1,cz+20.1,21,1,.9,0x166534);
-                        add(true,cx,9.2,cz+20.66,18,.25,.16,0xffe8a3);
+                        for(const x of [-16,16])
+                            add(false,cx+x,3.5,cz+17,.6,7,.6,0x637d87);
                     }else{
-                        // Armazéns do píer: portas de carga e platibanda.
-                        for(const dx of [-13,0,13]){
-                            add(false,cx+dx,6.75,cz,11,.65,16,0x475569);
-                            add(false,cx+dx,2.6,cz+7.68,5.4,4.8,.24,0x334155);
-                            add(true,cx+dx,3.6,cz+7.86,4.3,.65,.12,0xa5b4c5);
-                            for(const offset of [-3.3,3.3])
-                                add(false,cx+dx+offset,4.4,cz+7.82,.28,4.6,.35,0xe2e8f0);
+                        // Soldier Field: arquibancadas escalonadas, placar e luzes.
+                        for(const s of [-1,1])for(let row=0;row<3;row++){
+                            add(false,cx+s*(13.2+row*1.4),
+                                1.4+row*.85,cz,1.2,.45,27.5,0x73838d);
+                        }
+                        add(false,cx,7.9,cz-18.45,17,4.1,.85,0x234938);
+                        add(true,cx,9.1,cz-18.98,11,.38,.12,0xe2c77b);
+                        for(const x of [-19.5,19.5])for(const z of [-18,18]){
+                            add(false,cx+x,7.4,cz+z,.48,14.8,.48,0x6e7881);
+                            add(true,cx+x,14.6,cz+z,2.5,.45,.65,0xffe7bd);
                         }
                     }
                 } else if(city==='havana') {
