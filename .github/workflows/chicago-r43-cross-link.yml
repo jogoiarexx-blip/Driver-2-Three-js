@@ -8,6 +8,8 @@ on:
       - 'js/world/chicago-cross-link-r43.js'
       - 'tests/chicago-r43-cross-link*'
       - 'tests/chicago-r43-closed-block.test.cjs'
+      - 'js/world/chicago-r43-block-loop.js'
+      - 'tests/chicago-r43-block-loop*'
       - 'js/world/chicago-north-roadside-r32.js'
       - '.github/workflows/chicago-r43-cross-link.yml'
 
@@ -24,7 +26,7 @@ jobs:
         with:
           node-version: '22'
       - name: Validar sete arestas, duas junções e registro no radar
-        run: node --test tests/chicago-r43-cross-link.test.cjs tests/chicago-r43-closed-block.test.cjs
+        run: node --test tests/chicago-r43-cross-link.test.cjs tests/chicago-r43-closed-block.test.cjs tests/chicago-r43-block-loop.test.cjs
       - name: Instalar Playwright e Chromium
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1
@@ -41,6 +43,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r43-cross-link-browser.cjs
+      - name: Fazer uma volta completa pela quadra em ambos os sentidos sem teletransporte
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r43-block-loop-browser.cjs
       - name: Preservar logs de QA da nova ligação
         if: always()
         uses: actions/upload-artifact@v4
