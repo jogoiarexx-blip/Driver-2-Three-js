@@ -40,9 +40,12 @@ class DriverChicagoNeighborhoodTraffic {
     static project(points,measurements,x,z,progress){
         const length=measurements.at(-1);
         let best=null;
-        // Three copies allow crossing the starting seam without ever
-        // resetting or jumping vehicle coordinates.
-        for(const offset of [-length,0,length]){
+        // Search copies around the CURRENT lap, not only the first
+        // two repetitions. Cars must circulate indefinitely without
+        // progress freezing after completing their second lap.
+        const lap=Math.floor(progress/length);
+        for(const offset of [(lap-1)*length,lap*length,
+                             (lap+1)*length]){
             for(let i=1;i<points.length;i++){
                 const start=measurements[i-1]+offset,
                       end=measurements[i]+offset;
