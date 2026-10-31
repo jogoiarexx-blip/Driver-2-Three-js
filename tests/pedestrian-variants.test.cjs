@@ -11,7 +11,7 @@ test('13 variantes e dois modelos base ocupam 15 vagas diferentes',()=>{
     assert.equal(defs.length,13);
     assert.equal(new Set(defs.map(d=>d.pedestrianIndex)).size,13);
     assert.equal(new Set(defs.map(d=>d.url)).size,13);
-    assert.deepEqual([...defs].map(d=>d.pedestrianIndex),[2,3,4,5,6,7,8,9,10,11,12,13,14]);
+    assert.deepEqual(Array.from(defs,d=>d.pedestrianIndex),[2,3,4,5,6,7,8,9,10,11,12,13,14]);
     for(const d of defs){
         assert(d.pedestrianIndex>=2&&d.pedestrianIndex<28);
         assert.equal(d.textureMaxSize,1024);
