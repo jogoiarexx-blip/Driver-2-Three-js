@@ -10,6 +10,8 @@
                 this.heading = 0;
                 this.walkCycle = 0;
                 this.isSitting = false;
+                this.isSwimming = false;
+                this.swimClock = 0;
                 this.vehicleBoneRig=null;
                 this.motorcycleVehicle=null;
                 this.motorcycleDynamics=null;
@@ -103,6 +105,17 @@
                         part.visible = false;
                     }
                     this.animations = gltf.animations || [];
+                    // Mixamo Swim_Forward / Swim_Idle from homem velho.glb.
+                    // Keep Tanner's own model, skeleton, and clothing intact.
+                    if (typeof DriverTannerSwimAnimations !== 'undefined') {
+                        try {
+                            this.animations = this.animations.concat(
+                                DriverTannerSwimAnimations.build(model));
+                        } catch (error) {
+                            console.warn('Tanner: retargeting de nado falhou',
+                                error);
+                        }
+                    }
                     if (this.animations.length) {
                         this.animationMixer = new THREE.AnimationMixer(model);
                         this.playModelAnimation('idle');
@@ -120,6 +133,8 @@
                 const clips = this.animations;
                 const clip = name === 'idle'
                     ? clips.find(a => /^(idle|stand|breathing)/i.test(a.name))
+                    : name === 'swim_idle' || name === 'swim_forward'
+                    ? clips.find(a => a.name === name)
                     : clips.find(a => /^walk/i.test(a.name)) ||
                       clips.find(a => /^run/i.test(a.name));
                 if (!clip) {
@@ -131,9 +146,11 @@
                     return;
                 }
                 if (this.activeClip === clip) return;
-                if (this.activeAction) this.activeAction.fadeOut(.15);
+                const fade = /^swim/.test(name) ||
+                    /^swim/.test(this.activeClip?.name || '') ? .28 : .15;
+                if (this.activeAction) this.activeAction.fadeOut(fade);
                 this.activeAction = this.animationMixer.clipAction(clip);
-                this.activeAction.reset().fadeIn(.15).play();
+                this.activeAction.reset().fadeIn(fade).play();
                 this.activeClip = clip;
             }
 
@@ -261,6 +278,7 @@
             setPosition(x, y, z, heading = 0) {
                 this.group.position.set(x, y, z);
                 this.heading = heading;
+                this.isSwimming = false;
                 this.group.rotation.y = heading;
             }
 
