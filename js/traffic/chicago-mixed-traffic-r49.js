@@ -68,11 +68,14 @@ class DriverChicagoMixedTrafficR49 {
             holder:{},lastX:car.x,lastZ:car.z,stuck:0
         };
         car.chicagoMixedTrafficStateR49=state;
-        let goal=this.GOALS[state.index%this.GOALS.length];
+        const goals=Array.isArray(car.chicagoMixedTrafficGoalsR51) &&
+            car.chicagoMixedTrafficGoalsR51.length>=3?
+            car.chicagoMixedTrafficGoalsR51:this.GOALS;
+        let goal=goals[state.index%goals.length];
         if(Math.hypot(car.x-goal.x,car.z-goal.z)<14){
-            state.index=(state.index+3)%this.GOALS.length;
+            state.index=(state.index+3)%goals.length;
             state.holder={};
-            goal=this.GOALS[state.index];
+            goal=goals[state.index];
         }
         let navigation=DriverChicagoMixedNavigationR49.follow(
             city,car,goal,state.holder,dt);
@@ -126,7 +129,7 @@ class DriverChicagoMixedTrafficR49 {
         else state.stuck=0;
         if(state.stuck>3.5){
             // Never teleport; choose another destination and replan.
-            state.index=(state.index+1)%this.GOALS.length;
+            state.index=(state.index+1)%goals.length;
             state.holder={};
             state.stuck=0;
         }
