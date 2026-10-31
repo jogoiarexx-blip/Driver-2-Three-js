@@ -130,15 +130,19 @@ test('R56 actual arcade car physics: all four Chicago districts drive for 70 sec
         }
     }finally{delete global.THREE}
 });
-test('R56 10-minute continuous arcade replay traverses bridges and tight junctions without phantom walls',()=>{
+test('R56 10-minute continuous arcade replays: all four districts traverse tight bridges without phantom walls',()=>{
     global.THREE=three();
     try{
         const c=build(),specs=Traffic.spawnSpecs(c,[]);
-        const result=drive(c,specs[8],600);
-        assert.equal(result.collisions,0,JSON.stringify(result));
-        assert(result.meters>3500,JSON.stringify(result));
-        assert(result.goalChanges>=12,JSON.stringify(result));
-        assert.equal(result.blockedFrames,0);
+        for(const index of [0,4,8,12]){
+            const result=drive(c,specs[index],600);
+            assert.equal(result.collisions,0,
+                specs[index].name+' '+JSON.stringify(result));
+            assert(result.meters>3500,
+                specs[index].name+' '+JSON.stringify(result));
+            assert(result.goalChanges>=12,JSON.stringify(result));
+            assert.equal(result.blockedFrames,0);
+        }
     }finally{delete global.THREE}
 });
 test('R56 building AABBs have physically usable turn clearance; R53 slabs match foot height',()=>{
