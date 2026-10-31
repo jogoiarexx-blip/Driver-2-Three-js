@@ -1,0 +1,48 @@
+name: Driver 2 - Chicago R43 - ligação R42-R39
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'chicago/reference-cross-link-r43.*'
+      - 'js/world/chicago-cross-link-r43.js'
+      - 'tests/chicago-r43-cross-link*'
+      - '.github/workflows/chicago-r43-cross-link.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-crosslink-driving:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar sete arestas, duas junções e registro no radar
+        run: node --test tests/chicago-r43-cross-link.test.cjs
+      - name: Instalar Playwright e Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir o jogo em localhost
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Dirigir R43 em ambos os sentidos, verificar pavimento e duas junções
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r43-cross-link-browser.cjs
+      - name: Preservar logs de QA da nova ligação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r43-cross-link-qa
+          path: qa-artifacts/
+          retention-days: 14
