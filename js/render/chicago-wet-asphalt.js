@@ -112,11 +112,14 @@ class DriverChicagoWetAsphalt {
             if(Math.hypot(x-focus.x,z-focus.z)>94)continue;
             const chance=this.hash(Math.floor(x/this.GRID),Math.floor(z/this.GRID));
             if(chance<.37)continue;
-            const ground=this.safePatch(city,x,z);
-            if(ground===null)continue;
             const offsetX=(this.hash(ix,iz,11)-.5)*2.1;
             const offsetZ=(this.hash(ix,iz,22)-.5)*2.1;
-            dummy.position.set(x+offsetX,ground+.049,z+offsetZ);
+            // Testar as coordenadas finais, após jitter: o reflexo não
+            // pode sair da pista e entrar no rio ou sobre a calçada.
+            const finalX=x+offsetX,finalZ=z+offsetZ;
+            const ground=this.safePatch(city,finalX,finalZ);
+            if(ground===null)continue;
+            dummy.position.set(finalX,ground+.049,finalZ);
             dummy.rotation.set(0,this.hash(ix,iz,17)*Math.PI,0);
             dummy.scale.set(3.5+chance*3.8,1,4.4+chance*5.5);
             dummy.updateMatrix();
