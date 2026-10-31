@@ -54,6 +54,7 @@ const url=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
     };
    });
    report.samples.push({mode,...data});
+   console.log('R5_METRICS',JSON.stringify({mode,...data}));
    const name='chicago-'+mode+'.png';
    await page.screenshot({path:path.join(dir,name)});
    report.screenshots.push(name);
@@ -77,12 +78,16 @@ const url=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
   assert(!dry.visible,'dry road draws no puddle batch');
   assert(dry.roadRGB>.97,'road should recover its normal color');
   await page.evaluate(()=>window.DriverGame.setWeather('rain'));
-  await page.keyboard.down('KeyW');
+  await page.keyboard.down('w');
   await page.waitForTimeout(1500);
-  await page.keyboard.up('KeyW');
+  await page.keyboard.up('w');
+  // SwiftShader executa poucos quadros/segundo. Esperar pelo estado visual
+  // real, não por um número arbitrário de milissegundos no relógio da CI.
+  await page.waitForFunction(()=>window.DriverGame?.city?.
+   chicagoWetAsphalt?.wet>.52,null,{timeout:45000,polling:250});
   const wet=await sample('rain-driving');
   assert.equal(wet.water,true);
-  assert(wet.wet>.30,'rain should darken asphalt progressively');
+  assert(wet.wet>.52,'rain should darken asphalt progressively');
   assert(wet.roadRGB<dry.roadRGB-.08);
   assert(wet.patches>0,'procedural puddle mesh should be populated');
   assert(wet.visible,'puddles should render in rain');
@@ -90,7 +95,9 @@ const url=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
   // Single additional wet-asphalt draw call at a fixed set of 48 instances.
   assert(wet.calls<dry.calls+24,'rain effect generated too many draw calls');
   await page.evaluate(()=>window.DriverGame.setWeather('night'));
-  await page.waitForTimeout(1800);
+  await page.waitForFunction(previous=>window.DriverGame?.city?.
+   chicagoWetAsphalt?.wet<previous-.15,wet.wet,
+   {timeout:45000,polling:250});
   const night=await sample('night-drying');
   assert.equal(night.water,false);
   assert(night.wet<wet.wet,'road should dry after rain stops');
