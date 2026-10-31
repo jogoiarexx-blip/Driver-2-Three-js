@@ -402,6 +402,8 @@
                     if(Array.isArray(this.vehicles))
                         for(const v of this.vehicles)v.wetRoad=!!this.dayNight.rain;
                     if(this.roadLightFx)this.roadLightFx.update(0);
+                    if(typeof DriverChicagoWetAsphalt!=='undefined')
+                        DriverChicagoWetAsphalt.update(this,0);
                     return;
                 }
                 if (this.vehicles) {
@@ -3510,6 +3512,8 @@
                 this.updateCamera(dt);
                 if(this.dayNight)this.dayNight.update(dt);
                 if(this.roadLightFx)this.roadLightFx.update(dt);
+                if(typeof DriverChicagoWetAsphalt!=='undefined')
+                    DriverChicagoWetAsphalt.update(this,dt);
                 this.recordReplayFrame();
 
                 const speedKmh = (this.mode === 'driving' && this.playerCar) ? this.playerCar.speed * 3.4 : 0;
