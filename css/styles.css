@@ -607,6 +607,19 @@
 }
 
 
+/* R51: diagnóstico pelo FPS existente, sem novo botão ocupando a HUD. */
+#btn-traffic-telemetry-r51 {
+    color:inherit;background:transparent;border:0;padding:0;
+    font:inherit;cursor:pointer;white-space:nowrap;
+}
+#btn-traffic-telemetry-r51[aria-pressed="true"] {
+    color:#93e5d0;text-decoration:underline;
+    text-underline-offset:3px;
+}
+#btn-traffic-telemetry-r51:focus-visible {
+    outline:2px solid #9be6d7;outline-offset:2px;
+}
+
 /* R50 — instrumentos: um único velocímetro circular, sem painel plástico. */
 .speedometer-90s {
     width:clamp(114px,13vw,166px)!important;
