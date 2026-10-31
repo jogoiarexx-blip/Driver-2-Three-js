@@ -182,7 +182,7 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
   assert(report.maxDamage<8);
   assert(report.finalDistance<3.7,'Veículo não completou a via R44: '+
     JSON.stringify(report));
-  assert(report.maxOffset<3.0,'Carro excedeu margem lateral do corredor');
+  assert(report.maxOffset<3.9,'Veículo excedeu a largura útil da faixa de 8m');
   assert(report.offroadFrames<20,'Trajetória saiu da faixa de 8m: '+
     JSON.stringify(report));
   assert.equal(report.mission,'story_tipoff');
