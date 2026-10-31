@@ -9,7 +9,7 @@
 class DriverChicagoMixedNavigationR49 {
     static cache=new WeakMap();
     static STEP=80;
-    static key(p){return p.x+','+p.z;}
+    static key(p){return Math.round(p.x*2)/2+','+Math.round(p.z*2)/2;}
     static distance(a,b){return Math.hypot(a.x-b.x,a.z-b.z);}
     static bridgeClosed(city,a,b){
         if(!city?.bridgeRaised)return false;
@@ -18,7 +18,7 @@ class DriverChicagoMixedNavigationR49 {
         return Math.max(Math.abs(a.x),Math.abs(b.x))<13 &&
             Math.min(a.z,b.z)<35 && Math.max(a.z,b.z)>65;
     }
-    static clear(city,a,b,offsets=true){
+    static clear(city,a,b,offsets=true,offsetWidth=4){
         if(!a||!b||this.bridgeClosed(city,a,b))return false;
         const dx=b.x-a.x,dz=b.z-a.z,dist=Math.hypot(dx,dz);
         if(!Number.isFinite(dist)||dist<.01)return false;
@@ -35,7 +35,7 @@ class DriverChicagoMixedNavigationR49 {
                 return true;
             };
         if(!clearance(a,b))return false;
-        if(offsets)for(const offset of [-4,4]){
+        if(offsets)for(const offset of [-offsetWidth,offsetWidth]){
             if(!clearance(
                 {x:a.x+nx*offset,z:a.z+nz*offset},
                 {x:b.x+nx*offset,z:b.z+nz*offset}))return false;
@@ -56,11 +56,11 @@ class DriverChicagoMixedNavigationR49 {
                 adj.set(key,[]);}
             return key;
         };
-        const add=(a,b)=>{
+        const add=(a,b,offset=4)=>{
             const ak=addNode(a),bk=addNode(b);
             if(ak===bk)return;
             const edgeKey=[ak,bk].sort().join('|');
-            if(edges.has(edgeKey)||!this.clear(city,a,b))return;
+            if(edges.has(edgeKey)||!this.clear(city,a,b,true,offset))return;
             edges.add(edgeKey);
             const weight=this.distance(a,b);
             adj.get(ak).push({key:bk,cost:weight});
@@ -93,9 +93,40 @@ class DriverChicagoMixedNavigationR49 {
             }
         }
         for(const edge of secondary)add(edge.from,edge.to);
+        // R51: roads already drawn from PS1-adapted surface references.
+        // The separately audited R22 feeder is the only inferred link.
+        const sources=(city.chicagoPS1StreetNetwork?.radarPaths||[])
+            .filter(p=>p?.provenance==='PS1-surface-reference-adapted'||
+                p?.provenance==='topology-inferred-grid-feeder');
+        let sourceEdges=0,sourcePoints=0;
+        for(const path of sources){
+            const points=path.points||[];
+            if(points.length<2)continue;
+            sourcePoints+=points.length;
+            let previous=points[0];
+            for(let i=1;i<points.length;i++){
+                const target=points[i],length=this.distance(previous,target);
+                if(!Number.isFinite(length)||length<.01||length>160){
+                    previous=target;continue;
+                }
+                const start=previous;
+                for(let step=1,n=Math.ceil(length/16);step<=n;step++){
+                    const t=step/n,next={
+                        x:start.x+(target.x-start.x)*t,
+                        z:start.z+(target.z-start.z)*t
+                    };
+                    const before=edges.size;
+                    // Actual 8m source pavement is narrower than grid.
+                    add(previous,next,1.7);
+                    if(edges.size>before)sourceEdges++;
+                    previous=next;
+                }
+            }
+        }
         const graph={nodes,adj,edges:edges.size,stamp,build,count,
             secondaryNodes:(r48?.nodes.length||0)+(r50?.nodes.length||0),
-            gateways:(r48?.gridExits||0)+(r50?.gridExits||0)};
+            gateways:(r48?.gridExits||0)+(r50?.gridExits||0),
+            sourceCorridors:sources.length,sourcePoints,sourceEdges};
         this.cache.set(city,graph);
         return graph;
     }
@@ -121,12 +152,34 @@ class DriverChicagoMixedNavigationR49 {
         if(!first||!last)return null;
         const start=graph.nodes.get(first),end=graph.nodes.get(last);
         const scores=new Map([[first,0]]),previous=new Map();
-        const queue=[{key:first,g:0,f:this.distance(start,end)}];
+        const queue=[];
+        // Binary heap avoids O(N log N) resorting per expanded vertex.
+        const push=item=>{
+            let i=queue.length;queue.push(item);
+            while(i>0){const parent=(i-1)>>1;
+                if(queue[parent].f<=item.f)break;
+                queue[i]=queue[parent];i=parent;
+            }
+            queue[i]=item;
+        };
+        const pop=()=>{
+            const top=queue[0],last=queue.pop();
+            if(queue.length){let i=0;
+                while(i*2+1<queue.length){
+                    let j=i*2+1;
+                    if(j+1<queue.length&&queue[j+1].f<queue[j].f)j++;
+                    if(last.f<=queue[j].f)break;
+                    queue[i]=queue[j];i=j;
+                }
+                queue[i]=last;
+            }
+            return top;
+        };
+        push({key:first,g:0,f:this.distance(start,end)});
         const done=new Set();
         let found=false;
-        while(queue.length&&done.size<260){
-            queue.sort((a,b)=>a.f-b.f);
-            const current=queue.shift();
+        while(queue.length&&done.size<Math.min(3500,graph.nodes.size)){
+            const current=pop();
             if(done.has(current.key))continue;
             if(current.key===last){found=true;break;}
             done.add(current.key);
@@ -135,7 +188,7 @@ class DriverChicagoMixedNavigationR49 {
                 const nextG=current.g+edge.cost;
                 if(nextG>=(scores.get(edge.key)??Infinity))continue;
                 scores.set(edge.key,nextG);previous.set(edge.key,current.key);
-                queue.push({key:edge.key,g:nextG,
+                push({key:edge.key,g:nextG,
                     f:nextG+this.distance(graph.nodes.get(edge.key),end)});
             }
         }
