@@ -190,17 +190,14 @@ class DriverVehicleMount {
                     s.stand.side,!s.bike);
             }
             if(t>=.83){
-                if(t<.94){
-                    // Finish the seat/handlebar contact while the hinged
-                    // door remains open; no 17%-duration frozen pose.
+                // Hold the bike's hands and hips at the saddle throughout
+                // the final frames, including asynchronous GLB fallback.
+                // In a car, Tanner disappears only after crossing the
+                // doorway, not while the door is still fully open.
+                if(s.bike||t<.94)
                     this.setActor(engine,s.seat,s.vehicle.heading,
                         style,'enter',t,dt,s.stand.side,false);
-                }else if(s.bike&&engine.tanner.vehicleBoneRig){
-                    // Terminamos a pose com o GLB real, sem mostrar o
-                    // piloto procedural durante os últimos 0,25 segundos.
-                    this.setActor(engine,s.seat,s.vehicle.heading,
-                        style,'enter',t,dt,s.stand.side,false);
-                }else if(!s.bike)engine.tanner.setVisible(false);
+                else engine.tanner.setVisible(false);
             }
         }else{
             // During dismount, replace the fallback rider with Tanner
