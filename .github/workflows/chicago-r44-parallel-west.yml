@@ -9,6 +9,7 @@ on:
       - 'tests/chicago-r44-parallel-west*'
       - 'js/world/chicago-r44-block-loop.js'
       - 'tests/chicago-r44-block-loop.test.cjs'
+      - 'tests/chicago-r44-block-loop-browser.cjs'
       - 'js/world/chicago-north-roadside-r32.js'
       - '.github/workflows/chicago-r44-parallel-west.yml'
 
@@ -42,6 +43,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r44-parallel-west-browser.cjs
+      - name: Percorrer a segunda quadra inteira em ambos os sentidos
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r44-block-loop-browser.cjs
       - name: Arquivar resultados
         if: always()
         uses: actions/upload-artifact@v4
