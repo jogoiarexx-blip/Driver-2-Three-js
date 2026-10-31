@@ -31,15 +31,18 @@ class DriverChicagoNorthRoadsideR32 {
       // Half diagonal + 4m road half-width + 1m clearance.
       if(paths.some(p=>p.points.slice(1).some((q,j)=>this.pointSegment({x,z},p.points[j],q)<Math.SQRT2*half+(p.width||8)/2+1)))continue;
       if(lots.some(l=>Math.abs(l.x-x)<12&&Math.abs(l.z-z)<12))continue;
-      // A nova transversal oeste ganha fachadas de lojas baixas e residências.
-      // Tipos são visuais/procedurais, não geografia certificada do PS1.
+      // R41 e R42 recebem fachadas mistas apenas quando o lote é
+      // seco e está fora de todas as outras ruas. Zoneamento adaptado,
+      // não reconstrução certificada do bairro original do PS1.
       const west=path.id==='west-lateral-r41';
-      const shop=west&&Math.floor((cx+480)/28)%4===0;
+      const south=path.id==='south-stem-r42';
+      const shop=(west&&Math.floor((cx+480)/28)%4===0)||
+          (south&&Math.floor((cz+1408)/28)%4===0);
       lots.push({x,z,width:11,depth:11,
        height:shop?7+(lots.length%3)*2:8+(lots.length%4)*3,baseY:0,
        palette:lots.length%3,planned:true,kind:shop?'commercial':'residential',
        district:'wrigleyville',adaptedR32:true,
-       sourceCorridorId:path.id||null,approximateZoning:west});
+       sourceCorridorId:path.id||null,approximateZoning:west||south});
      }
      remaining+=28;
     }
