@@ -33,10 +33,12 @@ class DriverMotorcycleContactIK {
         // remain symmetric in the bike's local reference frame.
         const steer=this.clamp(signals.steer||0,-.8,.8);
         return {
-            leftHand:{x:-.34-steer*.045,y:1.26,z:.49+steer*.06},
-            rightHand:{x:.34-steer*.045,y:1.26,z:.49-steer*.06},
-            leftFoot:{x:-.30,y:.70,z:-.09},
-            rightFoot:{x:.30,y:.70,z:-.09}
+            // R58: follow the physical handlebar at chassis height
+            // 1.47m / z=.74 and the two actual foot pegs at y=.67.
+            leftHand:{x:-.34-steer*.045,y:1.47,z:.74+steer*.06},
+            rightHand:{x:.34-steer*.045,y:1.47,z:.74-steer*.06},
+            leftFoot:{x:-.31,y:.67,z:-.17},
+            rightFoot:{x:.31,y:.67,z:-.17}
         };
     }
     static bend(rig,role,x=0,y=0,z=0){
