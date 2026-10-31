@@ -22,6 +22,39 @@ class DriverChicagoPierStadiumR53 {
         };
     }
 
+    // R54: geométrica da madeira: y=.54 na plataforma, rampa linear
+    // desde a avenida x=320. Evita rodas afundadas e subida abrupta.
+    static deckHeightAt(x,z) {
+        if(!Number.isFinite(x)||!Number.isFinite(z))return null;
+        const lateral=Math.abs(z+40);
+        if(x>=320&&x<327&&lateral<=7.1)
+            return .54*(x-320)/7;
+        if(x>=327&&x<=411&&lateral<=7.8)return .54;
+        return null;
+    }
+
+    // R54: só amostrar trajetória no entorno dos obstáculos dos estádios
+    // e do píer. Evita atravessar guarda-corpos em quedas temporárias de FPS.
+    static needsSweep(city,x0,z0,x1,z1) {
+        if(city?.preset?.id!=='chicago')return false;
+        const near=(x,z)=>
+            (x>=310&&x<=416&&z>=-58&&z<=-22) ||
+            (x>=-322&&x<=-235&&z>=158&&z<=243) ||
+            (x>=236&&x<=322&&z>=-324&&z<=-236);
+        return near(x0,z0)||near(x1,z1);
+    }
+
+    static pathBlocked(city,x0,z0,x1,z1,radius=1.55,y=0) {
+        const distance=Math.hypot(x1-x0,z1-z0);
+        const steps=Math.max(1,Math.min(28,Math.ceil(distance/1.1)));
+        for(let i=1;i<=steps;i++){
+            const t=i/steps;
+            if(city.isPointBlocked(x0+(x1-x0)*t,
+                z0+(z1-z0)*t,radius,y))return true;
+        }
+        return false;
+    }
+
     static material(hex, glow = false) {
         return glow
             ? new THREE.MeshBasicMaterial({color: hex, transparent: true, opacity: .08, depthWrite: false})
@@ -109,6 +142,11 @@ class DriverChicagoPierStadiumR53 {
         }
         this.solid(city,state,'pier-eastern-end',
             409.9,1.05,-40,.48,1.5,14.2,steel);
+        // Dois montantes no alinhamento da marquise, em vez de antiga
+        // barra baixa que atravessava o carro visualmente.
+        for(const side of [-1,1])
+            this.solid(city,state,'pier-entry-post-'+side,
+                333,2.26,-40+side*6.95,.58,4.52,.58,metal);
         // Madeira, parafusos e faixas de passagem são decorativos, nunca AABBs.
         const planks=[];
         for(let x=332;x<=406;x+=1.65)
@@ -299,6 +337,11 @@ class DriverChicagoPierStadiumR53 {
             [city.chicagoStadium.x,city.chicagoStadium.z]:null,
             wheel:!!s?.wheel,seats:s?.seats||0,bulbs:s?.bulbs||0,
             visibleColliderCount:s?.colliders.length||0,
+            rampHeightAtStart:this.deckHeightAt(320,-40),
+            rampHeightAtMiddle:this.deckHeightAt(323.5,-40),
+            platformHeight:this.deckHeightAt(379,-40),
+            entranceClear:s ? !s.colliders.some(box=>379>box.minX &&
+                379<box.maxX&&-40>box.minZ&&-40<box.maxZ) : null,
             gatePreserved:!!city?.chicagoStadium?.gate,
             soldierFieldAt:city?.chicagoSoldierField?
                 [city.chicagoSoldierField.x,city.chicagoSoldierField.z]:null,
