@@ -108,6 +108,12 @@ class DriverTrafficTelemetryR50 {
             slowFrames:this.slowFrames,
             r49:vehicles.filter(v=>v.chicagoMixedTrafficR49).length,
             sourceCars:vehicles.filter(v=>v.chicagoSourceTrafficR51).length,
+            policeSearch:vehicles.filter(v=>
+                v.isPolice&&v.chicagoPoliceSearchStatusR57?.active).length,
+            policeSearchBlocked:vehicles.filter(v=>
+                v.isPolice&&v.chicagoPoliceSearchStatusR57?.blocked).length,
+            policeCornerBrakes:vehicles.filter(v=>
+                v.isPolice&&v.chicagoPoliceSearchStatusR57?.cornerBrake).length,
             graphNodes:nav?.nodes.size||0,graphEdges:nav?.edges||0,
             sourceCorridors:nav?.sourceCorridors||0,
             sourceEdges:nav?.sourceEdges||0,
@@ -134,6 +140,9 @@ class DriverTrafficTelemetryR50 {
                     report.sourceEdges+' segmentos válidos',
                 'A*: '+report.planned+' planos / '+report.pathFailures+
                     ' falhas | pior: '+report.routeWorstMs+'ms',
+                'Polícia R57 buscando: '+report.policeSearch+
+                    ' | sem rota: '+report.policeSearchBlocked,
+                'Polícia freando em curva R52: '+report.policeCornerBrakes,
                 'NPCs presos >2.5s: '+report.stuck,
                 'Dano novo (carros): '+report.damageEvents,
                 'Carros suspensos na estação: '+report.stationCarLift,
