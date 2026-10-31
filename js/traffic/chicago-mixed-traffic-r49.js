@@ -133,6 +133,13 @@ class DriverChicagoMixedTrafficR49 {
             Math.sin(heading-car.heading),Math.cos(heading-car.heading));
         const bend=Math.abs(delta);
         let speedLimit=bend>.5?4.2:bend>.22?6.5:11.2;
+        // R56: brake *before* narrow junctions, not after steering
+        // into the canal rail or into a building corner.
+        if(navigation.cornerAngle>.55 &&
+           navigation.cornerDistance<28){
+            speedLimit=Math.min(speedLimit,
+                navigation.cornerDistance<14?3.6:6.0);
+        }
         const fx=Math.sin(car.heading),fz=Math.cos(car.heading);
         const brakingGap=8+Math.max(0,car.speed)*.32;
         let waitingForTraffic=false,waitingForSignal=false,
