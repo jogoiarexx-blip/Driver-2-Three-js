@@ -23,6 +23,7 @@ class DriverDayNightCycle {
         this.sky=new THREE.Color();
         this.nightSky=new THREE.Color(0x10192d);
         this.twilightSky=new THREE.Color(0xc08165);
+        this.rainSky=new THREE.Color(0x303d50);
         this.daySky=new THREE.Color();
         this.daySun=new THREE.Color();
         this.sunsetSun=new THREE.Color(0xffa266);
@@ -79,6 +80,17 @@ class DriverDayNightCycle {
             map:texture,transparent:true,depthWrite:false,depthTest:true,
             fog:false,toneMapped:false
         });
+        // O gradiente mantém o astro visível se o WebP não carregar.
+        if(typeof THREE.TextureLoader==='function') {
+            const loader=new THREE.TextureLoader();
+            loader.load('./assets/sky/'+kind+'.webp',image=>{
+                image.encoding=THREE.sRGBEncoding;
+                const fallback=material.map;
+                material.map=image;
+                material.needsUpdate=true;
+                fallback.dispose();
+            },undefined,()=>{});
+        }
         const sprite=new THREE.Sprite(material);
         const size=isSun?42:31;
         sprite.scale.set(size,size,1);
@@ -124,7 +136,7 @@ class DriverDayNightCycle {
         // Horizonte laranja somente na alvorada/crepúsculo.
         this.sky.copy(this.nightSky).lerp(this.twilightSky,horizon);
         this.sky.lerp(this.daySky,DriverDayNightCycle.smooth(.08,.55,height));
-        if(this.rain)this.sky.lerp(new THREE.Color(0x303d50),.70);
+        if(this.rain)this.sky.lerp(this.rainSky,.70);
         // Luzes de Chicago seguem o mesmo sol; chuva aumenta a penumbra.
         if(typeof DriverChicagoNightLights!=='undefined' && game.city){
             const streetDark=1-DriverDayNightCycle.smooth(-.18,.20,height);
