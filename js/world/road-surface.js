@@ -195,7 +195,13 @@ class DriverRoadSurface {
             }
         }
         const geometry=new THREE.BoxGeometry(1,1,1);
-        const material=new THREE.MeshLambertMaterial({color:shade.curb});
+        const chicagoCurb=city.preset.id==='chicago' &&
+            typeof DriverChicagoStreetTextures!=='undefined'?
+            DriverChicagoStreetTextures.createCurbTexture():null;
+        const material=new THREE.MeshLambertMaterial({
+            color:chicagoCurb?0xffffff:shade.curb,
+            ...(chicagoCurb?{map:chicagoCurb}:{})
+        });
         const mesh=new THREE.InstancedMesh(geometry,material,pieces.length);
         const dummy=new THREE.Object3D();
         pieces.forEach((piece,i)=>{
