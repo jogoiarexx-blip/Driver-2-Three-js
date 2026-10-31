@@ -1993,7 +1993,7 @@
                 return .35*Math.min(1,edge/.9);
             }
 
-            getGroundHeightAt(x,z,referenceY=null) {
+            getGroundHeightAt(x,z,referenceY=null,forVehicle=false) {
                 if(this.interiorFloorAt?.(x,z))return 0;
                 if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceBridge!=='undefined'){
@@ -2002,6 +2002,12 @@
                 }
                 if(this.trainStation){
                     const ramp=this.trainStation.ramp,p=this.trainStation.platform;
+                    // A rampa ferroviária é pedonal. Veículos permanecem
+                    // no asfalto inferior, inclusive sob a plataforma.
+                    if(forVehicle && (x>=ramp.minX-3&&x<=ramp.maxX+3 &&
+                        z>=ramp.endZ-2&&z<=ramp.startZ+2 ||
+                        x>=p.minX-3&&x<=p.maxX+3 &&
+                        z>=p.minZ-3&&z<=p.maxZ+3))return 0;
                     // Eixo da rampa é estreito. Suavizar a borda evita
                     // degrau de 8m quando o carro passa junto ao corrimão.
                     if(x>=ramp.minX-1&&x<=ramp.maxX+1 &&
@@ -2069,7 +2075,9 @@
                 // alturas locais coerentes com a rampa e não com o chão.
                 if(this.trainStation){
                     const r=this.trainStation.ramp;
-                    if(z>=r.endZ+1&&z<=r.startZ-1){
+                    // Railings at 11m are not an invisible ground-level
+                    // vehicle wall; on-foot Tanner still collides with them.
+                    if(radius<1.1&&z>=r.endZ+1&&z<=r.startZ-1){
                         const slope=(r.startZ-z)/(r.startZ-r.endZ);
                         const top=this.trainStation.platform.height*slope;
                         if(y<top+1.0&&y>=top-2.0){
