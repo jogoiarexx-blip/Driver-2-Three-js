@@ -568,17 +568,26 @@
                     };
                 }
 
-                if (!steepStep &&
-                    !cityBuilder.isPointBlocked(nextX, nextZ, 1.55, this.y)) {
+                // R54: no píer e nos estádios, amostra a trajetória entre
+                // frames para não atravessar grades finas em alta velocidade.
+                // Fora destes marcos usa o teste original (mesmo custo).
+                const needsLandmarkSweep=
+                    typeof DriverChicagoPierStadiumR53!=='undefined' &&
+                    DriverChicagoPierStadiumR53.needsSweep(
+                        cityBuilder,this.x,this.z,nextX,nextZ);
+                const wallBlocked=(tx,tz)=>needsLandmarkSweep?
+                    DriverChicagoPierStadiumR53.pathBlocked(
+                        cityBuilder,this.x,this.z,tx,tz,1.55,this.y):
+                    cityBuilder.isPointBlocked(tx,tz,1.55,this.y);
+
+                if (!steepStep && !wallBlocked(nextX,nextZ)) {
                     this.x = nextX;
                     this.z = nextZ;
                 } else {
                     // Deslizamento junto a paredes: permite avançar no eixo livre
                     // em vez de parar completamente numa quina.
-                    const freeX = !steepStep &&
-                        !cityBuilder.isPointBlocked(nextX,this.z,1.55,this.y);
-                    const freeZ = !steepStep &&
-                        !cityBuilder.isPointBlocked(this.x,nextZ,1.55,this.y);
+                    const freeX = !steepStep && !wallBlocked(nextX,this.z);
+                    const freeZ = !steepStep && !wallBlocked(this.x,nextZ);
                     if (freeX) this.x = nextX;
                     if (freeZ) this.z = nextZ;
                     const impactNow = performance.now();
