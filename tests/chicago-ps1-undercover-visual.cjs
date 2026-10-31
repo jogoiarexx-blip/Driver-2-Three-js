@@ -39,8 +39,12 @@ const dir=path.join(process.cwd(),'qa-artifacts');fs.mkdirSync(dir,{recursive:tr
                 links:c.chicagoCityPlan.courtyardLinks?.length,
                 districts:DriverChicagoNeighborhoods.DISTRICTS.length,
                 pedestrians:g.pedManager.pedestrians.length,
+                // R32 has exact collider boxes tagged adaptedR32 instead
+                // of chicagoPlanLot. Both building classes must match their
+                // *own* physical AABB, without accepting a nearby fake collider.
                 exactCollision:c.districtBuildings.filter(b=>b.planned).every(b=>
-                    c.buildingBoxes.some(a=>a.chicagoPlanLot&&
+                    c.buildingBoxes.some(a=>(a.chicagoPlanLot||
+                        (b.adaptedR32&&a.adaptedR32))&&
                         Math.abs(a.minX-(b.x-b.width/2))<.001&&
                         Math.abs(a.maxX-(b.x+b.width/2))<.001&&
                         Math.abs(a.minZ-(b.z-b.depth/2))<.001&&
