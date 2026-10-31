@@ -135,8 +135,9 @@ class DriverChicagoMixedTrafficR49 {
         let speedLimit=bend>.5?4.2:bend>.22?6.5:11.2;
         // R56: brake *before* narrow junctions, not after steering
         // into the canal rail or into a building corner.
-        if(navigation.cornerAngle>.55 &&
-           navigation.cornerDistance<28){
+        const cornerBrake=navigation.cornerAngle>.55 &&
+            navigation.cornerDistance<28;
+        if(cornerBrake){
             speedLimit=Math.min(speedLimit,
                 navigation.cornerDistance<14?3.6:6.0);
         }
@@ -212,6 +213,7 @@ class DriverChicagoMixedTrafficR49 {
             target:{x:target.x,z:target.z},
             remaining:navigation.remaining,
             blocked:false,speedLimit,
+            cornerBrake,
             replans:state.replans||0,
             waiting:waitingForSignal?'signal':waitingForCrossing?
                 'pedestrian':waitingForTraffic?'traffic':null
