@@ -329,35 +329,72 @@
                 if (input.up) moveDir = 1;
                 else if (input.down) moveDir = -0.65;
 
-                const walkSpeed = (input.sprint ? 12.5 : 8.5) * moveDir;
+                const isWater = (x,z) =>
+                    typeof cityBuilder?.isWaterAt === 'function' &&
+                    cityBuilder.isWaterAt(x,z);
+                const wetBefore = isWater(this.group.position.x,
+                    this.group.position.z);
+                const wasSwimming = this.isSwimming;
+                // Swimming moves more slowly than running on the sidewalk.
+                const speed = wetBefore ?
+                    (input.sprint ? 5.2 : 3.9) :
+                    (input.sprint ? 12.5 : 8.5);
+                const velocity = speed * moveDir;
 
-                if (this.playerModel) this.playModelAnimation(Math.abs(moveDir)>0.01 ? 'walk' : 'idle');
                 if (Math.abs(moveDir) > 0) {
-                    const nextX = this.group.position.x + Math.sin(this.heading) * walkSpeed * dt;
-                    const nextZ = this.group.position.z + Math.cos(this.heading) * walkSpeed * dt;
-                    // Tanner também respeita piso inferior/plataforma:
-                    // não pode subir 11m entrando pela lateral da estação.
-                    const groundY = cityBuilder.getGroundHeightAt(
-                        nextX,nextZ,this.group.position.y);
-
-                    if (!cityBuilder.isPointBlocked(nextX, nextZ, 0.55, groundY)) {
+                    const nextX = this.group.position.x +
+                        Math.sin(this.heading)*velocity*dt;
+                    const nextZ = this.group.position.z +
+                        Math.cos(this.heading)*velocity*dt;
+                    // Water surface is at 0.06; the bed is -4.0. Collision
+                    // should use swimmer height so quay walls still block.
+                    const targetY = isWater(nextX,nextZ) ? -0.76 :
+                        cityBuilder.getGroundHeightAt(
+                            nextX,nextZ,this.group.position.y);
+                    if (!cityBuilder.isPointBlocked(nextX,nextZ,0.55,targetY)) {
                         this.group.position.x = nextX;
                         this.group.position.z = nextZ;
-                        this.group.position.y = groundY;
+                        this.group.position.y = targetY;
                     }
+                }
 
-                    // Animação dos braços e pernas correndo
-                    this.walkCycle += dt * (input.sprint ? 16 : 11);
-                    const swing = Math.sin(this.walkCycle) * 0.65;
-                    this.leftLeg.rotation.x = swing;
-                    this.rightLeg.rotation.x = -swing;
-                    this.leftArm.rotation.x = -swing * 0.8;
-                    this.rightArm.rotation.x = swing * 0.8;
+                this.isSwimming = isWater(this.group.position.x,
+                    this.group.position.z);
+                if (this.isSwimming) {
+                    this.swimClock += dt*(Math.abs(moveDir)>0.01?4:2);
+                    this.group.position.y = -0.76 +
+                        Math.sin(this.swimClock*2)*0.045;
+                    if (this.contactShadow)this.contactShadow.visible=false;
+                    if (this.playerModel)this.playModelAnimation(
+                        Math.abs(moveDir)>0.01?'swim_forward':'swim_idle');
+                    // Procedural fallback is visible only while GLB loads.
+                    const kick=Math.sin(this.swimClock*2)*0.4;
+                    this.leftLeg.rotation.x=kick;
+                    this.rightLeg.rotation.x=-kick;
+                    this.leftArm.rotation.x=-0.7-kick;
+                    this.rightArm.rotation.x=-0.7+kick;
                 } else {
-                    this.leftLeg.rotation.x = 0;
-                    this.rightLeg.rotation.x = 0;
-                    this.leftArm.rotation.x = 0;
-                    this.rightArm.rotation.x = 0;
+                    if(wasSwimming)this.group.position.y=
+                        cityBuilder.getGroundHeightAt(
+                            this.group.position.x,this.group.position.z,
+                            this.group.position.y);
+                    if(this.contactShadow&&!this.motorcycleVehicle)
+                        this.contactShadow.visible=true;
+                    if(this.playerModel)this.playModelAnimation(
+                        Math.abs(moveDir)>0.01?'walk':'idle');
+                    if(Math.abs(moveDir)>0){
+                        this.walkCycle+=dt*(input.sprint?16:11);
+                        const swing=Math.sin(this.walkCycle)*0.65;
+                        this.leftLeg.rotation.x=swing;
+                        this.rightLeg.rotation.x=-swing;
+                        this.leftArm.rotation.x=-swing*0.8;
+                        this.rightArm.rotation.x=swing*0.8;
+                    }else{
+                        this.leftLeg.rotation.x=0;
+                        this.rightLeg.rotation.x=0;
+                        this.leftArm.rotation.x=0;
+                        this.rightArm.rotation.x=0;
+                    }
                 }
             }
         }
