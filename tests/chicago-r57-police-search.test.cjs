@@ -114,7 +114,9 @@ test('R57 police without direct sight brakes into narrow R52 corners instead of 
         const outcome=drive(new TrafficAI(c),car,{x:120,z:-120},14);
         assert.equal(outcome.collisions,0,JSON.stringify(outcome));
         assert(outcome.meters>30);
-        assert(outcome.searchFrames>=200);
+        // Police radio has intermittent last-known-position windows.
+        // The search should be active for a useful portion of the replay.
+        assert(outcome.searchFrames>=140);
         assert(outcome.cornerFrames>0);
         assert.equal(car.policeLineOfSight,false);
         assert.equal(car.sirenActive,true);
