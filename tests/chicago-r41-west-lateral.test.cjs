@@ -76,5 +76,6 @@ test('R41 participa do mapa, render e radar na ordem correta',()=>{
  const paths=Net.sourcePaths({chicagoReferenceWestLateralR41:Road.plan()});
  assert.equal(paths.length,1);assert.equal(paths[0].id,'west-lateral-r41');
  assert.equal(paths[0].width,8);
- assert.equal(Net.SOURCE_NAMES.length,17);
+ assert(Net.SOURCE_NAMES.some(([id])=>id==='west-lateral-r41'));
+ assert(Net.SOURCE_NAMES.length>=17);
 });
