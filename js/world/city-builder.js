@@ -55,6 +55,9 @@
                 this.districtChunks=new Map();
                 this.districtTextureCache=new Map();
                 this.districtMaterialCache=new Map();
+                this.chicagoNightState=null;
+                this.streetLampPositions=null;
+                this.streetLampBulb=null;
                 this.lodStats=null;
                 this.lodSeconds=0;
                 this.roadAudit=null;
@@ -225,6 +228,9 @@
                     DriverRoadSurface.buildAsphalt(this);
                 this.buildRoadMarkings();
                 DriverStreetFurniture.build(this);
+                // R3: um halo compartilhado e um lote de luz no chão; sem PointLight por poste.
+                if(this.preset.id==='chicago'&&typeof DriverChicagoNightLights!=='undefined')
+                    DriverChicagoNightLights.installStreets(this);
                 this.buildTrafficLights();
                 this.decorateStreetsWithCC0();
                 yield 'Asfalto, ruas, sinalização e semáforos';
@@ -673,6 +679,11 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoStreetTextures!=='undefined')
                     DriverChicagoStreetTextures.decorateShops(
+                        this,chunk.buildings,group);
+                // Somente no LOD perto: janelas noturnas instanciadas.
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoNightLights!=='undefined')
+                    DriverChicagoNightLights.decorateWindows(
                         this,chunk.buildings,group);
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoOverhaul!=='undefined')
