@@ -670,3 +670,55 @@
     #hud-player-panel{max-width:43vw!important;width:min(43vw,155px)!important;}
     #d2-traffic-telemetry{top:65px;right:6px;font-size:10px;}
 }
+
+
+/* Chicago R56 — destinos opcionais do radar, compacto e legível em mobile. */
+#driver-landmarks-r56 {
+    position:absolute;left:4px;bottom:8px;z-index:36;
+    max-width:180px;font-family:Inter,Arial,sans-serif;
+}
+#driver-landmarks-r56-toggle {
+    border:1px solid #6a8188;border-radius:5px;
+    background:rgba(10,23,34,.96);color:#cce6e7;
+    font-size:9px;font-weight:800;letter-spacing:.06em;
+    padding:5px 7px;cursor:pointer;touch-action:manipulation;
+}
+#driver-landmarks-r56-toggle[aria-expanded="true"] {
+    border-color:#80d7df;color:#e4ffff;
+}
+#driver-landmarks-r56-menu {
+    position:absolute;bottom:31px;left:0;width:157px;
+    padding:5px;display:flex;flex-direction:column;gap:2px;
+    border:1px solid #657d83;border-radius:7px;
+    background:rgba(9,19,31,.98);
+    box-shadow:0 5px 22px #0009;
+}
+#driver-landmarks-r56-menu.hidden,
+#driver-landmarks-r56-status.hidden,
+#driver-landmarks-r56.hidden {display:none!important}
+#driver-landmarks-r56-menu button {
+    color:#c8d5dc;background:transparent;text-align:left;
+    padding:6px 8px;border:0;border-radius:4px;
+    font-size:11px;font-weight:650;cursor:pointer;
+}
+#driver-landmarks-r56-menu button:hover,
+#driver-landmarks-r56-menu button:focus-visible,
+#driver-landmarks-r56-menu button[aria-pressed="true"] {
+    background:#284751;color:#ecfeff;outline-color:#80d7df;
+}
+#driver-landmarks-r56-status {
+    position:absolute;bottom:31px;left:0;
+    width:max-content;max-width:min(220px,74vw);
+    padding:5px 7px;border-radius:5px;
+    border:1px solid #45616e;background:rgba(9,21,32,.96);
+    color:#bce7e5;font:700 9px/1.35 Inter,Arial,sans-serif;
+    white-space:normal;pointer-events:none;
+}
+#driver-landmarks-r56:has(#driver-landmarks-r56-menu:not(.hidden))
+#driver-landmarks-r56-status {display:none!important}
+@media(max-width:640px) {
+    #driver-landmarks-r56 {left:0;bottom:0}
+    #driver-landmarks-r56-toggle {font-size:8px;padding:4px 5px}
+    #driver-landmarks-r56-menu {bottom:27px;width:145px}
+    #driver-landmarks-r56-status {bottom:27px;max-width:150px}
+}
