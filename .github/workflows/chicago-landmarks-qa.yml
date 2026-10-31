@@ -1,0 +1,31 @@
+name: Chicago landmarks physics regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-pier-stadium-r53.js'
+      - 'js/world/chicago-neighborhoods.js'
+      - 'js/world/city-builder.js'
+      - 'js/vehicles/driver-vehicle.js'
+      - 'tests/chicago-r54-physics.test.cjs'
+      - '.github/workflows/chicago-landmarks-qa.yml'
+  pull_request:
+    paths:
+      - 'js/world/chicago-pier-stadium-r53.js'
+      - 'js/world/chicago-neighborhoods.js'
+      - 'js/world/city-builder.js'
+      - 'js/vehicles/driver-vehicle.js'
+      - 'tests/chicago-r54-physics.test.cjs'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source and Navy Pier physics
+        run: node --test tests/chicago-r54-physics.test.cjs
