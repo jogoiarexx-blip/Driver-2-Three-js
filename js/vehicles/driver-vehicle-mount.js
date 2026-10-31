@@ -89,6 +89,8 @@ class DriverVehicleMount {
                 (kind==='enter'?1.30:1.20),
             from,near,seat,stand,originalCar:engine.playerCar
         };
+        if(typeof DriverVehicleDoorsR58!=='undefined')
+            DriverVehicleDoorsR58.close(vehicle);
         if(kind==='enter')engine.tanner.setVisible(true);
         else {
             engine.tanner.setVisible(bike&&
@@ -123,14 +125,21 @@ class DriverVehicleMount {
     }
     static finish(engine,s){
         engine.vehicleMountTransition=null;
+        if(typeof DriverVehicleDoorsR58!=='undefined')
+            DriverVehicleDoorsR58.close(s.vehicle);
         engine.tanner.resetVehicleTransitionPose?.();
         if(s.kind==='enter'){
             const changed=s.vehicle!==s.originalCar;
             engine.playerCar=s.vehicle;
             engine.mode='driving';
             engine.tanner.setVisible(false);
-            if(s.bike)
-                engine.tanner.mountOnMotorcycle?.(s.vehicle);
+            if(s.bike){
+                const mounted=engine.tanner.mountOnMotorcycle?.(s.vehicle);
+                // Rider geometry is a fallback only while the real Tanner
+                // GLB skeleton is unavailable (asynchronous model load).
+                if(s.vehicle.motorcycleRider)
+                    s.vehicle.motorcycleRider.visible=!mounted;
+            }
             if(changed&&!engine.isPoliceNearPlayer?.(45))
                 engine.felony=Math.max(0,(engine.felony||0)-65);
             else if(s.vehicle.isPolice)
@@ -138,6 +147,8 @@ class DriverVehicleMount {
             this.badge(engine,s.bike?'NA MOTO':
                 s.vehicle.isSecret?'CARRO SECRETO!':'NO VOLANTE (V8)',true);
         }else{
+            if(s.bike&&s.vehicle.motorcycleRider)
+                s.vehicle.motorcycleRider.visible=false;
             engine.mode='on_foot';
             const ground=engine.city?.getGroundHeightAt?.(
                 s.stand.x,s.stand.z,s.stand.y);
@@ -157,6 +168,8 @@ class DriverVehicleMount {
         const t=this.clamp(s.clock/s.duration);
         s.progress=t;
         const style=s.bike?'motorcycle':'car';
+        if(!s.bike&&typeof DriverVehicleDoorsR58!=='undefined')
+            DriverVehicleDoorsR58.transition(s.vehicle,s.stand.side,s.kind,t);
         if(s.kind==='enter'){
             if(t<.30){
                 const p=this.move(s.from,s.near,t/.30);
@@ -172,12 +185,17 @@ class DriverVehicleMount {
                     s.stand.side,!s.bike);
             }
             if(t>=.83){
-                if(s.bike&&engine.tanner.vehicleBoneRig){
+                if(t<.94){
+                    // Finish the seat/handlebar contact while the hinged
+                    // door remains open; no 17%-duration frozen pose.
+                    this.setActor(engine,s.seat,s.vehicle.heading,
+                        style,'enter',t,dt,s.stand.side,false);
+                }else if(s.bike&&engine.tanner.vehicleBoneRig){
                     // Terminamos a pose com o GLB real, sem mostrar o
                     // piloto procedural durante os últimos 0,25 segundos.
                     this.setActor(engine,s.seat,s.vehicle.heading,
                         style,'enter',t,dt,s.stand.side,false);
-                }else engine.tanner.setVisible(false);
+                }else if(!s.bike)engine.tanner.setVisible(false);
             }
         }else{
             // Suaviza a liberação das mãos/pés sem atravessar o banco.
