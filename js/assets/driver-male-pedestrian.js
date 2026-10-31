@@ -75,10 +75,11 @@ class DriverMalePedestrian {
                         root.updateMatrixWorld(true);
                         const bounds=new THREE.Box3().setFromObject(root);
                         const size=bounds.getSize(new THREE.Vector3());
-                        if(!(size.y>.5)&&!Number.isFinite(size.y))
-                            throw new Error('Altura inválida do pedestre');
-                        if(!Number.isFinite(size.y)||size.y<=.5)
-                            throw new Error('Altura inválida do pedestre');
+                        // Cachorros podem ser exportados em centímetros
+                        // ou com bounding box inferior a 50 cm. A normalização
+                        // converte para a altura visual definida no cadastro.
+                        if(!Number.isFinite(size.y)||size.y<=.001)
+                            throw new Error('Altura inválida do modelo GLB');
 
                         // O arquivo tem aproximadamente 1,87m de altura;
                         // o pedestre do mundo terá 2,08m, sem pés flutuando.
