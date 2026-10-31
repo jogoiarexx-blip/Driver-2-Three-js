@@ -186,6 +186,7 @@
                 this.chicagoConnectorsR48=null;
                 this.chicagoConnectorsR50=null;
                 this.chicagoGooseEastR52=null;
+                this.chicagoWestCanalR53=null;
                 this.tannerHomeFurnitureBoxes=[];
                 this.tannerHomeInteriorStats=null;
                 this.rioParks=[];
@@ -405,6 +406,12 @@
                             typeof DriverChicagoGooseEastR52!=='undefined' &&
                             DriverChicagoGooseEastR52.isCarvedBlock(blockX,blockZ))
                             return;
+                        // R53: clear the four western-bank building cells
+                        // before their old geometry blocks the new pavement.
+                        if(this.preset.id==='chicago' &&
+                            typeof DriverChicagoWestCanalR53!=='undefined' &&
+                            DriverChicagoWestCanalR53.isCarvedBlock(blockX,blockZ))
+                            return;
 
                         // Nenhum quarteirão novo sobre o lago: a costa física
                         // é a mesma usada pelos carros e pelo parcelamento.
@@ -606,6 +613,8 @@
                         DriverChicagoConnectorsR50.build(this);
                     if(typeof DriverChicagoGooseEastR52!=='undefined')
                         DriverChicagoGooseEastR52.build(this);
+                    if(typeof DriverChicagoWestCanalR53!=='undefined')
+                        DriverChicagoWestCanalR53.build(this);
                     // Corredor Lower Wacker com pilares AABB reais.
                     if(typeof DriverChicagoLowerWacker!=='undefined')
                         DriverChicagoLowerWacker.build(this);
