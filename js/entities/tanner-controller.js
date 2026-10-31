@@ -14,6 +14,7 @@
                 this.swimClock = 0;
                 this.vehicleBoneRig=null;
                 this.motorcycleVehicle=null;
+                this.pendingMotorcycleVehicle=null;
                 this.motorcycleDynamics=null;
                 this.motorcycleContactReport=null;
                 this.motorcycleContactBlend=0;
@@ -120,6 +121,13 @@
                         this.animationMixer = new THREE.AnimationMixer(model);
                         this.playModelAnimation('idle');
                     }
+                    if(this.pendingMotorcycleVehicle&&this.vehicleBoneRig){
+                        // Replace the temporary low-poly rider only once
+                        // Tanner's real asynchronous rig is available.
+                        const bike=this.pendingMotorcycleVehicle;
+                        if(this.mountOnMotorcycle(bike)&&bike.motorcycleRider)
+                            bike.motorcycleRider.visible=false;
+                    }
                     console.info('Tanner GLB aplicado:', url,
                         'animações:', this.animations.map(a => a.name));
                 }, undefined, error => {
@@ -221,7 +229,11 @@
 
             mountOnMotorcycle(vehicle) {
                 if(!vehicle?.chassisTilt||!this.vehicleBoneRig||
-                    !this.playerModel||this.motorcycleVehicle)return false;
+                    !this.playerModel||this.motorcycleVehicle){
+                    if(vehicle&&!this.motorcycleVehicle)
+                        this.pendingMotorcycleVehicle=vehicle;
+                    return false;
+                }
                 this.resetVehicleTransitionPose();
                 if(this.contactShadow)this.contactShadow.visible=false;
                 vehicle.chassisTilt.add(this.group);
@@ -229,6 +241,7 @@
                 this.group.rotation.set(0,0,0);
                 this.heading=0;
                 this.motorcycleVehicle=vehicle;
+                this.pendingMotorcycleVehicle=null;
                 this.motorcycleDynamics=null;
                 this.motorcycleContactReport=null;
                 this.motorcycleContactBlend=0;
@@ -258,7 +271,10 @@
             }
 
             detachFromMotorcycle() {
-                if(!this.motorcycleVehicle)return false;
+                if(!this.motorcycleVehicle){
+                    this.pendingMotorcycleVehicle=null;
+                    return false;
+                }
                 this.resetVehicleTransitionPose();
                 // Scene.add restaura a propriedade da entidade Tanner e evita
                 // que o descarte do veículo libere seu material/esqueleto.
@@ -266,6 +282,7 @@
                 if(this.contactShadow)this.contactShadow.visible=true;
                 delete this.group.userData.driverPlayerRider;
                 this.motorcycleVehicle=null;
+                this.pendingMotorcycleVehicle=null;
                 this.motorcycleDynamics=null;
                 this.motorcycleContactReport=null;
                 this.motorcycleContactBlend=0;
