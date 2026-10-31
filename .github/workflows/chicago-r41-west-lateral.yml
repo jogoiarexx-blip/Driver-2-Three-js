@@ -7,6 +7,9 @@ on:
       - 'chicago/reference-west-lateral-r41.*'
       - 'js/world/chicago-west-lateral-r41.js'
       - 'tests/chicago-r41-west-lateral*'
+      - 'tests/chicago-r41-blocks.test.cjs'
+      - 'js/world/chicago-north-roadside-r32.js'
+      - 'js/world/chicago-north-markings-r33.js'
       - '.github/workflows/chicago-r41-west-lateral.yml'
 
 permissions:
@@ -22,7 +25,7 @@ jobs:
         with:
           node-version: '22'
       - name: Conferir origem, traçado e emenda com R39
-        run: node --test tests/chicago-r41-west-lateral.test.cjs
+        run: node --test tests/chicago-r41-west-lateral.test.cjs tests/chicago-r41-blocks.test.cjs
       - name: Preparar Chromium e WebGL em software
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1
