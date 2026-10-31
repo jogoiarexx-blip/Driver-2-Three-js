@@ -309,8 +309,12 @@
                 // 5. Quarteirões, Calçadas, Esconderijo e Garagem Secreta
                 const sidewalkColor=typeof DriverRoadSurface!=='undefined'?
                     DriverRoadSurface.palette(this.preset.id).sidewalk:0x777a7c;
+                const chicagoPavement=this.preset.id==='chicago' &&
+                    typeof DriverChicagoStreetTextures!=='undefined'?
+                    DriverChicagoStreetTextures.createSidewalkTexture():null;
                 const sidewalkMat = new THREE.MeshLambertMaterial({
-                    color:sidewalkColor
+                    color:chicagoPavement?0xffffff:sidewalkColor,
+                    ...(chicagoPavement?{map:chicagoPavement}:{})
                 });
                 const sidewalkPositions=[];
                 const coords = [];
@@ -646,6 +650,10 @@
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoCityPlan!=='undefined')
                     DriverChicagoCityPlan.detailDistrict(this,chunk.buildings,group);
+                if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoStreetTextures!=='undefined')
+                    DriverChicagoStreetTextures.decorateShops(
+                        this,chunk.buildings,group);
                 if(this.preset.id==='chicago' &&
                     typeof DriverChicagoOverhaul!=='undefined')
                     DriverChicagoOverhaul.detailDistrict(this,
