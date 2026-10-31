@@ -31,11 +31,11 @@ class DriverRoadGeometry {
         // Do not create fictitious foot height above the adjacent canal.
         if(city.chicagoWestCanalR53?.visualReady){
             for(const cx of [-280,-200])for(const cz of [-120,-40]){
-                const px=cx===-280?-304:-184;
+                const px=cx===-280?-300:-180;
                 const halfX=cx===-280?10:7;
                 for(const side of [-1,1]){
                     const edge=Math.min(halfX-Math.abs(x-px),
-                        7.5-Math.abs(z-(cz+side*24)));
+                        7.5-Math.abs(z-(cz+side*20)));
                     if(edge>0)return .271*Math.min(1,edge/.65);
                 }
             }
