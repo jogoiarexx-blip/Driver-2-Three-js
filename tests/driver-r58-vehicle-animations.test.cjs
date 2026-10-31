@@ -258,6 +258,11 @@ test('R58 seated bike coordinates match raised group root, steering bars and foo
     assert.equal(targets.leftHand.z,.74);
     assert.equal(targets.rightFoot.z,-.17);
     assert.equal(targets.leftFoot.y,.67);
+    const importedBike={...bike,_userCustomModel:true};
+    const imported=BikeIK.contacts(importedBike,{steer:0});
+    assert.equal(imported.leftHand.y,1.26);
+    assert.equal(imported.leftHand.z,.49);
+    assert.equal(imported.rightFoot.y,.70);
     const t=Object.create(Tanner.prototype);
     t.group=new Group();t.vehicleBoneRig={};
     t.playerModel=new Group();t.motorcycleVehicle=null;
