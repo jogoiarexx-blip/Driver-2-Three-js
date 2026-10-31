@@ -2101,8 +2101,13 @@
                     this.isWaterAt(x,z))return -4.0;
                 // Mantém compatibilidade com cenários isolados dos testes
                 // que chamam esta rotina com uma superfície simulada.
-                return typeof this.getSidewalkHeightAt==='function'?
+                const legacySidewalk=typeof this.getSidewalkHeightAt==='function'?
                     this.getSidewalkHeightAt(x,z):0;
+                // R52: instanced pavement top and physics must agree.
+                const secondaryPavement=this.preset?.id==='chicago' &&
+                    typeof DriverRoadGeometry!=='undefined'?
+                    DriverRoadGeometry.localPavementHeight(this,x,z):0;
+                return Math.max(legacySidewalk,secondaryPavement);
             }
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
