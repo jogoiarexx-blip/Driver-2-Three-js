@@ -192,6 +192,10 @@ jobs:
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
         run: node tests/chicago-r44-block-loop-browser.cjs
+      - name: R45 validar dois carros civis autônomos nas duas quadras durante 4200 frames
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-neighborhood-traffic-browser.cjs
       - name: Validar carregamento do mapa original de Chicago na raiz
         env:
           DRIVER_QA_URL: http://127.0.0.1:4173/
