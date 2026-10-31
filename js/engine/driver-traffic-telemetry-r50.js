@@ -41,10 +41,13 @@ class DriverTrafficTelemetryR50 {
                 x:car.x,z:car.z,damage:car.damage||0,stalled:0
             };
             const displacement=Math.hypot(car.x-before.x,car.z-before.z);
-            const scheduled=car.chicagoMixedTrafficR49||
-                car.chicagoNeighborhoodTrafficId||
-                (!car.isPolice&&!car.missionParked&&!car.isSecret);
-            const stalled=scheduled && Math.abs(car.speed||0)<1.5 &&
+            // Only count an NPC as stuck when its active controller
+            // wants movement. Red lights, yielding, or parked mission cars
+            // must not be mistaken for an AI navigation failure.
+            const requested=car.chicagoMixedTrafficStatusR49?.speedLimit ??
+                car.chicagoNeighborhoodTrafficStatus?.limit;
+            const expectedToMove=Number.isFinite(requested)&&requested>2;
+            const stalled=expectedToMove && Math.abs(car.speed||0)<1.5 &&
                 displacement<.5 ?before.stalled+tick:0;
             if(stalled>=2.5)stuck++;
             if((car.damage||0)>before.damage+1.5)damageEvents++;
