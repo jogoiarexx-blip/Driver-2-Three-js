@@ -102,6 +102,9 @@ class DriverChicagoGameplay {
         site.secretCar=car;
         game.wrigleyCar=car;
         game.vehicles.push(car);
+        // R60: a frota do save pode ter sido carregada antes deste setor.
+        if(typeof DriverHomeSave!=='undefined')
+            DriverHomeSave.restoreDeferredVehicle(game,car);
         return car;
     }
     static interact(city,pos){
