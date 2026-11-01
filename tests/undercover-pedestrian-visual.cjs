@@ -137,9 +137,59 @@ const base=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
      assert(shepherd.skinnedHeight>
         Math.max(...dogs.filter(m=>m!==shepherd).map(m=>m.skinnedHeight)));
    }
+   // P0 R61: prova E3 com os GLBs REAIS, não apenas mocks do Node.
+   // A frota lógica fica intacta durante o teste; somente clones do
+   // crowd são desmontados e preenchidos novamente do cache.
+   const lifecycle=await page.evaluate(()=>{
+     const manager=window.DriverGame.pedManager;
+     const crowd=manager.uploadedCrowd;
+     const originalSkeletons=new Set(),cloneSkeletons=new Set();
+     const collect=(root,set)=>root?.traverse(node=>{
+       if(node.isSkinnedMesh&&node.skeleton)set.add(node.skeleton);
+     });
+     for(const model of crowd.sources())
+       collect(model?.root||model?.asset,originalSkeletons);
+     const previous=[...crowd.instances.values()];
+     for(const record of previous)collect(record.root,cloneSkeletons);
+     if(!previous.length||!cloneSkeletons.size)
+       throw Error('Nenhum clone skinned GLB carregado para validar cleanup');
+     for(const skeleton of cloneSkeletons)
+       if(originalSkeletons.has(skeleton))
+         throw Error('Clone compartilha skeleton com modelo-fonte');
+     let released=0,sourceDisposed=0;
+     for(const skeleton of cloneSkeletons){
+       const dispose=skeleton.dispose?.bind(skeleton);
+       skeleton.dispose=function(){released++;return dispose?.();};
+     }
+     for(const skeleton of originalSkeletons){
+       const dispose=skeleton.dispose?.bind(skeleton);
+       skeleton.dispose=function(){sourceDisposed++;return dispose?.();};
+     }
+     crowd.release();
+     if(released!==cloneSkeletons.size || sourceDisposed!==0)
+       throw Error('Cleanup errado: '+JSON.stringify({
+         clones:cloneSkeletons.size,released,sourceDisposed}));
+     crowd.fill();
+     const after=crowd.status();
+     if(after.filledSlots!==28||after.proceduralCivilians!==0)
+       throw Error('GLBs perdidos após cleanup '+JSON.stringify(after));
+     const fresh=new Set();
+     for(const record of crowd.instances.values())collect(record.root,fresh);
+     if([...fresh].some(sk=>cloneSkeletons.has(sk)||originalSkeletons.has(sk)))
+       throw Error('Novo crowd reutilizou skeleton antigo ou original');
+     return {oldRecords:previous.length,
+       clonedSkeletons:cloneSkeletons.size,
+       released,sourceDisposed,
+       filledAfter:after.filledSlots,clonedAfter:fresh.size};
+   });
+   console.log('UNDERCOVER_R61_SKELETON_LIFECYCLE '+JSON.stringify(lifecycle));
+   assert(lifecycle.clonedSkeletons>0&&
+          lifecycle.released===lifecycle.clonedSkeletons);
+   assert.equal(lifecycle.sourceDisposed,0);
+   assert.equal(lifecycle.filledAfter,28);
    assert.equal(errors.length,0,'Erros de JS: '+errors.join(' | '));
    fs.writeFileSync(path.join(DIR,'undercover-pedestrians.json'),
-      JSON.stringify({pass:true,snapshots,errors},null,2));
+      JSON.stringify({pass:true,snapshots,lifecycle,errors},null,2));
    console.log('UNDERCOVER_GLBS_PASS '+JSON.stringify(snapshots));
  }catch(e){
    fs.writeFileSync(path.join(DIR,'undercover-pedestrians.json'),
