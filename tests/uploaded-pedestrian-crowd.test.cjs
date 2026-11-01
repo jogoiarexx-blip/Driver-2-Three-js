@@ -111,7 +111,7 @@ test('se um GLB adulto falha, outras fontes da espécie ocupam sua vaga',()=>{
     crowd.fill();
     assert.equal(crowd.status().filledSlots,28);
     assert(![...crowd.instances.values()].some(r=>r.sourceId==='mendigo'));
-    assert.equal(crowd.status().loadedModels,4);
+    assert.equal(crowd.status().loadedModels,6); // quatro adultos + duas crianças
 });
 test('agentes de bloqueio e troca de mapa liberam clones antes da limpeza GPU',()=>{
     const {crowd,manager}=makeManager();
