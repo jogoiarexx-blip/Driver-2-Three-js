@@ -62,6 +62,8 @@ on:
       - 'tests/gpu-resource-lifecycle.test.cjs'
       - 'js/assets/driver-female-pedestrian.js'
       - 'js/assets/driver-pedestrian-variants.js'
+      - 'js/assets/driver-uploaded-pedestrian-crowd.js'
+      - 'tests/uploaded-pedestrian-crowd.test.cjs'
       - 'js/entities/pedestrians-roadblocks.js'
       - 'assets/pedestrians/**'
       - '.github/workflows/visual-qa.yml'

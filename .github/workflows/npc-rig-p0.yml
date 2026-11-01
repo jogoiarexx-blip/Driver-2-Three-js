@@ -1,0 +1,56 @@
+name: Driver 2 - P0 NPC real GLB lifecycle
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/assets/driver-uploaded-pedestrian-crowd.js'
+      - 'js/assets/driver-pedestrian-variants.js'
+      - 'js/entities/pedestrians-roadblocks.js'
+      - 'tests/uploaded-pedestrian-crowd.test.cjs'
+      - 'tests/undercover-pedestrian-visual.cjs'
+      - '.github/workflows/npc-rig-p0.yml'
+  pull_request:
+    paths:
+      - 'js/assets/driver-uploaded-pedestrian-crowd.js'
+      - 'js/assets/driver-pedestrian-variants.js'
+      - 'js/entities/pedestrians-roadblocks.js'
+      - 'tests/uploaded-pedestrian-crowd.test.cjs'
+      - 'tests/undercover-pedestrian-visual.cjs'
+      - '.github/workflows/npc-rig-p0.yml'
+permissions:
+  contents: read
+jobs:
+  rig-lifecycle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Provar ciclo de 28 clones GLB e policiais adultos
+        run: node --test tests/uploaded-pedestrian-crowd.test.cjs
+      - name: Instalar Chromium do Playwright
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir o game localmente
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver2-rig-p0.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/driver2-rig-p0.log
+          exit 1
+      - name: Real GLBs no Undercover, missão e liberação do Skeleton
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/undercover-pedestrian-visual.cjs
+      - name: Preservar relatório de rigs e falhas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver2-r61-npc-lifecycle
+          path: qa-artifacts/undercover-pedestrians.json
+          retention-days: 14

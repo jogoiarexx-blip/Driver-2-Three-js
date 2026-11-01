@@ -24,7 +24,12 @@ class Group {
 class Skinned extends Group {
     constructor(){super();this.isSkinnedMesh=true;
         this.bindMatrix='bind';
-        this.skeleton={bones:[],clone(){return {bones:[...this.bones]}}};
+        this.skeleton={
+            bones:[],disposed:0,
+            dispose(){this.disposed++;},
+            clone(){return {bones:[...this.bones],disposed:0,
+                dispose(){this.disposed++;}}}
+        };
     }
     bind(skeleton){this.skeleton=skeleton;}
 }
@@ -95,6 +100,65 @@ test('28 vagas: adultos e duas crianças GLB reais, com rigs independentes',()=>
     assert.equal(crowd.instances.size,0);
     assert.equal(p.mesh.children.length,0);
     assert.equal(sources.length,7);
+});
+test('P0 NPC R61: troca de mapa libera skeletons próprios, não altera rigs compartilhados',()=>{
+    const {crowd,manager,sources}=makeManager();
+    crowd.fill();
+    assert.equal(crowd.instances.size,28);
+    const cloned=[...crowd.instances.values()];
+    const shared=sources.map(s=>s.root.children[1].skeleton);
+    const sharedGeometry=cloned.map(r=>r.root.children[1]);
+    // Dois skinned meshes que apontam para o mesmo skeleton não devem
+    // provocar dispose duplo nem invalidar o modelo-fonte.
+    const extra=new Skinned();
+    extra.skeleton=cloned[0].root.children[1].skeleton;
+    cloned[0].root.add(extra);
+    crowd.release();
+    assert.equal(crowd.instances.size,0);
+    assert(cloned.every(r=>r.root.children[1].skeleton.disposed===1));
+    assert(shared.every(s=>s.disposed===0));
+    assert(manager.pedestrians.every(p=>p.mesh.children.length===0));
+    // Simula três trocas de cidade. Cada geração deve liberar seus
+    // próprios skeletons e criar clones válidos do mesmo cache GLB.
+    for(let round=0;round<3;round++){
+        manager.pedestrians=Array.from({length:28},
+            ()=>({mesh:new Group(),walkSpeed:2.6}));
+        crowd.fill();
+        assert.equal(crowd.instances.size,28);
+        const generation=[...crowd.instances.values()];
+        assert(generation.every(r=>r.root.children[1].skeleton.disposed===0));
+        crowd.release();
+        assert(generation.every(r=>r.root.children[1].skeleton.disposed===1));
+        assert(shared.every(s=>s.disposed===0));
+    }
+    assert.equal(sharedGeometry.length,28);
+});
+test('P0 NPC R61: policiais não recebem rigs de cães ou crianças no carregamento gradual',()=>{
+    const {crowd,manager,sources}=makeManager();
+    const officer={mesh:new Group()};
+    manager.roadblockOfficers=[officer];
+    sources.forEach(source=>source.state='missing');
+    sources[5].state='ready'; // menina antes dos adultos
+    sources[6].state='ready'; // menino
+    crowd.fill();
+    assert.equal(crowd.officers.size,0);
+    assert.equal(officer.mesh.children.length,0);
+    sources[5].state='missing';
+    sources[6].state='missing';
+    sources[2].state='ready'; // primeiro adulto chega antes do masculino
+    crowd.fill();
+    assert.equal(crowd.officers.size,1);
+    assert.equal(crowd.officers.get(officer).sourceId,'mendigo');
+    assert.equal(officer.mesh.children.length,1);
+    const officerRecord=crowd.officers.get(officer);
+    crowd.releaseOfficer(officer);
+    assert.equal(officerRecord.root.children[1].skeleton.disposed,1);
+    assert.equal(sources[2].root.children[1].skeleton.disposed,0);
+    assert.equal(officer.mesh.children.length,0);
+    sources[1].state='ready';
+    crowd.fill();
+    assert.equal(crowd.officers.get(officer).sourceId,'male');
+    crowd.release();
 });
 test('sem GLB disponível nunca fabrica pessoas de caixas',()=>{
     const {crowd,manager,sources}=makeManager();
