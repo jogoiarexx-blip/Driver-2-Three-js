@@ -4,6 +4,10 @@ Recriação experimental de Driver 2 para navegador, baseada em Three.js. O proj
 
 > **Checklist permanente do desenvolvimento:** [AUDITORIA-MESTRA-DRIVER2.md](AUDITORIA-MESTRA-DRIVER2.md). Contém avaliação de Chicago, gameplay, física, GLBs, performance, arquitetura, QA e prioridades P0–P3. **Consultar e atualizar em toda revisão**, com testes antes/depois, evidências, pendências e deploy. A auditoria inicial registrou 920/940 (20 falhas) na R58. A R59 recuperou a suíte de lógica: **942/942 testes verdes em Node 22 e 24** ([Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600150)), com smoke Chromium das quatro cidades **aprovado** ([Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600145)). A homologação Chromium, saves, partida integral e mobile segue separada; Pages publicado não equivale a jogo certificado.
 
+## R60 — Playtest real de navegador e correção de saves
+
+O [playtest automatizado P0](docs/QA-PLAYTEST-P0-R60.md) dirige com W/D, sai do veículo com E, caminha com W e valida saves reais após recarregar. Inclui correção da antiga limitação de 32 carros e restauração de Wrigley após carregamento progressivo. Evidência: [8 etapas Chromium aprovadas](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823989), [944/944 Node 22/24](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823994). A certificação humana de campanha e Android continua pendente.
+
 ## Executar
 
 Abra a página publicada em **https://jogoiarexx-blip.github.io/Driver-2-Three-js/**.
