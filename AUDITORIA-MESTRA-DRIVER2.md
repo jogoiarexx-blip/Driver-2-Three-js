@@ -6,6 +6,20 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R63 — Sprint P1 GAME-09 — checkpoints regionais intermediários (01/11/2026)
+
+**Base:** R62 `e91160b`; PR [#38](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/38).
+
+**Falha identificada:** a R62 admitia as seis missões regionais no schema V2 e restaurava a cidade/missionType, mas **não serializava `regionalState`**; entrar em Vegas C4 com um gerador já plantado voltava ao primeiro; após a primeira entrega do assalto, o segundo veículo não era reconstruído e os índices de frota poderiam divergir; a rota do helicóptero do Rio voltava ao começo; armamento da barcaça perdia countdown.
+
+**Implementação real:** `DriverRegionalMissions.checkpoint(g)` exporta somente tipo, fase/quantidade C4, contagem regressiva, carro entregue, e segmento/posição/relógio/perda do helicóptero. `restoreCheckpoint(g,data)` recupera estados validados, reconstrói marcador certo, gera a **limusine antes de aplicar `data.vehicles`** e ajusta malha animada do helicóptero. Compatível com saves V1/V2 anteriores sem `regional`, sem alterar `DriverHomeSave.VERSION` ou a chave localStorage. Não serializa objetos Three.js.
+
+**E2 confirmado:** Node 22 e 24, **957/957**, zero falhas [run 41302385567](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302385567); R62 tinha 952. Cinco cenários diretos: Vegas C4 em fase 2 e countdown até vitória, heist no segundo veículo com vitória, helicóptero do Rio retoma segmento e segue movimento, barcaça com bomba armada, rejeição de fragmentos incompatíveis.
+
+**E3 em validação:** workflow de Chromium [R63 P1 checkpoints](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302385602), com evidências JSON e PNG para iniciar, gravar, recarregar e prosseguir em C4, assalto, helicóptero e barcaça. Outros gates: playtest R60 P0 e R62 P1. **Só marcar E3 aprovado com SUCCESS**, sem confundir cenários controlados (não dirigiu rotas completas por teclado) com E4 humano.
+
+**Pendentes:** confirmação Android real E5, certificação E4 das missões do começo ao fim, qualquer regressão detectada nos jobs e persistência completa de missões não regionais fora deste escopo.
+
 ### R62 — Sprint P1 GAME-09 / ARCH-04 (migração e saves regionais)
 
 **Base:** `544c0e2` R61. **Código:** [PR #37](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/37).
@@ -212,7 +226,7 @@ Links de referência dos workflows:
 - [ ] **GAME-06 P1** jogar **cada missão completa** do início à vitória, por controles reais; gravar evidência de sucesso e falha.
 - [ ] **GAME-07 P1** verificar mudança Chicago→Havana→Vegas→Rio sem estado antigo, missão quebrada ou itens de cidade anterior.
 - [ ] **GAME-08 P1** repetir missão após derrota, checkpoint intermediário, troca de veículo e mudança de cidade.
-- [ ] **GAME-09 P1 [R62 E2 + E3 direcionado aprovados]** seis missões regionais admitidas pela validação; Vegas C4 gravada e restaurada no navegador em [run 41264434195](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41264434195); migração V1→V2 e rejeição de corrupção verificadas. **Pendentes:** checkpoints internos de missões regionais, Android real e stress de saves.
+- [ ] **GAME-09 P1 [R63 E2 aprovado, E3 em validação]** save V2 de seis missões regionais, migração V1→V2, e estados C4/assalto/helicóptero/barcaça; 957/957 Node 22/24. Aguardando prova de reload em Chromium antes de encerrar checkpoint intermediário. Android real e stress de saves permanecem pendentes.
 - [ ] **GAME-10 P1** comparar ritmo do jogo: física, objetivos, dificuldade, perseguições e variedade, sem inventar fidelidade às 40+ missões do PS1.
 - [ ] **GAME-11 P2** feedback de objetivo curto e específico (mapa, minimapa, distância, texto e som) em vez de textos excessivos.
 - [ ] **GAME-12 P2** mapear as atividades secundárias, recompensa, repetição e qualidade de replays; confirmar que não quebram progresso principal.
