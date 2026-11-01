@@ -1,0 +1,54 @@
+name: Driver 2 - R63 P1 regional checkpoints real browser
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/gameplay/regional-missions.js'
+      - 'js/gameplay/home-save.js'
+      - 'tests/arcade-regional-expansion.test.cjs'
+      - 'tests/playtest-gameforge-p1-checkpoints.cjs'
+      - '.github/workflows/p1-regional-checkpoints.yml'
+  pull_request:
+    paths:
+      - 'js/gameplay/regional-missions.js'
+      - 'js/gameplay/home-save.js'
+      - 'tests/arcade-regional-expansion.test.cjs'
+      - 'tests/playtest-gameforge-p1-checkpoints.cjs'
+      - '.github/workflows/p1-regional-checkpoints.yml'
+permissions:
+  contents: read
+jobs:
+  regional-checkpoints:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Tests of C4, heist, helicopter, barge state contracts
+        run: node --test tests/arcade-regional-expansion.test.cjs tests/city-home-save.test.cjs
+      - name: Install Chromium via Playwright
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start game server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/driver2-r63-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/driver2-r63-http.log
+          exit 1
+      - name: Checkpoint C4, heist and Rio reload through real browser
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/playtest-gameforge-p1-checkpoints.cjs
+      - name: Retain screenshots and JSON evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver2-r63-p1-checkpoint-evidence
+          path: qa-artifacts/r63-*
+          retention-days: 14
