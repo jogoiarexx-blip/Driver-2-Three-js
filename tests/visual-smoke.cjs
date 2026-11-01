@@ -41,6 +41,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
     await page.waitForFunction(()=>window.DriverGame&&window.DriverGame.city.ready&&
       window.DriverGame.playerCar&&window.DriverBoot.sessionReady,null,{timeout:120000});
     for(const city of CITIES){
+      console.log('VISUAL_CITY_START',city);
       if(city!=='chicago') {
         const ok=await page.evaluate(id=>window.DriverGame.requestCityChange(id),city);
         assert(ok,'Falha ao carregar '+city);
@@ -462,21 +463,40 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       await page.screenshot({path:path.join(DIR,city+'-road-intersection.png')});
       // Amostra de frames do navegador headless: não representa FPS do usuário.
       const perf=await page.evaluate(async()=>{
-        const frames=[];
-        let prev=performance.now();
-        for(let i=0;i<90;i++){
-          await new Promise(resolve=>requestAnimationFrame(t=>{
-            frames.push(t-prev);prev=t;resolve();
-          }));
+        const frames=[],budgetMs=10000;
+        const started=performance.now();
+        let prev=started;
+        // Software WebGL may run at 1-5 FPS. Sample UP TO 90 frames,
+        // with a strict 10s wall-time budget: fewer samples are reported,
+        // never replaced with invented 60-FPS data.
+        for(let i=0;i<90&&performance.now()-started<budgetMs;i++){
+          const stamp=await new Promise(resolve=>{
+            let done=false;
+            const guard=setTimeout(()=>{
+              if(!done){done=true;resolve(null);}
+            },1500);
+            requestAnimationFrame(t=>{
+              if(done)return;
+              done=true;clearTimeout(guard);resolve(t);
+            });
+          });
+          if(stamp===null)break;
+          frames.push(stamp-prev);prev=stamp;
         }
-        const samples=frames.slice(5).filter(x=>x>0);
+        const samples=frames.slice(2).filter(x=>x>0);
+        if(samples.length<5)throw Error('WebGL stalled: only '+
+          frames.length+' frames in '+Math.round(performance.now()-started)+'ms');
         const avg=samples.reduce((a,b)=>a+b,0)/samples.length;
         const g=window.DriverGame;
         return {meanFrameMs:Number(avg.toFixed(2)),
           sampleFPS:Number((1000/avg).toFixed(1)),
+          sampledFrames:samples.length,
+          sampleWindowMs:Math.round(performance.now()-started),
+          softwareRendererBudgetMs:budgetMs,
           renderCalls:g.renderer.info.render.calls,
           triangles:g.renderer.info.render.triangles};
       });
+      console.log('VISUAL_CITY_PASS',city,JSON.stringify(perf));
       report.maps.push({...initial,driving,walking:{
         from:beforeWalk,to:afterWalk,distance:Math.hypot(
           afterWalk.x-beforeWalk.x,afterWalk.z-beforeWalk.z)},
