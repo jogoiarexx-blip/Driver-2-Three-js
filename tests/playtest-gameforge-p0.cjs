@@ -257,6 +257,16 @@ async function moveUntil(key,test,timeout=65000,arg=null){
         return result;
       });
     });
+    // Physics replay is paused; without an explicit camera render the
+    // screenshot still points to the old street and is invalid evidence.
+    await page.evaluate(()=>{
+      const g=window.DriverGame,car=g.playerCar;
+      g.camera.position.set(
+        car.x-Math.sin(car.heading)*10,car.y+5,
+        car.z-Math.cos(car.heading)*10);
+      g.camera.lookAt(car.x,car.y+1.5,car.z);
+      g.renderer.render(g.scene,g.camera);
+    });
     await shot('05-rail-underpass');
     assert.deepEqual(run.pageErrors,[],'uncaught browser errors');
     run.status='PASS';
