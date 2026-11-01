@@ -165,6 +165,18 @@ class DriverHomeSave {
         if(typeof car.updateTransform==='function')car.updateTransform();
         return true;
     }
+    // R64: um save com veículo de setor ainda não carregado deixa dados
+    // pendentes. Ao reconstruir frota/mudar cidade, esses dados pertencem
+    // à geração antiga e não podem "infectar" o próximo veículo criado.
+    static clearDeferredVehicleRestore(game) {
+        if(!game)return false;
+        const hadPending=Array.isArray(game._pendingVehicleRestore) &&
+            game._pendingVehicleRestore.length>0 ||
+            game._pendingPlayerVehicleIndex!=null;
+        game._pendingVehicleRestore=null;
+        game._pendingPlayerVehicleIndex=null;
+        return !!hadPending;
+    }
     static restoreDeferredVehicle(game,car) {
         const pending=game?._pendingVehicleRestore;
         if(!Array.isArray(pending)||!pending.length)return false;
