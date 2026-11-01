@@ -7,6 +7,9 @@ class DriverHomeSave {
     static KEY = 'driver2-three-save-v1';
     static VERSION = 1;
     static CITIES = ['chicago','havana','vegas','rio'];
+    // R60: Chicago currently creates 43+ cars. The former 32-car limit
+    // silently rejected real saves even though capture() included the fleet.
+    static MAX_VEHICLES = 128;
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
@@ -106,7 +109,7 @@ class DriverHomeSave {
             DriverHomeSave.CITIES.includes(data.city) &&
             DriverHomeSave.TYPES.includes(data.mission?.type) &&
             Array.isArray(data.vehicles) && data.vehicles.length>=1 &&
-            data.vehicles.length<=32 && typeof data.tanner?.x==='number' &&
+            data.vehicles.length<=DriverHomeSave.MAX_VEHICLES && typeof data.tanner?.x==='number' &&
             typeof data.tanner?.z==='number' &&
             Number.isFinite(data.tanner.x) && Number.isFinite(data.tanner.z) &&
             (data.interior==null||['home','warehouse','diner','garage'].includes(data.interior));
