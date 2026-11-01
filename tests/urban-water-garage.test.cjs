@@ -82,14 +82,17 @@ test('superfície da rampa é progressiva e termina na plataforma',()=>{
 });
 test('carro permanece no asfalto sob a rampa pedonal, sem salto ou parede invisível',()=>{
     const c=cityMock(),car=physicsCar(-14,-218,Math.PI,34,c);
-    const effect=fx(), ys=[];
+    const effect=fx(), ys=[], startY=car.y;
     for(let i=0;i<17;i++){
         Vehicle.prototype.updatePhysics.call(car,.05,
             {up:true},c,effect,null,true);
         ys.push(car.y);
     }
     // A geometria elevada pertence aos pedestres; não é uma rampa de carro.
-    assert.ok(Math.max(...ys)<.1,JSON.stringify(ys));
+    // O mock começa 0,33 m sobre a rampa pedonal; o carro deve descer,
+    // nunca subir até o deck quando usa a superfície de veículo.
+    assert.ok(Math.max(...ys)<=startY+1e-6,JSON.stringify(ys));
+    assert.ok(Math.abs(car.y)<.01,'o veículo deve assentar no asfalto');
     assert.ok(car.z<-235,'o carro deve avançar sob a estação');
     assert.ok(Math.abs(car.vy)<8);
     for(let i=1;i<ys.length;i++)
