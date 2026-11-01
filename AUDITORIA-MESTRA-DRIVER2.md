@@ -6,6 +6,17 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R61 — Sprint P0 NPC-03 — 31/10/2026 (E2/E3 em validação)
+
+**Base:** main `f49e297` R60. Implementação no [PR #36](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/36).
+
+- **Causa identificada 1 — ciclo de vida GLB:** `DriverUploadedPedestrianCrowd.detach()` só removia o contêiner e limpava `AnimationMixer`. Depois o gerenciador chamava `GPUResourceUtils.disposeSubtree` no grupo já sem os clones; os `Skeleton` individuais com possíveis `boneTexture` não recebiam `dispose()`. R61 agora descarta exatamente uma vez os esqueletos **clonados**, conservando geometria, material, textura e rigs das fontes compartilhadas.
+- **Causa identificada 2 — policial com rig errado:** em `attachOfficer()`, fallback era `available()[0]`. Como o loader prioriza crianças e cães, antes do adulto GLB carregar um oficial de bloqueio podia virar criança/cão. R61 filtra `species==='adult'` e só vincula quando houver modelo adulto. O rig masculino continua prioritário quando presente.
+- **E2 novo:** testes de 28 vagas × quatro gerações (trocas de mapa), descarte de skeletons sem duplicação, fonte preservada, policiais sem crianças/cães na fila, adulto alternativo e masculino; validação total Node 22/24 via GitHub Actions.
+- **E3 planejado:** executar `visual-qa.yml` integral porque agora o workflow inclui `driver-uploaded-pedestrian-crowd.js` nos caminhos de acionamento. Não alegar ausência de vazamento após horas no Android sem medição E5.
+- **Não alterar:** as alturas específicas dos três cães, dos dois modelos infantis, a representação das 28 vagas, as missões ou colisores de Chicago.
+- **Pendências independentes:** MAP-05, CAR-04, P0-10 (E4 humano e E5 hardware) permanecem abertos; NPC-03 só deve ser marcado concluído após Node e smoke visual sem regressões.
+
 ### R60 — Evidência visual integral confirmada
 
 - **E3 workflow completo APROVADO:** [GitHub Actions #41261882349](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261882349), **55 etapas SUCCESS**; sequência de Chicago, Undercover, R45, rios, pontes, dez modos e smoke das quatro cidades.
@@ -121,7 +132,7 @@ Links de referência dos workflows:
 - [x] **P0-07 [TREM] [E2+E3, run 41261823989]** rampa pedonal e passagem rodoviária inferior verificadas no motor real: deslocamento até z=-251,27, sem salto, bloqueio, água nem dano. Limites e restantes trechos permanecem sob CAR-04/MAP-05.
 - [x] **P0-08 [CACHE] [E2]** teste antigo procura versão swim-retarget-r1 do Tanner; conferir se só o cache-busting R58 mudou ou se há regressão de ordem/retargeting.
 - [x] **P0-09 [VISUAL] [E3 — 55 passos SUCCESS, run 41261882349]** workflow visual integral concluiu incluindo Chicago R22–R45, Goose Island, rios/pontes, dez modos e quatro cidades. O crosswalk foi corrigido na R59; a R60 deixou de tratar seis frames lentos no SwiftShader como crash. Baixo FPS permanece problema de medição E5, não certificação de GPU/Android.
-- [ ] **P0-10 [RELEASE]** lógica 944/944, playtest E3 com teclado e save/reload aprovados na R60; **ainda faltam** workflow visual integral, jogo humano/campanha E4, desempenho E5 em GPU real/Android e certificação de release antes do selo ESTÁVEL.
+- [ ] **P0-10 [RELEASE]** R60: lógica 944/944, playtest E3 com teclado/save/reload e workflow visual integral (55 etapas) aprovados. **Ainda faltam** missões/campanha por jogador humano E4, desempenho/memória E5 em GPU real/Android, mapa/setores P0 remanescentes e critérios de release antes do selo ESTÁVEL.
 
 ### Causas observadas nos logs (não confundir hipóteses com fatos)
 - O job de lógica mais recente deste levantamento registrou 20 falhas, incluindo CylinderGeometry ausente, Physics.update indisponível, comparação -0/0, expectativas de contagem de faixas/postes, clima/rig e pedestrian GLB.
@@ -215,7 +226,7 @@ Links de referência dos workflows:
 
 - [x] **NPC-01** há modelos GLB variados, incl. idosos, crianças, mulheres, homens e cães, além de sistema de distribuição.
 - [x] **NPC-02** existe infraestrutura de calçadas, travessias, reações e limpeza de recursos.
-- [ ] **NPC-03 P0** corrigir/testar falhas de 28 vagas GLB, fallback de carregamento e descarte de clones ao mudar mapa.
+- [ ] **NPC-03 P0 [R61 implementação em verificação]** corrigidos no PR #36 o descarte de skeletons clonados em trocas de mapa e a seleção exclusiva de adultos para policiais GLB. Testes novos cobrem 4 gerações de 28 vagas; exigir CI E2/E3 verde antes de encerrar.
 - [ ] **NPC-04 P1** validar tamanho real de cada criança e cão; pastor-alemão maior, demais cães menores, sem gigantes.
 - [ ] **NPC-05 P1** revisar foot IK/solo, animações com rigs diferentes, pés atravessando a calçada e deslizamento.
 - [ ] **NPC-06 P1** garantir pedestres e cães **em Undercover e Passeio Livre**, com spawn verificável e distribuição proporcional.
