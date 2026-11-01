@@ -13,6 +13,30 @@ fs.mkdirSync(DIR,{recursive:true});
 const BASE=process.env.DRIVER_QA_URL||'http://127.0.0.1:4173/';
 const CITIES=['chicago','havana','vegas','rio'];
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function waitForTannerTravel(page,start,label){
+  try{
+    // On software WebGL a 400-850ms sleep may contain ZERO rendered
+    // frames. Wait for actual movement, not an arbitrary wall delay.
+    await page.waitForFunction(origin=>{
+      const p=window.DriverGame?.tanner?.group?.position;
+      return p&&Math.hypot(p.x-origin.x,p.z-origin.z)>.05;
+    },{x:start.x,z:start.z},{timeout:12000});
+  }catch(error){
+    const state=await page.evaluate(()=>{
+      const g=window.DriverGame,p=g?.tanner?.group?.position;
+      return {city:g?.currentCityKey,mode:g?.mode,
+        isPaused:g?.isPaused,position:p?{x:p.x,z:p.z}:null,
+        fps:document.getElementById('fps-counter')?.textContent,
+        forward:!!g?.input?.up};
+    }).catch(e=>({inspectionError:String(e)}));
+    throw Error('Tanner movement timed out at '+label+': '+
+      JSON.stringify(state)+' / '+String(error));
+  }finally{
+    await page.evaluate(()=>{
+      if(window.DriverGame)window.DriverGame.input.up=false;
+    }).catch(()=>{});
+  }
+}
 (async()=>{
   const browser=await chromium.launch({headless:true,args:[
     '--use-gl=angle','--use-angle=swiftshader',
@@ -192,8 +216,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       });
       assert.equal(beforeWalk.mode,'on_foot','Falha ao sair do carro em '+city);
       await page.evaluate(()=>{window.DriverGame.input.up=true});
-      await sleep(400);
-      await page.evaluate(()=>{window.DriverGame.input.up=false});
+      await waitForTannerTravel(page,beforeWalk,city+' main street');
       const afterWalk=await page.evaluate(()=>{
         const p=window.DriverGame.tanner.group.position;
         return {x:p.x,z:p.z};
@@ -274,10 +297,9 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
-        await sleep(1150);
+        await waitForTannerTravel(page,starting,'Rio Copacabana');
         const walking=await page.evaluate(()=>{
           const g=window.DriverGame;
-          g.input.up=false;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
         assert(Math.hypot(walking.x-starting.x,walking.z-starting.z)>.05,
@@ -335,9 +357,9 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
-        await sleep(850);
+        await waitForTannerTravel(page,first,'Havana Malecon');
         const next=await page.evaluate(()=>{
-          const g=window.DriverGame;g.input.up=false;
+          const g=window.DriverGame;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
         const distance=Math.hypot(next.x-first.x,next.z-first.z);
@@ -400,9 +422,9 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           g.cameraRig.lastMode=-1;g.cameraRig.focus=null;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
-        await sleep(850);
+        await waitForTannerTravel(page,begin,'Las Vegas Strip');
         const end=await page.evaluate(()=>{
-          const g=window.DriverGame;g.input.up=false;
+          const g=window.DriverGame;
           return {x:g.tanner.group.position.x,z:g.tanner.group.position.z};
         });
         const walkDistance=Math.hypot(end.x-begin.x,end.z-begin.z);
