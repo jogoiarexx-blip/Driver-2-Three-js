@@ -6,6 +6,17 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R60 — P0 Playtest E3 (01/11/2026, revisão em PR #35)
+
+**Base anterior:** main R59 `58e664a`. **Comparativo real:** R59 942/942 testes Node e dois P0 não certificados em browser; R60 944/944 em **Node 22 e Node 24** ([Actions #41261823994](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823994)). Novo [playtest Game Forge #41261823989](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823989) **SUCCESS** em Chromium real, com passos/screenshot/JSON.
+
+- **P0-07 [TREM] E2 + E3 direcionado APROVADO:** 23 passos físicos no mesmo motor do player, carro em `(-14,-218)` avançou até `z=-251,27`, altura máxima `0`, nenhum colisor bloqueante, água ou dano na estação. Travessia não prova todas as bordas, cruzamentos ou missões completas.
+- **P0-10 [SAVE] BUG REAL CORRIGIDO:** `DriverHomeSave.valid()` restringia a 32 veículos, rejeitando saves legítimos com 43 carros. R60 limita a 128 e testa 43/129. Segundo defeito: `loadHomeGame()` começava com 42 carros e Wrigley era criado posteriormente; salvamento do 43º carro não era aplicado. Agora a restauração aguarda esse spawn e reaplica dano/estado, com teste Node de posição/dano/índice do jogador e prova no navegador de dano **33** no carro tardio após reload. Sem modificar os controles nem acelerar a física.
+- **Playtest baseado em Game Forge, evidências estilo Claude Code Game Studios:** `tests/playtest-gameforge-p0.cjs` inicia menu de verdade, dirige com W, vira com D, sai com E, caminha com W, grava e recarrega `localStorage`, repete a rampa via física e gera screenshots + JSON de etapas, duração, estado, erros e falhas. [Protocolo detalhado](docs/QA-PLAYTEST-P0-R60.md).
+- **P0-09 [VISUAL] em certificação integral:** R59 CI vermelho devido à heurística de FPS de SwiftShader que equiparava 6 frames lentos a renderização travada; R60 amplia orçamento de amostra para 14 s, tolera FPS baixo registrando insuficiência e só classifica ausência prolongada de frames como erro. Aprovou o playtest direcionado; workflow visual completo deve concluir antes de marcar P0-09 como finalizado.
+- **P0-10 [RELEASE] AINDA ABERTO:** evidência E3 com teclas é automatizada, **não jogabilidade humana E4**, nem desempenho E5 de GPU/Android ou campanha 15/15. Não rotular jogo de `100% COMPLETO` ou `ESTÁVEL CERTIFICADO` apenas com Node/Pages.
+- **Escopo não coberto nesta revisão:** 43 veículos simultâneos em tráfego real, 15 missões humanas completas, Android, FPS em GPU real, Gamepads, cobertura de todos os níveis do PS1.
+
 ### R59 — 31/10/2026 — Sprint A P0 (Node e smoke das quatro cidades aprovados)
 
 **Base:** main a7d501a7; revisão preparada em branch `fix/driver2-r59-p0-qa`. Branch de integração `fix/driver2-r59-p0-qa`, [PR #34](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/34). Evidência E2 confirmada para Node 22 e 24; E3/E4/E5 continuam condicionadas a teste específico.
@@ -100,10 +111,10 @@ Links de referência dos workflows:
 - [x] **P0-04 [R58] [E2]** asserção da porta compara 0 com -0 via assert.strictEqual: classificar se é só representação numérica, corrigir no teste ou na saída sem mascarar ângulos não nulos.
 - [x] **P0-05 [PAVIMENTO E MOBILIÁRIO] [E2]** corrigir/investigar testes de quantidade/instâncias de faixas e postes, travessias na água e preservação de elementos destrutíveis. Não “atualizar números esperados” sem medir a cena montada.
 - [x] **P0-06 [PEDESTRES GLB] [E2]** três falhas de simulação das 28 vagas, contingência de carregamento GLB e limpeza de clones/GPU: diferenciar teste desatualizado de vazamento real.
-- [ ] **P0-07 [TREM]** falha no teste de impulso vertical na rampa da estação: reproduzir fisicamente e eliminar salto/parede invisível sem retirar colisores válidos.
+- [x] **P0-07 [TREM] [E2+E3, run 41261823989]** rampa pedonal e passagem rodoviária inferior verificadas no motor real: deslocamento até z=-251,27, sem salto, bloqueio, água nem dano. Limites e restantes trechos permanecem sob CAR-04/MAP-05.
 - [x] **P0-08 [CACHE] [E2]** teste antigo procura versão swim-retarget-r1 do Tanner; conferir se só o cache-busting R58 mudou ou se há regressão de ordem/retargeting.
-- [ ] **P0-09 [VISUAL]** fazer o workflow visual passar de ponta a ponta; a última execução falhou no teste de crosswalk/terreno. Em seguida rodar smoke WebGL nas quatro cidades.
-- [ ] **P0-10 [RELEASE]** impedir que “publicado no Pages” seja reportado como “jogado e validado”: reunir QA verde + Playwright + saves + gameplay antes de selo ESTÁVEL.
+- [ ] **P0-09 [VISUAL]** P0 smoke R60 passou; workflow integral das quatro cidades ainda requer SUCCESS. O bloqueio anterior do crosswalk foi corrigido na R59, mas a coleta de FPS em SwiftShader permanecia classificando poucos frames como crash. R60 registra FPS baixo sem mascarar 6s sem frames.
+- [ ] **P0-10 [RELEASE]** lógica 944/944, playtest E3 com teclado e save/reload aprovados na R60; **ainda faltam** workflow visual integral, jogo humano/campanha E4, desempenho E5 em GPU real/Android e certificação de release antes do selo ESTÁVEL.
 
 ### Causas observadas nos logs (não confundir hipóteses com fatos)
 - O job de lógica mais recente deste levantamento registrou 20 falhas, incluindo CylinderGeometry ausente, Physics.update indisponível, comparação -0/0, expectativas de contagem de faixas/postes, clima/rig e pedestrian GLB.
