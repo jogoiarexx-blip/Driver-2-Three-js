@@ -108,6 +108,77 @@ class DriverRegionalMissions {
         }
         return true;
     }
+    // R63: guardar somente estado lógico numérico, jamais objetos Three.js,
+    // malhas, referências cíclicas ou cópias das rotas/cidades.
+    static checkpoint(g){
+        const s=g.regionalState;
+        if(!s || s.type!==g.missionType || !this.isRegional(s.type))
+            return null;
+        const data={type:s.type};
+        if(s.type==='story_vegas_c4'||s.type==='story_rio_barge'){
+            data.phase=s.phase;data.planted=s.planted;
+            data.countdown=s.countdown;
+        }else if(s.type==='story_vegas_heist'){
+            data.delivered=s.delivered;
+        }else if(s.type==='story_rio_helicopter'){
+            data.heliIndex=s.heliIndex;
+            data.heliAt={x:s.heliAt.x,z:s.heliAt.z};
+            data.seconds=s.seconds;data.lost=s.lost;
+        }
+        return data;
+    }
+    static restoreCheckpoint(g,raw){
+        const s=g.regionalState;
+        if(!raw||!s||raw.type!==s.type||g.missionType!==s.type ||
+            !this.isRegional(s.type))return false;
+        const bounded=(v,min,max,fallback=0)=>typeof v==='number' &&
+            Number.isFinite(v)?Math.max(min,Math.min(max,v)):fallback;
+        if(s.type==='story_vegas_c4'||s.type==='story_rio_barge'){
+            // Uma carga só avança a fase quando plantada pelo jogador.
+            // Não permitir forjar estados onde as contagens divergem.
+            const phase=Math.floor(bounded(raw.phase,0,s.sites.length));
+            const planted=Math.floor(bounded(raw.planted,0,s.sites.length));
+            const countdown=bounded(raw.countdown,0,13);
+            if(phase!==planted || (countdown>0&&phase!==s.sites.length))
+                return false;
+            s.phase=phase;s.planted=planted;s.countdown=countdown;
+            if(phase<s.sites.length){
+                this.nextSite(g,s); // recriar o objetivo e marcador certo
+            }else{
+                g.clearMissionMarkers();
+                document.getElementById('mission-subcounter')?.classList.remove('hidden');
+            }
+        }else if(s.type==='story_vegas_heist'){
+            s.delivered=Math.floor(bounded(raw.delivered,0,1));
+            if(s.delivered===1){
+                // A primeira entrega cria a limusine. Recriá-la ANTES de
+                // restaurar a frota para alinhar índices e danos do save.
+                this.car(g,{name:'LIMUSINE DE LUXO',color:0xc16273,
+                    bodyStyle:'limo',isTarget:false,x:0,z:165,maxSpeed:55});
+                document.getElementById('objective-banner').textContent=
+                    'Carro forte guardado. Roube a limousine e volte ao abrigo.';
+            }
+        }else if(s.type==='story_rio_helicopter'){
+            const point=raw.heliAt;
+            if(!point||typeof point.x!=='number'||
+                typeof point.z!=='number'||!Number.isFinite(point.x)||
+                !Number.isFinite(point.z))return false;
+            s.heliIndex=Math.floor(bounded(raw.heliIndex,0,s.route.length-1));
+            s.heliAt={
+                x:bounded(point.x,-410,410),
+                z:bounded(point.z,-410,410)
+            };
+            s.seconds=bounded(raw.seconds,0,300);
+            s.lost=bounded(raw.lost,0,12);
+            s.heli?.position.set(s.heliAt.x,
+                23+Math.sin(s.seconds*2),s.heliAt.z);
+            if(s.heli?.userData?.rotor)
+                s.heli.userData.rotor.rotation.y=s.seconds*22;
+        }
+        // Ambulância e Jericho não têm fase adicional; posição/danos
+        // já são recuperados pela frota serializada em DriverHomeSave.
+        return true;
+    }
     static nextSite(g,s){
         const target=s.sites[s.phase];
         g.clearMissionMarkers();

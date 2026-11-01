@@ -102,6 +102,9 @@ class DriverHomeSave {
                 lost:game.dropDirector.lost,
                 safeSeconds:game.dropDirector.safeSeconds
             }:null,
+            regional:typeof DriverRegionalMissions!=='undefined' &&
+                DriverRegionalMissions.isRegional(game.missionType)?
+                DriverRegionalMissions.checkpoint(game):null,
             completed:Array.from(new Set([
                 ...Array.from(game.completedMissions||[]),
                 ...Array.from(game.chapterProgress?.regionalCompleted||[])
@@ -186,6 +189,12 @@ class DriverHomeSave {
             game.changeCity(data.city);
         }
         game.startMission(data.mission.type);
+        // O segundo carro do assalto só nasce após a primeira entrega.
+        // Reconstruir a fase ANTES de aplicar posições por índice.
+        if(data.regional &&
+            typeof DriverRegionalMissions!=='undefined' &&
+            DriverRegionalMissions.isRegional(game.missionType))
+            DriverRegionalMissions.restoreCheckpoint(game,data.regional);
         // Restaura a frota dinâmica ANTES de aplicar posições persistidas.
         // Do contrário os carros adicionais não recebem o estado salvo.
         if(data.leaving&&game.missionType==='story_leaving'&&game.leavingDirector)
