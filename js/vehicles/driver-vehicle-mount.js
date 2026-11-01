@@ -167,9 +167,11 @@ class DriverVehicleMount {
     static update(engine,dt){
         const s=engine.vehicleMountTransition;
         if(!s)return false;
-        // Substeps limitados para não avançar 1,5s em um frame travado.
+        // Keep the cinematic duration close to wall time on weak GPUs.
+        // A 250ms maximum prevents instant completion after tab suspension
+        // without stretching a 1.2s exit into many seconds at low FPS.
         s.clock=Math.min(s.duration,s.clock+
-            Math.max(0,Math.min(.08,Number(dt)||0)));
+            Math.max(0,Math.min(.25,Number(dt)||0)));
         const t=this.clamp(s.clock/s.duration);
         s.progress=t;
         const style=s.bike?'motorcycle':'car';
