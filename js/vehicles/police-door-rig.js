@@ -122,7 +122,8 @@ class DriverPoliceDoorRig {
     static update(vehicle,dt){
         const rig=vehicle?.policeDoorRig;
         if(!rig||rig.phase==='closed')return false;
-        rig.clock+=Math.min(.08,Math.max(0,dt));
+        // Match the bounded wall-clock delta used by civilian doors.
+        rig.clock+=Math.min(.25,Math.max(0,Number(dt)||0));
         const angle=this.progress(rig.clock);
         // Porta esquerda: no GLB nativo, X positivo aponta para trás
         // e Z negativo aponta para fora (motor usa Ry(+90°)).
