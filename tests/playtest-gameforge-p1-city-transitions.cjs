@@ -73,17 +73,20 @@ async function shot(label){
    null,{timeout:150000});
   const initial=await step('Chicago boot and real deferred Wrigley-car save',()=>page.evaluate(()=>{
    const g=window.DriverGame,s=g.homeSave.capture(g);
-   s.vehicles.push({...s.vehicles[0],x:333,z:-238,damage:77});
+   // O estádio pode criar um carro durante startMission; reservar mais
+   // snapshots do que qualquer spawn imediato, mantendo o save válido.
+   for(let i=0;i<8;i++)s.vehicles.push({
+    ...s.vehicles[0],x:333+i,z:-238,damage:77});
    s.playerIndex=s.vehicles.length-1;
    if(!g.homeSave.restore(g,s))throw Error('restore refused');
-   if(g._pendingVehicleRestore?.length!==1)
+   if(!(g._pendingVehicleRestore?.length>0))
     throw Error('did not reproduce pending late vehicle save');
    g.chapterProgress.completeRegional('story_vegas_ambulance');
    g.completedMissions.add('story_vegas_ambulance');
    return {pending:g._pendingVehicleRestore.length,
     playerIndex:g._pendingPlayerVehicleIndex,vehicles:g.vehicles.length};
   }));
-  assert.equal(initial.pendingVehicleRestore,1);
+  assert(initial.pendingVehicleRestore>0);
   await shot('01-chicago-pending');
 
   const havana=await step('Chicago to Havana clears stale deferred save',()=>page.evaluate(
