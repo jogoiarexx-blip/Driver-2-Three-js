@@ -85,6 +85,24 @@ class DriverUploadedPedestrianCrowd {
         record.mixer.stopAllAction();
         record.mixer.uncacheRoot(record.root);
         record.container.parent?.remove(record.container);
+        // Clones GLB reusam geometria/material/texturas, mas cada cópia
+        // possui Skeleton próprio e pode alocar boneTexture na GPU.
+        // O disposeSubtree do gerenciador roda APÓS o detach e já não
+        // alcança estes rigs; liberar só os esqueletos dos clones aqui.
+        // Não destruir skeleton, geometria ou materiais do modelo-fonte.
+        const original=new Set();
+        (record.source?.root||record.source?.asset)?.traverse?.(node=>{
+            if(node.isSkinnedMesh&&node.skeleton)
+                original.add(node.skeleton);
+        });
+        const disposed=new Set();
+        record.root.traverse(node=>{
+            if(!node.isSkinnedMesh||!node.skeleton)return;
+            const skeleton=node.skeleton;
+            if(disposed.has(skeleton)||original.has(skeleton))return;
+            disposed.add(skeleton);
+            skeleton.dispose?.();
+        });
     }
 
     releaseSlot(index) {
@@ -154,9 +172,12 @@ class DriverUploadedPedestrianCrowd {
 
     attachOfficer(officer) {
         if(this.officers.has(officer))return;
-        const models=this.available();
+        // Crianças e cães carregam antes dos adultos. Nunca usar seus rigs
+        // como policiais durante a inicialização progressiva do Undercover.
+        const adults=this.available().filter(model=>
+            (model.config?.species||'adult')==='adult');
         const male=this.manager.malePedestrian;
-        const model=models.includes(male)?male:models[0];
+        const model=adults.includes(male)?male:adults[0];
         if(!model||!officer.mesh)return;
         try{
             const record=this.makeInstance(model,officer,
