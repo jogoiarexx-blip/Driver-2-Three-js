@@ -150,11 +150,34 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         'Saída segura indisponível em '+city+': '+JSON.stringify(exitStarted));
       // A saída de moto/carro leva ~1,2s; esperar o ciclo terminar
       // antes de posicionar o jogador para o teste de caminhada.
-      await page.waitForFunction(()=>{
-        const g=window.DriverGame;
-        return g.mode==='on_foot'&&!g.policeDoorTransition&&
-          !g.vehicleMountTransition;
-      },null,{timeout:6000});
+      try{
+        await page.waitForFunction(()=>{
+          const g=window.DriverGame;
+          return g.mode==='on_foot'&&!g.policeDoorTransition&&
+            !g.vehicleMountTransition;
+        },null,{timeout:6000});
+      }catch(error){
+        // Real browser diagnostics distinguish slow WebGL from invalid
+        // stand points, a cancelled rig or a stuck gameplay state.
+        const state=await page.evaluate(()=>{
+          const g=window.DriverGame,transition=g.vehicleMountTransition;
+          return {
+            city:g.currentCityKey,mode:g.mode,isPaused:g.isPaused,
+            mount:transition?{
+              kind:transition.kind,progress:transition.progress,
+              elapsed:transition.clock,duration:transition.duration
+            }:null,
+            policeDoor:g.policeDoorTransition?.vehicle?.policeDoorRig?
+              {phase:g.policeDoorTransition.vehicle.policeDoorRig.phase,
+               clock:g.policeDoorTransition.vehicle.policeDoorRig.clock}:null,
+            frameLabel:document.getElementById('fps-counter')?.textContent,
+            nextStand:DriverVehicleMount.chooseStandPoint(
+              g,g.playerCar,'exit')
+          };
+        }).catch(e=>({inspectionError:String(e)}));
+        throw Error('Vehicle exit timeout in '+city+': '+
+          JSON.stringify(state)+' / '+String(error));
+      }
       await page.evaluate(()=>{
         const g=window.DriverGame;
         g.tanner.setPosition(200,0,-170,Math.PI);
