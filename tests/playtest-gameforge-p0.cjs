@@ -144,7 +144,11 @@ async function moveUntil(key,test,timeout=65000,arg=null){
 
     const saved=await step('real localStorage save with actual fleet',async()=>{
       const result=await page.evaluate(()=>{
-        const g=window.DriverGame,snapshot=g.homeSave.capture(g);
+        const g=window.DriverGame;
+        // A real late-spawned Wrigley V8 must restore its non-default
+        // damage, not only the number of vehicles in the fleet.
+        if(g.wrigleyCar)g.wrigleyCar.damage=33;
+        const snapshot=g.homeSave.capture(g);
         const stored=g.homeSave.write(snapshot);
         const read=g.homeSave.read();
         return {stored,valid:!!read,vehicleCount:snapshot.vehicles.length,
@@ -152,13 +156,16 @@ async function moveUntil(key,test,timeout=65000,arg=null){
           playerIndex:snapshot.playerIndex,
           x:snapshot.vehicles[snapshot.playerIndex].x,
           z:snapshot.vehicles[snapshot.playerIndex].z,
-          mission:snapshot.mission.type};
+          mission:snapshot.mission.type,
+          lateVehicleDamage:read?.vehicles?.at(-1)?.damage};
       });
       assert(result.stored&&result.valid,'game rejected save from active scene');
       assert.equal(result.savedVehicleCount,result.vehicleCount,
         'save truncated a live vehicle fleet');
       assert(result.vehicleCount>32,
         'fixture should exercise historic 32-car save regression');
+      assert.equal(result.lateVehicleDamage,33,
+        'must have a distinctive late-spawned vehicle state');
       return result;
     });
 
@@ -198,12 +205,25 @@ async function moveUntil(key,test,timeout=65000,arg=null){
         const car=g.playerCar;
         return {ok,x:car.x,z:car.z,city:g.currentCityKey,
           mission:g.missionType,mode:g.mode,vehicles:g.vehicles.length,
-          storedVehicles:stored.vehicles.length};
+          storedVehicles:stored.vehicles.length,
+          deferred:g._pendingVehicleRestore?.length||0};
       });
       assert(rest.ok,'loadHomeGame rejected persisted save');
       assert.equal(rest.city,'chicago');
-      assert.equal(rest.vehicles,saved.data.savedVehicleCount,
-        'fleet did not recover after reload');
+      // The Wrigley car legitimately appears after the stadium LOD loads.
+      // Verify its restoration AFTER it actually exists.
+      await page.waitForFunction(count=>
+        window.DriverGame?.vehicles?.length===count,
+        saved.data.savedVehicleCount,{timeout:120000,polling:300});
+      const last=await page.evaluate(()=>{
+        const g=window.DriverGame;
+        return {count:g.vehicles.length,damage:g.vehicles.at(-1).damage,
+          pending:!!g._pendingVehicleRestore};
+      });
+      assert.equal(last.count,saved.data.savedVehicleCount);
+      assert.equal(last.damage,33,
+        'late Wrigley car did not receive saved damage');
+      assert.equal(last.pending,false,'unapplied saved vehicles remain');
       assert.equal(rest.mode,'driving');
       assert(Math.hypot(rest.x-saved.data.x,rest.z-saved.data.z)<.15,
         'driver car position did not restore');
