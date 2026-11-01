@@ -1,0 +1,52 @@
+name: Driver 2 - P0 smoke de carro para Tanner a pe
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/vehicles/driver-vehicle-mount.js'
+      - 'js/vehicles/police-door-rig.js'
+      - 'tests/visual-smoke.cjs'
+      - '.github/workflows/vehicle-exit-smoke.yml'
+  pull_request:
+    paths:
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/vehicles/driver-vehicle-mount.js'
+      - 'js/vehicles/police-door-rig.js'
+      - 'tests/visual-smoke.cjs'
+      - '.github/workflows/vehicle-exit-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  smoke-four-cities:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir jogo
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/driver2-smoke-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/driver2-smoke-http.log
+          exit 1
+      - name: Verificar quatro cidades, sair do carro, a pe e interiores
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/visual-smoke.cjs
+      - name: Registrar capturas, FPS e erro detalhado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver2-p0-vehicle-exit
+          path: qa-artifacts/
+          retention-days: 14
