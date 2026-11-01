@@ -10,12 +10,14 @@
 
 **Base:** main `f49e297` R60. Implementação no [PR #36](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/36).
 
+**Resultado reproduzido:** R60 **944/944** testes Node → R61 **946/946** em Node 22 e 24 ([CI 41263350494](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41263350494)). [CI de navegador dedicado 41263564943](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41263564943) SUCCESS, testes de fato com GLBs: 16 skeletons únicos de clones liberados uma vez, 0 skeletons de fontes, repopulação de **28/28** vagas; carregamento Undercover e missão sem regressão, testes de tamanho de cachorros/crianças aprovados. Workflow visual integral permanece como gate separado, não substituído por esse teste focado.
+
 - **Causa identificada 1 — ciclo de vida GLB:** `DriverUploadedPedestrianCrowd.detach()` só removia o contêiner e limpava `AnimationMixer`. Depois o gerenciador chamava `GPUResourceUtils.disposeSubtree` no grupo já sem os clones; os `Skeleton` individuais com possíveis `boneTexture` não recebiam `dispose()`. R61 agora descarta exatamente uma vez os esqueletos **clonados**, conservando geometria, material, textura e rigs das fontes compartilhadas.
 - **Causa identificada 2 — policial com rig errado:** em `attachOfficer()`, fallback era `available()[0]`. Como o loader prioriza crianças e cães, antes do adulto GLB carregar um oficial de bloqueio podia virar criança/cão. R61 filtra `species==='adult'` e só vincula quando houver modelo adulto. O rig masculino continua prioritário quando presente.
-- **E2 novo:** testes de 28 vagas × quatro gerações (trocas de mapa), descarte de skeletons sem duplicação, fonte preservada, policiais sem crianças/cães na fila, adulto alternativo e masculino; validação total Node 22/24 via GitHub Actions.
-- **E3 planejado:** executar `visual-qa.yml` integral porque agora o workflow inclui `driver-uploaded-pedestrian-crowd.js` nos caminhos de acionamento. Não alegar ausência de vazamento após horas no Android sem medição E5.
+- **E2 confirmado:** testes de 28 vagas × quatro gerações (trocas de mapa), descarte de skeletons sem duplicação, fonte preservada, policiais sem crianças/cães na fila, adulto alternativo e masculino; 946/946 em Node 22/24.
+- **E3 focado aprovado:** executado `undercover-pedestrian-visual.cjs` com GLBs reais; captura JSON e log no Actions. `visual-qa.yml` integral em andamento na data desta anotação; não declarar ausência de vazamento após horas no Android sem medição E5.
 - **Não alterar:** as alturas específicas dos três cães, dos dois modelos infantis, a representação das 28 vagas, as missões ou colisores de Chicago.
-- **Pendências independentes:** MAP-05, CAR-04, P0-10 (E4 humano e E5 hardware) permanecem abertos; NPC-03 só deve ser marcado concluído após Node e smoke visual sem regressões.
+- **Pendências independentes:** MAP-05, CAR-04, P0-10 (E4 humano e E5 hardware) permanecem abertos; NPC-03 aprovado nos critérios E2/E3 direcionados, mas não em soak test E5.
 
 ### R60 — Evidência visual integral confirmada
 
@@ -226,7 +228,7 @@ Links de referência dos workflows:
 
 - [x] **NPC-01** há modelos GLB variados, incl. idosos, crianças, mulheres, homens e cães, além de sistema de distribuição.
 - [x] **NPC-02** existe infraestrutura de calçadas, travessias, reações e limpeza de recursos.
-- [ ] **NPC-03 P0 [R61 implementação em verificação]** corrigidos no PR #36 o descarte de skeletons clonados em trocas de mapa e a seleção exclusiva de adultos para policiais GLB. Testes novos cobrem 4 gerações de 28 vagas; exigir CI E2/E3 verde antes de encerrar.
+- [x] **NPC-03 P0 [R61 E2+E3 direcionado]** clones GLB são liberados corretamente; policiais aguardam GLB adulto em vez de adotar criança/cão. Node 22/24 **946/946**, [CI focado 41263564943](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41263564943) SUCCESS: no Chromium **16 skeletons de clones reais descartados, 0 de fontes descartados, 28 vagas restauradas**, com crianças/cães e missão intactos. Não certifica memória GPU Android a longo prazo.
 - [ ] **NPC-04 P1** validar tamanho real de cada criança e cão; pastor-alemão maior, demais cães menores, sem gigantes.
 - [ ] **NPC-05 P1** revisar foot IK/solo, animações com rigs diferentes, pés atravessando a calçada e deslizamento.
 - [ ] **NPC-06 P1** garantir pedestres e cães **em Undercover e Passeio Livre**, com spawn verificável e distribuição proporcional.
