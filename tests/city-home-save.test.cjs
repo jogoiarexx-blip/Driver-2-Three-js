@@ -147,6 +147,48 @@ test('R60: veículo do estádio criado após o load recupera dano e dono',()=>{
   const original=read('js/world/chicago-gameplay.js');
   assert.match(original,/DriverHomeSave\.restoreDeferredVehicle\(game,car\)/);
 });
+test('R64: renovar a frota elimina save pendente de geração anterior',()=>{
+  const game=mockGame(),save=new Save(storage());
+  const snapshot=save.capture(game);
+  snapshot.vehicles.push({...snapshot.vehicles[0],x:333,z:-244,damage:71});
+  snapshot.playerIndex=2;
+  assert.equal(save.restore(game,snapshot),true);
+  assert.equal(game._pendingVehicleRestore.length,1);
+  assert.equal(game._pendingPlayerVehicleIndex,2);
+  assert.equal(Save.clearDeferredVehicleRestore(game),true);
+  assert.equal(game._pendingVehicleRestore,null);
+  assert.equal(game._pendingPlayerVehicleIndex,null);
+  const next=playerVehicle();game.vehicles.push(next);
+  assert.equal(Save.restoreDeferredVehicle(game,next),false);
+  assert.notEqual(next.x,333);
+  assert.notEqual(next.damage,71);
+  assert.equal(Save.clearDeferredVehicleRestore(game),false,
+    'idempotente se já não houver snapshot');
+});
+test('R64: novo save após troca limpa o antigo mas ainda aceita novos veículos tardios',()=>{
+  const game=mockGame(),save=new Save(storage()),old=save.capture(game);
+  old.vehicles.push({...old.vehicles[0],x:360,z:-230,damage:88});
+  assert(save.restore(game,old));
+  assert(Save.clearDeferredVehicleRestore(game));
+  const now=save.capture(game);
+  now.vehicles.push({...now.vehicles[0],x:90,z:110,damage:19});
+  now.playerIndex=2;
+  assert(save.restore(game,now));
+  const late=playerVehicle();game.vehicles.push(late);
+  assert(Save.restoreDeferredVehicle(game,late));
+  assert.equal(late.damage,19);
+  assert.equal(late.x,90);
+  assert.equal(game.playerCar,late);
+  assert.equal(game._pendingVehicleRestore,null);
+});
+test('R64: engine realmente limpa snapshot adiado ao reconstruir frota',()=>{
+  const src=read('js/engine/driver2-game-engine.js');
+  const section=src.slice(src.indexOf('spawnAllVehicles() {'),
+    src.indexOf('spawnAllVehicles() {')+450);
+  assert.match(section,/DriverHomeSave\.clearDeferredVehicleRestore\(this\)/);
+  assert.match(read('js/world/chicago-gameplay.js'),
+    /DriverHomeSave\.restoreDeferredVehicle\(game,car\)/);
+});
 test('R62: migra v1 antigo sem perder missão, veículo, progresso e posição',()=>{
   const disk=storage(),save=new Save(disk);
   const old={...save.capture(mockGame()),version:1};

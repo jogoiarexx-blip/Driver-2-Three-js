@@ -6,6 +6,20 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R64 — Sprint P1 GAME-07 / PERF-06 — troca de cidade e estado adiado (01/11/2026)
+
+**Base:** R63 `6a1b41a`. Implementação no [PR #39](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/39).
+
+**Antes, bug confirmado pela leitura do fluxo:** `DriverHomeSave.restore()` conserva `_pendingVehicleRestore` e `_pendingPlayerVehicleIndex` enquanto o carro do estádio de Chicago ainda não existe. `spawnAllVehicles()` desmontava a frota e criava outra ao reiniciar uma missão/trocar de cidade, sem descartar as pendências. Um carro adicionado mais tarde à frota nova poderia receber localização, dano e seleção de jogador **de uma geração de save anterior**. O problema não é exclusivo do Rio/Havana; ocorre sempre que uma reconstrução da frota sucede um save adiado.
+
+**Depois, correção real:** `DriverHomeSave.clearDeferredVehicleRestore(game)` limpa idempotentemente as duas referências no começo de `Driver2GameEngine.spawnAllVehicles()`. `restore()` continua criando **novas** pendências depois de `startMission()`, portanto o Wrigley Car legítimo permanece recuperável quando surgir na mesma geração. Nenhum GLB, física ou mapa foi alterado.
+
+**E2 certificado:** Node 22/24 **960/960** na R64 (R63 957/957, três testes adicionais); verificações de limpeza, substituição por save novo e preservação da restauração adiada válida. R60 P0 e regressões de missões regionais são gates separados.
+
+**E3 confirmado:** [Chromium R64, Actions #41304782739](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41304782739) **SUCCESS**, seis etapas documentadas com JSON/screenshot: Chicago save com **9 snapshots pendentes** (42 carros ativos), troca para Havana limpa **9→0** e índice pendente, veículo jogador continua na frota; Vegas C4 inicia e planta primeiro gerador, troca para Rio elimina `caine-depot-target-0`, objetivo e `regionalState`; Rio ativa barcaça, volta a Chicago e elimina `rio-barge-mission`. A frota final Chicago tem 42 carros com todas as raízes na cena; conquista regional preservada em todo o circuito. O primeiro teste havia falhado apenas na fixture antes das trocas por spawn imediato de veículo; corrigido com oito extras. **Observação honesta de memória:** primeira Chicago `renderer.info.memory`: 353 geometrias / 42 texturas, retorno Chicago 607 geometrias / 92 texturas. Essa diferença pode conter warmup/cache e materiais ainda ativos, não prova nem exclui leak; PERF-06 E5 e repetição prolongada abertos.
+
+**Ainda não certificado:** FPS, aumento de memória ao longo de 30–60min em Android real E5, ciclos completos de missão por humano E4, bem como todos os casos de perda de rede/falha de carregamento. GAME-07 e PERF-06 continuam abertos até esses critérios.
+
 ### R63 — Sprint P1 GAME-09 — checkpoints regionais intermediários (01/11/2026)
 
 **Base:** R62 `e91160b`; PR [#38](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/38).
@@ -224,7 +238,7 @@ Links de referência dos workflows:
 
 ### Pendências obrigatórias
 - [ ] **GAME-06 P1** jogar **cada missão completa** do início à vitória, por controles reais; gravar evidência de sucesso e falha.
-- [ ] **GAME-07 P1** verificar mudança Chicago→Havana→Vegas→Rio sem estado antigo, missão quebrada ou itens de cidade anterior.
+- [ ] **GAME-07 P1 [R64 E2+E3 dirigido aprovados]** [ciclo das quatro cidades](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41304782739) no Chromium: snapshot adiado 9→0, C4/barcaça removidos após a troca, frota válida e progresso regional intacto. **Pendentes:** E4 campanha humana, E5 Android e falhas/retries do loader.
 - [ ] **GAME-08 P1** repetir missão após derrota, checkpoint intermediário, troca de veículo e mudança de cidade.
 - [ ] **GAME-09 P1 [R63 E2+E3 direcionados aprovados]** V1→V2, seis missões regionais e retomada de C4/assalto/helicóptero/barcaça; 957/957 Node22/24 e [8 etapas Chromium](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302361086) SUCCESS. Ainda faltam Android real, testes humanos E4 e resistência/corrupção após longas sessões.
 - [ ] **GAME-10 P1** comparar ritmo do jogo: física, objetivos, dificuldade, perseguições e variedade, sem inventar fidelidade às 40+ missões do PS1.
@@ -294,7 +308,7 @@ Assets particularmente grandes: caminhonete velha 24,74 MiB; barco 20,50; caminh
 - [ ] **PERF-03 P1** metas iniciais sugeridas (AJUSTAR após baseline): desktop p95 frametime até 25 ms; Android intermediário p95 até 50 ms; nenhum leak cumulativo após trocar cidades 3×.
 - [ ] **PERF-04 P1** GLBs: inventário de triângulos por veículo/NPC, compactação Draco/Meshopt **após validar suporte e cadeia de carregamento**, texturas WebP/KTX2 quando compatível, LOD de modelo e limitações por plataforma.
 - [ ] **PERF-05 P1** tornar o pacote visual Chicago original streaming por chunk com limite de memória e descarte visível; nunca instanciar 1,54M triângulos sem budget e medição.
-- [ ] **PERF-06 P1** verificar se troca de cidade libera geometrias, materiais, texturas, mixer de animações e clones sem liberar recursos compartilhados.
+- [ ] **PERF-06 P1 [R64 observação de possível crescimento de memória]** cena sem objetos C4/barcaça residuais na troca, mas contagem `renderer.info.memory` da primeira Chicago **353 geometrias / 42 texturas** e no retorno **607 / 92**; quantificar warmup/cache versus leak por 3+ ciclos e Android GPU real antes de marcar completo.
 - [ ] **PERF-07 P1** investigar tempo de parsing/ordem dos **149 scripts locais**; juntar módulos por build simples e testável somente quando eliminar risco de dependências globais.
 - [ ] **PERF-08 P2** política de LOD: faixas, histerese, instancing, distância das árvores, iluminação, pedestres e veículos, sem popping perceptível.
 - [ ] **PERF-09 P2** progressão do loading mede trabalho real; testar no 3G/lento, perda de internet e cancelamento.
