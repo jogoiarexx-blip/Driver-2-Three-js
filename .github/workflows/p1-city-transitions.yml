@@ -1,0 +1,54 @@
+name: Driver 2 - R64 P1 four-city transition and deferred save
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/gameplay/home-save.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'tests/city-home-save.test.cjs'
+      - 'tests/playtest-gameforge-p1-city-transitions.cjs'
+      - '.github/workflows/p1-city-transitions.yml'
+  pull_request:
+    paths:
+      - 'js/gameplay/home-save.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'tests/city-home-save.test.cjs'
+      - 'tests/playtest-gameforge-p1-city-transitions.cjs'
+      - '.github/workflows/p1-city-transitions.yml'
+permissions:
+  contents: read
+jobs:
+  four-cities:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test deferred save contract
+        run: node --test tests/city-home-save.test.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start static game server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/driver2-r64-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/driver2-r64-http.log
+          exit 1
+      - name: Cross four cities and verify mission/resource cleanup
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/playtest-gameforge-p1-city-transitions.cjs
+      - name: Archive structured evidence and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver2-r64-four-city-evidence
+          path: qa-artifacts/r64-*
+          retention-days: 14
