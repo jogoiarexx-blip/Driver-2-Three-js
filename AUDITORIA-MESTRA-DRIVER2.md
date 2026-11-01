@@ -16,7 +16,7 @@
 
 **E2 inicial comprovado:** R61 `946/946` → R62 `952/952` em Node 22 e Node 24, após atualização dos testes que dependiam da versão antiga. Novos cenários: V1→V2 sem perda, recusa de versões futuras/inválidas, storage bloqueado, seis missões regionais, união de conquistas e limite de tamanho. Testes que continham `version:1` agora verificam explicitamente V2 **e** migração legada.
 
-**E3 em verificação:** `tests/playtest-gameforge-p1-save.cjs` inicia jogo real no Chromium, testa migração no localStorage, rejeição de dados futuros, inicia Vegas C4, grava e recarrega a página, verifica restauração da cidade/missão/conquista; usa captura/JSON para falhas. O teste P0 de Tanner e save também precisa continuar verde.
+**E3 Playwright confirmado:** [Actions #41264434195](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41264434195) SUCCESS, 4 etapas e PNG/JSON. Migração v1→v2 na mesma origem (storedVersion 2), dados de versão futura recusados/intactos, Vegas C4 gravada com 17 carros, reload restaurou `city=vegas`, `mission=story_vegas_c4`, `regionalState.type`, missão ativa e conquista `story_vegas_ambulance` preservada. O teste P0 original e os limites E4/E5 continuam gates independentes.
 
 **Pendências e limite de certificação:** esta revisão **não** certifica retomada a meio de todos os objetivos regionais (C4 parcial, heist segundo carro, helicóptero) nem E4 humano ou Android E5. Não declarar GAME-09/ARCH-04 completamente encerrados antes desses cenários e do Playwright.
 
@@ -212,7 +212,7 @@ Links de referência dos workflows:
 - [ ] **GAME-06 P1** jogar **cada missão completa** do início à vitória, por controles reais; gravar evidência de sucesso e falha.
 - [ ] **GAME-07 P1** verificar mudança Chicago→Havana→Vegas→Rio sem estado antigo, missão quebrada ou itens de cidade anterior.
 - [ ] **GAME-08 P1** repetir missão após derrota, checkpoint intermediário, troca de veículo e mudança de cidade.
-- [ ] **GAME-09 P1 [R62 E2 concluído, E3 em execução]** salvar/recarregar 6 missões regionais, migrar V1→V2, rejeitar saves corrompidos/futuros e preservar progresso do capítulo. Aguardando ensaio Playwright; faltam Android real e retomada de objetivos regionais parciais.
+- [ ] **GAME-09 P1 [R62 E2 + E3 direcionado aprovados]** seis missões regionais admitidas pela validação; Vegas C4 gravada e restaurada no navegador em [run 41264434195](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41264434195); migração V1→V2 e rejeição de corrupção verificadas. **Pendentes:** checkpoints internos de missões regionais, Android real e stress de saves.
 - [ ] **GAME-10 P1** comparar ritmo do jogo: física, objetivos, dificuldade, perseguições e variedade, sem inventar fidelidade às 40+ missões do PS1.
 - [ ] **GAME-11 P2** feedback de objetivo curto e específico (mapa, minimapa, distância, texto e som) em vez de textos excessivos.
 - [ ] **GAME-12 P2** mapear as atividades secundárias, recompensa, repetição e qualidade de replays; confirmar que não quebram progresso principal.
