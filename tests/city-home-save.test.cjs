@@ -110,6 +110,24 @@ test('cartucho salvo inválido é rejeitado sem sobrescrever partida',()=>{
   assert.equal(save.write(snapshot),false);
   assert.equal(save.read(),null);
 });
+test('R60: save persiste a frota atual de 43 veículos, sem truncar carros ou dano',()=>{
+  const game=mockGame(),seed=game.vehicles[0];
+  game.vehicles=Array.from({length:43},(_,i)=>({
+    ...seed,x:i*2-20,z:-120+i*2,damage:i%50,
+    damageZones:{front:i%50,rear:0,left:0,right:0}
+  }));
+  game.playerCar=game.vehicles[35];
+  const disk=storage(),save=new Save(disk);
+  const snapshot=save.capture(game);
+  assert.equal(snapshot.vehicles.length,43);
+  assert.equal(snapshot.playerIndex,35);
+  assert.equal(save.write(snapshot),true,
+    '32-car limit incorrectly rejected the real Chicago 43-car fleet');
+  assert.equal(new Save(disk).read().vehicles.length,43);
+  assert.equal(new Save(disk).read().vehicles[35].damage,35);
+  const corrupted={...snapshot,vehicles:Array.from({length:129},()=>snapshot.vehicles[0])};
+  assert.equal(save.valid(corrupted),false,'unbounded saves must still be rejected');
+});
 test('JSON quebrado é detectado, sem derrubar o aplicativo',()=>{
   const disk=storage(),save=new Save(disk);
   disk.setItem(Save.KEY,'{broken');
