@@ -234,6 +234,10 @@
             }
 
             spawnAllVehicles() {
+                // A frota anterior pode ter veículos de setor com
+                // restauração adiada (ex.: Wrigley Car). Nenhum snapshot
+                // pode sobreviver à troca de geração/cidade.
+                DriverHomeSave.clearDeferredVehicleRestore(this);
                 // Descartar uma montagem em curso antes de destruir veículos
                 // ao trocar de cidade, reiniciar missão ou recriar a frota.
                 if(this.vehicleMountTransition){
