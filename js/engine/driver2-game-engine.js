@@ -3498,6 +3498,11 @@
                 const now = performance.now();
                 const rawDt=(now-this.lastTime)/1000;
                 const dt = Math.min(0.05, rawDt);
+                // Vehicle entry/exit is an animation, not a physics step.
+                // The 50ms physics clamp can make a 1.2s dismount take 6s+
+                // on software WebGL / slow Android devices. Use bounded
+                // wall time for these transitions only; no physics leap.
+                const transitionDt = Math.max(0,Math.min(.25,rawDt));
                 this.lastTime = now;
 
                 this.frames++;
@@ -3539,13 +3544,13 @@
                 if(this.policeDoorTransition&&
                     typeof DriverPoliceDoorRig!=='undefined'){
                     DriverPoliceDoorRig.update(
-                        this.policeDoorTransition.vehicle,dt);
+                        this.policeDoorTransition.vehicle,transitionDt);
                     if(this.policeDoorTransition)
-                        this.updateVehicleDoorApproach(dt);
+                        this.updateVehicleDoorApproach(transitionDt);
                 }
                 if(this.vehicleMountTransition&&
                     typeof DriverVehicleMount!=='undefined')
-                    DriverVehicleMount.update(this,dt);
+                    DriverVehicleMount.update(this,transitionDt);
                 if (!this.gameEnded) {
                     if(this.trainLine&&this.missionType==='story_train'&&
                         this.missionActive)this.trainLine.update(dt);

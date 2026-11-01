@@ -6,6 +6,27 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R59 — 31/10/2026 — Sprint A P0 (Node e smoke das quatro cidades aprovados)
+
+**Base:** main a7d501a7; revisão preparada em branch `fix/driver2-r59-p0-qa`. Branch de integração `fix/driver2-r59-p0-qa`, [PR #34](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/34). Evidência E2 confirmada para Node 22 e 24; E3/E4/E5 continuam condicionadas a teste específico.
+
+- **ANTES (E2 remoto):** execução 41253703197 — 920/940 testes passaram, 20 falharam. Execução visual 41253690079 interrompida em crosswalk (7 instâncias de batch versus 5 esperadas).
+- **P0-02:** mock R52 atualizado com `CylinderGeometry`, que o mapa já usa de verdade.
+- **P0-03:** `DriverArcadePhysics` exporta a mesma classe estática para Node CommonJS, mantendo o contrato global no browser. Replays R56/R57 deixam de falhar antes de rodar por falta da API.
+- **P0-04:** fechar a porta fixa o ângulo em `+0`, eliminando `-0` sem mexer na curva de abertura nem em ângulos válidos.
+- **P0-05:** os testes passam a inspecionar *sete batches efetivos*: uma zebra, quatro componentes instanciados dos postes e duas placas regionais; verificam 162 registros destrutíveis e ausência de sombras dinâmicas.
+- **P0-06:** fixture de 28 vagas separa os 26 adultos das duas vagas infantis reservadas; novo teste cobre GLBs infantis indisponíveis e chegada posterior, sem criar crianças falsas a partir de adultos.
+- **P0-07:** teste da estação passa a verificar a política atual: rampa elevada pedonal, carro continua no asfalto inferior sem impulso vertical e com deslocamento; teste independente preserva progressão de altura pedonal.
+- **P0-08:** teste de ordem/cache usa a chave válida R58 do Tanner, sem reverter o cache-busting em produção.
+- **P0-01 CONCLUÍDO E2:** 942/942 testes Node 22 e 942/942 Node 24, ambos **SUCCESS** no [workflow 41260600150](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600150). Comparativo: 920/940 e 20 falhas (R58) → 942/942 e 0 falhas (R59), incluindo regressão de saída do carro a 4 FPS.
+- **P0-09 AINDA ABERTO:** primeira sequência Chromium R59 [41258524559](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41258524559) avançou além da pavimentação e verificou GLBs/cães, mas identificou teste R22 com contagem antiga de 21 ruas para radar que agora contém 36 (a direção física pelo acesso teve 0 água, 0 colisões, 0 danos). Corrigido **validando IDs PS1, acessos, integridade e ausência de duplicação**, sem subtrair ruas; reexecução [41258717291](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41258717291) avançou até R45 e encontrou falso congestionamento provocado por 35 NPCs congelados fora do replay; correção e evidência na seção seguinte.
+- **P0-09 / R45 E3 PARCIAL APROVADO:** [workflow focado 41259174215](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41259174215): 8/8 NPCs R43/R44/R48 percorreram entre 462 e 818 unidades em 4200 frames cada; cada um fez 1 a 2 voltas, sem água, bloqueios, danos ou parada prolongada. O teste anterior de 2 NPCs passava 8 veículos mas mantinha os outros 35 congelados como falsos obstáculos; o novo replay passa à IA apenas os 8 veículos efetivamente integrados fisicamente, sem esconder colisões entre eles. A frota de 43 carros simultâneos **não** foi reproduzida; execução [41259195099](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41259195099) avançou até o último smoke, revelando transição lenta; o smoke isolado subsequente passou, mas a nova [execução integral 41260596484](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260596484) permanece pendente de resultado.
+- **P0-10 AINDA ABERTO:** E4 gameplay por controles, ciclo save→reload e E5 FPS/memória/Android não foram homologados; publicação ≠ estabilidade.
+- **P0 extra — saída do carro em baixa taxa de quadros (motor):** antes, o temporizador das dobradiças/entrada de Tanner consumia o mesmo delta físico de 50 ms por frame, alongando uma animação de 1,2 s quando o WebGL rodava lentamente. Depois, `driver2-game-engine.js` fornece `transitionDt` de relógio real limitado a 250 ms para `DriverVehicleMount` e `DriverPoliceDoorRig`, sem alterar o passo de física. Teste novo simula 4 FPS e confirma transição para `on_foot`.
+- **E3 smoke isolado APROVADO:** [execução 41260600145](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600145) confirmou entrar/sair, caminhada, interiores e cenas em Chicago/Havana/Las Vegas/Rio. Corrigidos dois falsos bloqueios de harness: caminhada não deveria ser exigida em apenas 400 ms sem um frame, e amostragem de FPS em SwiftShader não deve aguardar incondicionalmente 90 frames; agora mede movimento efetivo e até 10 segundos de frames, registra amostras reais e falha se o renderizador parar.
+- **E5 NÃO CERTIFICADO:** amostras headless software Chromium: Chicago 1,6 FPS (1208 draw calls), Havana 1,7, Vegas 1,3, Rio 1,6. Esses números indicam uma limitação do renderizador por software e **não** medem o jogo em GPU/Android reais. Há 1,4–1,9 milhão de triângulos amostrados nesse ambiente; medir hardware real e otimizar LOD/draw calls continua aberto.
+- **Impacto esperado:** expor falhas físicas que estavam mascaradas pelos erros de import; preservar as quatro cidades, IA, 28 vagas, carros e campanha. FPS, memória, partidas completas e Android: **não medidos** nesta revisão.
+
 ## 0. Legenda e critérios de evidência
 
 - **[x] IMPLEMENTADO** = há evidência concreta no código/arquivo, mas isso **não** significa funcionalidade plenamente validada.
@@ -18,7 +39,7 @@
 
 ## 1. Resumo executivo — onde estamos
 
-**Veredito:** protótipo open-world robusto em recursos e regressões, mas **não jogo completo nem mapa Chicago 1:1 certificado**. Conservar o que funciona; tratar o QA vermelho e a integração do Chicago original como eixos prioritários. Refatorar os arquivos de motor gigantes **gradualmente**, sem reescrever o jogo inteiro.
+**Veredito:** protótipo open-world robusto em recursos e regressões, mas **não jogo completo nem mapa Chicago 1:1 certificado**. Conservar o que funciona; QA lógico R59 passou 942/942 no Node 22 e 24, enquanto o QA visual e a integração do Chicago original continuam eixos prioritários. Refatorar os arquivos de motor gigantes **gradualmente**, sem reescrever o jogo inteiro.
 
 ### Indicadores apurados no repositório
 
@@ -37,8 +58,8 @@
 | Scripts HTML | 152, dos quais 149 locais | todos os 149 caminhos locais consultados existem; custo de parse/ordem |
 | Campanha declarada | 8 Chicago + 1 Havana + 3 Vegas + 3 Rio | **15 etapas descritas no fluxo**, não 15 partidas certificadas |
 | Original PS1 visual | 54 GLBs, 1.544.872 triângulos | visual presente, sem colisores/ruas de produção homologados |
-| QA geral remoto recente | **920 passaram / 20 falharam / 940** | **BLOQUEANTE** — commit fd378064babb, 31/10/2026 |
-| QA visual remoto recente | **falhou** no passo de pavimentação/cruzamentos | **BLOQUEANTE** |
+| QA lógica R58 → R59 | **920/940 → 942/942** | **Node 22/24 verde** — run 41260600150, R59 |
+| QA visual R58 → R59 | R58: pavimentação; primeira R59: radar R22 antigo | Reexecução Chromium 41258717291 **a verificar** |
 | Deploy Pages para R58 | **sucesso** no SHA 82323c47189c | publicação ≠ QA ou jogabilidade |
 
 Fontes diretas: GitHub Git tree main, README.md, chicago/manifest.json, chicago/drive-mask.json, chicago/ground-survey.json, js/gameplay/campaign-flow.js, .github/workflows/*.yml.  
@@ -65,7 +86,7 @@ Links de referência dos workflows:
 | Áudio | motor sintético, efeitos e feedback | velocidade/volume/loop, aceleração, áudio mobile e repetição | **Pendente de homologação** |
 | Save/progresso | localStorage e versão/validação | rodada completa save→reload→retomar em cada missão/cidade | **Parcial** |
 | Arquitetura | muitos módulos já separados | motor ~199 KiB, CityBuilder 120 KiB, dependências globais, 149 JS | **Dívida alta** |
-| QA/CI | ampla quantidade de testes/workflows | **20 falhas reais no Node**, QA visual e veículos vermelhos | **P0** |
+| QA/CI | 941/941 de lógica em Node 22/24 | QA visual E3, direção real E4 e dispositivos E5 ainda sem certificação completa | **Parcial — P0** |
 
 ---
 
@@ -73,14 +94,14 @@ Links de referência dos workflows:
 
 **Regra:** correção de regressão comprovada tem preferência sobre novos edifícios, texturas, veículos e missões.
 
-- [ ] **P0-01 [QA] RESTABELECER A SUÍTE VERDE:** executar node --test tests/*.test.cjs em Node 22/24, classificar separadamente falha do produto x falha de teste/mock x expectativa obsoleta; corrigir sem simplesmente apagar as asserções. Evidência obrigatória: workflow Actions SUCCESS e total recontado.
-- [ ] **P0-02 [R52/Three.js]** mocks usados nos testes do distrito não possuem THREE.CylinderGeometry (5 cenários da R52 falham). Corrigir ambiente de testes e conferir novamente as ruas/colliders.
-- [ ] **P0-03 [R56/R57/física]** testes importam um Physics.update que não existe na forma exportada em CommonJS (5 casos). Tornar harness compatível com API real e repetir os replays em Node. A aprovação anterior em contexto V8 concatenado não é certificação Node.
-- [ ] **P0-04 [R58]** asserção da porta compara 0 com -0 via assert.strictEqual: classificar se é só representação numérica, corrigir no teste ou na saída sem mascarar ângulos não nulos.
-- [ ] **P0-05 [PAVIMENTO E MOBILIÁRIO]** corrigir/investigar testes de quantidade/instâncias de faixas e postes, travessias na água e preservação de elementos destrutíveis. Não “atualizar números esperados” sem medir a cena montada.
-- [ ] **P0-06 [PEDESTRES GLB]** três falhas de simulação das 28 vagas, contingência de carregamento GLB e limpeza de clones/GPU: diferenciar teste desatualizado de vazamento real.
+- [x] **P0-01 [QA] RESTABELECER A SUÍTE VERDE [E2 — Node 22/24 942/942, run 41260600150]:** executar node --test tests/*.test.cjs em Node 22/24, classificar separadamente falha do produto x falha de teste/mock x expectativa obsoleta; corrigir sem simplesmente apagar as asserções. Evidência obrigatória: workflow Actions SUCCESS e total recontado.
+- [x] **P0-02 [R52/Three.js] [E2]** mocks usados nos testes do distrito não possuem THREE.CylinderGeometry (5 cenários da R52 falham). Corrigir ambiente de testes e conferir novamente as ruas/colliders.
+- [x] **P0-03 [R56/R57/física] [E2]** testes importam um Physics.update que não existe na forma exportada em CommonJS (5 casos). Tornar harness compatível com API real e repetir os replays em Node. A aprovação anterior em contexto V8 concatenado não é certificação Node.
+- [x] **P0-04 [R58] [E2]** asserção da porta compara 0 com -0 via assert.strictEqual: classificar se é só representação numérica, corrigir no teste ou na saída sem mascarar ângulos não nulos.
+- [x] **P0-05 [PAVIMENTO E MOBILIÁRIO] [E2]** corrigir/investigar testes de quantidade/instâncias de faixas e postes, travessias na água e preservação de elementos destrutíveis. Não “atualizar números esperados” sem medir a cena montada.
+- [x] **P0-06 [PEDESTRES GLB] [E2]** três falhas de simulação das 28 vagas, contingência de carregamento GLB e limpeza de clones/GPU: diferenciar teste desatualizado de vazamento real.
 - [ ] **P0-07 [TREM]** falha no teste de impulso vertical na rampa da estação: reproduzir fisicamente e eliminar salto/parede invisível sem retirar colisores válidos.
-- [ ] **P0-08 [CACHE]** teste antigo procura versão swim-retarget-r1 do Tanner; conferir se só o cache-busting R58 mudou ou se há regressão de ordem/retargeting.
+- [x] **P0-08 [CACHE] [E2]** teste antigo procura versão swim-retarget-r1 do Tanner; conferir se só o cache-busting R58 mudou ou se há regressão de ordem/retargeting.
 - [ ] **P0-09 [VISUAL]** fazer o workflow visual passar de ponta a ponta; a última execução falhou no teste de crosswalk/terreno. Em seguida rodar smoke WebGL nas quatro cidades.
 - [ ] **P0-10 [RELEASE]** impedir que “publicado no Pages” seja reportado como “jogado e validado”: reunir QA verde + Playwright + saves + gameplay antes de selo ESTÁVEL.
 
@@ -282,7 +303,7 @@ Para declarar uma funcionalidade como **PRONTA**, cumprir todos os pontos aplic�
 **Sprint E — Performance (P1)**: GLBs, GPU lifecycle, carregamento, LOD, FPS medido em celular. Executar perfis em paralelo aos sprints.  
 **Sprint F — Fidelidade visual (P2/P3)**: fachadas, sinais, texturas, estética e áudio, com capturas antes/depois.
 
-**Próxima ação recomendada e objetiva:** reproduzir o job 41253703197 sob Node de CI, separar as 20 falhas por causa raiz e consertar a infraestrutura das suítes R52/R56/R57 antes de atualizar geografia.
+**Próxima ação recomendada e objetiva:** concluir a execução visual 41258717291, registrar evidências de percurso e save em navegador e só depois avaliar o gate de estabilidade; a recuperação da suíte Node R52/R56/R57 já tem evidência E2.
 
 ---
 

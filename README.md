@@ -2,7 +2,7 @@
 
 Recriação experimental de Driver 2 para navegador, baseada em Three.js. O projeto foi organizado em arquivos estáticos para funcionar diretamente no **GitHub Pages**, sem Node.js, npm ou compilação.
 
-> **Checklist permanente do desenvolvimento:** [AUDITORIA-MESTRA-DRIVER2.md](AUDITORIA-MESTRA-DRIVER2.md). Contém avaliação de Chicago, gameplay, física, GLBs, performance, arquitetura, QA e prioridades P0–P3. **Consultar e atualizar em toda revisão**, com testes antes/depois, evidências, pendências e deploy. A auditoria inicial identificou QA geral ainda vermelho (920/940 no run 41253703197); implantação bem-sucedida no Pages não equivale a jogo certificado.
+> **Checklist permanente do desenvolvimento:** [AUDITORIA-MESTRA-DRIVER2.md](AUDITORIA-MESTRA-DRIVER2.md). Contém avaliação de Chicago, gameplay, física, GLBs, performance, arquitetura, QA e prioridades P0–P3. **Consultar e atualizar em toda revisão**, com testes antes/depois, evidências, pendências e deploy. A auditoria inicial registrou 920/940 (20 falhas) na R58. A R59 recuperou a suíte de lógica: **942/942 testes verdes em Node 22 e 24** ([Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600150)), com smoke Chromium das quatro cidades **aprovado** ([Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600145)). A homologação Chromium, saves, partida integral e mobile segue separada; Pages publicado não equivale a jogo certificado.
 
 ## Executar
 

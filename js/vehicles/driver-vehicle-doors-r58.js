@@ -54,7 +54,8 @@ class DriverVehicleDoorsR58 {
             if(!piece)continue;
             const a=s===chosen?opening:0;
             // Local -Z panel swings outward from the front door jamb.
-            piece.hinge.rotation.y=-s*1.12*a;
+            // Keep closed and inactive hinges at +0 (not signed -0).
+            piece.hinge.rotation.y=a>0 ? -s*1.12*a : 0;
             piece.cavity.visible=a>.04;
         }
         return true;

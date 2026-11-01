@@ -15,6 +15,8 @@ on:
       - 'tests/chicago-r5-visitor-browser.cjs'
       - 'tests/chicago-r6-north-yard-browser.cjs'
       - 'tests/chicago-r7-real-driving-replay.cjs'
+      - 'tests/chicago-neighborhood-traffic-browser.cjs'
+      - 'js/traffic/chicago-neighborhood-traffic.js'
       - 'tests/chicago-r22-*'
       - 'tests/chicago-r23-*'
       - 'tests/chicago-r25-*'

@@ -119,3 +119,6 @@ class DriverArcadePhysics {
         return centrifugal;
     }
 }
+// CommonJS: expose the same static API used by the browser script.
+if (typeof module !== 'undefined' && module.exports)
+    module.exports = DriverArcadePhysics;

@@ -99,7 +99,9 @@ test('postes continuam instanciados e registrados individualmente',()=>{
     const poles=city.destructibleProps.filter(p=>p.type==='pole');
     assert.equal(poles.length,2*9*9);
     assert.equal(poles[0].poleMesh,poles[1].poleMesh);
-    assert.equal(city.cityGroup.objects.length,5);
+    assert.equal(city.cityGroup.objects.length,7);
+    assert.equal(city.cityGroup.objects.filter(m=>m.name==='street-signs-chicago').length,2);
+    assert(poles.every(p=>p.armMesh&&p.baseMesh));
 });
 test('acidente remove somente o poste atingido, preserva os vizinhos',()=>{
     const p=pole(0,0,1),other=p.poleMesh.matrices.get(2);

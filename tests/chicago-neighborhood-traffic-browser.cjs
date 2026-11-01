@@ -1,7 +1,8 @@
 'use strict';
-/** Real civilian AI, not a scripted QA pilot, drives the two loop roads.
- * Both spawned NPCs call the same getInput/updatePhysics as the game.
- * No position/heading/speed is edited after spawning.
+/** Real civilian AI drives all active R43/R44/R48 loops.
+ * The game is paused for deterministic QA: only local-loop NPCs receive
+ * physics ticks, so cars frozen outside this replay must not be passed as
+ * moving traffic obstacles. No positions/angles are teleported per frame.
  */
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 fs.mkdirSync('qa-artifacts',{recursive:true});
@@ -33,6 +34,7 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
     initial:{x:car.x,z:car.z,heading:car.heading},frames:0,
     blocked:0,water:0,offroad:0,damage:0,maxOffset:0,
     distance:0,starts:0,end:null,progress:0,laps:0,
+    stalledFrames:0,longestStall:0,stallStreak:0,
     snapshots:[]}));
    const effects={addSkidMark(){},spawnTireSmoke(){},
     spawnImpactSparks(){},spawnCarBreakaway(){},
@@ -41,8 +43,10 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
     for(let n=0;n<locals.length;n++){
      const car=locals[n],snap=snapshots[n],
       bx=car.x,bz=car.z;
+     // Other 35 scene cars are frozen by game.isPaused in this replay.
+     // Passing them to car-following would fake permanent traffic jams.
      const input=game.trafficAI.getInput(
-      car,1/30,game.vehicles,null,0);
+      car,1/30,locals,null,0);
      if(!input)throw Error('TrafficAI did not select circuit AI');
      car.updatePhysics(1/30,input,city,effects,null,false);
      const status=car.chicagoNeighborhoodTrafficStatus,
@@ -58,6 +62,11 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
      snap.damage=Math.max(snap.damage,car.damage);
      snap.progress=status.progress;
      snap.laps=status.laps;
+     if(status.limit===0&&Math.abs(car.speed)<.6){
+      snap.stalledFrames++;
+      snap.stallStreak++;
+      snap.longestStall=Math.max(snap.longestStall,snap.stallStreak);
+     }else snap.stallStreak=0;
      if(frame%350===0)snap.snapshots.push({
       f:frame,x:+car.x.toFixed(2),z:+car.z.toFixed(2),
       speed:+car.speed.toFixed(2),offset:+offset.toFixed(2),
@@ -82,11 +91,17 @@ fs.mkdirSync('qa-artifacts',{recursive:true});
   assert.equal(report.city,'chicago');
   assert.equal(report.mission,'story_tipoff');
   assert.deepEqual(report.loopRoads,[4,3]);
-  assert.equal(report.npcCount,2);
-  assert.deepEqual(report.snapshots.map(s=>s.id),['r43','r44']);
+  assert.equal(report.npcCount,8,'R43/R44 and six R48 local NPCs must spawn');
+  const count=report.snapshots.reduce((a,s)=>(a[s.id]=(a[s.id]||0)+1,a),{});
+  assert.deepEqual(Object.entries(count).sort(),[
+   ['r43',1],['r44',1],['r48-outer',2],['r48-east',2],
+   ['r48-grid-west',1],['r48-grid-east',1]
+  ].sort());
   for(const npc of report.snapshots){
    assert.equal(npc.frames,4200);
    assert(npc.distance>115,JSON.stringify(npc));
+   assert(npc.longestStall<300,
+    'local traffic deadlocked for 10+ seconds: '+JSON.stringify(npc));
    assert(npc.laps>=1,'No complete local traffic lap: '+JSON.stringify(npc));
    assert.equal(npc.water,0,JSON.stringify(npc));
    assert.equal(npc.blocked,0,JSON.stringify(npc));
