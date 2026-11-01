@@ -54,4 +54,4 @@ O relatório `qa-artifacts/gameforge-driver2-evidence.json` registra **etapa, du
 4. Registrar classificação: defeito de jogo, mock, expectativa obsoleta, ambiente SwiftShader, timing ou falha de evidência.
 5. Corrigir o produto e refazer antes/depois; E2/E3 de novo.
 
-**Status deste documento:** implementação R60 preparada em branch; evidências do Playwright somente podem ser afirmadas depois de execução efetiva no Actions.
+**Status comprovado:** [Actions R60 #41261823989](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823989) PASS nas oito etapas; [Node #41261823994](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823994) 944/944 em Node 22 e 24. No replay rail, z=-218 até z=-251,27, altura 0, água/dano/bloqueio 0. Resta confirmar o workflow visual integral e critérios humanos/dispositivo. Referência: [PR #35](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/35).
