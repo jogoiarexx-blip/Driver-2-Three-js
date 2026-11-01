@@ -6,7 +6,7 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
-### R59 — 31/10/2026 — Sprint A P0 (QA lógico aprovado; visual em validação)
+### R59 — 31/10/2026 — Sprint A P0 (Node e smoke das quatro cidades aprovados)
 
 **Base:** main a7d501a7; revisão preparada em branch `fix/driver2-r59-p0-qa`. Branch de integração `fix/driver2-r59-p0-qa`, [PR #34](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/34). Evidência E2 confirmada para Node 22 e 24; E3/E4/E5 continuam condicionadas a teste específico.
 
@@ -18,10 +18,13 @@
 - **P0-06:** fixture de 28 vagas separa os 26 adultos das duas vagas infantis reservadas; novo teste cobre GLBs infantis indisponíveis e chegada posterior, sem criar crianças falsas a partir de adultos.
 - **P0-07:** teste da estação passa a verificar a política atual: rampa elevada pedonal, carro continua no asfalto inferior sem impulso vertical e com deslocamento; teste independente preserva progressão de altura pedonal.
 - **P0-08:** teste de ordem/cache usa a chave válida R58 do Tanner, sem reverter o cache-busting em produção.
-- **P0-01 CONCLUÍDO E2:** 941/941 testes Node 22 e 941/941 Node 24, ambos **SUCCESS** no [workflow 41258638884](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41258638884). Comparativo anterior: 920/940 e 20 falhas, agora 0 falhas e um teste de salvaguarda adicional.
-- **P0-09 AINDA ABERTO:** primeira sequência Chromium R59 [41258524559](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41258524559) avançou além da pavimentação e verificou GLBs/cães, mas identificou teste R22 com contagem antiga de 21 ruas para radar que agora contém 36 (a direção física pelo acesso teve 0 água, 0 colisões, 0 danos). Corrigido **validando IDs PS1, acessos, integridade e ausência de duplicação**, sem subtrair ruas; reexecução [41258717291](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41258717291) ainda sem conclusão verificada no momento deste registro.
-- **P0-09 / R45 E3 PARCIAL APROVADO:** [workflow focado 41259174215](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41259174215): 8/8 NPCs R43/R44/R48 percorreram entre 462 e 818 unidades em 4200 frames cada; cada um fez 1 a 2 voltas, sem água, bloqueios, danos ou parada prolongada. O teste anterior de 2 NPCs passava 8 veículos mas mantinha os outros 35 congelados como falsos obstáculos; o novo replay passa à IA apenas os 8 veículos efetivamente integrados fisicamente, sem esconder colisões entre eles. A frota de 43 carros simultâneos **não** foi reproduzida; nova [execução visual integral 41259195099](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41259195099) ainda requer conclusão.
+- **P0-01 CONCLUÍDO E2:** 942/942 testes Node 22 e 942/942 Node 24, ambos **SUCCESS** no [workflow 41260600150](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600150). Comparativo: 920/940 e 20 falhas (R58) → 942/942 e 0 falhas (R59), incluindo regressão de saída do carro a 4 FPS.
+- **P0-09 AINDA ABERTO:** primeira sequência Chromium R59 [41258524559](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41258524559) avançou além da pavimentação e verificou GLBs/cães, mas identificou teste R22 com contagem antiga de 21 ruas para radar que agora contém 36 (a direção física pelo acesso teve 0 água, 0 colisões, 0 danos). Corrigido **validando IDs PS1, acessos, integridade e ausência de duplicação**, sem subtrair ruas; reexecução [41258717291](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41258717291) avançou até R45 e encontrou falso congestionamento provocado por 35 NPCs congelados fora do replay; correção e evidência na seção seguinte.
+- **P0-09 / R45 E3 PARCIAL APROVADO:** [workflow focado 41259174215](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41259174215): 8/8 NPCs R43/R44/R48 percorreram entre 462 e 818 unidades em 4200 frames cada; cada um fez 1 a 2 voltas, sem água, bloqueios, danos ou parada prolongada. O teste anterior de 2 NPCs passava 8 veículos mas mantinha os outros 35 congelados como falsos obstáculos; o novo replay passa à IA apenas os 8 veículos efetivamente integrados fisicamente, sem esconder colisões entre eles. A frota de 43 carros simultâneos **não** foi reproduzida; execução [41259195099](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41259195099) avançou até o último smoke, revelando transição lenta; o smoke isolado subsequente passou, mas a nova [execução integral 41260596484](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260596484) permanece pendente de resultado.
 - **P0-10 AINDA ABERTO:** E4 gameplay por controles, ciclo save→reload e E5 FPS/memória/Android não foram homologados; publicação ≠ estabilidade.
+- **P0 extra — saída do carro em baixa taxa de quadros (motor):** antes, o temporizador das dobradiças/entrada de Tanner consumia o mesmo delta físico de 50 ms por frame, alongando uma animação de 1,2 s quando o WebGL rodava lentamente. Depois, `driver2-game-engine.js` fornece `transitionDt` de relógio real limitado a 250 ms para `DriverVehicleMount` e `DriverPoliceDoorRig`, sem alterar o passo de física. Teste novo simula 4 FPS e confirma transição para `on_foot`.
+- **E3 smoke isolado APROVADO:** [execução 41260600145](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600145) confirmou entrar/sair, caminhada, interiores e cenas em Chicago/Havana/Las Vegas/Rio. Corrigidos dois falsos bloqueios de harness: caminhada não deveria ser exigida em apenas 400 ms sem um frame, e amostragem de FPS em SwiftShader não deve aguardar incondicionalmente 90 frames; agora mede movimento efetivo e até 10 segundos de frames, registra amostras reais e falha se o renderizador parar.
+- **E5 NÃO CERTIFICADO:** amostras headless software Chromium: Chicago 1,6 FPS (1208 draw calls), Havana 1,7, Vegas 1,3, Rio 1,6. Esses números indicam uma limitação do renderizador por software e **não** medem o jogo em GPU/Android reais. Há 1,4–1,9 milhão de triângulos amostrados nesse ambiente; medir hardware real e otimizar LOD/draw calls continua aberto.
 - **Impacto esperado:** expor falhas físicas que estavam mascaradas pelos erros de import; preservar as quatro cidades, IA, 28 vagas, carros e campanha. FPS, memória, partidas completas e Android: **não medidos** nesta revisão.
 
 ## 0. Legenda e critérios de evidência
@@ -36,7 +39,7 @@
 
 ## 1. Resumo executivo — onde estamos
 
-**Veredito:** protótipo open-world robusto em recursos e regressões, mas **não jogo completo nem mapa Chicago 1:1 certificado**. Conservar o que funciona; QA lógico R59 passou 941/941 no Node 22 e 24, enquanto o QA visual e a integração do Chicago original continuam eixos prioritários. Refatorar os arquivos de motor gigantes **gradualmente**, sem reescrever o jogo inteiro.
+**Veredito:** protótipo open-world robusto em recursos e regressões, mas **não jogo completo nem mapa Chicago 1:1 certificado**. Conservar o que funciona; QA lógico R59 passou 942/942 no Node 22 e 24, enquanto o QA visual e a integração do Chicago original continuam eixos prioritários. Refatorar os arquivos de motor gigantes **gradualmente**, sem reescrever o jogo inteiro.
 
 ### Indicadores apurados no repositório
 
@@ -55,7 +58,7 @@
 | Scripts HTML | 152, dos quais 149 locais | todos os 149 caminhos locais consultados existem; custo de parse/ordem |
 | Campanha declarada | 8 Chicago + 1 Havana + 3 Vegas + 3 Rio | **15 etapas descritas no fluxo**, não 15 partidas certificadas |
 | Original PS1 visual | 54 GLBs, 1.544.872 triângulos | visual presente, sem colisores/ruas de produção homologados |
-| QA lógica R58 → R59 | **920/940 → 941/941** | **Node 22/24 verde** — run 41258638884, R59 |
+| QA lógica R58 → R59 | **920/940 → 942/942** | **Node 22/24 verde** — run 41260600150, R59 |
 | QA visual R58 → R59 | R58: pavimentação; primeira R59: radar R22 antigo | Reexecução Chromium 41258717291 **a verificar** |
 | Deploy Pages para R58 | **sucesso** no SHA 82323c47189c | publicação ≠ QA ou jogabilidade |
 
@@ -91,7 +94,7 @@ Links de referência dos workflows:
 
 **Regra:** correção de regressão comprovada tem preferência sobre novos edifícios, texturas, veículos e missões.
 
-- [x] **P0-01 [QA] RESTABELECER A SUÍTE VERDE [E2 — Node 22/24 941/941, run 41258638884]:** executar node --test tests/*.test.cjs em Node 22/24, classificar separadamente falha do produto x falha de teste/mock x expectativa obsoleta; corrigir sem simplesmente apagar as asserções. Evidência obrigatória: workflow Actions SUCCESS e total recontado.
+- [x] **P0-01 [QA] RESTABELECER A SUÍTE VERDE [E2 — Node 22/24 942/942, run 41260600150]:** executar node --test tests/*.test.cjs em Node 22/24, classificar separadamente falha do produto x falha de teste/mock x expectativa obsoleta; corrigir sem simplesmente apagar as asserções. Evidência obrigatória: workflow Actions SUCCESS e total recontado.
 - [x] **P0-02 [R52/Three.js] [E2]** mocks usados nos testes do distrito não possuem THREE.CylinderGeometry (5 cenários da R52 falham). Corrigir ambiente de testes e conferir novamente as ruas/colliders.
 - [x] **P0-03 [R56/R57/física] [E2]** testes importam um Physics.update que não existe na forma exportada em CommonJS (5 casos). Tornar harness compatível com API real e repetir os replays em Node. A aprovação anterior em contexto V8 concatenado não é certificação Node.
 - [x] **P0-04 [R58] [E2]** asserção da porta compara 0 com -0 via assert.strictEqual: classificar se é só representação numérica, corrigir no teste ou na saída sem mascarar ângulos não nulos.
