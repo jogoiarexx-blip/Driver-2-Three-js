@@ -6,6 +6,20 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R64 — Sprint P1 GAME-07 / PERF-06 — troca de cidade e estado adiado (01/11/2026)
+
+**Base:** R63 `6a1b41a`. Implementação no [PR #39](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/39).
+
+**Antes, bug confirmado pela leitura do fluxo:** `DriverHomeSave.restore()` conserva `_pendingVehicleRestore` e `_pendingPlayerVehicleIndex` enquanto o carro do estádio de Chicago ainda não existe. `spawnAllVehicles()` desmontava a frota e criava outra ao reiniciar uma missão/trocar de cidade, sem descartar as pendências. Um carro adicionado mais tarde à frota nova poderia receber localização, dano e seleção de jogador **de uma geração de save anterior**. O problema não é exclusivo do Rio/Havana; ocorre sempre que uma reconstrução da frota sucede um save adiado.
+
+**Depois, correção real:** `DriverHomeSave.clearDeferredVehicleRestore(game)` limpa idempotentemente as duas referências no começo de `Driver2GameEngine.spawnAllVehicles()`. `restore()` continua criando **novas** pendências depois de `startMission()`, portanto o Wrigley Car legítimo permanece recuperável quando surgir na mesma geração. Nenhum GLB, física ou mapa foi alterado.
+
+**E2 certificado:** Node 22/24 **960/960** na R64 (R63 957/957, três testes adicionais); verificações de limpeza, substituição por save novo e preservação da restauração adiada válida. R60 P0 e regressões de missões regionais são gates separados.
+
+**E3 em validação:** `tests/playtest-gameforge-p1-city-transitions.cjs`, novo workflow dedicado; Chromium passa Chicago (save com carro do estádio pendente) → Havana → Vegas (C4 ativo) → Rio → Chicago, confirma sem estado/objetos remanescentes, sem duplicação de raízes de veículos, progresso regional preservado e observa `renderer.info.memory`. O primeiro teste falhou **na fixture de reprodução antes da troca**, pois o jogo criou um veículo adicional durante `startMission()`; a fixture foi ajustada para usar oito snapshots extras, produzindo estado pendente mesmo com spawns imediatos. Não confundir esse erro de fixture com resultado da validação final; aguardar SUCCESS.
+
+**Ainda não certificado:** FPS, aumento de memória ao longo de 30–60min em Android real E5, ciclos completos de missão por humano E4, bem como todos os casos de perda de rede/falha de carregamento. GAME-07 e PERF-06 continuam abertos até esses critérios.
+
 ### R63 — Sprint P1 GAME-09 — checkpoints regionais intermediários (01/11/2026)
 
 **Base:** R62 `e91160b`; PR [#38](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/38).
@@ -224,7 +238,7 @@ Links de referência dos workflows:
 
 ### Pendências obrigatórias
 - [ ] **GAME-06 P1** jogar **cada missão completa** do início à vitória, por controles reais; gravar evidência de sucesso e falha.
-- [ ] **GAME-07 P1** verificar mudança Chicago→Havana→Vegas→Rio sem estado antigo, missão quebrada ou itens de cidade anterior.
+- [ ] **GAME-07 P1 [R64 E2 aprovado, E3 em execução]** ciclo Chicago→Havana→Vegas→Rio→Chicago com missão ativa, resíduos da cena e save adiado. Snapshot de carro do estádio antigo é invalidado antes de uma nova frota. Faltam resultado Chromium, E4/E5 e exceções de carregamento.
 - [ ] **GAME-08 P1** repetir missão após derrota, checkpoint intermediário, troca de veículo e mudança de cidade.
 - [ ] **GAME-09 P1 [R63 E2+E3 direcionados aprovados]** V1→V2, seis missões regionais e retomada de C4/assalto/helicóptero/barcaça; 957/957 Node22/24 e [8 etapas Chromium](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302361086) SUCCESS. Ainda faltam Android real, testes humanos E4 e resistência/corrupção após longas sessões.
 - [ ] **GAME-10 P1** comparar ritmo do jogo: física, objetivos, dificuldade, perseguições e variedade, sem inventar fidelidade às 40+ missões do PS1.
@@ -294,7 +308,7 @@ Assets particularmente grandes: caminhonete velha 24,74 MiB; barco 20,50; caminh
 - [ ] **PERF-03 P1** metas iniciais sugeridas (AJUSTAR após baseline): desktop p95 frametime até 25 ms; Android intermediário p95 até 50 ms; nenhum leak cumulativo após trocar cidades 3×.
 - [ ] **PERF-04 P1** GLBs: inventário de triângulos por veículo/NPC, compactação Draco/Meshopt **após validar suporte e cadeia de carregamento**, texturas WebP/KTX2 quando compatível, LOD de modelo e limitações por plataforma.
 - [ ] **PERF-05 P1** tornar o pacote visual Chicago original streaming por chunk com limite de memória e descarte visível; nunca instanciar 1,54M triângulos sem budget e medição.
-- [ ] **PERF-06 P1** verificar se troca de cidade libera geometrias, materiais, texturas, mixer de animações e clones sem liberar recursos compartilhados.
+- [ ] **PERF-06 P1 [R64 regressão direcionada]** registrar geometria/texturas e detecção de objetos remanescentes no ciclo de quatro cidades, sem afirmar ausência de leak de GPU sem um soak test prolongado em hardware real.
 - [ ] **PERF-07 P1** investigar tempo de parsing/ordem dos **149 scripts locais**; juntar módulos por build simples e testável somente quando eliminar risco de dependências globais.
 - [ ] **PERF-08 P2** política de LOD: faixas, histerese, instancing, distância das árvores, iluminação, pedestres e veículos, sem popping perceptível.
 - [ ] **PERF-09 P2** progressão do loading mede trabalho real; testar no 3G/lento, perda de internet e cancelamento.
