@@ -87,6 +87,15 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
     blocked:points.filter(p=>p.blocked).length,
     submerged:points.filter(p=>p.water).length,
     radarPaths:r.radarPaths.length,radarDrawn:radar,
+    // Later revisions add valid roads; do not equate total roads with R22.
+    sourceRadarIds:r.radarPaths.filter(p=>
+      p.provenance==='PS1-surface-reference-adapted').map(p=>p.id),
+    feederRadarCount:r.radarPaths.filter(p=>
+      p.provenance==='topology-inferred-grid-feeder').length,
+    uniqueRadarCount:new Set(r.radarPaths.map(p=>p.id)).size,
+    invalidRadarCount:r.radarPaths.filter(p=>
+      !p.id||!Array.isArray(p.points)||p.points.length<2||
+      p.points.some(v=>!Number.isFinite(v.x)||!Number.isFinite(v.z))).length,
     physicalDrive:drive,
     stillAtChicago:g.currentCityKey==='chicago',
     wholePS1MapCertified:r.wholePS1MapCertified,
@@ -103,7 +112,16 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
   assert.equal(report.blocked,0);
   assert.equal(report.submerged,0);
   assert(report.safeSamples>=45);
-  assert.equal(report.radarPaths,report.sourceCorridors+report.connectorsAccepted);
+  const sourceIds=require('../js/world/chicago-ps1-street-network-r22.js')
+    .SOURCE_NAMES.map(([id])=>id);
+  assert.deepEqual([...report.sourceRadarIds].sort(),[...sourceIds].sort(),
+    'cada rua fonte R22 deve continuar presente no radar');
+  assert.equal(report.feederRadarCount,report.connectorsAccepted);
+  assert(report.radarPaths>=report.sourceCorridors+report.connectorsAccepted,
+    'expansões não podem apagar vias fonte do radar');
+  assert.equal(report.uniqueRadarCount,report.radarPaths,
+    'vias não podem ser duplicadas por módulos de expansão');
+  assert.equal(report.invalidRadarCount,0,'radar contém via inválida');
   assert(report.radarDrawn>1);
   assert(report.physicalDrive.toDistance<3.4,
     'real car could not reach the north grid via the new street: '+
