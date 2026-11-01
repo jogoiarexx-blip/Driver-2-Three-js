@@ -16,7 +16,7 @@
 
 **E2 confirmado:** Node 22 e 24, **957/957**, zero falhas [run 41302385567](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302385567); R62 tinha 952. Cinco cenários diretos: Vegas C4 em fase 2 e countdown até vitória, heist no segundo veículo com vitória, helicóptero do Rio retoma segmento e segue movimento, barcaça com bomba armada, rejeição de fragmentos incompatíveis.
 
-**E3 em validação:** workflow de Chromium [R63 P1 checkpoints](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302385602), com evidências JSON e PNG para iniciar, gravar, recarregar e prosseguir em C4, assalto, helicóptero e barcaça. Outros gates: playtest R60 P0 e R62 P1. **Só marcar E3 aprovado com SUCCESS**, sem confundir cenários controlados (não dirigiu rotas completas por teclado) com E4 humano.
+**E3 confirmado:** [Chromium R63 Actions #41302361086](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302361086) SUCCESS, **8 etapas** e JSON/PNG do jogo real. C4 fase 1 → reload fase 1/segundo marcador, depois plantou gerador 2; heist primeira entrega → reload limusine correta e vitória no segundo carro com **19/19 veículos**; Rio helicóptero `index=2`, `seconds=32.5`, `lost=3` e ponto `(152,-247)` → reload no mesmo trecho e movimento `afterSeconds=32.75`; Rio barcaça armada → reload com countdown **8s** e sem marcador incorreto. [R62 P1 no branch](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302385665) SUCCESS. O playtest P0 e Android E5 permanecem gates independentes; E3 são cenários controlados, não direção humana E4.
 
 **Pendentes:** confirmação Android real E5, certificação E4 das missões do começo ao fim, qualquer regressão detectada nos jobs e persistência completa de missões não regionais fora deste escopo.
 
@@ -226,7 +226,7 @@ Links de referência dos workflows:
 - [ ] **GAME-06 P1** jogar **cada missão completa** do início à vitória, por controles reais; gravar evidência de sucesso e falha.
 - [ ] **GAME-07 P1** verificar mudança Chicago→Havana→Vegas→Rio sem estado antigo, missão quebrada ou itens de cidade anterior.
 - [ ] **GAME-08 P1** repetir missão após derrota, checkpoint intermediário, troca de veículo e mudança de cidade.
-- [ ] **GAME-09 P1 [R63 E2 aprovado, E3 em validação]** save V2 de seis missões regionais, migração V1→V2, e estados C4/assalto/helicóptero/barcaça; 957/957 Node 22/24. Aguardando prova de reload em Chromium antes de encerrar checkpoint intermediário. Android real e stress de saves permanecem pendentes.
+- [ ] **GAME-09 P1 [R63 E2+E3 direcionados aprovados]** V1→V2, seis missões regionais e retomada de C4/assalto/helicóptero/barcaça; 957/957 Node22/24 e [8 etapas Chromium](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41302361086) SUCCESS. Ainda faltam Android real, testes humanos E4 e resistência/corrupção após longas sessões.
 - [ ] **GAME-10 P1** comparar ritmo do jogo: física, objetivos, dificuldade, perseguições e variedade, sem inventar fidelidade às 40+ missões do PS1.
 - [ ] **GAME-11 P2** feedback de objetivo curto e específico (mapa, minimapa, distância, texto e som) em vez de textos excessivos.
 - [ ] **GAME-12 P2** mapear as atividades secundárias, recompensa, repetição e qualidade de replays; confirmar que não quebram progresso principal.
