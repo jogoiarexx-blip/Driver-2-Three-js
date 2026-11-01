@@ -128,6 +128,25 @@ test('R60: save persiste a frota atual de 43 veículos, sem truncar carros ou da
   const corrupted={...snapshot,vehicles:Array.from({length:129},()=>snapshot.vehicles[0])};
   assert.equal(save.valid(corrupted),false,'unbounded saves must still be rejected');
 });
+test('R60: veículo do estádio criado após o load recupera dano e dono',()=>{
+  const game=mockGame(),save=new Save(storage());
+  const snap=save.capture(game);
+  snap.vehicles.push({...snap.vehicles[0],x:111,z:-238,damage:33});
+  snap.playerIndex=2;
+  assert.equal(save.restore(game,snap),true);
+  assert.equal(game.vehicles.length,2,'o terceiro carro ainda não foi criado');
+  assert.equal(game._pendingVehicleRestore.length,1);
+  const late=playerVehicle();game.vehicles.push(late);
+  assert.equal(Save.restoreDeferredVehicle(game,late),true);
+  assert.equal(late.x,111);
+  assert.equal(late.z,-238);
+  assert.equal(late.damage,33);
+  assert.equal(game.playerCar,late);
+  assert.equal(game._pendingVehicleRestore,null);
+  assert.equal(Save.restoreDeferredVehicle(game,playerVehicle()),false);
+  const original=read('js/world/chicago-gameplay.js');
+  assert.match(original,/DriverHomeSave\.restoreDeferredVehicle\(game,car\)/);
+});
 test('JSON quebrado é detectado, sem derrubar o aplicativo',()=>{
   const disk=storage(),save=new Save(disk);
   disk.setItem(Save.KEY,'{broken');
