@@ -96,7 +96,8 @@ test('index carrega fonte dos clips antes do Tanner e invalida cache',()=>{
   assert.ok(html.indexOf('tanner-swim-animations.js')>0);
   assert.ok(html.indexOf('tanner-swim-animations.js')<
     html.indexOf('tanner-controller.js'));
-  assert.match(html,/tanner-controller\.js\?v=swim-retarget-r1/);
+  // Cache key changed in R58; preserve ordering and assert the live key.
+  assert.match(html,/tanner-controller\.js\?v=r58-seat-height-async/);
 });
 
 test('piso dos interiores tem prioridade sobre o mar de Chicago',()=>{

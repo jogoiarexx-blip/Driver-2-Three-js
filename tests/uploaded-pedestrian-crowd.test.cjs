@@ -53,7 +53,10 @@ function makeSource(id){
         runAction:new Action({name:'Running',duration:1})};
 }
 function makeManager(){
-    const sources=['female','male','mendigo','woman-2','woman-3'].map(makeSource);
+    // Current spawn policy reserves slots 5 and 6 for real child GLBs.
+    const sources=['female','male','mendigo','woman-2','woman-3',
+        'child-a','child-b'].map(makeSource);
+    for(const source of sources.slice(5))source.config.species='child';
     const manager={
         pedestrians:Array.from({length:28},()=>({mesh:new Group(),walkSpeed:2.6})),
         roadblockOfficers:[],
@@ -62,7 +65,7 @@ function makeManager(){
     };
     return {manager,sources,crowd:new Crowd(manager)};
 }
-test('28 vagas reais: 5 GLBs originais e 23 clones sem geometria nova',()=>{
+test('28 vagas: adultos e duas crianças GLB reais, com rigs independentes',()=>{
     const {manager,crowd,sources}=makeManager();
     for(let i=0;i<5;i++)manager.pedestrians[i][
         i===0?'glbFemale':i===1?'glbMale':'glbVariant']=true;
@@ -70,9 +73,10 @@ test('28 vagas reais: 5 GLBs originais e 23 clones sem geometria nova',()=>{
     assert.equal(crowd.instances.size,23);
     assert.equal(crowd.status().filledSlots,28);
     assert.equal(crowd.status().proceduralCivilians,0);
-    assert.equal(crowd.status().loadedModels,5);
+    assert.equal(crowd.status().loadedModels,7);
+    assert.equal(crowd.status().speciesCount.child,2);
     const ids=new Set([...crowd.instances.values()].map(r=>r.sourceId));
-    assert.equal(ids.size,5);
+    assert.equal(ids.size,7);
     for(const [index,record] of crowd.instances){
         assert.equal(manager.pedestrians[index].glbCrowd,true);
         assert.equal(record.root.children[1].skeleton.bones[0],record.root.children[0]);
@@ -90,7 +94,7 @@ test('28 vagas reais: 5 GLBs originais e 23 clones sem geometria nova',()=>{
     crowd.release();
     assert.equal(crowd.instances.size,0);
     assert.equal(p.mesh.children.length,0);
-    assert.equal(sources.length,5);
+    assert.equal(sources.length,7);
 });
 test('sem GLB disponível nunca fabrica pessoas de caixas',()=>{
     const {crowd,manager,sources}=makeManager();
@@ -101,7 +105,7 @@ test('sem GLB disponível nunca fabrica pessoas de caixas',()=>{
     assert(!managerSource.includes('const torsoGeo='));
     assert(!managerSource.includes('const uniform = new THREE.MeshLambertMaterial'));
 });
-test('se um GLB falha, outras fontes reais ocupam sua vaga',()=>{
+test('se um GLB adulto falha, outras fontes da espécie ocupam sua vaga',()=>{
     const {crowd,manager,sources}=makeManager();
     sources[2].state='error';
     crowd.fill();
@@ -122,6 +126,23 @@ test('agentes de bloqueio e troca de mapa liberam clones antes da limpeza GPU',(
     manager.pedestrians=Array.from({length:28},()=>({mesh:new Group(),walkSpeed:2.6}));
     crowd.fill();
     assert.equal(crowd.status().filledSlots,28);
+});
+test('vagas infantis aguardam GLB infantil e recuperam-se sem usar adultos',()=>{
+    const {crowd,manager,sources}=makeManager();
+    for(const source of sources.slice(5))source.state='missing';
+    crowd.fill();
+    assert.equal(crowd.status().filledSlots,26);
+    assert.equal(crowd.status().waitingSlots,2);
+    assert.equal(crowd.instances.has(5),false);
+    assert.equal(crowd.instances.has(6),false);
+    sources[5].state='ready';
+    crowd.fill();
+    assert.equal(crowd.status().filledSlots,28);
+    assert.equal(crowd.status().speciesCount.child,2);
+    assert.equal(manager.pedestrians[5].species,'child');
+    assert.equal(manager.pedestrians[6].species,'child');
+    crowd.release();
+    assert.equal(crowd.instances.size,0);
 });
 test('scripts carregam antes do gerenciador e nunca carregam procedural de reserva',()=>{
     assert(html.indexOf('driver-uploaded-pedestrian-crowd.js')>

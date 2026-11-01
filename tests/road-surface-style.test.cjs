@@ -107,7 +107,10 @@ test('crosswalks span over 20m, never float on canal, poles remain destructible'
   assert(zebra.matrices.every(m=>!(m.position.z>31&&m.position.z<69)));
   assert(zebra.matrices.some(m=>Math.abs(m.position.x+9.54)<.01));
   assert.equal(c.destructibleProps.filter(x=>x.type==='pole').length,162);
-  assert.equal(c.cityGroup.children.length,5);
+  // The 2 additional batches are regional signs, not missing zebras/poles.
+  assert.equal(c.cityGroup.children.length,7);
+  assert.equal(c.cityGroup.children.filter(m=>m.name==='street-signs-havana').length,2);
+  assert.equal(c.cityGroup.children.filter(m=>m.count===162).length,4);
 });
 
 test('city builder loads road surface and curb without modifying traffic or garages',()=>{

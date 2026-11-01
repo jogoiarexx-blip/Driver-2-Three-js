@@ -33,7 +33,7 @@ function three(){
         setMatrixAt(i){assert(i>=0&&i<this.count);}
     }
     return {Group:Obj,Object3D:Obj,Mesh,InstancedMesh:Instances,
-        BoxGeometry:class{},MeshLambertMaterial:class{},
+        BoxGeometry:class{},CylinderGeometry:class{},MeshLambertMaterial:class{},
         MeshBasicMaterial:class{}};
 }
 function city(){

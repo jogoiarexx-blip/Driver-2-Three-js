@@ -6,6 +6,21 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R59 — 31/10/2026 — P0-01 a P0-10 (correção em homologação)
+
+**Base:** main a7d501a7; revisão preparada em branch `fix/driver2-r59-p0-qa`. Nenhum item P0 é marcado como certificado sem Actions e browser verde.
+
+- **ANTES (E2 remoto):** execução 41253703197 — 920/940 testes passaram, 20 falharam. Execução visual 41253690079 interrompida em crosswalk (7 instâncias de batch versus 5 esperadas).
+- **P0-02:** mock R52 atualizado com `CylinderGeometry`, que o mapa já usa de verdade.
+- **P0-03:** `DriverArcadePhysics` exporta a mesma classe estática para Node CommonJS, mantendo o contrato global no browser. Replays R56/R57 deixam de falhar antes de rodar por falta da API.
+- **P0-04:** fechar a porta fixa o ângulo em `+0`, eliminando `-0` sem mexer na curva de abertura nem em ângulos válidos.
+- **P0-05:** os testes passam a inspecionar *sete batches efetivos*: uma zebra, quatro componentes instanciados dos postes e duas placas regionais; verificam 162 registros destrutíveis e ausência de sombras dinâmicas.
+- **P0-06:** fixture de 28 vagas separa os 26 adultos das duas vagas infantis reservadas; novo teste cobre GLBs infantis indisponíveis e chegada posterior, sem criar crianças falsas a partir de adultos.
+- **P0-07:** teste da estação passa a verificar a política atual: rampa elevada pedonal, carro continua no asfalto inferior sem impulso vertical e com deslocamento; teste independente preserva progressão de altura pedonal.
+- **P0-08:** teste de ordem/cache usa a chave válida R58 do Tanner, sem reverter o cache-busting em produção.
+- **P0-01, P0-09, P0-10:** **PENDENTES de evidência** do Actions Node completo, sequência Chromium/WebGL, save/campanha e Pages; não confundir correção de harness com homologação de direção.
+- **Impacto esperado:** expor falhas físicas que estavam mascaradas pelos erros de import; preservar as quatro cidades, IA, 28 vagas, carros e campanha. FPS, memória, partidas completas e Android: **não medidos** nesta revisão.
+
 ## 0. Legenda e critérios de evidência
 
 - **[x] IMPLEMENTADO** = há evidência concreta no código/arquivo, mas isso **não** significa funcionalidade plenamente validada.

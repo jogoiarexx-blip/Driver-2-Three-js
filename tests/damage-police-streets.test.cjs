@@ -83,9 +83,12 @@ test('flanqueadores não criam previsão infinita',()=>{
     assert.ok(Math.hypot(target.x-2,target.z-5)<100);
 });
 test('faixas de pedestres são instanciadas em um lote',()=>{
-    const city={preset:{id:'chicago'},cityGroup:new Element()};
+    const city={preset:{id:'chicago'},cityGroup:new Element(),destructibleProps:[]};
     Street.build(city);
-    assert.equal(city.cityGroup.children.length,5);
+    // One zebra batch + four pole parts + two regional sign batches.
+    assert.equal(city.cityGroup.children.length,7);
+    assert.equal(city.cityGroup.children.filter(m=>m.name==='street-signs-chicago').length,2);
+    assert.equal(city.destructibleProps.length,162);
     const crosswalk=city.cityGroup.children.find(mesh=>mesh.count===1600);
     assert.ok(crosswalk,'faixas ausentes');
     assert.equal(crosswalk.instanceMatrix.needsUpdate,true);
@@ -93,8 +96,10 @@ test('faixas de pedestres são instanciadas em um lote',()=>{
 test('postes não criam fontes dinâmicas de luz',()=>{
     const city={preset:{id:'vegas'},cityGroup:new Element()};
     Street.build(city);
-    assert.equal(city.cityGroup.children.filter(m=>m.count===162).length,2);
+    // Pole, lamp, pedestal and arm must share the 162 real positions.
+    assert.equal(city.cityGroup.children.filter(m=>m.count===162).length,4);
     assert.equal(city.cityGroup.children.filter(m=>m.count===41).length,2);
+    assert.equal(city.cityGroup.children.filter(m=>m.name==='street-signs-vegas').length,2);
     assert.ok(city.cityGroup.children.every(m=>m.castShadow===false));
 });
 test('HTML carrega módulos antes dos consumidores',()=>{
