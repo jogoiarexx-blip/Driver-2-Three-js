@@ -1,0 +1,52 @@
+name: Driver 2 - R62 P1 save migration and regional mission
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/gameplay/home-save.js'
+      - 'tests/playtest-gameforge-p1-save.cjs'
+      - 'tests/city-home-save.test.cjs'
+      - '.github/workflows/p1-save-playtest.yml'
+  pull_request:
+    paths:
+      - 'js/gameplay/home-save.js'
+      - 'tests/playtest-gameforge-p1-save.cjs'
+      - 'tests/city-home-save.test.cjs'
+      - '.github/workflows/p1-save-playtest.yml'
+permissions:
+  contents: read
+jobs:
+  save-regional:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar contrato de saves e capítulo regional
+        run: node --test tests/city-home-save.test.cjs
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Servir o game para testes de save em origem real
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/driver2-p1-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/driver2-p1-http.log
+          exit 1
+      - name: Migrar save V1 e retornar a Vegas C4 após reload
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/playtest-gameforge-p1-save.cjs
+      - name: Preservar screenshots e evidências do P1
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver2-p1-regional-save-evidence
+          path: qa-artifacts/p1-save-*
+          retention-days: 14
