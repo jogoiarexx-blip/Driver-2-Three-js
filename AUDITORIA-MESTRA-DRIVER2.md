@@ -6,6 +6,20 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R62 — Sprint P1 GAME-09 / ARCH-04 (migração e saves regionais)
+
+**Base:** `544c0e2` R61. **Código:** [PR #37](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/37).
+
+**Falha real identificada:** `DriverHomeSave.TYPES` reconhecia Chicago/Havana mas recusava seis missões implementadas e selecionáveis em Vegas/Rio. `write()` devolvia falso, impedindo gravar o progresso regional enquanto uma dessas missões estava ativa. `restore()` substituía `completedMissions` com a lista do save, descartando conquistas que existissem só no checkpoint regional separado. Não havia migração de schema do save geral.
+
+**Mudanças:** contrato `DriverHomeSave.VERSION = 2` com `LEGACY_VERSION = 1`, mantendo `KEY=driver2-three-save-v1` para não perder localStorage existente; leitura converte V1 válido para V2 e tenta persistir a migração. Mesmo em storage read-only, devolve os dados migrados em memória. Versões futuras e arquivos inválidos não são sobrescritos. A whitelist incorpora as seis missões regionais; concluídas do save manual e do capítulo são combinadas sem inventar conquistas. `write()` agora recusa saves com bytes/caracteres além do limite de `read()`, impedindo falso sucesso.
+
+**E2 inicial comprovado:** R61 `946/946` → R62 `952/952` em Node 22 e Node 24, após atualização dos testes que dependiam da versão antiga. Novos cenários: V1→V2 sem perda, recusa de versões futuras/inválidas, storage bloqueado, seis missões regionais, união de conquistas e limite de tamanho. Testes que continham `version:1` agora verificam explicitamente V2 **e** migração legada.
+
+**E3 Playwright confirmado:** [Actions #41264434195](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41264434195) SUCCESS, 4 etapas e PNG/JSON. Migração v1→v2 na mesma origem (storedVersion 2), dados de versão futura recusados/intactos, Vegas C4 gravada com 17 carros, reload restaurou `city=vegas`, `mission=story_vegas_c4`, `regionalState.type`, missão ativa e conquista `story_vegas_ambulance` preservada. O teste P0 original e os limites E4/E5 continuam gates independentes.
+
+**Pendências e limite de certificação:** esta revisão **não** certifica retomada a meio de todos os objetivos regionais (C4 parcial, heist segundo carro, helicóptero) nem E4 humano ou Android E5. Não declarar GAME-09/ARCH-04 completamente encerrados antes desses cenários e do Playwright.
+
 ### R61 — Sprint P0 NPC-03 — 31/10/2026 (E2/E3 em validação)
 
 **Base:** main `f49e297` R60. Implementação no [PR #36](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/36).
@@ -198,7 +212,7 @@ Links de referência dos workflows:
 - [ ] **GAME-06 P1** jogar **cada missão completa** do início à vitória, por controles reais; gravar evidência de sucesso e falha.
 - [ ] **GAME-07 P1** verificar mudança Chicago→Havana→Vegas→Rio sem estado antigo, missão quebrada ou itens de cidade anterior.
 - [ ] **GAME-08 P1** repetir missão após derrota, checkpoint intermediário, troca de veículo e mudança de cidade.
-- [ ] **GAME-09 P1** testar localStorage em Chrome desktop e Android: salvar, recarregar, restaurar, importar versão velha e corrupção deliberada.
+- [ ] **GAME-09 P1 [R62 E2 + E3 direcionado aprovados]** seis missões regionais admitidas pela validação; Vegas C4 gravada e restaurada no navegador em [run 41264434195](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41264434195); migração V1→V2 e rejeição de corrupção verificadas. **Pendentes:** checkpoints internos de missões regionais, Android real e stress de saves.
 - [ ] **GAME-10 P1** comparar ritmo do jogo: física, objetivos, dificuldade, perseguições e variedade, sem inventar fidelidade às 40+ missões do PS1.
 - [ ] **GAME-11 P2** feedback de objetivo curto e específico (mapa, minimapa, distância, texto e som) em vez de textos excessivos.
 - [ ] **GAME-12 P2** mapear as atividades secundárias, recompensa, repetição e qualidade de replays; confirmar que não quebram progresso principal.
@@ -281,7 +295,7 @@ Assets particularmente grandes: caminhonete velha 24,74 MiB; barco 20,50; caminh
 - [ ] **ARCH-01 P1** dividir js/engine/driver2-game-engine.js (~199 KiB): ciclo principal, estado/missão, entrada do jogador, HUD, carregamento, cidade e tráfego. Extrair por interface, uma responsabilidade por PR.
 - [ ] **ARCH-02 P1** dividir js/world/city-builder.js (~120 KiB): construção por distrito, água/pontes, colisores, props, lifecycle e estatísticas.
 - [ ] **ARCH-03 P1** separar completamente cena visual, física, IA e estado de campanha; minimizar variáveis globais e acoplamento à ordem de scripts.
-- [ ] **ARCH-04 P1** versionar contratos de save e criar migração automática em vez de manter somente versões estritas.
+- [x] **ARCH-04 P1 [R62 contrato V2 + migração V1]** manter a mesma chave localStorage, validação explícita, atualização segura V1→V2, rejeição de formato futuro e testes em 952/952 Node; não sobreescrever dados inválidos.
 - [ ] **ARCH-05 P1** centralizar catálogo de veículos/GLBs, pesos, texturas, escalas e licenças. Validar links e limites de memória.
 - [ ] **ARCH-06 P1** centralizar configuração de qualidade (low/medium/high/auto), DPR, sombras, pedestres, draw distance e orçamento de LOD.
 - [ ] **ARCH-07 P1** revisar compatibilidade de testes Node: export real, mocks Three.js completos, sem testes que só passam por concatenação no mesmo contexto.

@@ -191,9 +191,12 @@ test('estado do trem é uma opção válida no sistema de save',()=>{
     assert.equal(Train.START_Z,168);
     assert.equal(Train.STOP_Z,-258);
     assert.ok(saver.valid({
-        version:1,city:'chicago',interior:null,mission:{type:'story_train'},
+        version:Save.VERSION,city:'chicago',interior:null,mission:{type:'story_train'},
         tanner:{x:0,z:0},vehicles:[{x:0,z:0}]
     }));
+    assert.equal(saver.migrate({version:1,city:'chicago',interior:null,
+        mission:{type:'story_train'},tanner:{x:0,z:0},
+        vehicles:[{x:0,z:0}]}).version,Save.VERSION);
 });
 test('save captura posição e chegada do trem, sem dados gráficos pesados',()=>{
     const {train}=trainInstance();train.reset(true);

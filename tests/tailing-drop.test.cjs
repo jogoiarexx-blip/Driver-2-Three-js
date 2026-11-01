@@ -188,10 +188,11 @@ test('simulação do motor percorre a rota inteira sem atravessar prédio',()=>{
 test('save aceita a missão furtiva e locais adicionais dentro da cidade',()=>{
     const store=new Save({});
     for(const room of ['home','warehouse','diner','garage']){
-        const raw={version:1,city:'chicago',interior:room,
+        const raw={version:Save.VERSION,city:'chicago',interior:room,
             mission:{type:'story_drop'},
             tanner:{x:1180,z:0},vehicles:[{x:0,z:0}]};
         assert.equal(store.valid(raw),true);
+        assert.equal(store.migrate({...raw,version:1}).version,Save.VERSION);
     }
 });
 test('motor restaura coordenadas estendidas de uma oficina',()=>{

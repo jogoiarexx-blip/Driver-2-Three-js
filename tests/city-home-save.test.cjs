@@ -68,7 +68,7 @@ test('arquivo salva um registro versionado recuperável após recriar gerenciado
   const disk=storage(),a=new Save(disk);
   assert.equal(a.write(a.capture(mockGame())),true);
   const b=new Save(disk),loaded=b.read();
-  assert.equal(loaded.version,1);
+  assert.equal(loaded.version,2);
   assert.equal(loaded.city,'chicago');
   assert.equal(loaded.interior,'home');
   assert.equal(loaded.mission.type,'story_tipoff');
@@ -146,6 +146,78 @@ test('R60: veículo do estádio criado após o load recupera dano e dono',()=>{
   assert.equal(Save.restoreDeferredVehicle(game,playerVehicle()),false);
   const original=read('js/world/chicago-gameplay.js');
   assert.match(original,/DriverHomeSave\.restoreDeferredVehicle\(game,car\)/);
+});
+test('R62: migra v1 antigo sem perder missão, veículo, progresso e posição',()=>{
+  const disk=storage(),save=new Save(disk);
+  const old={...save.capture(mockGame()),version:1};
+  disk.setItem(Save.KEY,JSON.stringify(old));
+  const migrated=save.read();
+  assert.equal(migrated.version,2);
+  assert.equal(migrated.city,'chicago');
+  assert.equal(migrated.mission.type,'story_tipoff');
+  assert.equal(migrated.vehicles[0].damageZones.front,30);
+  assert.equal(migrated.tanner.x,1000);
+  assert.equal(migrated.completed[0],'story_witness');
+  assert.equal(JSON.parse(disk.getItem(Save.KEY)).version,2);
+});
+test('R62: V1 corrompido e versões futuras são rejeitados sem sobrescrever',()=>{
+  const disk=storage(),save=new Save(disk),base=save.capture(mockGame());
+  for(const data of [
+    {...base,version:99},
+    {...base,version:1,vehicles:[]},
+    {...base,version:1,city:'fake'}
+  ]){
+    const raw=JSON.stringify(data);disk.setItem(Save.KEY,raw);
+    assert.equal(save.read(),null);
+    assert.equal(disk.getItem(Save.KEY),raw);
+  }
+});
+test('R62: v1 válido ainda carrega com armazenamento bloqueado para escrita',()=>{
+  const raw=JSON.stringify({
+    ...new Save(storage()).capture(mockGame()),version:1
+  });
+  const save=new Save({getItem(){return raw;},setItem(){throw Error('security');}});
+  assert.equal(save.read().version,2);
+  assert.equal(save.read().mission.type,'story_tipoff');
+});
+test('R62: seis capítulos Vegas/Rio podem salvar e reler sua missão',()=>{
+  const chapter=read('js/gameplay/chapter-progress.js'),
+    regional=read('js/gameplay/regional-missions.js');
+  const disk=storage(),save=new Save(disk);
+  for(const type of Save.REGIONAL){
+    assert(chapter.includes("'"+type+"'"),'checkpoint faltando '+type);
+    assert(regional.includes(type+':['),'diretor faltando '+type);
+    const game=mockGame();
+    game.currentCityKey=type.startsWith('story_vegas')?'vegas':'rio';
+    game.missionType=type;game.interiorPlace=null;
+    const state=save.capture(game);
+    assert.equal(save.write(state),true,type);
+    assert.equal(save.read().mission.type,type);
+    assert.equal(save.read().city,game.currentCityKey);
+  }
+});
+test('R62: conquistas do capítulo e do save são combinadas sem perder nenhuma',()=>{
+  const game=mockGame(),save=new Save(storage());
+  const snapshot=save.capture(game);
+  snapshot.completed=['story_witness','story_vegas_c4'];
+  const persisted=[];
+  game.chapterProgress={
+    regionalCompleted:new Set(['story_rio_barge']),
+    completeRegional(type){persisted.push(type);
+      this.regionalCompleted.add(type);return true;}
+  };
+  assert.equal(save.restore(game,snapshot),true);
+  for(const type of ['story_witness','story_vegas_c4','story_rio_barge'])
+    assert(game.completedMissions.has(type),type);
+  assert(game.chapterProgress.regionalCompleted.has('story_vegas_c4'));
+  assert(persisted.includes('story_vegas_c4'));
+  assert(save.capture(game).completed.includes('story_rio_barge'));
+});
+test('R62: recusa gravar arquivo grande demais para ser lido',()=>{
+  const disk=storage(),save=new Save(disk),data=save.capture(mockGame());
+  data.payload='x'.repeat(65000);
+  assert.equal(save.write(data),false);
+  assert.equal(save.read(),null);
 });
 test('JSON quebrado é detectado, sem derrubar o aplicativo',()=>{
   const disk=storage(),save=new Save(disk);

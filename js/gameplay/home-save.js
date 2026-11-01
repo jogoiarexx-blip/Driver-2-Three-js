@@ -5,7 +5,9 @@
  */
 class DriverHomeSave {
     static KEY = 'driver2-three-save-v1';
-    static VERSION = 1;
+    static VERSION = 2; // R62 P1: migrar a versão 1 sem mudar a chave
+    static LEGACY_VERSION = 1;
+    static MAX_SAVE_BYTES = 60000;
     static CITIES = ['chicago','havana','vegas','rio'];
     // R60: Chicago currently creates 43+ cars. The former 32-car limit
     // silently rejected real saves even though capture() included the fleet.
@@ -13,7 +15,13 @@ class DriverHomeSave {
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
-        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder','story_caine','story_leaving','story_havana_lead'
+        'heist','race','secret','pursuit','story_tipoff','story_witness','story_train','story_drop','story_safehouse','story_intruder','story_caine','story_leaving','story_havana_lead',
+        'story_vegas_ambulance','story_vegas_c4','story_vegas_heist',
+        'story_rio_barge','story_rio_jericho','story_rio_helicopter'
+    ];
+    static REGIONAL = [
+        'story_vegas_ambulance','story_vegas_c4','story_vegas_heist',
+        'story_rio_barge','story_rio_jericho','story_rio_helicopter'
     ];
     constructor(storage) { this.storage=storage; }
 
@@ -94,13 +102,19 @@ class DriverHomeSave {
                 lost:game.dropDirector.lost,
                 safeSeconds:game.dropDirector.safeSeconds
             }:null,
-            completed:Array.from(game.completedMissions||[])
+            completed:Array.from(new Set([
+                ...Array.from(game.completedMissions||[]),
+                ...Array.from(game.chapterProgress?.regionalCompleted||[])
+            ]))
         };
     }
     write(data) {
         try {
             if(!this.storage || !this.valid(data))return false;
-            this.storage.setItem(DriverHomeSave.KEY,JSON.stringify(data));
+            const serialized=JSON.stringify(data);
+            // Escrever saves ilegíveis (>60 KB) era um falso sucesso.
+            if(serialized.length>DriverHomeSave.MAX_SAVE_BYTES)return false;
+            this.storage.setItem(DriverHomeSave.KEY,serialized);
             return true;
         }catch(e){return false;}
     }
@@ -114,12 +128,25 @@ class DriverHomeSave {
             Number.isFinite(data.tanner.x) && Number.isFinite(data.tanner.z) &&
             (data.interior==null||['home','warehouse','diner','garage'].includes(data.interior));
     }
+    // A chave localStorage é a mesma de 2026: converter V1 preservando
+    // integralmente os dados e sem sobrescrever saves futuros/corrompidos.
+    migrate(data) {
+        if(this.valid(data))return data;
+        if(!data || data.version!==DriverHomeSave.LEGACY_VERSION)return null;
+        const upgraded={...data,version:DriverHomeSave.VERSION};
+        return this.valid(upgraded)?upgraded:null;
+    }
     read() {
         try {
             const raw=this.storage?.getItem(DriverHomeSave.KEY);
-            if(!raw || raw.length>60000)return null;
+            if(!raw || raw.length>DriverHomeSave.MAX_SAVE_BYTES)return null;
             const data=JSON.parse(raw);
-            return this.valid(data)?data:null;
+            const upgraded=this.migrate(data);
+            if(!upgraded)return null;
+            if(data.version===DriverHomeSave.LEGACY_VERSION)
+                // Permitir carregar v1 mesmo quando o storage for read-only.
+                this.write(upgraded);
+            return upgraded;
         }catch(e){return null;}
     }
     // Centralize save sanitization: early and late-spawned vehicles must
@@ -236,10 +263,17 @@ class DriverHomeSave {
         });
         game.markersCollected=game.missionMarkers.filter(m=>m.collected).length;
         DriverCheckpointRoute.refresh(game.missionType,game.missionMarkers);
-        game.completedMissions=new Set(
-            (Array.isArray(data.completed)?data.completed:[])
-            .filter(t=>DriverHomeSave.TYPES.includes(t)).slice(0,40)
-        );
+        game.completedMissions=new Set([
+            ...(Array.isArray(data.completed)?data.completed:[])
+                .filter(t=>DriverHomeSave.TYPES.includes(t)).slice(0,40),
+            ...Array.from(game.chapterProgress?.regionalCompleted||[])
+                .filter(t=>DriverHomeSave.REGIONAL.includes(t))
+        ]);
+        // O checkpoint regional é independente do save da casa. Unir
+        // conquistas verificadas em vez de apagar uma ao restaurar a outra.
+        for(const mission of game.completedMissions)
+            if(DriverHomeSave.REGIONAL.includes(mission))
+                game.chapterProgress?.completeRegional?.(mission);
         if(game.chapterProgress){
             if(game.completedMissions.has('story_leaving') ||
                 game.completedMissions.has('story_havana_lead'))

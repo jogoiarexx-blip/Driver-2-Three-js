@@ -129,7 +129,10 @@ test('menu permite importação local e controle da cor',()=>{
         html.indexOf('js/assets/free-vehicle-library.js'));
 });
 test('partida antiga e controles de IA conservam funções',()=>{
-    assert.match(read('js/gameplay/home-save.js'),/static VERSION = 1/);
+    const saveSource=read('js/gameplay/home-save.js');
+    assert.match(saveSource,/static VERSION = 2/);
+    assert.match(saveSource,/static LEGACY_VERSION = 1/);
+    assert.match(saveSource,/migrate\(data\)/);
     assert.match(read('js/traffic/traffic-ai.js'),/getInput\(car, dt, vehicles/);
     assert.match(read('js/engine/driver2-game-engine.js'),
         /window\.DriverBoot = new DriverBootFlow\(\)/);
