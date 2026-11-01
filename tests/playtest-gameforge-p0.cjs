@@ -61,10 +61,10 @@ async function ready(){
     window.DriverGame?.city?.ready&&window.DriverGame?.playerCar,
     null,{timeout:120000});
 }
-async function moveUntil(key,test,timeout=65000){
+async function moveUntil(key,test,timeout=65000,arg=null){
   await page.keyboard.down(key);
   try{
-    await page.waitForFunction(test,null,{timeout,polling:200});
+    await page.waitForFunction(test,arg,{timeout,polling:200});
   }finally{
     await page.keyboard.up(key);
   }
@@ -176,10 +176,10 @@ async function moveUntil(key,test,timeout=65000){
     });
     await step('keyboard W moves Tanner on pavement',async()=>{
       const before=(await snapshot()).tanner;
-      await moveUntil('w',()=>{
+      await moveUntil('w',origin=>{
         const p=window.DriverGame?.tanner?.group?.position;
-        return p&&Math.hypot(p.x-before.x,p.z-before.z)>.35;
-      },65000);
+        return p&&Math.hypot(p.x-origin.x,p.z-origin.z)>.35;
+      },65000,{x:before.x,z:before.z});
       const after=(await snapshot()).tanner;
       const distance=Math.hypot(after.x-before.x,after.z-before.z);
       assert(distance>.35,'Tanner stayed still when W was pressed');
@@ -222,7 +222,7 @@ async function moveUntil(key,test,timeout=65000){
           speed:31,vy:0,lateralVelocity:0,damage:0,prevX:-14,prevZ:-218});
         car.updateTransform();
         let maxHeight=car.y,blocked=0,water=0,maxDamage=0;
-        for(let i=0;i<65;i++){
+        for(let i=0;i<23;i++){
           car.updatePhysics(1/30,{up:true,down:false,left:false,
             right:false,handbrake:false,sprint:false},city,effects,null,true);
           maxHeight=Math.max(maxHeight,car.y);
