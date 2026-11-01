@@ -192,6 +192,118 @@ test('Rio Jericho pursuit requires 100% damage to the actual target',()=>{
     g.targetCar.damage=100;
     assert.equal(Regional.update(g,.05).success,true);
 });
+test('R63 P1: Vegas C4 plantado parcialmente volta ao segundo gerador e termina',()=>{
+    const start=game('vegas');start.missionType='story_vegas_c4';
+    Regional.begin(start,'story_vegas_c4');
+    start.mode='on_foot';start.tannerX=200;start.tannerZ=-160;
+    assert.equal(Regional.interact(start),true);
+    const saved=JSON.parse(JSON.stringify(Regional.checkpoint(start)));
+    assert.equal(saved.phase,1);assert.equal(saved.planted,1);
+    assert.equal(start.missionMarkers[0].x,-200);
+
+    const loaded=game('vegas');loaded.missionType='story_vegas_c4';
+    Regional.begin(loaded,'story_vegas_c4');
+    assert.equal(Regional.restoreCheckpoint(loaded,saved),true);
+    assert.equal(loaded.regionalState.phase,1);
+    assert.equal(loaded.missionMarkers.length,1);
+    assert.equal(loaded.missionMarkers[0].x,-200);
+    loaded.mode='on_foot';
+    loaded.tannerX=-200;loaded.tannerZ=-160;
+    assert.equal(Regional.interact(loaded),true);
+    assert.equal(loaded.regionalState.planted,2);
+    loaded.tannerX=280;loaded.tannerZ=160;
+    assert.equal(Regional.interact(loaded),true);
+    assert.equal(loaded.regionalState.countdown,13);
+    const countdown=JSON.parse(JSON.stringify(Regional.checkpoint(loaded)));
+    const end=game('vegas');end.missionType='story_vegas_c4';
+    Regional.begin(end,'story_vegas_c4');
+    assert(Regional.restoreCheckpoint(end,countdown));
+    assert.equal(end.missionMarkers.length,0);
+    assert.equal(end.regionalState.countdown,13);
+    end.mode='on_foot';end.tannerX=0;end.tannerZ=-320;
+    assert.equal(Regional.update(end,14)?.success,true);
+});
+test('R63 P1: Vegas heist recupera limousine no segundo objetivo sem duplicar',()=>{
+    const g=game('vegas');g.missionType='story_vegas_heist';
+    Regional.begin(g,'story_vegas_heist');
+    g.playerCar=g.targetCar;
+    g.playerCar.x=-120;g.playerCar.z=-120;
+    assert.equal(Regional.update(g,.016),null);
+    assert.equal(g.regionalState.delivered,1);
+    assert.equal(g.vehicles.length,3);
+    const saved=JSON.parse(JSON.stringify(Regional.checkpoint(g)));
+    const loaded=game('vegas');loaded.missionType='story_vegas_heist';
+    Regional.begin(loaded,'story_vegas_heist');
+    assert.equal(loaded.vehicles.length,2);
+    assert(Regional.restoreCheckpoint(loaded,saved));
+    assert.equal(loaded.vehicles.length,3);
+    assert.equal(loaded.regionalState.delivered,1);
+    assert.equal(loaded.targetCar.name,'LIMUSINE DE LUXO');
+    loaded.playerCar=loaded.targetCar;
+    loaded.playerCar.x=-120;loaded.playerCar.z=-120;
+    assert.equal(Regional.update(loaded,.016)?.success,true);
+    assert.equal(loaded.regionalState.delivered,2);
+});
+test('R63 P1: Rio helicopter retoma segmento, relógio e limite de perseguição',()=>{
+    const start=game('rio');start.missionType='story_rio_helicopter';
+    Regional.begin(start,'story_rio_helicopter');
+    const s=start.regionalState;
+    s.heliIndex=2;s.heliAt={x:141,z:-243};
+    s.seconds=33;s.lost=3.2;
+    const payload=JSON.parse(JSON.stringify(Regional.checkpoint(start)));
+    const g=game('rio');g.missionType='story_rio_helicopter';
+    Regional.begin(g,'story_rio_helicopter');
+    assert(Regional.restoreCheckpoint(g,payload));
+    assert.equal(g.regionalState.heliIndex,2);
+    assert.equal(g.regionalState.heliAt.x,141);
+    assert.equal(g.regionalState.seconds,33);
+    assert.equal(g.regionalState.lost,3.2);
+    assert.equal(g.regionalState.heli.position.z,-243);
+    g.playerCar.x=141;g.playerCar.z=-243;
+    const before={...g.regionalState.heliAt};
+    Regional.update(g,.2);
+    assert(g.regionalState.seconds>33);
+    assert.notEqual(g.regionalState.heliAt.x,before.x);
+    assert(g.regionalState.lost<3.2);
+    assert.equal(g.vehicles.length,1,'helicopter is not a vehicle clone');
+});
+test('R63 P1: Rio barge retoma countdown sem recriar objetivo ou detonar cedo',()=>{
+    const first=game('rio');first.missionType='story_rio_barge';
+    Regional.begin(first,'story_rio_barge');
+    first.mode='on_foot';first.tannerX=240;first.tannerZ=26;
+    assert(Regional.interact(first));
+    first.regionalState.countdown=8;
+    const raw=JSON.parse(JSON.stringify(Regional.checkpoint(first)));
+    const g=game('rio');g.missionType='story_rio_barge';
+    Regional.begin(g,'story_rio_barge');
+    assert(Regional.restoreCheckpoint(g,raw));
+    assert.equal(g.missionMarkers.length,0);
+    assert.equal(g.regionalState.countdown,8);
+    g.mode='on_foot';g.tannerX=0;g.tannerZ=-240;
+    assert(!Regional.update(g,7)?.success);
+    assert(Regional.update(g,2)?.success);
+});
+test('R63 P1: fragmentos incompatíveis não modificam fase nem alvo',()=>{
+    const g=game('vegas');g.missionType='story_vegas_heist';
+    Regional.begin(g,'story_vegas_heist');
+    const before=g.vehicles.length;
+    assert.equal(Regional.restoreCheckpoint(g,{
+        type:'story_rio_helicopter',delivered:1}),false);
+    assert.equal(g.vehicles.length,before);
+    assert.equal(g.regionalState.delivered,0);
+    Regional.dispose(g);
+    g.missionType='story_vegas_c4';Regional.begin(g,'story_vegas_c4');
+    assert.equal(Regional.restoreCheckpoint(g,{
+        type:'story_vegas_c4',phase:2,planted:1,countdown:0}),false);
+    assert.equal(g.regionalState.phase,0);
+    assert.equal(g.missionMarkers[0].x,200);
+    const heli=game('rio');heli.missionType='story_rio_helicopter';
+    Regional.begin(heli,'story_rio_helicopter');
+    assert.equal(Regional.restoreCheckpoint(heli,{
+        type:'story_rio_helicopter',heliIndex:2,heliAt:{x:NaN,z:5}
+    }),false);
+    assert.equal(heli.regionalState.heliIndex,0);
+});
 test('arcade checkpoint and gate racing both have reachable final victories',()=>{
     const check=game('vegas');
     Arcade.begin(check,'arcade_checkpoint');
