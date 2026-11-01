@@ -7,6 +7,9 @@ class DriverHomeSave {
     static KEY = 'driver2-three-save-v1';
     static VERSION = 1;
     static CITIES = ['chicago','havana','vegas','rio'];
+    // R60: Chicago currently creates 43+ cars. The former 32-car limit
+    // silently rejected real saves even though capture() included the fleet.
+    static MAX_VEHICLES = 128;
     static TYPES = [
         'freeroam','chase','checkpoints','getaway','evidence','survival',
         'trailblazer','tail','mountainpass','quickchase','gauntlet','bomb',
@@ -106,7 +109,7 @@ class DriverHomeSave {
             DriverHomeSave.CITIES.includes(data.city) &&
             DriverHomeSave.TYPES.includes(data.mission?.type) &&
             Array.isArray(data.vehicles) && data.vehicles.length>=1 &&
-            data.vehicles.length<=32 && typeof data.tanner?.x==='number' &&
+            data.vehicles.length<=DriverHomeSave.MAX_VEHICLES && typeof data.tanner?.x==='number' &&
             typeof data.tanner?.z==='number' &&
             Number.isFinite(data.tanner.x) && Number.isFinite(data.tanner.z) &&
             (data.interior==null||['home','warehouse','diner','garage'].includes(data.interior));
@@ -119,8 +122,37 @@ class DriverHomeSave {
             return this.valid(data)?data:null;
         }catch(e){return null;}
     }
+    // Centralize save sanitization: early and late-spawned vehicles must
+    // restore the very same validated physics, damage and breakaway state.
+    static applyVehicleState(car,raw) {
+        if(!car||!raw)return false;
+        const safe=DriverHomeSave.position(raw);
+        Object.assign(car,safe);
+        car.speed=safe.speed;
+        car.breakawayFlags={...safe.breakawayFlags};
+        car.prevX=car.x;car.prevZ=car.z;
+        car.lateralVelocity=0;
+        if(typeof car.updateTransform==='function')car.updateTransform();
+        return true;
+    }
+    static restoreDeferredVehicle(game,car) {
+        const pending=game?._pendingVehicleRestore;
+        if(!Array.isArray(pending)||!pending.length)return false;
+        const state=pending.shift();
+        DriverHomeSave.applyVehicleState(car,state);
+        if(game._pendingPlayerVehicleIndex===game.vehicles.indexOf(car)) {
+            game.playerCar=car;
+            game._pendingPlayerVehicleIndex=null;
+            if(game.mode==='driving')game.tanner?.setVisible?.(false);
+        }
+        if(pending.length===0)game._pendingVehicleRestore=null;
+        return true;
+    }
     restore(game,data) {
         if(!this.valid(data))return false;
+        // A previous load must never restore into newly spawned cars.
+        game._pendingVehicleRestore=null;
+        game._pendingPlayerVehicleIndex=null;
         if (game.currentCityKey!==data.city) {
             // Evita que a missão atual force Chicago durante a troca de cidade.
             game.missionType='freeroam';
@@ -142,17 +174,16 @@ class DriverHomeSave {
                 typeof game.activateCaineVans==='function')
                 game.activateCaineVans();
         }
-        for(let i=0;i<Math.min(data.vehicles.length,game.vehicles.length);i++){
-            const car=game.vehicles[i],raw=data.vehicles[i];
-            const safe=DriverHomeSave.position(raw);
-            Object.assign(car,safe);
-            car.speed=safe.speed;
-            car.breakawayFlags={...safe.breakawayFlags};
-            car.prevX=car.x;car.prevZ=car.z;
-            car.lateralVelocity=0;
-            if(typeof car.updateTransform==='function')car.updateTransform();
-        }
-        const index=Math.floor(DriverHomeSave.bounded(data.playerIndex,0,game.vehicles.length-1));
+        for(let i=0;i<Math.min(data.vehicles.length,game.vehicles.length);i++)
+            DriverHomeSave.applyVehicleState(game.vehicles[i],data.vehicles[i]);
+        // Wrigley Car spawns when its sector becomes ready in a later frame.
+        // Keep the remaining snapshots until that real vehicle is created.
+        const pending=data.vehicles.slice(game.vehicles.length)
+            .map(raw=>DriverHomeSave.position(raw));
+        game._pendingVehicleRestore=pending.length?pending:null;
+        const index=Math.floor(DriverHomeSave.bounded(
+            data.playerIndex,0,data.vehicles.length-1));
+        game._pendingPlayerVehicleIndex=index>=game.vehicles.length?index:null;
         game.playerCar=game.vehicles[index] || game.vehicles[0];
         game.felony=DriverHomeSave.bounded(data.felony,0,100);
         if (data.secretGateOpen)game.city.unlockSecretGate();
