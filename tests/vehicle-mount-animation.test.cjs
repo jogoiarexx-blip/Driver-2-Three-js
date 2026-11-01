@@ -82,6 +82,20 @@ test('car transition freezes physics and changes driver only when finished',()=>
  assert.equal(engine.mode,'on_foot');
  assert.equal(tanner.group.visible,true);
 });
+test('low-FPS browser frames do not stretch the car exit indefinitely',()=>{
+ const {engine,bike,tanner}=harness('muscle',{
+  isPointBlocked:()=>false,isWaterAt:()=>false
+ });
+ engine.mode='driving';engine.playerCar=bike;tanner.setVisible(false);
+ assert(Mount.start(engine,bike,'exit'));
+ // Five 250ms frames emulate 4 FPS. The visual transition must finish
+ // after ~1.2 seconds of wall time, not require 24+ rendered frames.
+ for(let frame=0;frame<5;frame++)Mount.update(engine,.25);
+ assert.equal(engine.mode,'on_foot');
+ assert.equal(engine.vehicleMountTransition,null);
+ assert.equal(tanner.group.visible,true);
+ assert.equal(tanner.resetCount,1);
+});
 test('blocked exit refuses to teleport Tanner into buildings or water',()=>{
  const {engine,bike}=harness('motorcycle',{
     isWaterAt:()=>true,isPointBlocked:()=>true
@@ -109,7 +123,8 @@ test('runner and HTML use transition module while preserving police door rig',()
         html.indexOf('driver2-game-engine.js'));
  assert.match(engine,/DriverVehicleMount\.start\(this,this\.playerCar,'exit'\)/);
  assert.match(engine,/DriverVehicleMount\.start\(this,closestCar,'enter'\)/);
- assert.match(engine,/DriverVehicleMount\.update\(this,dt\)/);
+ assert.match(engine,/DriverVehicleMount\.update\(this,transitionDt\)/);
+ assert.match(engine,/const transitionDt = Math\.max\(0,Math\.min\(\.25,rawDt\)\)/);
  assert.match(engine,/this\.policeDoorTransition\|\|this\.vehicleMountTransition/);
  assert.match(engine,/this\.startPoliceDoorTransition\(this\.playerCar,'exit'\)/);
 });
