@@ -6,6 +6,13 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R60 — Evidência visual integral confirmada
+
+- **E3 workflow completo APROVADO:** [GitHub Actions #41261882349](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261882349), **55 etapas SUCCESS**; sequência de Chicago, Undercover, R45, rios, pontes, dez modos e smoke das quatro cidades.
+- **E3 smoke separado:** [#41261882213](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261882213) SUCCESS.
+- **E3 Game Forge teclado/save/rampa:** [#41262121040](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41262121040) SUCCESS, oito etapas, cinco capturas/JSON após correção da câmera física.
+- **P0-07 e P0-09 certificados na cobertura automatizada disponível; P0-10 NÃO certificado em E4/E5.** Não afirmar 15/15 missões humanas, 43 carros em tráfego real simultâneo ou desempenho mobile comprovado.
+
 ### R60 — P0 Playtest E3 (01/11/2026, revisão em PR #35)
 
 **Base anterior:** main R59 `58e664a`. **Comparativo real:** R59 942/942 testes Node e dois P0 não certificados em browser; R60 944/944 em **Node 22 e Node 24** ([Actions #41261823994](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823994)). Novo [playtest Game Forge #41261823989](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823989) **SUCCESS** em Chromium real, com passos/screenshot/JSON.
@@ -113,7 +120,7 @@ Links de referência dos workflows:
 - [x] **P0-06 [PEDESTRES GLB] [E2]** três falhas de simulação das 28 vagas, contingência de carregamento GLB e limpeza de clones/GPU: diferenciar teste desatualizado de vazamento real.
 - [x] **P0-07 [TREM] [E2+E3, run 41261823989]** rampa pedonal e passagem rodoviária inferior verificadas no motor real: deslocamento até z=-251,27, sem salto, bloqueio, água nem dano. Limites e restantes trechos permanecem sob CAR-04/MAP-05.
 - [x] **P0-08 [CACHE] [E2]** teste antigo procura versão swim-retarget-r1 do Tanner; conferir se só o cache-busting R58 mudou ou se há regressão de ordem/retargeting.
-- [ ] **P0-09 [VISUAL]** P0 smoke R60 passou; workflow integral das quatro cidades ainda requer SUCCESS. O bloqueio anterior do crosswalk foi corrigido na R59, mas a coleta de FPS em SwiftShader permanecia classificando poucos frames como crash. R60 registra FPS baixo sem mascarar 6s sem frames.
+- [x] **P0-09 [VISUAL] [E3 — 55 passos SUCCESS, run 41261882349]** workflow visual integral concluiu incluindo Chicago R22–R45, Goose Island, rios/pontes, dez modos e quatro cidades. O crosswalk foi corrigido na R59; a R60 deixou de tratar seis frames lentos no SwiftShader como crash. Baixo FPS permanece problema de medição E5, não certificação de GPU/Android.
 - [ ] **P0-10 [RELEASE]** lógica 944/944, playtest E3 com teclado e save/reload aprovados na R60; **ainda faltam** workflow visual integral, jogo humano/campanha E4, desempenho E5 em GPU real/Android e certificação de release antes do selo ESTÁVEL.
 
 ### Causas observadas nos logs (não confundir hipóteses com fatos)
