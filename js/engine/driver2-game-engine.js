@@ -18,12 +18,14 @@
                 this.camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 620);
                 this.cameraRig = new DriverCameraRig();
                 this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                // Definir DPR antes do primeiro setSize evita alocar duas
+                // vezes o framebuffer WebGL na inicialização.
                 // R58: desktop anti-aliased edges can use extra actual
                 // pixels; keep the smaller mobile budget to protect FPS.
                 const coarse=window.matchMedia?.('(pointer: coarse)').matches;
                 this.renderer.setPixelRatio(Math.min(
                     Number(window.devicePixelRatio)||1,coarse?1.5:1.85));
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
 
                 this.ambientLight = new THREE.AmbientLight(0xf1f5f9, 0.75);
                 this.sunLight = new THREE.DirectionalLight(0xfde68a, 0.85);
@@ -3174,56 +3176,87 @@
             }
 
             loadExternalGLB(url, labelName) {
-                const statusEl = document.getElementById('asset-loader-status');
-                statusEl.textContent = `Baixando modelo 3D externo (${labelName}) via THREE.GLTFLoader...`;
+                const statusEl=document.getElementById('asset-loader-status');
                 if (!THREE.GLTFLoader) {
-                    statusEl.textContent = 'Erro: THREE.GLTFLoader não disponível.';
+                    statusEl.textContent='Erro: THREE.GLTFLoader não disponível.';
                     return;
                 }
-                const loader = new THREE.GLTFLoader();
-                loader.load(
-                    url,
-                    (gltf) => {
-                        this.applyCustomModelToPlayerCar(gltf.scene, labelName);
-                        statusEl.textContent = `Sucesso! Modelo "${labelName}" acoplado ao chassi físico de Tanner!`;
-                    },
-                    undefined,
-                    (err) => {
-                        statusEl.textContent = `Aviso ao carregar URL externa: verifique sua conexão. Mantendo malha padrão.`;
-                    }
-                );
+                statusEl.textContent='Carregando modelo 3D "'+labelName+'"...';
+                try{
+                    new THREE.GLTFLoader().load(url,gltf=>{
+                        const accepted=this.applyCustomModelToPlayerCar(
+                            gltf?.scene,labelName);
+                        statusEl.textContent=accepted?
+                            'Modelo "'+labelName+'" pronto para dirigir.':
+                            'O GLB não tem geometria utilizável. Veículo anterior preservado.';
+                    },undefined,()=>{
+                        statusEl.textContent='Não foi possível carregar o GLB. Veículo anterior preservado.';
+                    });
+                }catch(_){
+                    statusEl.textContent='Erro ao iniciar a leitura do GLB.';
+                }
             }
 
             loadLocalGLB(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const statusEl = document.getElementById('asset-loader-status');
-                statusEl.textContent = `Processando arquivo local "${file.name}"...`;
-
-                const url = URL.createObjectURL(file);
-                const loader = new THREE.GLTFLoader();
-                loader.load(
-                    url,
-                    (gltf) => {
-                        this.applyCustomModelToPlayerCar(gltf.scene, file.name.replace(/\..+$/, '').toUpperCase());
-                        statusEl.textContent = `Sucesso! Seu arquivo 3D "${file.name}" está pronto para dirigir na cidade!`;
-                        URL.revokeObjectURL(url);
-                    },
-                    undefined,
-                    () => {
-                        statusEl.textContent = `Formato inválido. Selecione um arquivo .glb ou .gltf válido.`;
-                    }
-                );
+                const file=event?.target?.files?.[0];
+                if(!file)return;
+                // Permite escolher novamente o mesmo arquivo após um erro.
+                event.target.value='';
+                const statusEl=document.getElementById('asset-loader-status');
+                if(!THREE.GLTFLoader || typeof URL.createObjectURL!=='function'){
+                    statusEl.textContent='Carregador de GLB não disponível.';
+                    return;
+                }
+                if(!/\.glb$/i.test(file.name||'')){
+                    statusEl.textContent='Escolha um arquivo .glb. GLTF com arquivos externos não é suportado neste seletor.';
+                    return;
+                }
+                statusEl.textContent='Processando arquivo local "'+file.name+'"...';
+                let url;
+                try{url=URL.createObjectURL(file)}
+                catch(_){
+                    statusEl.textContent='Não foi possível abrir o arquivo selecionado.';
+                    return;
+                }
+                // A URL temporária anterior não pode ficar retida se o
+                // decoder rejeitar o GLB ou se ocorrer uma exceção no callback.
+                let released=false;
+                const release=()=>{
+                    if(released)return;
+                    released=true;
+                    URL.revokeObjectURL(url);
+                };
+                try{
+                    new THREE.GLTFLoader().load(url,gltf=>{
+                        try{
+                            const accepted=this.applyCustomModelToPlayerCar(
+                                gltf?.scene,file.name.replace(/\.[^.]+$/,'').toUpperCase());
+                            statusEl.textContent=accepted?
+                                'Modelo "'+file.name+'" pronto para dirigir.':
+                                'O GLB não tem geometria válida. Veículo anterior preservado.';
+                        }catch(_){
+                            statusEl.textContent='Erro ao aplicar modelo. Veículo anterior preservado.';
+                        }finally{release()}
+                    },undefined,()=>{
+                        release();
+                        statusEl.textContent='Falha ao carregar o GLB. Verifique o arquivo e tente novamente.';
+                    });
+                }catch(_){
+                    release();
+                    statusEl.textContent='Falha ao iniciar a importação do arquivo GLB.';
+                }
             }
 
             applyCustomModelToPlayerCar(modelScene, name) {
-                if (!this.playerCar || !modelScene) return;
-                // Remove a malha antiga e suas rodas, mas preserva faróis,
-                // lanternas de freio e giroflex sobre o GLB importado.
-                this.playerCar.applyCC0Model(modelScene, false);
-                this.playerCar._userCustomModel = true;
-                this.playerCar._cc0ModelApplied = false;
-                this.playerCar.name = name.slice(0, 25);
+                if(!this.playerCar || !modelScene)return false;
+                // Evita declarar sucesso em GLBs vazios ou ilegíveis e não
+                // altera flags do jogador se o chassi rejeitar o modelo.
+                if(this.playerCar.applyCC0Model(modelScene,false)===false)
+                    return false;
+                this.playerCar._userCustomModel=true;
+                this.playerCar._cc0ModelApplied=false;
+                this.playerCar.name=String(name||'CARRO').slice(0,25);
+                return true;
             }
 
             restoreDefaultCarMesh() {
@@ -3233,7 +3266,7 @@
                 this.playerCar.name = CITY_PRESETS[this.currentCityKey].playerCarName;
                 if (this.freeVehicleAssets && this.freeVehicleAssets.enabled) this.freeVehicleAssets.decorateFleet();
                 document.getElementById('asset-loader-status').textContent =
-                    'Malha Low-Poly PS1 original restaurada com sucesso!';
+                    'Recarregando o GLB do repositório. Malha temporária disponível somente se falhar.';
             }
 
             bindEvents() {
@@ -3508,6 +3541,15 @@
                 requestAnimationFrame(() => this.animate());
 
                 const now = performance.now();
+                // O WebGL custa energia mesmo quando o navegador minimiza a
+                // aba. Não simular IA/missões nem renderizar no fundo.
+                // Atualizar lastTime evita um salto ao voltar ao jogo.
+                if(document.hidden){
+                    this.lastTime=now;
+                    this.frames=0;
+                    this.fpsTimer=0;
+                    return;
+                }
                 const rawDt=(now-this.lastTime)/1000;
                 const dt = Math.min(0.05, rawDt);
                 // Vehicle entry/exit is an animation, not a physics step.

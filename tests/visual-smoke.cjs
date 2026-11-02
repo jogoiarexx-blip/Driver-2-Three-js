@@ -173,14 +173,15 @@ async function waitForTannerTravel(page,start,label){
       });
       assert(exitStarted.started,
         'Saída segura indisponível em '+city+': '+JSON.stringify(exitStarted));
-      // A saída de moto/carro leva ~1,2s; esperar o ciclo terminar
-      // antes de posicionar o jogador para o teste de caminhada.
+      // A saída leva 1,35s de animação; sob SwiftShader a máquina pode
+      // renderizar menos de 6 frames em 6s. Ainda exigimos a conclusão
+      // REAL do ciclo dentro de 15s, sem adiantar o estado via teste.
       try{
         await page.waitForFunction(()=>{
           const g=window.DriverGame;
           return g.mode==='on_foot'&&!g.policeDoorTransition&&
             !g.vehicleMountTransition;
-        },null,{timeout:6000});
+        },null,{timeout:15000});
       }catch(error){
         // Real browser diagnostics distinguish slow WebGL from invalid
         // stand points, a cancelled rig or a stuck gameplay state.
