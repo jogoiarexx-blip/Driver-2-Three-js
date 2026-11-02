@@ -275,14 +275,9 @@ class DriverBootFlow {
 
     async preloadModels(game,report) {
         if(!game.freeVehicleAssets?.enabled)return;
-        if(!this.settings.models){
-            // O checkbox controla só a ESPERA pelo pré-carregamento:
-            // os GLBs continuam sendo utilizados no trânsito.
-            game.freeVehicleAssets.decorateFleet();
-            report(1,'GLBs locais continuam carregando em segundo plano');
-            return;
-        }
         const library=game.freeVehicleAssets;
+        // Importação escolhida antes do início não pode ser ignorada quando
+        // o usuário desmarca a espera pelo pré-carregamento.
         if(this.pendingUserCarFile){
             const file=this.pendingUserCarFile;
             this.pendingUserCarFile=null;
@@ -290,6 +285,13 @@ class DriverBootFlow {
             this.showCarStatus(ok?
                 'Carro 3D personalizado carregado e aplicado.':
                 'Não foi possível aplicar o GLB. Confira o arquivo.');
+        }
+        if(!this.settings.models){
+            // Pré-carregamento opcional: o GLB continua sendo utilizado na
+            // frota, mas o menu não aguarda todos os downloads.
+            library.decorateFleet();
+            report(1,'GLBs locais continuam carregando em segundo plano');
+            return;
         }
         // GLB publicado em assets/vehicles é prioridade. Esperamos a
         // aplicação no jogador antes de compilar shaders/câmera, evitando
