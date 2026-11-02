@@ -1,0 +1,54 @@
+name: Driver 2 - R66 GLB traffic in four cities
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/assets/uploaded-vehicles.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/gameplay/tanner-garage.js'
+      - 'tests/uploaded-traffic-r66*'
+      - '.github/workflows/uploaded-traffic-r66.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'js/assets/uploaded-vehicles.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'tests/uploaded-traffic-r66*'
+permissions:
+  contents: read
+jobs:
+  real-browser-traffic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test deterministic traffic spawns and one secret
+        run: node --test tests/uploaded-traffic-r66.test.cjs
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve game from checkout
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/r66-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r66-http.log
+          exit 1
+      - name: Verify uploaded vehicles drive with GLBs in four cities
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/uploaded-traffic-r66-browser.cjs
+      - name: Upload JSON evidence and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r66-glb-traffic-four-cities
+          path: |
+            qa-artifacts/r66-*
+          if-no-files-found: ignore
