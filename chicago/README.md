@@ -12,6 +12,12 @@ O manifesto, atlas e 54 GLBs já estão publicados nesta pasta do GitHub, direta
 
 **Aviso:** esta é uma visualização técnica, não substitui a cidade jogável nem define colisores, ruas e missões do PS1.
 
+## R72 — Primeiro corredor rastreável do original (aresta 3445)
+
+O arquivo [corridor-review-r72.json](corridor-review-r72.json) registra a primeira inspeção dirigida de uma conexão da rede original: nós **2560 → 2805**, tiles **01_02 / 01_03**, 16,375 unidades OBJ e evidência R28 sem interpolação de altura R29. No [visualizador original](../chicago-original-preview.html), use **Inspecionar corredor R72** para focar a câmera, exibir a linha dourada e os limites dos dois setores em azul; a classe de pavimento R24 é calculada das máscaras reais de material e mostrada junto dos avisos de não certificação.
+
+O arquivo é reproduzível com `node tools/chicago-r72-source-corridor.cjs` (relatório detalhado de pavimento no diretório QA). **A transformação R15 projeta parte da linha fora da grade rodoviária oeste do Undercover**, então o corredor não foi introduzido no tráfego, piso ou colisões. Material de pavimento não prova largura de pista real; sua migração requer vistoria e testes E4/E5, além de calibração de coordenadas.
+
 ## R71 — Auditoria individual dos 54 setores
 
 O arquivo [sector-inventory-r71.json](sector-inventory-r71.json) cataloga cada setor original de `manifest.json`, com ID, arquivo GLB, limites X/Y/Z, triângulos, bytes e situação de piso dirigível, colisão, água, sinais, trânsito, pedestres, missões e testes reais. Reproduzir: `node tools/chicago-r71-sector-inventory.cjs chicago/sector-inventory-r71.json`. Todos os 54 setores são **malhas visuais**, mas nenhum deve ser marcado como **setor de gameplay homologado** sem verificação física e transformação de coordenadas. Este inventário é o ponto de partida de MAP-06, não certificação 54/54.
