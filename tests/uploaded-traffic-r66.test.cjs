@@ -49,7 +49,7 @@ test('quatro GLBs enviados viram civis móveis em todas as cidades',()=>{
 });
 
 test('van ocupa a vaga histórica do caminhão e mantém os índices de saves',()=>{
-    assert.match(engineSource,/name: 'CAMINHÃO CARGA'[^\\n]*uploadedModel:'cargo-van'/);
+    assert.match(engineSource,/name: 'CAMINHÃO CARGA'.*uploadedModel:'cargo-van'/);
     // O carro enviado não duplica quando a van já existe na frota civil.
     const original={name:'CAMINHÃO CARGA',bodyStyle:'truck',
         uploadedModel:'cargo-van',x:102,z:-84,heading:Math.PI/2};
