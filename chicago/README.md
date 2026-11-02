@@ -12,6 +12,17 @@ O manifesto, atlas e 54 GLBs já estão publicados nesta pasta do GitHub, direta
 
 **Aviso:** esta é uma visualização técnica, não substitui a cidade jogável nem define colisores, ruas e missões do PS1.
 
+## R74 — Diagnóstico da costura de pavimento, sem fabricar estrada
+
+A R74 compara a faixa -0,1 OBJ do corredor **3445** (setores `01_02` e `01_03`) usando quatro conjuntos independentes de triângulos: malha original sem filtro, geometria elegível pela altura R26, UV de asfalto R26 e a interseção dos filtros. O cruzamento com a textura R24 diferencia **buraco geométrico** de **triângulo presente mas reprovado por altura/UV**. Também verifica pequenas posições vizinhas para diagnosticar costuras; não interpola nem fecha espaços reais.
+
+```sh
+node --test tests/chicago-r74-source-seam.test.cjs tests/chicago-r73-triangle-width.test.cjs
+node tools/chicago-r74-source-seam.cjs qa-artifacts/chicago-r74/seam-diagnostic.json
+```
+
+O [workflow R74](../.github/workflows/chicago-r74.yml) publica a classificação de cada um dos 67 cortes. Os 2 GLBs são conferidos por SHA256 antes da análise. Os resultados ainda **não** certificam via, pista, colisão, tráfego, geografia real nem escala de veículos. Também foi corrigido o teste do radar R22, que antes podia travar ao tentar capturar um canvas animado apesar de a condução física ter sido aprovada.
+
 ## R73 — Sondagem de triângulos e largura transversal (sem criar pista)
 
 Antes de tentar transformar a aresta 3445 em rua dirigível, a R73 cruza triângulos realmente presentes nos GLBs originais `01_02` e `01_03` com a máscara de pavimentação R24. A cada trecho longitudinal de até 0,25 unidade OBJ, avalia cortes laterais com passo 0,1 (±0,8 OBJ), detectando lacunas, grama, água, desníveis e geometrias empilhadas. O arquivo de saída informa **largura simétrica contínua por seção**, não largura de uma pista de veículos homologada. Um corte com largura aparente grande ainda pode pertencer a calçada ou área aberta e não é integrado ao Undercover.
