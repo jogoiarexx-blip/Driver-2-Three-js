@@ -1,0 +1,42 @@
+name: Chicago R73 - PS1 source triangle width gate
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tools/chicago-r73-triangle-width.cjs'
+      - 'tests/chicago-r73-triangle-width.test.cjs'
+      - '.github/workflows/chicago-r73.yml'
+      - 'chicago/corridor-review-r72.json'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/chicago-r73-triangle-width.cjs'
+      - 'tests/chicago-r73-triangle-width.test.cjs'
+      - '.github/workflows/chicago-r73.yml'
+permissions:
+  contents: read
+jobs:
+  inspect-original-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and R72/R73 unit gates
+        run: |
+          node --check tools/chicago-r73-triangle-width.cjs
+          node --check tests/chicago-r73-triangle-width.test.cjs
+          node --test tests/chicago-r73-triangle-width.test.cjs tests/chicago-r72-corridor-review.test.cjs
+      - name: Audit actual original GLB triangles, pavement and cross sections
+        run: |
+          node tools/chicago-r73-triangle-width.cjs qa-artifacts/chicago-r73/triangle-width.json
+          node -e "const a=require('./qa-artifacts/chicago-r73/triangle-width.json');if(a.certifiedForDriving||a.trafficEnabled||a.collidersCreated||a.provenance.sourceTiles.length!==2||a.evidence.totalCrossSections<40)process.exit(1)"
+      - name: Archive exact source triangle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r73-corridor-3445-triangle-width
+          path: qa-artifacts/chicago-r73/triangle-width.json
+          if-no-files-found: warn
