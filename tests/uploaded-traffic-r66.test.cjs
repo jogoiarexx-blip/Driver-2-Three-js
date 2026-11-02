@@ -93,6 +93,13 @@ test('apenas o carro de garagem é secreto; Jones e van de missão não herdam o
     // R66: somente a criação do veículo secreto da garagem marca esse tipo.
     const secretStarts=[...engineSource.matchAll(/isSecret:\s*true/g)];
     assert.equal(secretStarts.length,1);
+    // Chicago tem carro bônus no estádio, mas o título secreto é exclusivo
+    // do desbloqueável da garagem. A vaga do estádio continua funcional.
+    const gameplay=read('js/world/chicago-gameplay.js');
+    const stadium=gameplay.match(/static ensureWrigleyCar\(game\)[\s\S]*?static interact\(/);
+    assert.ok(stadium);
+    assert.doesNotMatch(stadium[0],/isSecret\s*:\s*true/);
+    assert.match(stadium[0],/car\.missionParked=true/);
 });
 
 test('garagem conserva identificador do GLB da van sem permitir novo carro secreto',()=>{
