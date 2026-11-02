@@ -103,6 +103,9 @@ class DriverChicagoGameplay {
         site.secretCar=car;
         game.wrigleyCar=car;
         game.vehicles.push(car);
+        // O bônus nasce depois da frota inicial: aplicar o GLB do GitHub
+        // também a ele, preservando o chassi e as posições do save.
+        game.freeVehicleAssets?.decorateFleet();
         // R60: a frota do save pode ter sido carregada antes deste setor.
         if(typeof DriverHomeSave!=='undefined')
             DriverHomeSave.restoreDeferredVehicle(game,car);
