@@ -6,7 +6,7 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
-### R67 — Auditoria geral de estabilidade, cache e integração (02/11/2026) — em validação
+### R67 — Auditoria geral de estabilidade, cache e integração (02/11/2026) — merge realizado; certificação final pendente
 
 **Escopo:** P0/PERF-06, GAME-07, CAR-05, ARCH-06, ARCH-11, carregamento de GLBs, shader/boot, qualidade e estrutura do repositório. Inventário e diagnóstico em [docs/AUDITORIA-REPOSITORIO-R67.md](docs/AUDITORIA-REPOSITORIO-R67.md).
 
@@ -14,7 +14,7 @@
 
 **Outras melhorias de código:** importar GLB libera URL temporária em todas as saídas e não marca falha como sucesso; DPR aplicado antes de `setSize` inicial; simulação/renderização pausadas automaticamente ao ocultar a aba, sem acumular delta; a opção de GLB significa **pré-carregar ou carregar em segundo plano**, sem desligar os carros do repositório nem disparar `toggle()` a cada ajuste; HTML versiona os JS alterados. Gate de integridade dos scripts locais e 4 arquivos novos de regressão.
 
-**Evidências:** workflow da PR R67 e resultado da suíte Node/Chromium a anexar após execução. **Abertos:** Chicago MAP-05 até MAP-20, campanha GAME-06/E4, GPU/Android E5, PERF-06 3+ trocas, QA prolongado dos veículos, NPCs e fachadas. Não declarar melhoria percentual de FPS nem ausência de vazamento sem medição.
+**Evidências E2/E3 intermediárias da PR #43:** [985/985 Node 22 e Node 24](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41499086257), [Chicago física](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41499086221), [geografia Chicago PS1](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41499086200), [R66 tráfego GLB nas quatro cidades](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41499086196), [R64 troca/saves](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41499086380) e [R60 Game Forge](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41499086304) aprovados no commit anterior. O smoke visual geral anterior falhou em SwiftShader por animação de porta a 1,232/1,35 s após o antigo limite de 6 s; o teste posterior exige conclusão real em até 15 s, sem forçar estado. **Validação do head final ainda na fila** no GitHub Actions ao registrar a auditoria: [Node](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41499782968), [smoke](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41499783134). **Integrado ao main:** [PR #43](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/43), merge `1649e73`. E4/E5 permanecem não certificados. **Abertos:** Chicago MAP-05 até MAP-20, campanha GAME-06/E4, GPU/Android E5, PERF-06 3+ trocas, QA prolongado dos veículos, NPCs e fachadas. Não declarar melhoria percentual de FPS nem ausência de vazamento sem medição.
 
 ### R66 — Veículos enviados circulam; único segredo real (02/11/2026)
 
