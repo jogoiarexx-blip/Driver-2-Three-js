@@ -44,7 +44,9 @@ test('R74 detects a real material-match in continuous synthetic geometry without
 });
 test('R74 differentiates grass from UV rejection',()=>{
  const m=masks();
- const col=Math.round((-.1-survey.xminOBJ)/survey.stepOBJ);
+ // The synthetic corridor runs toward +Z; its left normal points -X,
+ // therefore an offset -0.1 corresponds to x = +0.1, not -0.1.
+ const col=Math.round((.1-survey.xminOBJ)/survey.stepOBJ);
  for(let row=0;row<survey.height;row++){
   const k=row*survey.width+col;
   m.grass[k>>>3]|=(128>>>(k&7));
@@ -54,7 +56,7 @@ test('R74 differentiates grass from UV rejection',()=>{
 });
 test('R74 UV and height polygons from raw mock accessors are independently counted',()=>{
  const xyz=[[0,0,0],[1,0,0],[0,0,1],
-  [0,.4,0],[1,.4,0],[0,.4,1],
+  [0,.4,0],[1,.8,0],[0,.4,1],
   [0,0,0],[1,0,0],[0,0,1]];
  const uv=[[70,200],[80,210],[85,220],
   [70,200],[80,210],[85,220],
