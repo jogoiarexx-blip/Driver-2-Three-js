@@ -6,6 +6,16 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R67 — Auditoria geral de estabilidade, cache e integração (02/11/2026) — em validação
+
+**Escopo:** P0/PERF-06, GAME-07, CAR-05, ARCH-06, ARCH-11, carregamento de GLBs, shader/boot, qualidade e estrutura do repositório. Inventário e diagnóstico em [docs/AUDITORIA-REPOSITORIO-R67.md](docs/AUDITORIA-REPOSITORIO-R67.md).
+
+**Defeito E1 comprovado:** `resetCityForPreset` coletava texturas com `cityGroup.traverse`; `return` no nó marcado `cc0SharedAsset` não impedia o percurso dos filhos e podia destruir o atlas de um barco GLB compartilhado na troca de cidade. Agora usa `GPUResourceUtils.disposeSubtree` com herança da flag, e tem teste dirigido. `loadCityPresetProgressive` não considerava geração obsoleta após `requestAnimationFrame`; agora rejeita o trabalho antigo sem voltar a marcar `ready`.
+
+**Outras melhorias de código:** importar GLB libera URL temporária em todas as saídas e não marca falha como sucesso; DPR aplicado antes de `setSize` inicial; a opção de GLB significa **pré-carregar ou carregar em segundo plano**, sem desligar os carros do repositório nem disparar `toggle()` a cada ajuste; HTML versiona os JS alterados. Gate de integridade dos scripts locais e 4 arquivos novos de regressão.
+
+**Evidências:** workflow da PR R67 e resultado da suíte Node/Chromium a anexar após execução. **Abertos:** Chicago MAP-05 até MAP-20, campanha GAME-06/E4, GPU/Android E5, PERF-06 3+ trocas, QA prolongado dos veículos, NPCs e fachadas. Não declarar melhoria percentual de FPS nem ausência de vazamento sem medição.
+
 ### R66 — Veículos enviados circulam; único segredo real (02/11/2026)
 
 **Pedido:** mover os GLBs adicionados pelo usuário para o trânsito normal e deixar apenas um carro secreto no mapa ativo.
