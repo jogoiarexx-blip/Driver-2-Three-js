@@ -187,9 +187,14 @@ class DriverBootFlow {
         if(!this.game)return;
         this.game.reducedMotion=this.settings.reducedMotion ||
             !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-        if(this.game.freeVehicleAssets &&
-            this.game.freeVehicleAssets.enabled!==this.settings.models)
-            this.game.freeVehicleAssets.toggle();
+        // "models" significa pré-carregar antes da partida, NÃO trocar
+        // modelos locais por caixas. toggle() agora é uma tentativa de
+        // download (tecla M), e antes era chamado repetidamente quando
+        // o checkbox estava desligado, desperdiçando CPU/rede.
+        if(this.game.freeVehicleAssets && !this.game.freeVehicleAssets.enabled){
+            this.game.freeVehicleAssets.enabled=true;
+            this.game.freeVehicleAssets.decorateFleet();
+        }
         if(this.game.playerCar)
             this.game.playerCar.setPaintColor(
                 parseInt(this.settings.playerColor.slice(1),16));
@@ -249,7 +254,7 @@ class DriverBootFlow {
         this.loading.classList.remove('hidden');
         document.getElementById('d2-load-title').textContent=title;
         document.getElementById('d2-load-errors').textContent=
-            'Modelos externos opcionais usam alternativas low-poly se falharem.';
+            'Veículos GLB locais serão reutilizados. Falhas de download possuem contingência visual.';
         document.getElementById('d2-load-return').classList.add('hidden');
         this.paintProgress({fraction:0,label:'Verificando recursos necessários'});
         try {
@@ -269,8 +274,12 @@ class DriverBootFlow {
     }
 
     async preloadModels(game,report) {
-        if(!this.settings.models||!game.freeVehicleAssets?.enabled){
-            report(1,'Malhas low-poly procedurais prontas');
+        if(!game.freeVehicleAssets?.enabled)return;
+        if(!this.settings.models){
+            // O checkbox controla só a ESPERA pelo pré-carregamento:
+            // os GLBs continuam sendo utilizados no trânsito.
+            game.freeVehicleAssets.decorateFleet();
+            report(1,'GLBs locais continuam carregando em segundo plano');
             return;
         }
         const library=game.freeVehicleAssets;
@@ -280,7 +289,7 @@ class DriverBootFlow {
             const ok=await library.importUserCar(file);
             this.showCarStatus(ok?
                 'Carro 3D personalizado carregado e aplicado.':
-                'Não foi possível aplicar o GLB, mantidas malhas alternativas.');
+                'Não foi possível aplicar o GLB. Confira o arquivo.');
         }
         // GLB publicado em assets/vehicles é prioridade. Esperamos a
         // aplicação no jogador antes de compilar shaders/câmera, evitando
@@ -348,13 +357,13 @@ class DriverBootFlow {
             if(model)success++;else skipped++;
             finished++;
             report(.25+.75*finished/names.length,
-                'Modelos externos: '+success+' carregados, '+skipped+
+                'Modelos do repositório: '+success+' carregados, '+skipped+
                 ' usando fallback ('+finished+'/'+names.length+')');
         }));
         game.freeVehicleAssets.decorateFleet();
         if(skipped){
             document.getElementById('d2-load-errors').textContent=
-                skipped+' asset(s) externos indisponíveis. Usando malhas PS1 sem bloquear o jogo.';
+                skipped+' GLB(s) locais não disponíveis ainda. Alternativa visual somente em falha total.';
         }
     }
 
