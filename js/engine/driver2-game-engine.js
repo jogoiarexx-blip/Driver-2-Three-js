@@ -3207,7 +3207,7 @@
                     statusEl.textContent='Carregador de GLB não disponível.';
                     return;
                 }
-                if(!/\\.glb$/i.test(file.name||'')){
+                if(!/\.glb$/i.test(file.name||'')){
                     statusEl.textContent='Escolha um arquivo .glb. GLTF com arquivos externos não é suportado neste seletor.';
                     return;
                 }
@@ -3230,7 +3230,7 @@
                     new THREE.GLTFLoader().load(url,gltf=>{
                         try{
                             const accepted=this.applyCustomModelToPlayerCar(
-                                gltf?.scene,file.name.replace(/\\.[^.]+$/,'').toUpperCase());
+                                gltf?.scene,file.name.replace(/\.[^.]+$/,'').toUpperCase());
                             statusEl.textContent=accepted?
                                 'Modelo "'+file.name+'" pronto para dirigir.':
                                 'O GLB não tem geometria válida. Veículo anterior preservado.';
