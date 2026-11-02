@@ -1,0 +1,62 @@
+name: Chicago R72 - original PS1 corridor inspection and migration gate
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-corridor-review-r72.js'
+      - 'chicago/corridor-review-r72.json'
+      - 'chicago-original-preview.html'
+      - 'tests/chicago-r72*'
+      - 'tools/chicago-r72-source-corridor.cjs'
+      - '.github/workflows/chicago-r72.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-corridor-review-r72.js'
+      - 'chicago/corridor-review-r72.json'
+      - 'chicago-original-preview.html'
+      - 'tests/chicago-r72*'
+permissions:
+  contents: read
+jobs:
+  source-corridor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify JS syntax and source graph, paving and tile provenance
+        run: |
+          node --check js/world/chicago-corridor-review-r72.js
+          node --check tools/chicago-r72-source-corridor.cjs
+          node --check tests/chicago-r72-browser.cjs
+          node --test tests/chicago-r72-corridor-review.test.cjs
+          node tools/chicago-r72-source-corridor.cjs qa-artifacts/chicago-r72/corridor-material-audit.json
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve checkout like GitHub Pages
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/r72-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r72-http.log
+          exit 1
+      - name: Chromium original visual source and unchanged live Undercover
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r72-browser.cjs
+      - name: Publish original corridor screenshot and material audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r72-ps1-corridor-3445
+          path: |
+            qa-artifacts/chicago-r72*
+            qa-artifacts/chicago-r72/*
+          if-no-files-found: ignore

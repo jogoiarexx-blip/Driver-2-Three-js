@@ -9,12 +9,13 @@ small{color:#a8b7c6}button{background:#1e4571;border:1px solid #3f7295;color:whi
 </style></head><body><div id="view"></div>
 <section id="panel"><b>CHICAGO • ORIGINAL PS1</b><div>Pré-visualização geográfica da geometria enviada pelo usuário. Não é a cidade jogável nem altera as missões e a física do clone.</div>
 <small>Arraste para orbitar • Roda para zoom • WASD/setas para mover • Tecla 1: centro • Tecla 2: vista superior.</small>
-<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button><button id="review27" type="button">Revisar alertas R27</button><button id="routes28" type="button">Ver rotas por nível R28</button><button id="recover29" type="button">Ver recuperação R29</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="review27-audit" aria-live="polite" style="font-size:12px;color:#d6b4d7;margin-top:7px">R27: revisão de alturas no mesmo X/Z. Nenhum viaduto certificado.</div><div id="routes28-audit" aria-live="polite" style="font-size:12px;color:#98d7bf;margin-top:7px">R28: revisão de conectividade 3D sem ativar trânsito.</div><div id="recover29-audit" aria-live="polite" style="font-size:12px;color:#c5c3f7;margin-top:7px">R29: análise de falhas de altura com triângulos próximos, sem ativar tráfego.</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
+<div><button id="center">Centralizar</button><button id="top">Vista superior</button><button id="more">Aumentar alcance</button><button id="roads" type="button">Mostrar vias candidatas</button><button id="grades" type="button">Mostrar conflitos de altura</button><button id="review27" type="button">Revisar alertas R27</button><button id="routes28" type="button">Ver rotas por nível R28</button><button id="recover29" type="button">Ver recuperação R29</button><button id="corridor72" type="button">Inspecionar corredor R72</button></div><div id="status">Carregando manifest...</div><div id="road-audit" aria-live="polite" style="font-size:12px;color:#adc8d7;margin-top:8px">R24: camadas originais de pavimento · sem certificação de vias.</div><div id="grade-audit" aria-live="polite" style="font-size:12px;color:#e1b4b9;margin-top:8px">R26: alturas medidas nos 54 GLBs; alertas de cruzamento ainda não certificados.</div><div id="review27-audit" aria-live="polite" style="font-size:12px;color:#d6b4d7;margin-top:7px">R27: revisão de alturas no mesmo X/Z. Nenhum viaduto certificado.</div><div id="routes28-audit" aria-live="polite" style="font-size:12px;color:#98d7bf;margin-top:7px">R28: revisão de conectividade 3D sem ativar trânsito.</div><div id="recover29-audit" aria-live="polite" style="font-size:12px;color:#c5c3f7;margin-top:7px">R29: análise de falhas de altura com triângulos próximos, sem ativar tráfego.</div><div id="corridor72-audit" aria-live="polite" style="font-size:12px;color:#ffdb8f;margin-top:7px">R72: corredor 3445 dos GLBs PS1, pronto para revisão de pavimento e posição (sem trânsito).</div><div id="ground-audit" style="font-size:12px;color:#91b9c7;margin-top:8px">Análise de superfícies PS1: aguardando dados.</div></section>
 <div id="footer">OBJ dividido em 54 setores • carregamento sob demanda • material faltante em roxo</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="./js/world/chicago-original-tile-stream.js"></script>
 <script src="./js/world/chicago-road-evidence-r24.js?v=chicago-r24"></script>
+<script src="./js/world/chicago-corridor-review-r72.js?v=r72-source-3445"></script>
 <script>
 (async function(){
 'use strict';
@@ -415,6 +416,87 @@ recover29Button.addEventListener('click',async()=>{
   recover29Button.textContent='Tentar novamente';
  }finally{recover29Loading=false;recover29Button.disabled=false;}
 });
+// R72: inspect one actual original PS1 corridor with tile attribution,
+// material width evidence and uncalibrated R15 projection. VISUAL ONLY.
+let corridor72Overlay=null,corridor72Loading=false;
+const corridor72Button=document.getElementById('corridor72'),
+      corridor72Status=document.getElementById('corridor72-audit');
+corridor72Button.addEventListener('click',async()=>{
+ if(corridor72Overlay){
+    corridor72Overlay.visible=!corridor72Overlay.visible;
+    corridor72Button.textContent=corridor72Overlay.visible?
+      'Ocultar corredor R72':'Inspecionar corredor R72';
+    if(corridor72Overlay.visible&&window.__chicagoR72?.report)
+      focusR72(window.__chicagoR72.report);
+    return;
+ }
+ if(corridor72Loading)return;
+ corridor72Loading=true;corridor72Button.disabled=true;
+ corridor72Status.textContent='Validando fonte original, alturas e asfalto do corredor…';
+ try{
+   const files=[
+     './chicago/reference-network.json',
+     './chicago/reference-layered-r28.json',
+     './chicago/reference-recovery-r29.json',
+     './chicago/manifest.json',
+     './chicago/reference-curve-r15.json',
+     './chicago/corridor-review-r72.json',
+     './chicago/reference-street-survey.json'
+   ];
+   const [graph,r28,r29,manifest,r15,published,survey]=
+      await Promise.all(files.map(async url=>{
+        const response=await fetch(url);
+        if(!response.ok)throw Error('HTTP '+response.status+': '+url);
+        return response.json();
+      }));
+   const review=DriverChicagoCorridorR72.build(graph,r28,r29,manifest,r15);
+   if(JSON.stringify(review)!==JSON.stringify(published))
+     throw Error('Inventário do corredor difere da origem original PS1');
+   const masks=await DriverChicagoRoadEvidenceR24.browserMasks(survey);
+   const paving=DriverChicagoCorridorR72.materials(review,survey,
+     masks,DriverChicagoRoadEvidenceR24);
+   corridor72Overlay=DriverChicagoCorridorR72.overlay(THREE,review);
+   stream.root.add(corridor72Overlay);
+   // Hide old overlapping audit layers, not their saved state/data.
+   for(const [group,button,label] of [
+     [evidenceOverlay,roadsButton,'Mostrar vias candidatas'],
+     [gradeOverlay,gradeButton,'Mostrar conflitos de altura'],
+     [review27Overlay,review27Button,'Revisar alertas R27'],
+     [routes28Overlay,routes28Button,'Ver rotas por nível R28'],
+     [recover29Overlay,recover29Button,'Ver recuperação R29']
+   ])if(group){group.visible=false;button.textContent=label;}
+   window.__chicagoR72={report:review,materialEvidence:paving,
+     overlay:corridor72Overlay,sourceOnly:true,trafficEnabled:false};
+   corridor72Button.textContent='Ocultar corredor R72';
+   const confidencePT={strong:'forte',medium:'intermediária',
+       review:'revisar',reject:'descartar'}[paving.confidence]||
+       paving.confidence;
+   corridor72Status.textContent='R72 • aresta 3445 ('+
+     review.lengthPolylineOBJ.toLocaleString('pt-BR')+
+     ' unidades OBJ), GLBs '+review.tiles.map(t=>t.id).join(', ')+
+     ' · Pavimento original: '+confidencePT+
+     ' (centro '+Math.round(paving.center*100)+'%, faixa lateral '+
+     Math.round(paving.laneEdges*100)+'%, margem externa '+
+     Math.round(paving.outerEdges*100)+'%; grama '+
+     Math.round(paving.grass*100)+'%)'+
+     ' · Projeção R15 fora da grade: '+
+     (!review.projectedUndercoverR15.withinLegacyGrid320?'SIM':'NÃO')+
+     '. Linha dourada = traçado observado; azul = limites dos setores. '+
+     'NENHUMA rua, colisão, missão ou tráfego foi homologado.';
+   focusR72(review);
+ }catch(error){
+   corridor72Status.textContent='R72: falha ao validar o original: '+
+     String(error.message||error);
+   corridor72Button.textContent='Tentar revisão R72';
+ }finally{corridor72Loading=false;corridor72Button.disabled=false;}
+});
+function focusR72(report){
+ const points=report.sourcePointsOBJ,first=points[0],last=points.at(-1);
+ target.set((first[0]+last[0])/2,1,(first[1]+last[1])/2);
+ yaw=.5;pitch=.8;distance=47;
+ stream.update(target);
+}
+
 let drag=false,px=0,py=0;
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);
@@ -443,7 +525,7 @@ let then=performance.now();function frame(now){requestAnimationFrame(frame);
 requestAnimationFrame(frame);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 addEventListener('pagehide',()=>{
- for(const group of [evidenceOverlay,gradeOverlay,review27Overlay,routes28Overlay,recover29Overlay]){
+ for(const group of [evidenceOverlay,gradeOverlay,review27Overlay,routes28Overlay,recover29Overlay,corridor72Overlay]){
   if(!group)continue;
   group.traverse(obj=>{obj.geometry?.dispose?.();obj.material?.dispose?.();});
   group.parent?.remove(group);

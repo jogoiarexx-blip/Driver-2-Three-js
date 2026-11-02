@@ -1,0 +1,33 @@
+{
+  "format": "DriverChicagoOriginalCorridorReviewR72",
+  "sourceSHA256": "a94e6e47cb22066f671abe2d5547cf9f96391b874c5fb08229ed4773cc25ba50",
+  "sourceTriangles": 1544872,
+  "candidateEdgeId": 3445,
+  "nodeIds": [2560, 2805],
+  "sourcePointsOBJ": [[-90.6, 92.882], [-90.6, 76.507]],
+  "lengthPolylineOBJ": 16.375,
+  "sourceGraphLengthOBJ": 16.582107,
+  "sourcePixels": 132,
+  "selectedForReview": "R28 directly observed grade; R29 height interpolation not required",
+  "r28Evidence": true,
+  "r29RecoveredHeight": false,
+  "adjacentR28EdgesInComponent": 1,
+  "tiles": [
+    {"id":"01_02","url":"chicago/chunks/01_02.glb","bounds":{"min":[-96.0813,-0.1536,63.9345],"max":[-79.9443,0.8448,80.064]},"roadCertified":false},
+    {"id":"01_03","url":"chicago/chunks/01_03.glb","bounds":{"min":[-91.6995,-0.1536,79.9428],"max":[-79.9272,0.5184,96.0768]},"roadCertified":false}
+  ],
+  "tilesCount": 2,
+  "projectedUndercoverR15": {
+    "method": "R15 similarity fit; source position NOT certified",
+    "worldPoints": [{"x":-330.8654,"z":281.2416},{"x":-327.607,"z":147.92}],
+    "bounds": {"minX":-330.8654,"maxX":-327.607,"minZ":147.92,"maxZ":281.2416},
+    "withinLegacyGrid320": false,
+    "calibratedOriginalPlacement": false,
+    "roadCollisionSurveyed": false
+  },
+  "originalRoadCertified": false,
+  "gameTrafficEnabled": false,
+  "collisionCreated": false,
+  "missionsMigrated": false,
+  "nextGate": "Inspect material coverage, original lane width and height triangulation; calibrate placement and recheck Undercover collisions before any drivable integration"
+}
