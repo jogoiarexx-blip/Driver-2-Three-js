@@ -314,7 +314,7 @@
                 // 4. Carros Civis + Veículos Pesados Exclusivos do Driver 2 (Ônibus, Caminhão Baú e Limusine)
                 const civilSpecs = [
                     { name: 'ÔNIBUS ESCOLAR', color: 0xfacc15, bodyStyle: 'bus', uploadedModel:'school-bus', x: -84, z: -138, heading: Math.PI, maxSpeed: 42, accel: 20 },
-                    { name: 'CAMINHÃO CARGA', color: 0x0284c7, bodyStyle: 'truck', x: 102, z: -84, heading: Math.PI / 2, maxSpeed: 45, accel: 22 },
+                    { name: 'CAMINHÃO CARGA', color: 0x0284c7, bodyStyle: 'truck', uploadedModel:'cargo-van', x: 102, z: -84, heading: Math.PI / 2, maxSpeed: 45, accel: 22 },
                     { name: 'STRETCH LIMO V8', color: 0x18181b, bodyStyle: 'limo', x: 84, z: 122, heading: 0, maxSpeed: 52, accel: 27 },
                     { name: 'CADILLAC VERDE', color: 0x15803d, bodyStyle: 'muscle', x: -76, z: 27, heading: 0, maxSpeed: 46, accel: 24 },
                     { name: 'COUPE TURQUESA', color: 0x0d9488, bodyStyle: 'muscle', x: 116, z: -4, heading: Math.PI / 2, maxSpeed: 48, accel: 25 },
@@ -333,6 +333,9 @@
                         maxSpeed: c.maxSpeed,
                         accel: c.accel
                     });
+                    // R66: usar a vaga antiga do caminhão civil para a van
+                    // GLB. Assim a frota base e os índices dos saves não mudam.
+                    if(c.uploadedModel==='cargo-van')civ.uploadedTraffic=true;
                     // R49: existing ordinary sedans join the inter-district
                     // network; school bus, heavy trucks and mission vehicles
                     // preserve their original driving controller.
@@ -723,9 +726,11 @@
                         'saia a pé e entre no carro dele antes que a testemunha parta.';
                     this.targetCar=new DriverVehicle(this.scene,{
                         name:'CARRO DE JONES',color:0x94a3b8,isTarget:true,
-                        isSecret:true,x:244,z:-240,heading:Math.PI,
+                        x:244,z:-240,heading:Math.PI,
                         maxSpeed:52,accel:30
                     });
+                    // Jones espera Tanner chegar; não é outro carro secreto.
+                    this.targetCar.missionParked=true;
                     this.vehicles.push(this.targetCar);
                 } else if(type==='story_leaving'){
                     this.missionActive=true;
@@ -1267,11 +1272,12 @@
                 if(this.intruderBlocker)return this.intruderBlocker;
                 const van=new DriverVehicle(this.scene,{
                     name:'VAN AMARELA • EMBOSCADA',
-                    color:0xeab308,bodyStyle:'truck',isSecret:true,
+                    color:0xeab308,bodyStyle:'truck',
                     x:198,z:-137,heading:Math.PI/2,
                     maxSpeed:21,accel:17
                 });
-                van.isSecret=true;
+                // A van da emboscada é obstáculo de missão, não carro secreto.
+                van.missionParked=true;
                 van.speed=0;
                 van.updateTransform();
                 this.vehicles.push(van);
@@ -1602,7 +1608,9 @@
                 // Os bloqueios intactos entram como obstáculos para os motoristas
                 // não os atravessarem nem os destruírem por engano.
                 this.trafficAI.policeRoadblocks = this.pedManager.roadblocks;
-                // O carro secreto só deixa a garagem quando o jogador assume o volante.
+                // Somente o carro secreto da garagem usa isSecret;
+                // atores de missão ficam imóveis via missionParked. As
+                // caminhonetes, a van civil e a moto recebem IA normal.
                 for (const vehicle of this.vehicles) {
                     if (vehicle === this.playerCar || vehicle.missionParked || vehicle.isSecret ||
                         vehicle===this.policeDoorTransition?.vehicle ||

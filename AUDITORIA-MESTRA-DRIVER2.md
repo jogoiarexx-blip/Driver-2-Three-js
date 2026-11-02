@@ -6,6 +6,16 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R66 — Veículos enviados circulam; único segredo real (02/11/2026)
+
+**Pedido:** mover os GLBs adicionados pelo usuário para o trânsito normal e deixar apenas um carro secreto no mapa ativo.
+
+**Antes (E1):** `DriverUploadedVehicles.spawn()` estacionava três carros com `missionParked=true`, portanto `updateAIAndCollisions()` não os dirigia; a van de 23 MB nem entrava nessa frota. `story_tipoff` também marcava Jones como `isSecret` e a van do bloqueio de `story_intruder` recebia esse rótulo por conveniência, criando falsos carros secretos nas missões. A garagem não aceitava `cargo-van`.
+
+**Depois (implementação a validar):** quatro GLBs, `pickup-new`, `pickup-old`, `cargo-van` e `motorcycle`, são criados como tráfego civil nos quatro mapas, sem `missionParked` e sem `isSecret`. O spawn adiciona somente três veículos à frota antiga porque a van reutiliza a vaga do `CAMINHÃO CARGA` civil; assim preserva contagem e índices da frota dos saves R65. As três vagas novas testam faixas de sentido coerente, 18 metros de superfície trafegável, obstáculos, água, distância entre veículos, alternativas determinísticas e duplicação. O ônibus segue na frota original. Somente `secretCar` usa `isSecret`. Jones e o bloqueio de Caine aguardam a missão imóveis por `missionParked=true`. O carro bônus do estádio Wrigley preserva a vaga, o acesso e a restauração adiada do save, mas usa `missionParked` em vez de `isSecret`. Garagem serializa o identificador da van.
+
+**Evidências requeridas:** E2 `node --test tests/*.test.cjs` em Node 22/24 e verificações diretas de IA semáforos e rotas; E3 Chromium em Chicago e smoke nas quatro cidades com quatro modelos em movimento, nenhum carro extra secreto e sem água/colisores invisíveis; E4 e E5 ainda dependem de hardware e partida real. Não fechar P0-10/MAP-05 com base somente neste patch.
+
 ### R65 — GLBs locais em toda a frota (02/11/2026) — E1/E2 confirmados; E3/E4/E5 pendentes
 
 **Pedido:** eliminar os carros procedurais visíveis e substituir os modelos automáticos pelos GLBs já presentes no repositório em todas as quatro cidades.

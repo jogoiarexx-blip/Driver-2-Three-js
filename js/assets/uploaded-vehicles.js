@@ -1,12 +1,12 @@
 /** Uploaded GLBs: cached local models; physics/mission fleet stays independent. */
 class DriverUploadedVehicles {
     static DEFINITIONS={
-        'pickup-new':{url:'./assets/vehicles/caminhonete-nova-otimizada.glb',name:'CAMINHONETE NOVA',bodyStyle:'truck',z:-38},
-        'pickup-old':{url:'./assets/vehicles/caminhonete%20velha.glb',name:'CAMINHONETE ANTIGA',bodyStyle:'truck',z:-58},
+        'pickup-new':{url:'./assets/vehicles/caminhonete-nova-otimizada.glb',name:'CAMINHONETE NOVA',bodyStyle:'truck'},
+        'pickup-old':{url:'./assets/vehicles/caminhonete%20velha.glb',name:'CAMINHONETE ANTIGA',bodyStyle:'truck'},
         // GLB de 23 MB adicionado ao repositório em 02/11. Usado somente nos
         // furgões de entrega, reutilizando malha/texturas entre os clones.
         'cargo-van':{url:'./assets/vehicles/Van_Rustica_Otimizada_23MB.glb',name:'FURGÃO DE ENTREGAS',bodyStyle:'truck'},
-        motorcycle:{url:'./assets/vehicles/moto-otimizada.glb',name:'MOTO',bodyStyle:'motorcycle',z:-78},
+        motorcycle:{url:'./assets/vehicles/moto-otimizada.glb',name:'MOTO',bodyStyle:'motorcycle'},
         // Esse ônibus substitui o ônibus civil já existente, não cria outro.
         'school-bus':{url:'./assets/vehicles/onibus%20escolar.glb',
             name:'ÔNIBUS ESCOLAR',bodyStyle:'bus'},
@@ -16,16 +16,62 @@ class DriverUploadedVehicles {
         this.engine=engine;this.library=library;this.cache=new Map();
         this.queue=Promise.resolve();this.states={};this.boat=null;
     }
-    static spawn(engine){
-        for(const [id,d] of Object.entries(this.DEFINITIONS)){
-            if(id==='boat'||id==='school-bus'||id==='cargo-van')continue;
-            const x=9,z=d.z;
-            if(engine.city.isWaterAt(x,z)||engine.city.isPointBlocked(x,z,1.55))continue;
-            if(engine.vehicles.some(v=>Math.hypot(v.x-x,v.z-z)<9))continue;
-            const vehicle=new DriverVehicle(engine.scene,{name:d.name,bodyStyle:d.bodyStyle,
-                uploadedModel:id,color:0x65746d,x,z,heading:0,maxSpeed:id==='motorcycle'?48:44,accel:25});
-            vehicle.missionParked=true;engine.vehicles.push(vehicle);
+    // Veículos enviados pelo usuário participam do tráfego normal.
+    // Cada ponto é uma faixa da grade existente (±4 do eixo da rua),
+    // não uma vaga de estacionamento. Alternativas evitam água/obstáculos.
+    static TRAFFIC_SPECS=[
+        {id:'pickup-new',color:0x65746d,maxSpeed:44,accel:24,
+            slots:[{x:4,z:-60,heading:0},{x:4,z:92,heading:0},
+                {x:84,z:28,heading:0},{x:-44,z:4,heading:-Math.PI/2}]},
+        {id:'pickup-old',color:0x8b7355,maxSpeed:42,accel:22,
+            slots:[{x:84,z:-60,heading:0},{x:-84,z:-195,heading:0},
+                {x:164,z:-4,heading:Math.PI/2},{x:-4,z:195,heading:Math.PI}]},
+        {id:'cargo-van',color:0x807565,maxSpeed:38,accel:20,
+            slots:[{x:-84,z:-54,heading:0},{x:84,z:32,heading:0},
+                {x:-164,z:4,heading:-Math.PI/2},{x:4,z:175,heading:0}]},
+        {id:'motorcycle',color:0x64748b,maxSpeed:48,accel:29,
+            slots:[{x:-44,z:-84,heading:Math.PI/2},{x:36,z:76,heading:Math.PI/2},
+                {x:-4,z:195,heading:Math.PI},{x:164,z:-4,heading:Math.PI/2}]}
+    ];
+    static isTrafficLaneOpen(engine,spec,position){
+        const city=engine.city;
+        const radius=spec.id==='motorcycle'?1.1:1.55;
+        const {x,z,heading}=position;
+        if(!Number.isFinite(x)||!Number.isFinite(z)||
+            !Number.isFinite(heading))return false;
+        if(city.isWaterAt(x,z)||city.isPointBlocked(x,z,radius))return false;
+        // Certificar também o trecho inicial adiante das rodas: uma vaga seca
+        // isolada não significa que a IA consiga sair para a avenida.
+        if(typeof DriverRoadGeometry!=='undefined'){
+            const ahead=18;
+            if(!DriverRoadGeometry.segmentDrivable(city,x,z,
+                x+Math.sin(heading)*ahead,z+Math.cos(heading)*ahead,
+                radius))return false;
         }
+        const separation=spec.id==='motorcycle'?9:12;
+        return !engine.vehicles.some(v=>
+            Math.hypot((v.x??Infinity)-x,(v.z??Infinity)-z)<separation);
+    }
+    static spawn(engine){
+        const added=[];
+        for(const spec of this.TRAFFIC_SPECS){
+            const definition=this.DEFINITIONS[spec.id];
+            if(engine.vehicles.some(v=>v.uploadedModel===spec.id))continue;
+            const position=spec.slots.find(slot=>
+                this.isTrafficLaneOpen(engine,spec,slot));
+            if(!position)continue; // Nunca spawnar em água ou sobre um prédio.
+            const vehicle=new DriverVehicle(engine.scene,{
+                name:definition.name,bodyStyle:definition.bodyStyle,
+                uploadedModel:spec.id,color:spec.color,
+                x:position.x,z:position.z,heading:position.heading,
+                maxSpeed:spec.maxSpeed,accel:spec.accel
+            });
+            vehicle.uploadedTraffic=true;
+            vehicle.missionParked=false;
+            engine.vehicles.push(vehicle);
+            added.push(vehicle);
+        }
+        return added;
     }
     static updateRiders(engine){
         for(const vehicle of engine.vehicles){
