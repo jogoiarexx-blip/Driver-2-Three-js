@@ -61,6 +61,9 @@ const report={date:new Date().toISOString(),status:'STARTED',errors:[],
    assert(inspect.visualOnly);
    assert(inspect.shaderGeometry.every(x=>x.vertices>0));
    assert(inspect.text.includes('GLBs 01_02, 01_03'));
+   assert(inspect.text.includes('intermediária'));
+   assert(inspect.text.includes('margem externa 0%'));
+   assert(inspect.material.grass>.9);
    assert(inspect.text.includes('NENHUMA rua'));
    await page.locator('#corridor72').click();
    assert.equal(await page.evaluate(()=>window.__chicagoR72.overlay.visible),false);
