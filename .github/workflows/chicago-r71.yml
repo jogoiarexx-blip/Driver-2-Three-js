@@ -1,0 +1,60 @@
+name: Chicago R71 - PS1 sector inventory and physical feeder grade
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-ps1-street-network-r22.js'
+      - 'chicago/sector-inventory-r71.json'
+      - 'tools/chicago-r71-sector-inventory.cjs'
+      - 'tests/chicago-r71*'
+      - '.github/workflows/chicago-r71.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-ps1-street-network-r22.js'
+      - 'chicago/sector-inventory-r71.json'
+      - 'tests/chicago-r71*'
+permissions:
+  contents: read
+jobs:
+  physical-feeder-and-sectors:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify all 54 tiles and grade regression
+        run: |
+          node --check js/world/chicago-ps1-street-network-r22.js
+          node --check tests/chicago-r71-browser.cjs
+          node --test tests/chicago-r71-source-grade-and-sector-inventory.test.cjs
+          node tools/chicago-r71-sector-inventory.cjs qa-artifacts/chicago-r71/sector-inventory.json
+          cmp -s chicago/sector-inventory-r71.json qa-artifacts/chicago-r71/sector-inventory.json
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve game as GitHub Pages static files
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/r71-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r71-http.log
+          exit 1
+      - name: Real-world R22 road render and published per-sector inventory
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r71-browser.cjs
+      - name: Upload screenshot and evidence JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r71-source-feeder-sector-inventory
+          path: |
+            qa-artifacts/chicago-r71-*
+            qa-artifacts/chicago-r71/*
+          if-no-files-found: ignore
