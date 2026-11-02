@@ -155,7 +155,8 @@ class DriverChicagoCityPlan {
     // fachadas. Antes havia asfalto visual, mas a IA não tinha essas ruas
     // no grafo R49; a largura total do asfalto não era validada.
     static verifyCourtyard(city,link) {
-        if(city?.preset?.id!=='chicago'||!link?.from||!link?.to||
+        if(!city||(city.preset&&city.preset.id!=='chicago')||
+            !link?.from||!link?.to||
             !Number.isFinite(link.width)||link.width<3)return false;
         const {from,to}=link,dx=to.x-from.x,dz=to.z-from.z;
         const distance=Math.hypot(dx,dz);
@@ -188,7 +189,7 @@ class DriverChicagoCityPlan {
         return true;
     }
     static courtyardLinks(city){
-        if(city?.preset?.id!=='chicago')return [];
+        if(!city||(city.preset&&city.preset.id!=='chicago'))return [];
         const links=[],seen=new Set();
         for(const block of city.chicagoCityPlan?.blocks||[]){
             if(block.kind!=='residential')continue;
