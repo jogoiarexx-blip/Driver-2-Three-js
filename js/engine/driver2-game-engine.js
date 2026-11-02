@@ -723,9 +723,11 @@
                         'saia a pé e entre no carro dele antes que a testemunha parta.';
                     this.targetCar=new DriverVehicle(this.scene,{
                         name:'CARRO DE JONES',color:0x94a3b8,isTarget:true,
-                        isSecret:true,x:244,z:-240,heading:Math.PI,
+                        x:244,z:-240,heading:Math.PI,
                         maxSpeed:52,accel:30
                     });
+                    // Jones espera Tanner chegar; não é outro carro secreto.
+                    this.targetCar.missionParked=true;
                     this.vehicles.push(this.targetCar);
                 } else if(type==='story_leaving'){
                     this.missionActive=true;
@@ -1267,11 +1269,12 @@
                 if(this.intruderBlocker)return this.intruderBlocker;
                 const van=new DriverVehicle(this.scene,{
                     name:'VAN AMARELA • EMBOSCADA',
-                    color:0xeab308,bodyStyle:'truck',isSecret:true,
+                    color:0xeab308,bodyStyle:'truck',isTarget:true,
                     x:198,z:-137,heading:Math.PI/2,
                     maxSpeed:21,accel:17
                 });
-                van.isSecret=true;
+                // A van da emboscada é obstáculo de missão, não carro secreto.
+                van.missionParked=true;
                 van.speed=0;
                 van.updateTransform();
                 this.vehicles.push(van);
@@ -1602,7 +1605,9 @@
                 // Os bloqueios intactos entram como obstáculos para os motoristas
                 // não os atravessarem nem os destruírem por engano.
                 this.trafficAI.policeRoadblocks = this.pedManager.roadblocks;
-                // O carro secreto só deixa a garagem quando o jogador assume o volante.
+                // Somente o carro secreto da garagem usa isSecret;
+                // atores de missão ficam imóveis via missionParked. As
+                // caminhonetes, a van civil e a moto recebem IA normal.
                 for (const vehicle of this.vehicles) {
                     if (vehicle === this.playerCar || vehicle.missionParked || vehicle.isSecret ||
                         vehicle===this.policeDoorTransition?.vehicle ||
