@@ -134,6 +134,10 @@ test('R69: southern alleys connect to the existing north-south asphalt, not an i
         chicagoCityPlan:{blocks:[
             {x:120,z:-360,kind:'residential',district:'prairie-ave'}],
             courtyardLinks:[]}});
+    blocked.isPointBlocked=function(x,z,r=0){
+        return this.buildingBoxes.some(box=>x+r>box.minX&&
+            x-r<box.maxX&&z+r>box.minZ&&z-r<box.maxZ);
+    };
     blocked.chicagoCityPlan.courtyardLinks=Plan.courtyardLinks(blocked);
     const stops=Nav.compile(blocked);
     assert.equal(stops.courtyardBoundaryFeeders,1,
