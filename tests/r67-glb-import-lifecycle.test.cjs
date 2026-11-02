@@ -79,3 +79,21 @@ test('external loader only claims success when model applies',()=>{
     assert.equal(h.game.playerCar.name,'ANTES');
     assert.equal(h.game.playerCar._userCustomModel,false);
 });
+
+test('aba oculta não executa IA, física ou WebGL e não acumula delta ao voltar',()=>{
+    const frames=[];
+    const Type=vm.runInNewContext(source+';Driver2GameEngine',{
+        window:{},document:{hidden:true},
+        requestAnimationFrame:cb=>frames.push(cb),
+        performance:{now:()=>5000}
+    });
+    const game=Object.create(Type.prototype);
+    game.lastTime=1000;game.frames=12;game.fpsTimer=.4;
+    game.updateAIAndCollisions=()=>{throw Error('AI must not run hidden')};
+    game.renderer={render(){throw Error('renderer must not run hidden')}};
+    Type.prototype.animate.call(game);
+    assert.equal(frames.length,1,'keep only the next animation callback queued');
+    assert.equal(game.lastTime,5000,'clock rebased while backgrounded');
+    assert.equal(game.frames,0);
+    assert.equal(game.fpsTimer,0);
+});
