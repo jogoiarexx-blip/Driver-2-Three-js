@@ -17,7 +17,7 @@ function harness({loadThrows=false}={}){
         }
     }};
     const Type=vm.runInNewContext(source+';Driver2GameEngine',{
-        THREE,document:{getElementById(){return status}},URL
+        THREE,document:{getElementById(){return status}},URL,window:{}
     });
     const game=Object.create(Type.prototype);
     game.playerCar={name:'ANTES',_userCustomModel:false,
