@@ -6,6 +6,18 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R65 — GLBs locais em toda a frota (02/11/2026) — E1, testes E2/E3 pendentes
+
+**Pedido:** eliminar os carros procedurais visíveis e substituir os modelos automáticos pelos GLBs já presentes no repositório em todas as quatro cidades.
+
+**Antes (E1):** `FreeVehicleAssets.getModelName` dependia do CDN Kenney para vários carros comuns e para os alvos e carros secretos; ônibus/limusines tinham retorno nulo; `toggle()` reconstruía as carrocerias procedurais; a entidade `DriverVehicle` exibia a malha de caixas enquanto aguardava o GLB.
+
+**Depois (código preparado):** seis arquivos GLB locais são a única fonte automática de veículos; caminhonetes divididas de forma determinística, ônibus e motos mantêm suas identidades, viaturas usam suas portas reais e o carro de Tanner é usado nos sedãs, alvos, secretos e limusines. Malhas procedurais iniciais ficam escondidas; o botão M reexecuta carregamentos, não muda para PS1. Em indisponibilidade TOTAL de GLBs locais permanece fallback visual de emergência, notificado no status, para evitar colisores invisíveis. `DriverVehicle.applyCC0Model` preserva chassis e física e adequa o comprimento da limusine.
+
+**Verificação necessária:** `tests/repository-vehicle-fleet-r65.test.cjs` + `node --test tests/*.test.cjs` em Node 22/24; navegador real desktop (todos os 43+ veículos), troca entre quatro cidades, entrar/sair de carro, portas GLB, salvar/recarregar; Android real FPS/memória E5. **Nenhuma certificação E2/E3/E4/E5 declarada antes do Actions**.
+
+**Pendências:** limusine e caminhão de carga não têm GLB exclusivo no repositório, então reutilizam modelos locais de tamanho adaptado. Falha total de download gera emergência procedural como exceção explicitamente reportada; remover até essa exceção exigiria modo de bloqueio de partida quando todos os modelos estão indisponíveis.
+
 ### R64 — Sprint P1 GAME-07 / PERF-06 — troca de cidade e estado adiado (01/11/2026)
 
 **Base:** R63 `6a1b41a`. Implementação no [PR #39](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/39).
