@@ -49,13 +49,20 @@ test('carregamento é serial, único por modelo e preserva fallback quando falha
  callbacks[0].ok({scene:root});assert.equal(await first,root);await Promise.resolve();assert.equal(requests.length,2);
  callbacks[1].fail();assert.equal(await second,null);assert.equal(roster.states['pickup-old'],'missing');
 });
-test('spawn não substitui frota anterior, evita água e colisões',()=>{
+test('GLBs enviados surgem no tráfego normal, sem vagas especiais ou duplicação',()=>{
  const Type=vm.runInNewContext(source+';DriverUploadedVehicles',{DriverVehicle:class{constructor(_scene,config){Object.assign(this,config);}}});
  const engine={scene:{},vehicles:[{x:100,z:100}],city:{isWaterAt:()=>false,isPointBlocked:()=>false}};
- Type.spawn(engine);assert.equal(engine.vehicles.length,4);assert.equal(engine.vehicles[0].x,100);
- assert.equal(new Set(engine.vehicles.slice(1).map(v=>v.uploadedModel)).size,3);assert(engine.vehicles.slice(1).every(v=>v.missionParked));
- Type.spawn(engine);assert.equal(engine.vehicles.length,4);
- const wet={...engine,vehicles:[],city:{isWaterAt:()=>true}};Type.spawn(wet);assert.equal(wet.vehicles.length,0);
+ const added=Type.spawn(engine);
+ assert.equal(engine.vehicles.length,5);
+ assert.equal(engine.vehicles[0].x,100);
+ assert.equal(added.length,4);
+ assert.deepEqual(Array.from(new Set(added.map(v=>v.uploadedModel))).sort(),
+  ['cargo-van','motorcycle','pickup-new','pickup-old'].sort());
+ assert(added.every(v=>v.missionParked===false&&v.uploadedTraffic===true&&
+    !v.isSecret&&!v.isPolice));
+ Type.spawn(engine);assert.equal(engine.vehicles.length,5);
+ const wet={...engine,vehicles:[],city:{isWaterAt:()=>true,isPointBlocked:()=>false}};
+ assert.equal(Type.spawn(wet).length,0);
 });
 test('moto tem massa e colisão próprias e mantém identidade na garagem',()=>{
  const Collisions=vm.runInNewContext(read('js/physics/vehicle-collisions.js')+';DriverVehicleCollisions');
@@ -65,7 +72,7 @@ test('moto tem massa e colisão próprias e mantém identidade na garagem',()=>{
  assert.equal(Collisions.dimensions(bike).width,1.05);assert.equal(Physics.mass(bike),280);
  const garage=new Garage({getItem(){return null},setItem(){}});assert(garage.store(bike));
  assert.equal(garage.take(0).uploadedModel,'motorcycle');
- for(const id of ['pickup-new','pickup-old','school-bus'])assert.equal(Garage.sanitize({...bike,bodyStyle:id==='school-bus'?'bus':'truck',uploadedModel:id}).uploadedModel,id);
+ for(const id of ['pickup-new','pickup-old','cargo-van','school-bus'])assert.equal(Garage.sanitize({...bike,bodyStyle:id==='school-bus'?'bus':'truck',uploadedModel:id}).uploadedModel,id);
  assert.equal(Garage.sanitize({...bike,uploadedModel:'arbitrary.glb'}).uploadedModel,null);
 });
 test('download tardio não sobrescreve importação manual nem veículo removido',async()=>{
