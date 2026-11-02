@@ -18,6 +18,7 @@ class Uploaded {
     static DEFINITIONS={
         'pickup-new':{url:'./assets/vehicles/caminhonete-nova-otimizada.glb'},
         'pickup-old':{url:'./assets/vehicles/caminhonete%20velha.glb'},
+        'cargo-van':{url:'./assets/vehicles/Van_Rustica_Otimizada_23MB.glb'},
         motorcycle:{url:'./assets/vehicles/moto-otimizada.glb'},
         'school-bus':{url:'./assets/vehicles/onibus%20escolar.glb'},
         boat:{url:'./assets/barco%20de%20pesca.glb'}
@@ -47,7 +48,8 @@ test('todos os veículos são ligados aos GLBs locais, inclusive alvo, secreto e
         car('muscle'),car('muscle',{isTarget:true}),
         car('muscle',{isSecret:true}),car('limo'),
         car('muscle',{isPolice:true}),car('truck',{x:10,z:14}),
-        car('bus'),car('motorcycle'),car('truck',{x:19,z:26})
+        car('bus'),car('motorcycle'),car('truck',{x:19,z:26}),
+        car('truck',{name:'FURGÃO GOOSE ISLAND'})
     ];
     const l=library(cars);
     const keys=cars.map(v=>l.getModelName(v));
@@ -57,6 +59,7 @@ test('todos os veículos são ligados aos GLBs locais, inclusive alvo, secreto e
     assert.equal(keys[6],'school-bus');
     assert.equal(keys[7],'motorcycle');
     assert.ok(keys[8].startsWith('pickup-'));
+    assert.equal(keys[9],'cargo-van');
     assert.equal(l.canUseDriver2Model(cars[1]),true);
     assert.equal(l.canUseDriver2Model(cars[2]),true);
     assert.equal(l.canUseDriver2Model(cars[3]),true);
@@ -111,6 +114,7 @@ test('GLBs apontados pelo catálogo existem na pasta do próprio repositório',(
         'assets/vehicles/car police.glb',
         'assets/vehicles/caminhonete-nova-otimizada.glb',
         'assets/vehicles/caminhonete velha.glb',
+        'assets/vehicles/Van_Rustica_Otimizada_23MB.glb',
         'assets/vehicles/moto-otimizada.glb',
         'assets/vehicles/onibus escolar.glb'
     ];
