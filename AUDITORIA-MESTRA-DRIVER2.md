@@ -6,6 +6,16 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R71 — Chicago: inventário dos 54 setores PS1 e piso real do acesso R22 (02/11/2026) — E1, em validação
+
+**Problema físico MAP-05/MAP-08:** o acesso inferido `north-branch-to-wrigley-grid` da R22 era examinado apenas em água/colisores e desenhado em um retângulo inteiramente plano `Y=.039`. Se a altura verdadeira dos pneus mudasse no trecho, a superfície poderia flutuar ou ficar abaixo do carro; a R70 protegia o grafo de IA, mas não corrigia o pavimento R22 que era construído antes.
+
+**Correção:** `DriverChicagoPS1StreetNetwork.checkConnector()` amostra a faixa central e as duas bordas com passo de até 1,5 m, confirmando água, colisão, altura finita e ausência de degraus que não poderiam ser rampas. `makeMesh()` agora subdivide o asfalto em triângulos com altura `getGroundHeightAt(x,z,null,true)+.039`; o chão físico dos pneus é a única referência. Um conector reprovado continua rejeitado e não aparece no mapa como estrada fictícia. Não modifica ponte móvel, mission flags, saves, tráfego GLB nem outras cidades.
+
+**Inventário MAP-06:** a pasta original `chicago/manifest.json` identifica **54 GLBs visuais PS1** e 1.544.872 triângulos; `tools/chicago-r71-sector-inventory.cjs` gera o inventário publicável `chicago/sector-inventory-r71.json`, com uma linha por setor, limites 3D, malha de origem e campos explícitos de piso dirigível, colisão, água, sinais, NPCs, trânsito, missões, E4 e E5. O estado **não certificado** é intencional: não existe transformação homologada de todos os setores originais para a malha jogável Undercover. **0/54 setores homologados integralmente para gameplay**, diferente de 54/54 modelos disponíveis para visualizar. R24–R29 forneceram apenas evidência parcial de superfície/nível, não homologação de ruas por setor.
+
+**Gates da sprint:** `tests/chicago-r71-source-grade-and-sector-inventory.test.cjs`, geração reproduzível do JSON, 54 GLBs acessíveis no repo, suíte Node22/24, regressão física Chicago R69/R70 e Chromium com verificação do conector construído e do inventário entregue pelo servidor. MAP-05/MAP-06/MAP-08 **continuam abertos** para calibração de mapas por setor, certificação de percursos/colisões e E4/E5 em hardware.
+
 ### R70 — Chicago: duas pontes móveis e checagem de altura das rotas (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
 **Causa reproduzível (MAP-05/MAP-08):** `DriverChicagoMixedNavigationR49.bridgeClosed` removia o tabuleiro móvel central (x≈0) quando a ponte levantava, mas esquecia a segunda ponte basculante leste (x≈240), embora ambas usem o mesmo `bridgeAngle`. Rotas do trânsito continuavam atravessando uma folha elevada, sobretudo se a aresta tivesse sido subdividida junto ao vão. `clear` também verificava água e AABB somente no plano (x,z), aceitando arestas entre níveis de piso abruptamente diferentes mesmo se não existisse uma rampa física.

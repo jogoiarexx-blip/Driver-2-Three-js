@@ -79,34 +79,67 @@ class DriverChicagoPS1StreetNetwork {
             width:8,sourceKind:'topology-inferred-grid-feeder'
         }];
     }
+    // R71: a mesma cota física da suspensão vale para a auditoria e o
+    // pavimento desenhado. Um acesso inferido NÃO vira ponte/viaduto
+    // automaticamente só porque sua projeção XZ está livre de obstáculos.
+    static floorAt(city,x,z){
+        if(typeof city?.getGroundHeightAt!=='function')return 0;
+        return city.getGroundHeightAt(x,z,null,true);
+    }
     static checkConnector(city,link){
-        if(!link?.from||!link?.to)return {valid:false,reason:'missing-endpoint'};
-        const {from:a,to:b}=link,dx=b.x-a.x,dz=b.z-a.z;
+        if(!link?.from||!link?.to)
+            return {valid:false,reason:'missing-endpoint'};
+        const {from:a,to:b}=link,dx=b.x-a.x,dz=b.z-a.z,
+            width=Number(link.width);
         const length=Math.hypot(dx,dz);
-        if(!Number.isFinite(length)||length<2||length>90)
-            return {valid:false,reason:'invalid-length'};
-        const nx=-dz/length,nz=dx/length,half=link.width/2;
-        const steps=Math.max(3,Math.ceil(length/2));
-        for(let i=0;i<=steps;i++){
-            const t=i/steps,x=a.x+dx*t,z=a.z+dz*t;
-            for(const offset of [-half+.65,0,half-.65]){
-                const px=x+nx*offset,pz=z+nz*offset;
-                if(city.isWaterAt?.(px,pz))
-                    return {valid:false,reason:'water',x:px,z:pz};
-                if(city.isPointBlocked?.(px,pz,.6,0))
-                    return {valid:false,reason:'collision',x:px,z:pz};
+        if(!Number.isFinite(length)||length<2||length>90 ||
+           !Number.isFinite(width)||width<3||width>24)
+            return {valid:false,reason:'invalid-length-or-width'};
+        const nx=-dz/length,nz=dx/length,half=width/2;
+        const steps=Math.max(3,Math.ceil(length/1.5));
+        for(const offset of [-half+.65,0,half-.65]){
+            let previous=null;
+            for(let i=0;i<=steps;i++){
+                const t=i/steps,
+                    px=a.x+dx*t+nx*offset,pz=a.z+dz*t+nz*offset;
+                if(city?.isWaterAt?.(px,pz))
+                    return {valid:false,reason:'water',x:px,z:pz,
+                        offset};
+                if(city?.isPointBlocked?.(px,pz,.65,0))
+                    return {valid:false,reason:'collision',x:px,z:pz,
+                        offset};
+                const height=this.floorAt(city,px,pz);
+                if(!Number.isFinite(height))
+                    return {valid:false,reason:'missing-floor-height',
+                        x:px,z:pz,offset};
+                if(previous!==null &&
+                   Math.abs(height-previous)>.35+length/steps*.55)
+                    return {valid:false,reason:'disconnected-floor-levels',
+                        x:px,z:pz,offset};
+                previous=height;
             }
         }
-        return {valid:true,length,pointsTested:(steps+1)*3};
+        return {valid:true,length,pointsTested:(steps+1)*3,
+            physicallyGraded:typeof city?.getGroundHeightAt==='function'};
     }
     static makeMesh(city,link){
         const {from:a,to:b,width}=link,dx=b.x-a.x,dz=b.z-a.z,
             length=Math.hypot(dx,dz),nx=-dz/length*width/2,
             nz=dx/length*width/2,vertices=[];
-        for(const [x,z] of [
-            [a.x-nx,a.z-nz],[b.x-nx,b.z-nz],[a.x+nx,a.z+nz],
-            [b.x-nx,b.z-nz],[b.x+nx,b.z+nz],[a.x+nx,a.z+nz]
-        ])vertices.push(x,.039,z);
+        // A placa única antiga mantinha Y=.039 mesmo quando a suspensão
+        // seguia um deck/rampa. Segmentos de até 1.5 m acompanham cada
+        // bordo sem criar colisores ou degraus visuais fantasmas.
+        const steps=Math.max(2,Math.ceil(length/1.5));
+        const point=(t,sign)=>{
+            const x=a.x+dx*t+nx*sign,z=a.z+dz*t+nz*sign;
+            return [x,this.floorAt(city,x,z)+.039,z];
+        };
+        for(let i=0;i<steps;i++){
+            const t=i/steps,u=(i+1)/steps;
+            const l0=point(t,-1),r0=point(t,1),
+                l1=point(u,-1),r1=point(u,1);
+            vertices.push(...l0,...l1,...r0,...r0,...l1,...r1);
+        }
         const geo=new THREE.BufferGeometry();
         geo.setAttribute('position',
             new THREE.Float32BufferAttribute(vertices,3));
@@ -117,6 +150,8 @@ class DriverChicagoPS1StreetNetwork {
         mesh.name='chicago-r22-'+link.id;
         mesh.userData.chicagoPS1StreetConnector=true;
         mesh.userData.originalPlacementCertified=false;
+        mesh.userData.drivingFloorMatched=true;
+        mesh.userData.gradedSegments=steps;
         city.cityGroup.add(mesh);
         return mesh;
     }
