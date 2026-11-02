@@ -108,3 +108,35 @@ test('R69: generated surface and IA edges derive from identical verified segment
     const graph=Nav.compile(c);
     assert.equal(graph.courtyardConnected,2);
 });
+
+test('R69: southern alleys connect to the existing north-south asphalt, not an isolated island',()=>{
+    const c=city({chicagoCityPlan:{blocks:[
+        {x:120,z:-360,kind:'residential',district:'prairie-ave'}],
+        courtyardLinks:[]}});
+    c.chicagoCityPlan.courtyardLinks=Plan.courtyardLinks(c);
+    const graph=Nav.compile(c);
+    assert.equal(graph.courtyardLinks,2);
+    assert.equal(graph.courtyardConnected,2);
+    assert.equal(graph.courtyardBoundaryFeeders,2);
+    for(const endpoint of [80,160]){
+        assert(graph.adj.get(endpoint+',-358').some(n=>n.key===endpoint+',-320'),
+            'the actual paved avenue must connect outside-grid alley');
+        const route=Nav.plan(c,{x:120,z:-358},{x:endpoint,z:-320});
+        assert(route&&route.length>=3,
+            'southern street must reach the city graph, not only the opposite alley end');
+        for(let i=1;i<route.length;i++)
+            assert(Nav.clear(c,route[i-1],route[i]),
+                'no phantom branch outside the old grid');
+    }
+    // Vertical road exists but a real obstacle must block the feeder.
+    const blocked=city({
+        buildingBoxes:[{minX:78,maxX:82,minZ:-341,maxZ:-338}],
+        chicagoCityPlan:{blocks:[
+            {x:120,z:-360,kind:'residential',district:'prairie-ave'}],
+            courtyardLinks:[]}});
+    blocked.chicagoCityPlan.courtyardLinks=Plan.courtyardLinks(blocked);
+    const stops=Nav.compile(blocked);
+    assert.equal(stops.courtyardBoundaryFeeders,1,
+        'one obstructed avenue must not be connected over the building');
+    assert(!(stops.adj.get('80,-358')||[]).some(n=>n.key==='80,-320'));
+});
