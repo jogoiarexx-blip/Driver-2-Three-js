@@ -314,7 +314,7 @@
                 // 4. Carros Civis + Veículos Pesados Exclusivos do Driver 2 (Ônibus, Caminhão Baú e Limusine)
                 const civilSpecs = [
                     { name: 'ÔNIBUS ESCOLAR', color: 0xfacc15, bodyStyle: 'bus', uploadedModel:'school-bus', x: -84, z: -138, heading: Math.PI, maxSpeed: 42, accel: 20 },
-                    { name: 'CAMINHÃO CARGA', color: 0x0284c7, bodyStyle: 'truck', x: 102, z: -84, heading: Math.PI / 2, maxSpeed: 45, accel: 22 },
+                    { name: 'CAMINHÃO CARGA', color: 0x0284c7, bodyStyle: 'truck', uploadedModel:'cargo-van', x: 102, z: -84, heading: Math.PI / 2, maxSpeed: 45, accel: 22 },
                     { name: 'STRETCH LIMO V8', color: 0x18181b, bodyStyle: 'limo', x: 84, z: 122, heading: 0, maxSpeed: 52, accel: 27 },
                     { name: 'CADILLAC VERDE', color: 0x15803d, bodyStyle: 'muscle', x: -76, z: 27, heading: 0, maxSpeed: 46, accel: 24 },
                     { name: 'COUPE TURQUESA', color: 0x0d9488, bodyStyle: 'muscle', x: 116, z: -4, heading: Math.PI / 2, maxSpeed: 48, accel: 25 },
@@ -333,6 +333,9 @@
                         maxSpeed: c.maxSpeed,
                         accel: c.accel
                     });
+                    // R66: usar a vaga antiga do caminhão civil para a van
+                    // GLB. Assim a frota base e os índices dos saves não mudam.
+                    if(c.uploadedModel==='cargo-van')civ.uploadedTraffic=true;
                     // R49: existing ordinary sedans join the inter-district
                     // network; school bus, heavy trucks and mission vehicles
                     // preserve their original driving controller.
