@@ -174,7 +174,7 @@ class DriverChicagoCityPlan {
                     z=from.z+dz*t+nz*offset;
                 if(!Number.isFinite(x)||!Number.isFinite(z)||
                     city.isWaterAt?.(x,z)||
-                    city.isPointBlocked?.(x,z,offset===0?1.3:.25,0))
+                    city.isPointBlocked?.(x,z,offset===0?1.55:.25,0))
                     return false;
                 if(ground){
                     const y=ground(x,z);
