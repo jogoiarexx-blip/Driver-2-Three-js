@@ -26,7 +26,7 @@ function withinUV(uvs){
 }
 function extract(accessors,rect){
  const {pos,uv,indices}=accessors;
- const sets={all:[],grade:[],uv:[],paving:[]};
+ const sets={all:[],grade:[],uv:[],paving:[]},details=[];
  let inRect=0,nonFinite=0,failedGrade=0,failedUV=0;
  for(let i=0;i<indices.count;i+=3){
   const ids=[indices.get(i),indices.get(i+1),indices.get(i+2)];
@@ -43,11 +43,12 @@ function extract(accessors,rect){
   const uvs=ids.map(j=>[uv.get(j,0)*2048,uv.get(j,1)*2048]);
   const compatible=withinUV(uvs);
   sets.all.push(tri);
+  details.push({tri,uvs,grade,wholeTriangleUV:compatible});
   if(grade)sets.grade.push(tri);else failedGrade++;
   if(compatible)sets.uv.push(tri);else failedUV++;
   if(grade&&compatible)sets.paving.push(tri);
  }
- return {sets,counts:{inRect,failedGrade,failedUV,nonFinite,
+ return {sets,details,counts:{inRect,failedGrade,failedUV,nonFinite,
   pavementUVAndGrade:sets.paving.length}};
 }
 function categorize(raw,grade,paving,material){
@@ -128,6 +129,67 @@ function inspect(report,survey,masks,triangleSets){
   warning:'Diagnostic-only source GLB polygons. Raw mesh can include walls. UV/grade filtering can reject real non-road surfaces and raster material is not collision proof.',
   sections};
 }
+// R74 exact per-point UV interpolation: classify the PS1 atlas position
+// under the probe, not the whole triangle bounding box (R26's conservative
+// test rejects any triangle straddling a texture-region border).
+function interpolateUV(tri,uvs,x,z){
+ const u=Probe.heightAt(tri.map((p,i)=>[p[0],uvs[i][0],p[2]]),x,z);
+ if(u===null)return null;
+ const v=Probe.heightAt(tri.map((p,i)=>[p[0],uvs[i][1],p[2]]),x,z);
+ return v===null?null:[u,v];
+}
+function analyzeExactUV(rows,x,z){
+ let gradeHits=0,localPavedHits=0,borderFalseNegatives=0,otherMaterialHits=0;
+ const examples=[];
+ for(const row of rows){
+  if(!row.grade)continue;
+  const uv=interpolateUV(row.tri,row.uvs,x,z);
+  if(!uv)continue;
+  gradeHits++;
+  const localPaved=withinUV([uv]);
+  if(localPaved){
+   localPavedHits++;
+   if(!row.wholeTriangleUV)borderFalseNegatives++;
+  }else otherMaterialHits++;
+  if(examples.length<3)examples.push({
+   atlasPixel:uv.map(n=>+n.toFixed(3)),
+   wholeTriangleUVAccepted:row.wholeTriangleUV,
+   pointUVPavement:localPaved
+  });
+ }
+ const verdict=gradeHits===0?'no_grade_triangle':
+  localPavedHits&&otherMaterialHits?'overlapping_paving_and_other_uv':
+  localPavedHits&&borderFalseNegatives?'pavement_uv_border_false_negative':
+  localPavedHits?'pavement_uv_inside':
+  'point_uses_other_atlas_material';
+ return {gradeHits,localPavedHits,borderFalseNegatives,
+  otherMaterialHits,verdict,examples};
+}
+function inspectPointUV(report,rows){
+ const counts={},diagnostics=[];
+ const sourceOffsets=[-.12,-.1,-.08];
+ for(let s=1;s<report.sourcePointsOBJ.length;s++){
+  const a=report.sourcePointsOBJ[s-1],b=report.sourcePointsOBJ[s];
+  const dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz);
+  assert(length>0);
+  const nx=-dz/length,nz=dx/length,n=Math.max(1,Math.ceil(length/.25));
+  for(let i=0;i<=n;i++){
+   if(s>1&&i===0)continue;
+   const t=i/n,x=a[0]+dx*t,z=a[1]+dz*t;
+   const offsets=sourceOffsets.map(offset=>{
+    const audit=analyzeExactUV(rows,x+nx*offset,z+nz*offset);
+    const key=String(offset);
+    counts[key]??={};
+    counts[key][audit.verdict]=(counts[key][audit.verdict]||0)+1;
+    return {offset,...audit};
+   });
+   diagnostics.push({atOBJ:[+x.toFixed(4),+z.toFixed(4)],offsets});
+  }
+ }
+ return {pointOffsetsOBJ:sourceOffsets,
+  countsByOffset:counts,sections:diagnostics,
+  interpretation:'Point-interpolated atlas UV, diagnostic only. The R26 conservative whole-triangle UV rule must not be relaxed for runtime without collision/road verification.'};
+}
 function build(){
  const load=f=>JSON.parse(fs.readFileSync(path.join(ROOT,f),'utf8'));
  const report=load('chicago/corridor-review-r72.json');
@@ -145,7 +207,7 @@ function build(){
   minX:Math.min(...pts.map(p=>p[0]))-1,maxX:Math.max(...pts.map(p=>p[0]))+1,
   minZ:Math.min(...pts.map(p=>p[1]))-1,maxZ:Math.max(...pts.map(p=>p[1]))+1
  };
- const all={all:[],grade:[],uv:[],paving:[]},sourceTiles=[];
+ const all={all:[],grade:[],uv:[],paving:[]},detailRows=[],sourceTiles=[];
  for(const tile of report.tiles){
   const file='chicago/chunks/'+tile.id+'.glb',entry=manifest.tiles.find(t=>t.id===tile.id);
   assert(entry&&entry.url==='chunks/'+tile.id+'.glb');
@@ -157,10 +219,12 @@ function build(){
   assert.equal(accessor.triangles,entry.triangles);
   const obj=extract(accessor,rect);
   for(const key of Object.keys(all))all[key].push(...obj.sets[key]);
+  detailRows.push(...obj.details);
   sourceTiles.push({id:tile.id,sha256:sha,triangles:accessor.triangles,
    ...obj.counts});
  }
  const result=inspect(report,survey,masks,all);
+ result.pointUV=inspectPointUV(report,detailRows);
  result.sourceTiles=sourceTiles;
  return result;
 }
@@ -173,7 +237,9 @@ if(require.main===module){
   tiles:report.sourceTiles,crossSections:report.evidence.crossSections,
   minusPointOneOBJ:report.evidence.minusPointOneOBJ,
   neighbors:report.evidence.seamNeighborhoodReasons,
+  actualUV:report.pointUV.countsByOffset,
   output:out,roadCertified:false,trafficEnabled:false
  }));
 }
-module.exports={withinUV,extract,categorize,probeAt,inspect,build};
+module.exports={withinUV,extract,categorize,probeAt,inspect,
+ interpolateUV,analyzeExactUV,inspectPointUV,build};
