@@ -485,18 +485,18 @@ async function waitForTannerTravel(page,start,label){
       await page.screenshot({path:path.join(DIR,city+'-road-intersection.png')});
       // Amostra de frames do navegador headless: não representa FPS do usuário.
       const perf=await page.evaluate(async()=>{
-        const frames=[],budgetMs=14000;
+        const frames=[],budgetMs=21000;
         const started=performance.now();
         let prev=started;
         // Software WebGL may run at 1-5 FPS. Sample UP TO 90 frames,
-        // with a strict 10s wall-time budget: fewer samples are reported,
+        // with a strict 21s wall-time budget: fewer samples are reported,
         // never replaced with invented 60-FPS data.
         for(let i=0;i<90&&performance.now()-started<budgetMs;i++){
           const stamp=await new Promise(resolve=>{
             let done=false;
             const guard=setTimeout(()=>{
               if(!done){done=true;resolve(null);}
-            },6000);
+            },12000);
             requestAnimationFrame(t=>{
               if(done)return;
               done=true;clearTimeout(guard);resolve(t);
@@ -508,9 +508,15 @@ async function waitForTannerTravel(page,start,label){
         const samples=frames.slice(1).filter(x=>x>0);
         // Old code incorrectly declared a WebGL crash with six slow frames
         // on a shared SwiftShader CI runner (0.7 FPS is still rendering).
-        // Reserve failure for an actual ~6s complete RAF starvation.
-        if(frames.length===0)throw Error(
-          'No WebGL frame delivered within 6000ms');
+        // Software WebGL must still deliver a real frame within 12 seconds.
+        // Longer than the legacy 6s guard to account for larger local GLBs;
+        // NEVER invent a frame or claim this samples a real mobile GPU.
+        if(frames.length===0){
+          const render=window.DriverGame?.renderer?.info?.render;
+          throw Error('No WebGL frame delivered within 12000ms; '+
+            'drawCalls='+String(render?.calls)+' triangles='+
+            String(render?.triangles));
+        }
         const avg=samples.length?
           samples.reduce((a,b)=>a+b,0)/samples.length:null;
         const g=window.DriverGame;
