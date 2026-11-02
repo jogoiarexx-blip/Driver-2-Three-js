@@ -12,7 +12,7 @@
 
 **Defeito E1 comprovado:** `resetCityForPreset` coletava texturas com `cityGroup.traverse`; `return` no nó marcado `cc0SharedAsset` não impedia o percurso dos filhos e podia destruir o atlas de um barco GLB compartilhado na troca de cidade. Agora usa `GPUResourceUtils.disposeSubtree` com herança da flag, e tem teste dirigido. `loadCityPresetProgressive` não considerava geração obsoleta após `requestAnimationFrame`; agora rejeita o trabalho antigo sem voltar a marcar `ready`.
 
-**Outras melhorias de código:** importar GLB libera URL temporária em todas as saídas e não marca falha como sucesso; DPR aplicado antes de `setSize` inicial; a opção de GLB significa **pré-carregar ou carregar em segundo plano**, sem desligar os carros do repositório nem disparar `toggle()` a cada ajuste; HTML versiona os JS alterados. Gate de integridade dos scripts locais e 4 arquivos novos de regressão.
+**Outras melhorias de código:** importar GLB libera URL temporária em todas as saídas e não marca falha como sucesso; DPR aplicado antes de `setSize` inicial; simulação/renderização pausadas automaticamente ao ocultar a aba, sem acumular delta; a opção de GLB significa **pré-carregar ou carregar em segundo plano**, sem desligar os carros do repositório nem disparar `toggle()` a cada ajuste; HTML versiona os JS alterados. Gate de integridade dos scripts locais e 4 arquivos novos de regressão.
 
 **Evidências:** workflow da PR R67 e resultado da suíte Node/Chromium a anexar após execução. **Abertos:** Chicago MAP-05 até MAP-20, campanha GAME-06/E4, GPU/Android E5, PERF-06 3+ trocas, QA prolongado dos veículos, NPCs e fachadas. Não declarar melhoria percentual de FPS nem ausência de vazamento sem medição.
 
