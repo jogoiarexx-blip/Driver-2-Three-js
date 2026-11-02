@@ -47,9 +47,11 @@ class DriverChicagoMixedNavigationR49 {
         const stamp=!!city.bridgeRaised,build=city.buildSequence||0;
         const count=city.buildingBoxes?.length||0;
         const sourceStamp=city.chicagoPS1StreetNetwork?.radarPaths?.length||0;
+        const courtyardStamp=city.chicagoCityPlan?.courtyardLinks?.length||0;
         const cached=this.cache.get(city);
         if(cached&&cached.stamp===stamp&&cached.build===build &&
-            cached.count===count&&cached.sourceStamp===sourceStamp)return cached;
+            cached.count===count&&cached.sourceStamp===sourceStamp&&
+            cached.courtyardStamp===courtyardStamp)return cached;
         const nodes=new Map(),adj=new Map(),edges=new Set();
         const addNode=p=>{
             const key=this.key(p);
@@ -83,8 +85,13 @@ class DriverChicagoMixedNavigationR49 {
         // R57: add only physical, dry service lanes, verified during build.
         // Gateways split the old 80m link so new accesses are reachable.
         const r57=city.chicagoLandmarkDistrictR57?.links||[];
+        // R69: becos residenciais já pavimentados e aprovados com testes
+        // de faixa inteira. Sem esse registro, visualmente existiam ruas
+        // para Tanner que a IA jamais alcançava ao planejar a rota.
+        const courtyards=city.chicagoCityPlan?.courtyardLinks||[];
         const secondary=[...(r48?.edges||[]),...(r50?.edges||[]),
-            ...(r52?.edges||[]),...(r53?.edges||[]),...r57];
+            ...(r52?.edges||[]),...(r53?.edges||[]),...r57,
+            ...courtyards];
         const gateways=secondary.flatMap(e=>[e.from,e.to]);
         // Subdivide existing 80-unit arteries where an R48 gateway joins.
         // Without splitting, a local road would end at a disconnected node.
@@ -103,9 +110,9 @@ class DriverChicagoMixedNavigationR49 {
                 }
             }
         }
-        // R57 links are narrow one-lane service roads. Their center is
-        // validated with vehicle radius; requiring ±1.7m paired lanes here
-        // can falsely disconnect a passage by an existing signpost.
+        // R57/R69 links are narrow one-lane service roads. Their width is
+        // validated at build time; the graph follows the actual centerline
+        // rather than demanding two extra car lanes beside the buildings.
         for(const edge of secondary)
             add(edge.from,edge.to,edge.width?0:4);
         // R51: roads already drawn from PS1-adapted surface references.
@@ -149,7 +156,11 @@ class DriverChicagoMixedNavigationR49 {
             buckets.get(bucket).push(id);
         }
         const graph={nodes,adj,edges:edges.size,stamp,build,count,
-            sourceStamp,buckets,bucketSize,
+            sourceStamp,courtyardStamp,buckets,bucketSize,
+            courtyardLinks:courtyards.length,
+            courtyardConnected:courtyards.filter(l=>
+                (adj.get(this.key(l.from))||[]).some(e=>
+                    e.key===this.key(l.to))).length,
             secondaryNodes:(r48?.nodes.length||0)+(r50?.nodes.length||0)+
                 (r52?.nodes.length||0)+(r53?.nodes.length||0),
             gateways:(r48?.gridExits||0)+(r50?.gridExits||0)+
