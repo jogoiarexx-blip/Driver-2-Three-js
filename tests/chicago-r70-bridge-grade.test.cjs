@@ -94,6 +94,6 @@ test('R70: graph invalidates on bascule state change; no fake east deck link',()
 test('R70: other cities use their own existing navigation, not Chicago bascule mask',()=>{
     const other=city({preset:{id:'rio'},bridgeRaised:true});
     assert.equal(Nav.compile(other),null);
-    assert.equal(Nav.bridgeClosed(other,{x:240,z:0},{x:240,z:80}),true,
-        'helper is scoped by callers, not used for other city route graph');
+    assert.equal(Nav.bridgeClosed(other,{x:240,z:0},{x:240,z:80}),false,
+        'Rio bridge coordinates must never receive Chicago bascule mask');
 });
