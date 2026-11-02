@@ -1,0 +1,43 @@
+name: Chicago R74 - PS1 original UV and geometry seam diagnosis
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tools/chicago-r74-source-seam.cjs'
+      - 'tests/chicago-r74-source-seam.test.cjs'
+      - 'tools/chicago-r73-triangle-width.cjs'
+      - '.github/workflows/chicago-r74.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/chicago-r74-source-seam.cjs'
+      - 'tests/chicago-r74-source-seam.test.cjs'
+      - '.github/workflows/chicago-r74.yml'
+permissions:
+  contents: read
+jobs:
+  source-seam:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and safe structural tests
+        run: |
+          node --check tools/chicago-r74-source-seam.cjs
+          node --check tests/chicago-r74-source-seam.test.cjs
+          node --check tests/chicago-r22-source-street-browser.cjs
+          node --test tests/chicago-r74-source-seam.test.cjs tests/chicago-r73-triangle-width.test.cjs
+      - name: Original PS1 3445 GLB source diagnosis, no gameplay modification
+        run: |
+          node tools/chicago-r74-source-seam.cjs qa-artifacts/chicago-r74/seam-diagnostic.json
+          node -e "const a=require('./qa-artifacts/chicago-r74/seam-diagnostic.json');const n=a.evidence.minusPointOneOBJ.reduce((s,c)=>s+c.count,0);if(a.originalRoadCertified||a.trafficEnabled||a.collidersCreated||a.sourceGeometryModified||a.undercoverPositionCalibrated||a.sourceTiles.length!==2||a.evidence.crossSections!==67||n!==67)process.exit(1)"
+      - name: Preserve per-section failure classification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r74-ps1-corridor-3445-seam-evidence
+          path: qa-artifacts/chicago-r74/seam-diagnostic.json
+          if-no-files-found: warn
