@@ -6,7 +6,7 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
-### R69 — Chicago: ruas residenciais efetivamente navegáveis (02/11/2026) — E1 implementado; QA E2/E3 em andamento
+### R69 — Chicago: ruas residenciais efetivamente navegáveis (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
 **Problema antes:** `DriverChicagoCityPlan.buildCourtyardLinks()` já desenhava os becos entre casas residenciais com pequenas malhas triangulares, porém `DriverChicagoMixedNavigationR49.compile()` consumia somente ligações R48/R50/R52/R53/R57 e corredores da fonte PS1. O carro da IA via um beco desenhado mas nunca conseguia escolhê-lo para circular. A validação antiga verificava apenas a linha central, portanto podia estender o asfalto pela borda de canal/prédio.
 
@@ -14,7 +14,7 @@
 
 **Limites:** sistema aplicado apenas à Chicago Undercover adaptada; as ruas não são alegadas 1:1 do PS1 nem os becos aprovados certificam o mapa inteiro. Preserva objetivos de missão, saves, GLBs dos carros e a navegação das outras três cidades. Não cria colisores adicionais, água fictícia, transições elevadas ou atalhos novos somente no radar.
 
-**Evidências a completar:** `tests/chicago-r69-courtyard-network.test.cjs`, regressões `chicago-city-plan` e `chicago-r49-mixed-navigation`, suíte Node22/24, regressão física Chicago e navegador Chromium `tests/chicago-r69-browser.cjs` com contagem de becos efetivamente conectados, verificações de rotas e captura. MAP-05/MAP-07 seguem ABERTOS para os setores restantes, missões reais e validação E4/E5.
+**E2 aprovado na versão final:** [Node22 e Node24, 997/997 cada, sem falhas](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41507952206), [física/landmarks Chicago](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41507952185), [retrocompatibilidade R68](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41507952278). **E3 Chromium:** [run 41507952180 com JSON e PNG](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41507952180), 10 becos certificados na Chicago ativa = **400 m** de rua, 10 pares de ida/volta, 3 alimentadores da borda sul, os 4 becos ao sul alcançam o grafo principal, geometria única de 1.200 vértices, 369 colisores, frota 43/um secreto. Testes direcionados 19/19 também aprovados. **Integrado ao main:** [PR #45](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/45), commit `538311a`. MAP-05/MAP-07 seguem ABERTOS para os setores restantes, oito missões E4 e validação FPS/memória de Android E5.
 
 ### R68 — Chicago: largura real dos acessos + telhados por lote (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
