@@ -6,7 +6,7 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
-### R72 — Chicago: corredor original PS1 3445 com auditoria de largura, alturas e implantação (02/11/2026) — E1; QA em validação
+### R72 — Chicago: corredor original PS1 3445 com auditoria de largura, alturas e implantação (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
 **Objetivo MAP-06/MAP-08:** sair do inventário genérico dos 54 setores e examinar um corredor PS1 original identificável antes de substituir qualquer rua adaptada no Undercover. **Seleção reproduzível:** a aresta original **3445**, com nós 2560→2805, cruza os GLBs **01_02 e 01_03** e tem **16,375 unidades OBJ** de polilinha; pertence diretamente ao grafo de candidatos R28 (pavimento e altura observados nos GLBs), **sem recuperação de altura do R29**. O corredor mais longo da R29 (3949/4036/4037, 22,082 OBJ) depende de alturas recuperadas e não foi ativado. O comprimento bruto da aresta de origem (16,582107 OBJ) não deve ser confundido com a distância geométrica simplificada (16,375 OBJ).
 
@@ -16,7 +16,7 @@
 
 **Próxima barreira para habilitar no Undercover:** validar manualmente a faixa e sua largura em texturas/triângulos originais, calibrar um posicionamento que não atravesse água ou quarteirões, medir piso físico na largura da pista e aprovar continuidade do grafo e missão com direção humana. Não marcar MAP-05/06/08 concluídos nem atribuir aos setores GLB certificação de gameplay.
 
-**Gates:** Node 22/24, `tests/chicago-r72-corridor-review.test.cjs`, relatório R24 material no artefato do CI, Chromium R72 inspecionando traçado/GLBs reais, verificação de Chicago jogável sem novos carros secretos/colisores e screenshot do corredor original; E4/E5 permanecem abertos.
+**E2 aprovado:** [1.015/1.015 testes Node 22 e Node 24](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41519614370), [regressão física Chicago](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41519614301), [R24](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41519614397), [R26](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41519614265), [R27](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41519614178), [R28](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41519614191) e [R29](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41519614258) aprovados. **E3 Chromium real:** [41519614185 — auditoria material/JSON e screenshot original](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41519614185) (6/6 testes direcionados), aresta 3445, 2 tiles, cobertura R24 intermediária, overlay original visível, Chicago Undercover sem novo piso/IA/colisores: 369 colisores, 42 veículos e um secreto. O relatório CLI bloqueou a migração por grama nas margens, largura desconhecida e projeção fora da grade. **Integrado ao main:** [PR #48](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/48), commit `3f62611`. E4/E5 e a conversão real do corredor permanecem ABERTOS.
 
 ### R71 — Chicago: inventário dos 54 setores PS1 e piso real do acesso R22 (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
