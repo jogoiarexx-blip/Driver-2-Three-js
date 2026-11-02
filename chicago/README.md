@@ -12,6 +12,10 @@ O manifesto, atlas e 54 GLBs já estão publicados nesta pasta do GitHub, direta
 
 **Aviso:** esta é uma visualização técnica, não substitui a cidade jogável nem define colisores, ruas e missões do PS1.
 
+## R71 — Auditoria individual dos 54 setores
+
+O arquivo [sector-inventory-r71.json](sector-inventory-r71.json) cataloga cada setor original de `manifest.json`, com ID, arquivo GLB, limites X/Y/Z, triângulos, bytes e situação de piso dirigível, colisão, água, sinais, trânsito, pedestres, missões e testes reais. Reproduzir: `node tools/chicago-r71-sector-inventory.cjs chicago/sector-inventory-r71.json`. Todos os 54 setores são **malhas visuais**, mas nenhum deve ser marcado como **setor de gameplay homologado** sem verificação física e transformação de coordenadas. Este inventário é o ponto de partida de MAP-06, não certificação 54/54.
+
 ## Solo real da geometria PS1 (baseline de navegação, NÃO malha de ruas)
 
 Foi executada a extração de superfícies horizontais diretamente dos **54 GLBs originais** desta pasta, com `tools/chicago-ground-survey.py`.
