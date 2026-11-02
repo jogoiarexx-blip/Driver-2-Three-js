@@ -21,6 +21,8 @@ node --test tests/chicago-r74-source-seam.test.cjs tests/chicago-r73-triangle-wi
 node tools/chicago-r74-source-seam.cjs qa-artifacts/chicago-r74/seam-diagnostic.json
 ```
 
+**Medição concluída:** o [workflow R74 aprovado](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41540397757) confirmou que **67/67 amostras em -0,10 OBJ** têm geometria e altura elegíveis, porém a UV interpolada **mapeia outro material do atlas**; em **-0,12 OBJ**, 67/67 amostras mapeiam UV de pavimento. Logo, o resultado anterior de largura zero não significa um buraco geométrico: a linha passa por uma **fronteira de materiais**, que a máscara R24 pode classificar de forma grosseira. A R74 testou também a hipótese de um triângulo rejeitado erroneamente por cruzar o limite UV, mas nesse ponto o próprio pixel interpolado não é pavimento segundo as regiões R26. Não converter esse material em asfalto automaticamente.
+
 O [workflow R74](../.github/workflows/chicago-r74.yml) publica a classificação de cada um dos 67 cortes. Os 2 GLBs são conferidos por SHA256 antes da análise. Os resultados ainda **não** certificam via, pista, colisão, tráfego, geografia real nem escala de veículos. Também foi corrigido o teste do radar R22, que antes podia travar ao tentar capturar um canvas animado apesar de a condução física ter sido aprovada.
 
 ## R73 — Sondagem de triângulos e largura transversal (sem criar pista)
