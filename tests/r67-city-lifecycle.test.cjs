@@ -67,7 +67,7 @@ test('old progressive load is cancelled on a newer city reset, with no stale rea
     assert.equal(frames.length,1);
     state.resetCityForPreset('havana');
     frames.shift()(0);
-    assert.equal(await pending,false);
+    await assert.rejects(pending,/Carregamento antigo cancelado/);
     assert.equal(count,1,'generator must not rebuild the second stage');
     assert.equal(state.preset.id,'havana');
     assert.equal(state.ready,false);
