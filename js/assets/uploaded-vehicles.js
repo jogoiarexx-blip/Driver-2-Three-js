@@ -89,23 +89,42 @@ class DriverUploadedVehicles {
                     }catch(_){fail();}
                 },undefined,fail);}catch(_){fail();}
             }));
-            this.cache.set(id,task);this.queue=task.then(()=>undefined,()=>undefined);
+            const retryable=task.then(template=>{
+                if(!template)this.cache.delete(id);
+                return template;
+            });
+            this.cache.set(id,retryable);
+            this.queue=retryable.then(()=>undefined,()=>undefined);
         }
         return this.cache.get(id);
     }
-    decorate(vehicle){
-        const id=vehicle.uploadedModel;
-        if(vehicle._uploadedCustomModel===id)return;
+    decorate(vehicle, forcedId=null){
+        const id=forcedId||vehicle.uploadedModel;
+        if(!id || vehicle._uploadedCustomModel===id)return;
         this.getTemplate(id).then(template=>{
-            if(!template||!this.library.enabled||!this.engine.vehicles.includes(vehicle)||
-                !vehicle.root.parent||vehicle._userCustomModel||vehicle._uploadedCustomModel===id)return;
+            if(!this.library.enabled||!this.engine.vehicles.includes(vehicle)||
+                !vehicle.root.parent||vehicle._userCustomModel||vehicle._uploadedCustomModel===id||
+                vehicle._cc0ModelApplied)return;
+            if(!template){
+                this.library.decorateRepositoryFallback?.(vehicle,id);
+                return;
+            }
             const wrapped=new THREE.Group(),clone=template.clone(true);
             // No GLB de veículos, o comprimento vem no eixo X.
             // +90° alinha o comprimento ao eixo Z da física do Driver 2.
             clone.rotation.y=Math.PI/2;wrapped.add(clone);wrapped.updateMatrixWorld(true);
             vehicle._userCustomModel=false;
-            if(vehicle.applyCC0Model(wrapped,true)===false)return;
-            vehicle._userCustomModel=true;vehicle._uploadedCustomModel=id;
+            vehicle._repositoryModelPending=id;
+            const applied=vehicle.applyCC0Model(wrapped,true)!==false;
+            vehicle._repositoryModelPending=null;
+            if(!applied){
+                this.library.decorateRepositoryFallback?.(vehicle,id);
+                return;
+            }
+            vehicle._userCustomModel=true;
+            vehicle._uploadedCustomModel=id;
+            vehicle._repositoryModelId=id;
+            vehicle._modelLoadFailed=false;
             // Unified uploads have no individually addressable wheels or doors.
             // Keep the original mesh; do not invent four wheel pivots on the bike.
             DriverUploadedVehicles.updateRiders(this.engine);this.library.updateStatus();
