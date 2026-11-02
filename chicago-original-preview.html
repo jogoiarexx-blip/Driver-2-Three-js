@@ -468,12 +468,17 @@ corridor72Button.addEventListener('click',async()=>{
    window.__chicagoR72={report:review,materialEvidence:paving,
      overlay:corridor72Overlay,sourceOnly:true,trafficEnabled:false};
    corridor72Button.textContent='Ocultar corredor R72';
+   const confidencePT={strong:'forte',medium:'intermediária',
+       review:'revisar',reject:'descartar'}[paving.confidence]||
+       paving.confidence;
    corridor72Status.textContent='R72 • aresta 3445 ('+
      review.lengthPolylineOBJ.toLocaleString('pt-BR')+
      ' unidades OBJ), GLBs '+review.tiles.map(t=>t.id).join(', ')+
-     ' · Pavimento original: '+paving.confidence+
-     ' (centro '+Math.round(paving.center*100)+'%, bordas '+
-     Math.round(paving.laneEdges*100)+'%)'+
+     ' · Pavimento original: '+confidencePT+
+     ' (centro '+Math.round(paving.center*100)+'%, faixa lateral '+
+     Math.round(paving.laneEdges*100)+'%, margem externa '+
+     Math.round(paving.outerEdges*100)+'%; grama '+
+     Math.round(paving.grass*100)+'%)'+
      ' · Projeção R15 fora da grade: '+
      (!review.projectedUndercoverR15.withinLegacyGrid320?'SIM':'NÃO')+
      '. Linha dourada = traçado observado; azul = limites dos setores. '+
