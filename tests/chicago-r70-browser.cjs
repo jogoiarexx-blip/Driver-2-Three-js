@@ -30,7 +30,7 @@ const report={date:new Date().toISOString(),status:'STARTED',pageErrors:[],
    null,{timeout:120000});
   const checked=await page.evaluate(()=>{
    const game=window.DriverGame,city=game.city;
-   const nav=window.DriverChicagoMixedNavigationR49;
+   const nav=DriverChicagoMixedNavigationR49;
    game.isPaused=true;
    const originallyRaised=city.bridgeRaised;
    const originalAngle=city.bridgeAngle;
