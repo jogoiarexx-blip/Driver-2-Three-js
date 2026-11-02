@@ -42,6 +42,23 @@ test('o menu reabilita biblioteca inativa sem reativar toggle legado',()=>{
     assert.equal(calls.decorate,1);
     assert.equal(calls.toggle,0);
 });
+test('importação GLB pendente funciona mesmo com pré-carregamento desmarcado',async()=>{
+    const {boot,library,calls}=ctx(false,true);
+    const file={name:'personal.glb',size:123456};
+    boot.pendingUserCarFile=file;
+    let received=null,notice='';
+    boot.showCarStatus=s=>{notice=s;};
+    library.importUserCar=async f=>{received=f;return true;};
+    const events=[];
+    await Type.prototype.preloadModels.call(boot,boot.game,(ratio,label)=>
+        events.push({ratio,label}));
+    assert.equal(received,file);
+    assert.equal(boot.pendingUserCarFile,null);
+    assert.match(notice,/Carro 3D personalizado/);
+    assert.equal(calls.decorate,1);
+    assert.equal(events.at(-1).ratio,1);
+});
+
 test('sem pré-carregamento o jogo continua decorando a frota com GLBs locais',async()=>{
     const {boot,calls}=ctx(false,true);
     const events=[];
