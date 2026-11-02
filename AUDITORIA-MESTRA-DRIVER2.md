@@ -6,7 +6,7 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
-### R65 — GLBs locais em toda a frota (02/11/2026) — E1, testes E2/E3 pendentes
+### R65 — GLBs locais em toda a frota (02/11/2026) — E1/E2 confirmados; E3/E4/E5 pendentes
 
 **Pedido:** eliminar os carros procedurais visíveis e substituir os modelos automáticos pelos GLBs já presentes no repositório em todas as quatro cidades.
 
@@ -14,7 +14,7 @@
 
 **Depois (código preparado):** sete arquivos GLB locais são a única fonte automática de veículos; caminhonetes divididas de forma determinística, furgões de entrega usam o GLB de 23 MB recém-adicionado, ônibus e motos mantêm suas identidades, viaturas usam suas portas reais e o carro de Tanner é usado nos sedãs, alvos, secretos e limusines. Malhas procedurais iniciais ficam escondidas; o botão M reexecuta carregamentos, não muda para PS1. Em indisponibilidade TOTAL de GLBs locais permanece fallback visual de emergência, notificado no status, para evitar colisores invisíveis. `DriverVehicle.applyCC0Model` preserva chassis e física e adequa o comprimento da limusine.
 
-**Verificação necessária:** `tests/repository-vehicle-fleet-r65.test.cjs` + `node --test tests/*.test.cjs` em Node 22/24; navegador real desktop (todos os 43+ veículos), troca entre quatro cidades, entrar/sair de carro, portas GLB, salvar/recarregar; Android real FPS/memória E5. **Nenhuma certificação E2/E3/E4/E5 declarada antes do Actions**.
+**E2 confirmado em PR #40:** Node 22 **965/965** e Node 24 **965/965**, workflow [41452339317](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41452339317); Chicago landmarks physics regression aprovado no [41452339325](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41452339325). PR integrado ao main no commit `ddd33c5`. **E3/E4/E5 não certificados:** playtest Game Forge em Chromium [41452339309](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41452339309) ainda em execução durante esta anotação; faltam visualização da frota completa, troca entre quatro cidades, entrada/saída, portas, save/reload e Android real FPS/memória.
 
 **Pendências:** limusine e caminhão de carga não têm GLB exclusivo no repositório, então reutilizam modelos locais de tamanho adaptado. Falha total de download gera emergência procedural como exceção explicitamente reportada; remover até essa exceção exigiria modo de bloqueio de partida quando todos os modelos estão indisponíveis.
 
