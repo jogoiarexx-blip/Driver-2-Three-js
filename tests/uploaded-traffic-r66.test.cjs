@@ -48,6 +48,22 @@ test('quatro GLBs enviados viram civis móveis em todas as cidades',()=>{
     }
 });
 
+test('van ocupa a vaga histórica do caminhão e mantém os índices de saves',()=>{
+    assert.match(engineSource,/name: 'CAMINHÃO CARGA'[^\\n]*uploadedModel:'cargo-van'/);
+    // O carro enviado não duplica quando a van já existe na frota civil.
+    const original={name:'CAMINHÃO CARGA',bodyStyle:'truck',
+        uploadedModel:'cargo-van',x:102,z:-84,heading:Math.PI/2};
+    const city=clearCity(),engine={scene:{},city,
+        vehicles:[{x:0,z:-20},original]};
+    const added=Spawn.spawn(engine);
+    assert.equal(added.length,3);
+    assert.equal(engine.vehicles[1],original);
+    assert.deepEqual(Array.from(added.map(v=>v.uploadedModel)),
+        ['pickup-new','pickup-old','motorcycle']);
+    assert.equal(original.missionParked,undefined);
+    assert.equal(Spawn.spawn(engine).length,0);
+});
+
 test('motoristas dos GLBs recebem aceleração da IA e não são estacionados',()=>{
     const city=clearCity(),engine={scene:{},city,vehicles:[{x:0,z:-20,speed:0,y:0}]};
     const cars=Spawn.spawn(engine),ai=new Traffic(city);
