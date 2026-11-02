@@ -8,6 +8,14 @@ Recriação experimental de Driver 2 para navegador, baseada em Three.js. O proj
 
 O [playtest automatizado P0](docs/QA-PLAYTEST-P0-R60.md) dirige com W/D, sai do veículo com E, caminha com W e valida saves reais após recarregar. Inclui correção da antiga limitação de 32 carros e restauração de Wrigley após carregamento progressivo. Evidência: [8 etapas Chromium aprovadas](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823989), [944/944 Node 22/24](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823994). A certificação humana de campanha e Android continua pendente.
 
+## R66 — Caminhonetes, moto e van circulam no trânsito (02/11/2026)
+
+- As **duas caminhonetes, a van rústica e a moto** do catálogo GLB aparecem como quatro veículos civis que **dirigem sozinhos** nas quatro cidades, em vez de estacionados junto à avenida inicial. O ônibus e os carros civis existentes continuam circulando; nenhum veículo adicional é marcado como secreto.
+- O spawn testa água, edifícios, passagem dirigível nos 18 metros seguintes e distância da frota para escolher faixas iniciais seguras. Se nenhum dos pontos alternativos for válido, o carro não nasce atravessando água ou construções.
+- **Um único carro secreto por cidade carregada:** permanece o veículo especial da garagem. Jones e a van de emboscada agora ficam parados por `missionParked`, mas **não são carros secretos**. Assim a missão não perde seus personagens nem é confundida com o desbloqueável.
+- Tanner pode roubar e guardar os veículos normais; a garagem agora reconhece a identidade `cargo-van` para restaurar seu modelo GLB. Colisões, física, polícia e saves continuam independentes dos visuais.
+- Testes: `tests/uploaded-vehicles.test.cjs` e `tests/uploaded-traffic-r66.test.cjs` mais a suíte completa de lógica. Evidências E2/E3/E5 a registrar após a execução; esta descrição não equivale à certificação visual.
+
 ## R65 — Frota inteira usando GLBs do repositório (02/11/2026)
 
 - Todos os veículos automáticos das quatro cidades utilizam **modelos .glb locais**, sem downloads automáticos de carros Kenney via CDN. Os carros comuns, secretos, de missão e limusines compartilham o modelo `carro_driver2_otimizado.glb` com pintura por instância; policiais usam `car police.glb`. Caminhões usam as duas caminhonetes locais; furgões de entrega de Chicago usam também o novo `Van_Rustica_Otimizada_23MB.glb` (23 MB, cache compartilhado), ônibus usa `onibus escolar.glb` e motos usam `moto-otimizada.glb`.
@@ -1291,12 +1299,11 @@ apenas um download por arquivo novo. Revisão independente sem bloqueios.
 
 ### Veículos adicionais enviados ao GitHub
 
-As caminhonetes nova e antiga e a moto aparecem estacionadas junto à avenida
-inicial: x=9, z=-38/-58/-78. Saia do carro e pressione E perto de uma delas para
-assumir os controles arcade existentes. Os carros anteriores e caminhões de
-missão continuam disponíveis. A moto tem volume físico e massa próprios, modelo
-procedural de reserva e piloto sentado enquanto controlada. A identidade dos
-três veículos é preservada ao guardar e retirar da garagem de Tanner.
+Histórico R65: os modelos GLB das caminhonetes e da moto foram adicionados
+ao repositório. **R66 substitui a localização estacionada anterior**: agora as
+duas caminhonetes, a van e a moto circulam como tráfego de IA em faixas livres.
+Tanner pode pará-los e dirigi-los; a física da moto e o armazenamento dos quatro
+modelos na garagem permanecem independentes do visual GLB.
 
 O barco de pesca fica ancorado ao sul do Navy Pier, em Chicago, como cenário;
 não há controles de navegação. Os quatro GLBs originais foram preservados. O
