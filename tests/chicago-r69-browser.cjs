@@ -50,8 +50,15 @@ const report={date:new Date().toISOString(),status:'STARTED',
     const physical=DriverChicagoCityPlan.verifyCourtyard(city,link);
     const route=network.plan(city,a,b);
     const routeOK=!!route&&route.length>=2;
+    const southEdge=[a,b].find(p=>p.z< -320&&
+       Math.abs(p.x/80-Math.round(p.x/80))<1e-6);
+    // A faixa sul deve alcançar a avenida já asfaltada em z=-320,
+    // não apenas ligar as duas pontas de uma ilha isolada no grafo.
+    const cityRoute=southEdge?network.plan(city,a,
+        {x:southEdge.x,z:-320}):null;
+    const reachesMain=southEdge?!!cityRoute&&cityRoute.length>=3:null;
     return {id:link.id,from,to,adjacent,reverse,dryBothEnds,
-        physical,routeOK,steps:route?.length||0};
+        physical,routeOK,steps:route?.length||0,reachesMain};
    });
    // User assets and campaign vehicles are not changed in this sprint.
    const oldCount=game.vehicles.length;
@@ -66,7 +73,9 @@ const report={date:new Date().toISOString(),status:'STARTED',
    }
    return {city:game.currentCityKey,buildCount,buildMeters,
     surfaceCount:surfaces.length,surfaces,courtyardLinks:links.length,
-    connected:graph.courtyardConnected,examined,carCount:oldCount,
+    connected:graph.courtyardConnected,
+    boundaryFeeders:graph.courtyardBoundaryFeeders,
+    examined,carCount:oldCount,
     secretCount:savedSecret,colliders:city.buildingBoxes.length,
     sourceCorridors:graph.sourceCorridors};
   });
@@ -83,6 +92,10 @@ const report={date:new Date().toISOString(),status:'STARTED',
   assert(result.examined.every(l=>l.physical&&l.dryBothEnds&&
    l.adjacent&&l.reverse&&l.routeOK),
    'undrivable street in registered network');
+  assert(result.boundaryFeeders>=2,
+   'southern roads reach no city avenues: '+JSON.stringify(result));
+  assert(result.examined.filter(l=>l.reachesMain!==null).every(l=>l.reachesMain),
+   'southside alley is an isolated traffic graph island');
   assert.equal(result.secretCount,1);
   assert.equal(report.pageErrors.length,0,JSON.stringify(report.pageErrors));
   await page.screenshot({path:path.join(out,'chicago-r69-residential-lanes.png'),
