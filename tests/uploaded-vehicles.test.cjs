@@ -4,7 +4,7 @@ const read=p=>fs.readFileSync(p,'utf8');
 const source=read('js/assets/uploaded-vehicles.js');
 const Roster=vm.runInNewContext(source+';DriverUploadedVehicles');
 test('todos os veículos enviados possuem GLB local válido',()=>{
- assert.equal(Object.keys(Roster.DEFINITIONS).length,5);
+ assert.equal(Object.keys(Roster.DEFINITIONS).length,6);
  for(const [id,definition] of Object.entries(Roster.DEFINITIONS)){
   const filename=decodeURIComponent(definition.url.slice(2));
   // Todos os GLBs, incluindo o ônibus escolar, são obrigatórios agora.
