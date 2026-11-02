@@ -6,6 +6,16 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R68 — Chicago: largura real dos acessos + telhados por lote (02/11/2026) — E1; QA em validação
+
+**Objetivo:** avançar MAP-05 (piso e vias não fictícias), MAP-09 (ocupação e silhuetas de bairros) e VIS-09 sem alterar missões, tráfego de outras cidades ou índice de carros no save.
+
+**Problema observado no código anterior:** R57 verificava somente o eixo da rua antes de publicar vias secundárias para Navy Pier, Wrigley e Soldier Field. Uma pista com o centro seco podia ter uma borda sobre água ou dentro de paredes; também faltava detectar saltos bruscos de cota. R68 testa eixo e duas bordas dentro da largura declarada com amostras de 1,25 m e rejeita água, AABB ou variação de altura incompatível com rampa. Esses segmentos deixam de ser desenhados/registrados no grafo quando não forem seguros, sem "tampar" água com asfalto.
+
+**Fachadas e prédios:** o plano de lotes de Chicago já tinha cornijas e janelas proporcionais, mas a cobertura de casas e armazéns permanecia uma caixa plana. R68 acrescenta, apenas no LOD próximo, telhados de duas águas às casas residenciais e duas faixas de telhado aos armazéns de Goose Island. O perfil triangular é uma única malha `InstancedMesh` por chunk, com posições, cores e dimensões determinísticas dentro do lote; não há novos volumes físicos nem telhado de 38 m sobre casa de 11 m. Torres e comércios preservam suas coberturas planas, sem mudar colisões ou save.
+
+**Validação necessária:** `tests/chicago-r57-landmark-district.test.cjs`, `tests/chicago-r68-rooflines.test.cjs`, suíte Node 22/24, regressão da física e navegação real até os três pontos, screenshots Chromium em Chicago e Android E5 posterior. Uma checagem de estrutura não é certificação da malha original do PS1. Não marcar MAP-05/MAP-09 como completos antes de percursos reais e setores homologados.
+
 ### R67 — Auditoria geral de estabilidade, cache e integração (02/11/2026) — merge realizado; certificação final pendente
 
 **Escopo:** P0/PERF-06, GAME-07, CAR-05, ARCH-06, ARCH-11, carregamento de GLBs, shader/boot, qualidade e estrutura do repositório. Inventário e diagnóstico em [docs/AUDITORIA-REPOSITORIO-R67.md](docs/AUDITORIA-REPOSITORIO-R67.md).

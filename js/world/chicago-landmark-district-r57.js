@@ -33,25 +33,66 @@ class DriverChicagoLandmarkDistrictR57 {
             !city?.isWaterAt?.(x,z)&&
             !city?.isPointBlocked?.(x,z,r,0);
     }
-    static verifyLine(city,a,b,radius=1.6) {
-        const d=Math.hypot(b[0]-a[0],b[1]-a[1]);
-        for(let i=0,n=Math.max(1,Math.ceil(d/1.4));i<=n;i++){
-            const t=i/n,x=a[0]+(b[0]-a[0])*t,
-                z=a[1]+(b[1]-a[1])*t;
-            if(!this.valid(city,x,z,radius))
-                return {ok:false,at:[x,z]};
+    // Uma rua só é segura quando a faixa central E as duas bordas
+    // acompanham piso seco, sem paredes ou degraus abruptos. Antes (R57),
+    // apenas a linha central era verificada, podendo criar asfalto e
+    // ligações de IA que cortavam a beirada da água/edifícios.
+    static verifyLine(city,a,b,radius=1.6,width=0) {
+        if(!Array.isArray(a)||!Array.isArray(b)||
+            ![...a,...b,radius,width].every(Number.isFinite)||
+            radius<0||width<0)return {ok:false,reason:'invalid-route'};
+        const dx=b[0]-a[0],dz=b[1]-a[1],
+            distance=Math.hypot(dx,dz);
+        if(distance<.01)return {ok:false,reason:'degenerate-route'};
+        const nx=-dz/distance,nz=dx/distance;
+        const edge=Math.max(0,width/2-.55);
+        const offsets=edge>.35?[0,-edge,edge]:[0];
+        const steps=Math.max(1,Math.ceil(distance/1.25));
+        const ground=typeof city?.getGroundHeightAt==='function'?
+            (x,z)=>city.getGroundHeightAt(x,z,null,true):null;
+        for(const offset of offsets){
+            let previousHeight=null;
+            for(let i=0;i<=steps;i++){
+                const t=i/steps,
+                    x=a[0]+dx*t+nx*offset,
+                    z=a[1]+dz*t+nz*offset;
+                // Borda do asfalto: testa a superfície, não uma segunda
+                // faixa inteira de 1,6 m fora do limite da rua.
+                const clearance=offset===0?radius:Math.min(.35,radius*.25);
+                if(!this.valid(city,x,z,clearance))
+                    return {ok:false,reason:'blocked-or-water',at:[x,z],
+                        edgeOffset:offset};
+                if(ground){
+                    const y=ground(x,z);
+                    if(!Number.isFinite(y))
+                        return {ok:false,reason:'invalid-height',at:[x,z]};
+                    // Uma rampa contínua é aceita; salto maior que metade
+                    // do avanço horizontal sugere degrau/viaduto falso.
+                    if(previousHeight!==null &&
+                        Math.abs(y-previousHeight)>.45+distance/steps*.50)
+                        return {ok:false,reason:'height-discontinuity',
+                            at:[x,z],edgeOffset:offset};
+                    previousHeight=y;
+                }
+            }
         }
-        return {ok:true};
+        return {ok:true,checkedOffsets:offsets.length,
+            meters:distance};
     }
     static verifyApproach(city,route) {
         if(city?.preset?.id!=='chicago')return {ok:false,reason:'city'};
-        const points=route.points;
+        const points=route?.points;
+        if(!Array.isArray(points)||points.length<2||
+            !Number.isFinite(route.width)||route.width<2)
+            return {ok:false,reason:'invalid-route'};
         for(let i=1;i<points.length;i++){
-            const check=this.verifyLine(city,points[i-1],points[i]);
-            if(!check.ok)return {ok:false,reason:'blocked-or-water',at:check.at};
+            const check=this.verifyLine(city,points[i-1],points[i],
+                1.55,route.width);
+            if(!check.ok)return {...check,id:route.id};
         }
         return {ok:true,meters:points.slice(1).reduce((sum,p,i)=>
-            sum+Math.hypot(p[0]-points[i][0],p[1]-points[i][1]),0)};
+            sum+Math.hypot(p[0]-points[i][0],p[1]-points[i][1]),0),
+            fullWidth:true};
     }
     static verifyLot(city,lot) {
         if(city?.preset?.id!=='chicago')return false;

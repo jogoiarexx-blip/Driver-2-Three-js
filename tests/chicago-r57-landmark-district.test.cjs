@@ -184,3 +184,40 @@ test('R57: does not build foreign-city content or unsafe routes',()=>{
  assert.equal(R57.verifyApproach(c,R57.APPROACHES[0]).ok,false);
  assert.equal(R57.build(c),null);
 });
+
+test('R68: faixa central seca não autoriza asfalto atravessando água pelas bordas',()=>{
+ const c={preset:{id:'chicago'},
+  isWaterAt:(x,z)=>z>1.1,
+  isPointBlocked:()=>false,
+  getGroundHeightAt:()=>0};
+ assert.equal(R57.verifyLine(c,[0,0],[10,0],1.55).ok,true);
+ const risky=R57.verifyLine(c,[0,0],[10,0],1.55,4.2);
+ assert.equal(risky.ok,false);
+ assert.equal(risky.reason,'blocked-or-water');
+ assert(risky.edgeOffset>0);
+ assert.equal(R57.verifyApproach(c,{
+  id:'unsafe-shoulder',district:'wrigley',width:4.2,
+  points:[[0,0],[10,0]]}).ok,false);
+});
+test('R68: corredor com degrau ou parede na borda não entra no grafo',()=>{
+ const c={preset:{id:'chicago'},isWaterAt:()=>false,
+  isPointBlocked:(x,z)=>z< -1.1,
+  getGroundHeightAt:()=>0};
+ const blocked=R57.verifyLine(c,[0,0],[10,0],1.55,4.2);
+ assert.equal(blocked.ok,false);
+ assert(blocked.edgeOffset<0);
+ c.isPointBlocked=()=>false;
+ c.getGroundHeightAt=(x)=>x>5?2.7:0;
+ assert.equal(R57.verifyLine(c,[0,0],[10,0],1.55,4.2).reason,
+  'height-discontinuity');
+ c.getGroundHeightAt=(x)=>.08*x;
+ assert.equal(R57.verifyLine(c,[0,0],[10,0],1.55,4.2).ok,true,
+  'gentle ramps remain accessible');
+});
+test('R68: malformed and zero-length secondary paths are rejected',()=>{
+ const c={preset:{id:'chicago'},isWaterAt:()=>false,
+  isPointBlocked:()=>false};
+ assert.equal(R57.verifyLine(c,[2,3],[2,3]).reason,'degenerate-route');
+ assert.equal(R57.verifyLine(c,[0,0],[Infinity,0]).ok,false);
+ assert.equal(R57.verifyApproach(c,{id:'broken',width:5,points:[[0,0]]}).ok,false);
+});

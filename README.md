@@ -4,6 +4,12 @@ Recriação experimental de Driver 2 para navegador, baseada em Three.js. O proj
 
 > **Checklist permanente do desenvolvimento:** [AUDITORIA-MESTRA-DRIVER2.md](AUDITORIA-MESTRA-DRIVER2.md). Contém avaliação de Chicago, gameplay, física, GLBs, performance, arquitetura, QA e prioridades P0–P3. **Consultar e atualizar em toda revisão**, com testes antes/depois, evidências, pendências e deploy. A auditoria inicial registrou 920/940 (20 falhas) na R58. A R59 recuperou a suíte de lógica: **942/942 testes verdes em Node 22 e 24** ([Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600150)), com smoke Chromium das quatro cidades **aprovado** ([Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41260600145)). A homologação Chromium, saves, partida integral e mobile segue separada; Pages publicado não equivale a jogo certificado.
 
+## R68 — Melhorias da Chicago (02/11/2026)
+
+**Ruas:** os acessos ao Navy Pier, Wrigley Field e Soldier Field agora são verificados na faixa central e nas duas bordas, incluindo água, paredes e saltos de altura. Uma pista insegura não é apresentada como ligação dirigível. **Prédios:** os lotes residenciais de Wrigleyville/Wicker Park ganham telhados inclinados; galpões industriais de Goose Island recebem silhueta de coberturas em faixas. Uma malha instanciada por chunk e LOD perto evita novos custos por prédio e preserva colisões/missões/saves. A estética é **adaptada ao mapa procedural**, não réplica 1:1 da ROM.
+
+Referência e limites: [Auditoria mestra](AUDITORIA-MESTRA-DRIVER2.md). QA Node e navegador serão registrados no PR; ainda faltam desempenho E5 de Android e validação integral dos setores PS1.
+
 ## R67 — Auditoria geral: estabilidade, GPU, carregamento, GLBs e interface (02/11/2026)
 
 Esta revisão investiga problemas transversais no **motor, cidades, gráficos/recursos GPU, veículos GLB, interface, carregamento e testes**. Correções concretas: impedir a destruição de texturas compartilhadas ao trocar de cidade; interromper carregamento progressivo ultrapassado; liberar URLs temporárias de GLBs importados mesmo em falha; só confirmar importação válida; eliminar alocação duplicada do framebuffer inicial; suspender renderização e física em abas ocultas para economizar recursos; consertar a opção de pré-carregamento para não forçar repetidas descargas nem carros procedurais. Códigos locais receberam versionamento de URL para a publicação no Pages.
