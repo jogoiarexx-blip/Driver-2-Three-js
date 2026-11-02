@@ -22,6 +22,8 @@ node --test tests/chicago-r73-triangle-width.test.cjs
 node tools/chicago-r73-triangle-width.cjs qa-artifacts/chicago-r73/triangle-width.json
 ```
 
+**Resultado real dos GLBs:** a [execução aprovada do R73](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41526741116) mediu **67 cortes**. Em todos eles o centro possui pavimento, mas a sondagem exata não achou triângulo pavimentado em **−0,1 OBJ** (embora a máscara R24 marque esse local como pavimentado); pontos vizinhos de −0,2 a −0,4 OBJ têm suporte. A largura contínua simétrica acaba ficando zero pelo filtro conservador. Isso indica uma lacuna na cobertura de **triângulos elegíveis**, que pode refletir uma costura/UV, não uma confirmação de rua inexistente. Não habilitar tráfego até inspeção do problema.
+
 O workflow [Chicago R73](../.github/workflows/chicago-r73.yml) salva o relatório com o SHA256 dos dois GLBs. Até homologar localização, escala, colisores, faixa, contínuo de rede e direção humana, **nenhuma alteração é feita no trânsito, na física, nas missões ou nos saves do jogo**.
 
 ## R72 — Primeiro corredor rastreável do original (aresta 3445)
