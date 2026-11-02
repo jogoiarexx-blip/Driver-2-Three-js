@@ -8,7 +8,7 @@ Recriação experimental de Driver 2 para navegador, baseada em Three.js. O proj
 
 Corrigi a navegação da segunda ponte levadiça, na parte leste de Chicago. Agora **as pontes central e leste fecham suas rotas de IA quando são levantadas**, inclusive em trechos curtos, e voltam a conectar **somente quando a animação do tabuleiro chegar a menos de 8°**. A ponte fixa do canal oeste não é afetada. Também acrescentei uma verificação do nível físico das faixas e rampas, impedindo ligações do trânsito entre pisos separados por degraus ou viadutos sem acesso. O teste usa a altura física dos veículos, não a plataforma pedonal elevada do trem. Mantém missões, saves, trânsito GLB, policiamento e as outras cidades.
 
-Testes automatizados Node e Chromium: execução exigida antes de certificar a sprint. A Chicago ainda é uma reconstrução adaptada; MAP-05/MAP-08, oito missões humanas e FPS no Android continuam em aberto.
+**QA R70 aprovado:** [1.004/1.004 testes Node 22 e 24](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41511489616), [física Chicago](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41511489585) e [Chromium real com captura/JSON](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41511489658). As duas basculantes bloquearam a IA ao levantar e reabriram com inclinação segura; a ponte fixa oeste continuou livre, sem novos colisores. **Integrado no [PR #46](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/46), commit `d64a2b9`.** Chicago ainda é uma reconstrução adaptada: MAP-05/MAP-08, oito missões humanas e FPS/memória em Android permanecem abertos.
 
 ## R69 — Chicago: becos entre quarteirões conectados ao trânsito (02/11/2026)
 
