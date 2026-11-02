@@ -6,7 +6,7 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
-### R71 — Chicago: inventário dos 54 setores PS1 e piso real do acesso R22 (02/11/2026) — E1, em validação
+### R71 — Chicago: inventário dos 54 setores PS1 e piso real do acesso R22 (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
 **Problema físico MAP-05/MAP-08:** o acesso inferido `north-branch-to-wrigley-grid` da R22 era examinado apenas em água/colisores e desenhado em um retângulo inteiramente plano `Y=.039`. Se a altura verdadeira dos pneus mudasse no trecho, a superfície poderia flutuar ou ficar abaixo do carro; a R70 protegia o grafo de IA, mas não corrigia o pavimento R22 que era construído antes.
 
@@ -14,7 +14,7 @@
 
 **Inventário MAP-06:** a pasta original `chicago/manifest.json` identifica **54 GLBs visuais PS1** e 1.544.872 triângulos; `tools/chicago-r71-sector-inventory.cjs` gera o inventário publicável `chicago/sector-inventory-r71.json`, com uma linha por setor, limites 3D, malha de origem e campos explícitos de piso dirigível, colisão, água, sinais, NPCs, trânsito, missões, E4 e E5. O estado **não certificado** é intencional: não existe transformação homologada de todos os setores originais para a malha jogável Undercover. **0/54 setores homologados integralmente para gameplay**, diferente de 54/54 modelos disponíveis para visualizar. R24–R29 forneceram apenas evidência parcial de superfície/nível, não homologação de ruas por setor.
 
-**Gates da sprint:** `tests/chicago-r71-source-grade-and-sector-inventory.test.cjs`, geração reproduzível do JSON, 54 GLBs acessíveis no repo, suíte Node22/24, regressão física Chicago R69/R70 e Chromium com verificação do conector construído e do inventário entregue pelo servidor. MAP-05/MAP-06/MAP-08 **continuam abertos** para calibração de mapas por setor, certificação de percursos/colisões e E4/E5 em hardware.
+**E2 aprovado:** [Node22 e Node24 1.009/1.009 testes cada](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41514167163); [regressão física Chicago](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41514167196); 5/5 testes direcionados R71 e geração determinística do inventário dos 54 GLBs. **E3 real Chromium:** [run 41514167504 — JSON e PNG](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41514167504), 1 acesso R22 planejado/aceito e navegável em 3 nós, 108 vértices ajustados à altura física (erro máximo 8,05×10⁻¹⁰), 561 arestas de navegação, 369 colisores, um veículo secreto, catálogo dos 54 setores servido pelo navegador. Neste mapa concreto o piso R22 continua nivelado (0,039), mas o teste unitário também cobre rampas e saltos de altura artificiais para evitar futuras regressões. **Integrado ao main:** [PR #47](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/47), commit `57dd305`. MAP-05/MAP-06/MAP-08 **continuam abertos** para a homologação de setores originais, inspeção das ruas/colisões e E4/E5 real em hardware.
 
 ### R70 — Chicago: duas pontes móveis e checagem de altura das rotas (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
