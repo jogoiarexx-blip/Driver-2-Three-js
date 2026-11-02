@@ -74,19 +74,20 @@ class DriverChicagoGameplay {
         };
     }
     static ensureWrigleyCar(game){
-        // Cria só uma vez por frota, inclusive quando a cidade carrega
-        // progressivamente. A IA já preserva veículos isSecret parados.
+        // Bônus do estádio criado uma vez por frota durante streaming.
+        // Não é um segundo carro secreto: o estado parado é independente.
         const site=game?.city?.chicagoStadium;
         if(game?.currentCityKey!=='chicago'||!site ||
             !Array.isArray(game.vehicles)||game.wrigleyCar)
             return game?.wrigleyCar||null;
         const car=new DriverVehicle(game.scene,{
             name:'WRIGLEY • SUPERCHARGED V8',
-            color:0x0b0e14,bodyStyle:'muscle',isSecret:true,
+            color:0x0b0e14,bodyStyle:'muscle',
             x:site.x,z:site.z,heading:Math.PI,
             maxSpeed:72,accel:43
         });
-        car.isWrigleySecret=true;
+        car.isWrigleySecret=true; // Identificador histórico para saves/testes.
+        car.missionParked=true; // Não abandonar a vaga antes do portão abrir.
         car.driftMultiplier=1.28; // permite drift mais amplo, sem alterar outros carros
         // As faixas acompanham capô/porta-malas e o rig do chassi.
         const yellow=new THREE.MeshBasicMaterial({color:0xfacc15});
