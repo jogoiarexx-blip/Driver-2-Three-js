@@ -6,7 +6,7 @@ Recriação experimental de Driver 2 para navegador, baseada em Three.js. O proj
 
 ## R69 — Chicago: becos entre quarteirões conectados ao trânsito (02/11/2026)
 
-Os becos residenciais já desenhados na Chicago passaram a ter **registro real no grafo de IA**, com conexão nas avenidas existentes para veículos circularem em ambos os sentidos. A validação verifica centro, bordas, água, colisores e desníveis antes de criar o asfalto e a aresta de navegação. O piso visual passa a usar a mesma altura que a suspensão do carro; nenhum prédio é atravessado por atalhos. Os veículos GLB, garagem, missões e cidades Havana/Las Vegas/Rio permanecem inalterados. Essa atualização é parte de **MAP-07**, não certificação 1:1 do mapa PS1. Testes no GitHub Actions e medição no Chromium são necessários antes de declarar a sprint aprovada.
+Os becos residenciais já desenhados na Chicago passaram a ter **registro real no grafo de IA**, com conexão nas avenidas existentes para veículos circularem em ambos os sentidos. Na borda sul, onde as avenidas continuam além de z=-320, a rede agora alcança o asfalto existente com ligações verticais verificadas, sem estender cruzamentos sobre terrenos vazios. A validação verifica centro, bordas, água, colisores e desníveis antes de criar o asfalto e a aresta de navegação. O piso visual passa a usar a mesma altura que a suspensão do carro; nenhum prédio é atravessado por atalhos. Os veículos GLB, garagem, missões e cidades Havana/Las Vegas/Rio permanecem inalterados. Essa atualização é parte de **MAP-07**, não certificação 1:1 do mapa PS1. Testes no GitHub Actions e medição no Chromium são necessários antes de declarar a sprint aprovada.
 
 ## R68 — Melhorias da Chicago (02/11/2026)
 
