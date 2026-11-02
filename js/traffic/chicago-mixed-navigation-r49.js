@@ -35,8 +35,17 @@ class DriverChicagoMixedNavigationR49 {
         }
         return true;
     }
+    // O comando "abaixar" pode ocorrer enquanto as folhas ainda giram.
+    // A passagem só reabre quando o ângulo FÍSICO caiu abaixo de 8°;
+    // cache e destino dos motoristas usam esta mesma condição.
+    static bridgeAccessClosed(city){
+        if(city?.preset?.id!=='chicago')return false;
+        const angle=Number(city.bridgeAngle);
+        return !!city.bridgeRaised ||
+            (Number.isFinite(angle)&&angle>8*Math.PI/180);
+    }
     static bridgeClosed(city,a,b){
-        if(city?.preset?.id!=='chicago'||!city?.bridgeRaised)return false;
+        if(!this.bridgeAccessClosed(city))return false;
         return [0,240].some(x=>this.segmentTouchesBox(
             a,b,x-10.25,x+10.25,34,66));
     }
@@ -94,7 +103,7 @@ class DriverChicagoMixedNavigationR49 {
     }
     static compile(city){
         if(city?.preset?.id!=='chicago')return null;
-        const stamp=!!city.bridgeRaised,build=city.buildSequence||0;
+        const stamp=this.bridgeAccessClosed(city),build=city.buildSequence||0;
         const count=city.buildingBoxes?.length||0;
         const sourceStamp=city.chicagoPS1StreetNetwork?.radarPaths?.length||0;
         const courtyardStamp=city.chicagoCityPlan?.courtyardLinks?.length||0;
@@ -366,7 +375,7 @@ class DriverChicagoMixedNavigationR49 {
     static follow(city,car,goal,holder,dt){
         if(!goal||!holder||city?.preset?.id!=='chicago')
             return {target:null,blocked:true};
-        const stamp=!!city.bridgeRaised,build=city.buildSequence||0;
+        const stamp=this.bridgeAccessClosed(city),build=city.buildSequence||0;
         // Mobile NPC positions may vary every frame. Replan at most every
         // 1.5s, or on a changed bridge, target neighborhood or city rebuild.
         const sector=x=>Math.round(x/32);
