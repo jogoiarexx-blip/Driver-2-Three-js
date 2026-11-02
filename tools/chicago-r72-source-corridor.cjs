@@ -33,6 +33,8 @@ function build(){
     const rejectedForPhysicalMigration=[];
     if(!['strong','medium'].includes(material.confidence))
         rejectedForPhysicalMigration.push('source-pavement-confidence-not-strong-or-medium');
+    if(material.outerEdges<.5||material.grass>.3)
+        rejectedForPhysicalMigration.push('narrow-original-road-or-grassy-shoulders');
     if(!report.projectedUndercoverR15.withinLegacyGrid320)
         rejectedForPhysicalMigration.push('R15-world-projection-outside-old-road-grid');
     rejectedForPhysicalMigration.push('original-width-not-certified');
