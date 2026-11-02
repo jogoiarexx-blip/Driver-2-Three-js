@@ -82,13 +82,16 @@
                 for(const stage of this.buildEnvironmentStages()){
                     // A cidade pode ser substituída por outra enquanto aguarda
                     // requestAnimationFrame. Nunca continuar a geração antiga.
-                    if(this.buildSequence!==generation)return false;
+                    if(this.buildSequence!==generation)
+                        throw new Error('Carregamento antigo cancelado: outra cidade foi selecionada');
                     done++;
                     onProgress(Math.min(1,done/total),stage);
                     await new Promise(resolve=>requestAnimationFrame(resolve));
-                    if(this.buildSequence!==generation)return false;
+                    if(this.buildSequence!==generation)
+                        throw new Error('Carregamento antigo cancelado: outra cidade foi selecionada');
                 }
-                if(this.buildSequence!==generation)return false;
+                if(this.buildSequence!==generation)
+                        throw new Error('Carregamento antigo cancelado: outra cidade foi selecionada');
                 this.ready=true;
                 onProgress(1,'Cidade construída com sucesso');
                 return true;
