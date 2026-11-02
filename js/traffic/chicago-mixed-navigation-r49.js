@@ -115,6 +115,44 @@ class DriverChicagoMixedNavigationR49 {
         // rather than demanding two extra car lanes beside the buildings.
         for(const edge of secondary)
             add(edge.from,edge.to,edge.width?0:4);
+        // R69: ruas residenciais do limite sul (z ~ -358) atingem
+        // avenidas x=80/160/240 que já têm asfalto até z=-392, mas o
+        // grafo antigo terminava em z=-320. Ligar fisicamente essa ponta
+        // ao último cruzamento da grade, sem esticar o radar sobre água
+        // nem habilitar uma rua transversal inexistente em z=-400.
+        let courtyardBoundaryFeeders=0;
+        const linked=new Set();
+        for(const road of courtyards)for(const p of [road.from,road.to]){
+            if(!Number.isFinite(p?.x)||!Number.isFinite(p?.z)||
+                Math.abs(p.x)>limit||Math.abs(p.z)<=limit||
+                Math.abs(p.z)>Math.min(limit+72,392)||
+                Math.abs(p.x/this.STEP-Math.round(p.x/this.STEP))>1e-6)
+                continue;
+            const to={x:p.x,z:Math.sign(p.z)*limit};
+            const key=this.key(p)+'|'+this.key(to);
+            if(linked.has(key))continue;
+            linked.add(key);
+            const distance=this.distance(p,to);
+            if(distance<1||distance>72)continue;
+            let gradeSafe=true,lastHeight=null;
+            if(typeof city.getGroundHeightAt==='function'){
+                const count=Math.ceil(distance/2);
+                for(let i=0;i<=count;i++){
+                    const z=p.z+(to.z-p.z)*i/count;
+                    const y=city.getGroundHeightAt(p.x,z,null,true);
+                    if(!Number.isFinite(y)||
+                       (lastHeight!==null &&
+                        Math.abs(y-lastHeight)>.45+distance/count*.5)){
+                        gradeSafe=false;break;
+                    }
+                    lastHeight=y;
+                }
+            }
+            if(!gradeSafe)continue;
+            const before=edges.size;
+            add(p,to,4); // duas faixas asfaltadas verificadas por clear()
+            if(edges.size>before)courtyardBoundaryFeeders++;
+        }
         // R51: roads already drawn from PS1-adapted surface references.
         // The separately audited R22 feeder is the only inferred link.
         const sources=(city.chicagoPS1StreetNetwork?.radarPaths||[])
@@ -158,6 +196,7 @@ class DriverChicagoMixedNavigationR49 {
         const graph={nodes,adj,edges:edges.size,stamp,build,count,
             sourceStamp,courtyardStamp,buckets,bucketSize,
             courtyardLinks:courtyards.length,
+            courtyardBoundaryFeeders,
             courtyardConnected:courtyards.filter(l=>
                 (adj.get(this.key(l.from))||[]).some(e=>
                     e.key===this.key(l.to))).length,
