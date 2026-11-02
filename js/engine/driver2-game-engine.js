@@ -1269,7 +1269,7 @@
                 if(this.intruderBlocker)return this.intruderBlocker;
                 const van=new DriverVehicle(this.scene,{
                     name:'VAN AMARELA • EMBOSCADA',
-                    color:0xeab308,bodyStyle:'truck',isTarget:true,
+                    color:0xeab308,bodyStyle:'truck',
                     x:198,z:-137,heading:Math.PI/2,
                     maxSpeed:21,accel:17
                 });
