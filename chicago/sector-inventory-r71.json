@@ -1,0 +1,1632 @@
+{
+  "format": "Driver2ChicagoSectorInventoryR71",
+  "input": "chicago/manifest.json",
+  "caveat": "54 original PS1 GLB sectors are available for visualization; none is automatically certified as a drivable Undercover sector.",
+  "sourceTiles": 54,
+  "sourceTriangles": 1544872,
+  "sourceFaces": 840281,
+  "sourceBytes": 105874332,
+  "sectorsCertifiedForGameplay": 0,
+  "sectors": [
+    {
+      "id": "00_01",
+      "meshUrl": "chicago/chunks/00_01.glb",
+      "sourceBounds": {
+        "min": [
+          -102.144,
+          -0.1152,
+          53.1837
+        ],
+        "max": [
+          -95.8991,
+          0.6528,
+          64.0648
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 5981,
+      "faces": 3235,
+      "bytes": 432220,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "00_02",
+      "meshUrl": "chicago/chunks/00_02.glb",
+      "sourceBounds": {
+        "min": [
+          -102.144,
+          -0.1137,
+          63.9131
+        ],
+        "max": [
+          -95.9262,
+          0.8448,
+          68.4303
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 2932,
+      "faces": 1537,
+      "bytes": 206664,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "00_04",
+      "meshUrl": "chicago/chunks/00_04.glb",
+      "sourceBounds": {
+        "min": [
+          -97.4991,
+          -0.1137,
+          110.63
+        ],
+        "max": [
+          -95.9123,
+          0.1916,
+          112.063
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 295,
+      "faces": 156,
+      "bytes": 23140,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "00_05",
+      "meshUrl": "chicago/chunks/00_05.glb",
+      "sourceBounds": {
+        "min": [
+          -111.975,
+          -0.1152,
+          111.896
+        ],
+        "max": [
+          -95.7252,
+          1.152,
+          128.088
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 16817,
+      "faces": 8977,
+      "bytes": 1202256,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "00_06",
+      "meshUrl": "chicago/chunks/00_06.glb",
+      "sourceBounds": {
+        "min": [
+          -111.975,
+          -0.1137,
+          127.869
+        ],
+        "max": [
+          -95.8992,
+          1.152,
+          133.561
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 13190,
+      "faces": 6941,
+      "bytes": 922860,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "01_00",
+      "meshUrl": "chicago/chunks/01_00.glb",
+      "sourceBounds": {
+        "min": [
+          -92.1603,
+          -0.1137,
+          34.1892
+        ],
+        "max": [
+          -79.9487,
+          0.5376,
+          48.0576
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 11596,
+      "faces": 5993,
+      "bytes": 815408,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "01_01",
+      "meshUrl": "chicago/chunks/01_01.glb",
+      "sourceBounds": {
+        "min": [
+          -96.0465,
+          -0.1137,
+          47.7252
+        ],
+        "max": [
+          -79.9458,
+          0.8448,
+          64.0188
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 18836,
+      "faces": 10183,
+      "bytes": 1256560,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "01_02",
+      "meshUrl": "chicago/chunks/01_02.glb",
+      "sourceBounds": {
+        "min": [
+          -96.0813,
+          -0.1536,
+          63.9345
+        ],
+        "max": [
+          -79.9443,
+          0.8448,
+          80.064
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 25443,
+      "faces": 13604,
+      "bytes": 1698312,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "01_03",
+      "meshUrl": "chicago/chunks/01_03.glb",
+      "sourceBounds": {
+        "min": [
+          -91.6995,
+          -0.1536,
+          79.9428
+        ],
+        "max": [
+          -79.9272,
+          0.5184,
+          96.0768
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 29306,
+      "faces": 15050,
+      "bytes": 2008480,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "01_04",
+      "meshUrl": "chicago/chunks/01_04.glb",
+      "sourceBounds": {
+        "min": [
+          -96.1219,
+          -0.1536,
+          95.9187
+        ],
+        "max": [
+          -79.8798,
+          1.152,
+          112.088
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 28296,
+      "faces": 14525,
+      "bytes": 1938692,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "01_05",
+      "meshUrl": "chicago/chunks/01_05.glb",
+      "sourceBounds": {
+        "min": [
+          -96.1158,
+          -0.1152,
+          111.927
+        ],
+        "max": [
+          -79.9428,
+          1.3056,
+          128.088
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 45812,
+      "faces": 24185,
+      "bytes": 3198616,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "01_06",
+      "meshUrl": "chicago/chunks/01_06.glb",
+      "sourceBounds": {
+        "min": [
+          -96.1217,
+          -0.1536,
+          127.869
+        ],
+        "max": [
+          -79.9428,
+          1.92,
+          144.026
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 29704,
+      "faces": 15558,
+      "bytes": 2089416,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "01_07",
+      "meshUrl": "chicago/chunks/01_07.glb",
+      "sourceBounds": {
+        "min": [
+          -91.2003,
+          -0.1137,
+          143.687
+        ],
+        "max": [
+          -79.9428,
+          1.1545,
+          158.17
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 11374,
+      "faces": 5843,
+      "bytes": 841452,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_00",
+      "meshUrl": "chicago/chunks/02_00.glb",
+      "sourceBounds": {
+        "min": [
+          -80.0798,
+          0,
+          32.0196
+        ],
+        "max": [
+          -63.9345,
+          0.6912,
+          48.198
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 24842,
+      "faces": 13469,
+      "bytes": 1691216,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_01",
+      "meshUrl": "chicago/chunks/02_01.glb",
+      "sourceBounds": {
+        "min": [
+          -80.064,
+          0,
+          47.8434
+        ],
+        "max": [
+          -63.7572,
+          0.6912,
+          64.0704
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 32942,
+      "faces": 18475,
+      "bytes": 2144224,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_02",
+      "meshUrl": "chicago/chunks/02_02.glb",
+      "sourceBounds": {
+        "min": [
+          -80.1438,
+          -0.0026,
+          63.7764
+        ],
+        "max": [
+          -63.738,
+          1.1545,
+          80.064
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 40156,
+      "faces": 21546,
+      "bytes": 2768504,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_03",
+      "meshUrl": "chicago/chunks/02_03.glb",
+      "sourceBounds": {
+        "min": [
+          -80.063,
+          -0.0006,
+          79.9428
+        ],
+        "max": [
+          -63.93,
+          1.3995,
+          96.0768
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 58223,
+      "faces": 32342,
+      "bytes": 4001764,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_04",
+      "meshUrl": "chicago/chunks/02_04.glb",
+      "sourceBounds": {
+        "min": [
+          -80.1024,
+          -0.0002,
+          95.9187
+        ],
+        "max": [
+          -63.939,
+          1.3056,
+          112.08
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 69687,
+      "faces": 38321,
+      "bytes": 4748196,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_05",
+      "meshUrl": "chicago/chunks/02_05.glb",
+      "sourceBounds": {
+        "min": [
+          -80.0687,
+          -0.1152,
+          111.902
+        ],
+        "max": [
+          -63.933,
+          1.6896,
+          128.144
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 63678,
+      "faces": 34122,
+      "bytes": 4418068,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_06",
+      "meshUrl": "chicago/chunks/02_06.glb",
+      "sourceBounds": {
+        "min": [
+          -80.1438,
+          0,
+          127.949
+        ],
+        "max": [
+          -63.933,
+          1.3056,
+          144.038
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 44134,
+      "faces": 24052,
+      "bytes": 2951932,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_07",
+      "meshUrl": "chicago/chunks/02_07.glb",
+      "sourceBounds": {
+        "min": [
+          -80.262,
+          -0.1137,
+          143.961
+        ],
+        "max": [
+          -63.936,
+          1.1545,
+          160.172
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 35416,
+      "faces": 18377,
+      "bytes": 2444872,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_08",
+      "meshUrl": "chicago/chunks/02_08.glb",
+      "sourceBounds": {
+        "min": [
+          -79.3359,
+          -0.1152,
+          159.7
+        ],
+        "max": [
+          -63.9264,
+          1.1545,
+          176.147
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 24922,
+      "faces": 13248,
+      "bytes": 1710240,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_09",
+      "meshUrl": "chicago/chunks/02_09.glb",
+      "sourceBounds": {
+        "min": [
+          -73.9599,
+          -0.1152,
+          175.901
+        ],
+        "max": [
+          -63.8148,
+          0.3235,
+          192.121
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 12202,
+      "faces": 6357,
+      "bytes": 830428,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_10",
+      "meshUrl": "chicago/chunks/02_10.glb",
+      "sourceBounds": {
+        "min": [
+          -73.6512,
+          -0.1152,
+          191.9
+        ],
+        "max": [
+          -63.9248,
+          0.1923,
+          208.053
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 2445,
+      "faces": 1265,
+      "bytes": 179288,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "02_11",
+      "meshUrl": "chicago/chunks/02_11.glb",
+      "sourceBounds": {
+        "min": [
+          -64.4415,
+          -0.1137,
+          208.05
+        ],
+        "max": [
+          -63.8148,
+          0.0036,
+          219.731
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 32,
+      "faces": 16,
+      "bytes": 3652,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_00",
+      "meshUrl": "chicago/chunks/03_00.glb",
+      "sourceBounds": {
+        "min": [
+          -64.2876,
+          -0.1162,
+          32.3328
+        ],
+        "max": [
+          -48,
+          0.768,
+          48.0045
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 34939,
+      "faces": 18661,
+      "bytes": 2392668,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_01",
+      "meshUrl": "chicago/chunks/03_01.glb",
+      "sourceBounds": {
+        "min": [
+          -64.2492,
+          -0.1137,
+          47.9955
+        ],
+        "max": [
+          -47.994,
+          1.1545,
+          64.2876
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 13815,
+      "faces": 7359,
+      "bytes": 917236,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_02",
+      "meshUrl": "chicago/chunks/03_02.glb",
+      "sourceBounds": {
+        "min": [
+          -64.131,
+          -0.1543,
+          63.9215
+        ],
+        "max": [
+          -47.9051,
+          1.1545,
+          75.7248
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 14445,
+      "faces": 7648,
+      "bytes": 985600,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_03",
+      "meshUrl": "chicago/chunks/03_03.glb",
+      "sourceBounds": {
+        "min": [
+          -63.9804,
+          -0.1152,
+          80.0964
+        ],
+        "max": [
+          -47.9476,
+          1.3056,
+          96.0768
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 43856,
+      "faces": 23747,
+      "bytes": 3059592,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_04",
+      "meshUrl": "chicago/chunks/03_04.glb",
+      "sourceBounds": {
+        "min": [
+          -64.0002,
+          -0.1152,
+          95.9187
+        ],
+        "max": [
+          -47.994,
+          1.3082,
+          112.085
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 63963,
+      "faces": 35924,
+      "bytes": 4410256,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_05",
+      "meshUrl": "chicago/chunks/03_05.glb",
+      "sourceBounds": {
+        "min": [
+          -64.0158,
+          -0.1152,
+          111.738
+        ],
+        "max": [
+          -47.994,
+          1.3056,
+          128.066
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 52944,
+      "faces": 29628,
+      "bytes": 3590380,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_06",
+      "meshUrl": "chicago/chunks/03_06.glb",
+      "sourceBounds": {
+        "min": [
+          -64.0188,
+          -0.1152,
+          127.986
+        ],
+        "max": [
+          -47.9601,
+          1.3056,
+          144.038
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 47995,
+      "faces": 26247,
+      "bytes": 3250700,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_07",
+      "meshUrl": "chicago/chunks/03_07.glb",
+      "sourceBounds": {
+        "min": [
+          -64.013,
+          0,
+          143.923
+        ],
+        "max": [
+          -47.9582,
+          1.3056,
+          160.09
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 57083,
+      "faces": 32057,
+      "bytes": 3795808,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_08",
+      "meshUrl": "chicago/chunks/03_08.glb",
+      "sourceBounds": {
+        "min": [
+          -64.0895,
+          -0.0003,
+          159.935
+        ],
+        "max": [
+          -47.9424,
+          1.3056,
+          176.064
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 40412,
+      "faces": 21841,
+      "bytes": 2724796,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_09",
+      "meshUrl": "chicago/chunks/03_09.glb",
+      "sourceBounds": {
+        "min": [
+          -64.131,
+          -0.1137,
+          175.943
+        ],
+        "max": [
+          -47.9232,
+          1.3056,
+          192.088
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 34477,
+      "faces": 18693,
+      "bytes": 2342052,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_10",
+      "meshUrl": "chicago/chunks/03_10.glb",
+      "sourceBounds": {
+        "min": [
+          -64.1313,
+          -0.1162,
+          191.919
+        ],
+        "max": [
+          -47.9615,
+          1.3056,
+          208.093
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 37963,
+      "faces": 21012,
+      "bytes": 2562508,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "03_11",
+      "meshUrl": "chicago/chunks/03_11.glb",
+      "sourceBounds": {
+        "min": [
+          -64.134,
+          -0.1162,
+          207.912
+        ],
+        "max": [
+          -47.9232,
+          0.5376,
+          223.507
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 26141,
+      "faces": 14053,
+      "bytes": 1836260,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_01",
+      "meshUrl": "chicago/chunks/04_01.glb",
+      "sourceBounds": {
+        "min": [
+          -48,
+          0.1152,
+          63.9744
+        ],
+        "max": [
+          -45.6192,
+          0.2686,
+          63.9746
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 32,
+      "faces": 16,
+      "bytes": 2996,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_02",
+      "meshUrl": "chicago/chunks/04_02.glb",
+      "sourceBounds": {
+        "min": [
+          -48.1566,
+          -0.1536,
+          63.9345
+        ],
+        "max": [
+          -38.1636,
+          0.5376,
+          80.262
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 8900,
+      "faces": 4734,
+      "bytes": 616084,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_03",
+      "meshUrl": "chicago/chunks/04_03.glb",
+      "sourceBounds": {
+        "min": [
+          -48.0045,
+          -0.1541,
+          79.9428
+        ],
+        "max": [
+          -36.8258,
+          1.152,
+          96.0768
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 25005,
+      "faces": 12815,
+      "bytes": 1738180,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_04",
+      "meshUrl": "chicago/chunks/04_04.glb",
+      "sourceBounds": {
+        "min": [
+          -48.0768,
+          -0.1541,
+          95.9187
+        ],
+        "max": [
+          -31.9503,
+          0.5376,
+          112.056
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 43581,
+      "faces": 24184,
+      "bytes": 3005572,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_05",
+      "meshUrl": "chicago/chunks/04_05.glb",
+      "sourceBounds": {
+        "min": [
+          -45.696,
+          -0.1536,
+          111.93
+        ],
+        "max": [
+          -36.5937,
+          0.5376,
+          128.03
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 23054,
+      "faces": 12801,
+      "bytes": 1587280,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_06",
+      "meshUrl": "chicago/chunks/04_06.glb",
+      "sourceBounds": {
+        "min": [
+          -48.0399,
+          -0.1541,
+          127.949
+        ],
+        "max": [
+          -31.8889,
+          0.5376,
+          144.038
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 37713,
+      "faces": 20808,
+      "bytes": 2547412,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_07",
+      "meshUrl": "chicago/chunks/04_07.glb",
+      "sourceBounds": {
+        "min": [
+          -48.0414,
+          -0.1152,
+          143.539
+        ],
+        "max": [
+          -31.872,
+          1.3056,
+          160.085
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 51800,
+      "faces": 29903,
+      "bytes": 3538252,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_08",
+      "meshUrl": "chicago/chunks/04_08.glb",
+      "sourceBounds": {
+        "min": [
+          -48.1344,
+          -0.1152,
+          159.935
+        ],
+        "max": [
+          -31.7184,
+          1.3056,
+          176.3
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 33528,
+      "faces": 19351,
+      "bytes": 2298536,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_09",
+      "meshUrl": "chicago/chunks/04_09.glb",
+      "sourceBounds": {
+        "min": [
+          -48.0768,
+          -0.1137,
+          175.904
+        ],
+        "max": [
+          -32.4465,
+          1.3056,
+          192.236
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 13179,
+      "faces": 6793,
+      "bytes": 949576,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_10",
+      "meshUrl": "chicago/chunks/04_10.glb",
+      "sourceBounds": {
+        "min": [
+          -48.0783,
+          -0.0005,
+          191.906
+        ],
+        "max": [
+          -34.9488,
+          1.152,
+          208.057
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 29841,
+      "faces": 15749,
+      "bytes": 2097588,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "04_11",
+      "meshUrl": "chicago/chunks/04_11.glb",
+      "sourceBounds": {
+        "min": [
+          -48.0768,
+          -0.0008,
+          207.935
+        ],
+        "max": [
+          -35.5584,
+          0.8064,
+          223.046
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 44157,
+      "faces": 24256,
+      "bytes": 3069480,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "05_04",
+      "meshUrl": "chicago/chunks/05_04.glb",
+      "sourceBounds": {
+        "min": [
+          -32.0655,
+          0,
+          96.0369
+        ],
+        "max": [
+          -30.2978,
+          0.528,
+          106.562
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 4610,
+      "faces": 2463,
+      "bytes": 310436,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "05_06",
+      "meshUrl": "chicago/chunks/05_06.glb",
+      "sourceBounds": {
+        "min": [
+          -32.1011,
+          -0.1543,
+          131.264
+        ],
+        "max": [
+          -24.9924,
+          0.5376,
+          144.038
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 12084,
+      "faces": 6721,
+      "bytes": 809332,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "05_07",
+      "meshUrl": "chicago/chunks/05_07.glb",
+      "sourceBounds": {
+        "min": [
+          -32.0642,
+          -0.1152,
+          143.956
+        ],
+        "max": [
+          -15.9146,
+          0.5376,
+          160.089
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 32313,
+      "faces": 16961,
+      "bytes": 2209460,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "05_08",
+      "meshUrl": "chicago/chunks/05_08.glb",
+      "sourceBounds": {
+        "min": [
+          -32.0882,
+          -0.1152,
+          159.908
+        ],
+        "max": [
+          -15.9868,
+          0.5376,
+          173.837
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 27149,
+      "faces": 14505,
+      "bytes": 1877540,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "06_07",
+      "meshUrl": "chicago/chunks/06_07.glb",
+      "sourceBounds": {
+        "min": [
+          -16.0775,
+          -0.0002,
+          147.61
+        ],
+        "max": [
+          -9.7521,
+          1.075,
+          160.057
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 25217,
+      "faces": 14484,
+      "bytes": 1727704,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    },
+    {
+      "id": "06_08",
+      "meshUrl": "chicago/chunks/06_08.glb",
+      "sourceBounds": {
+        "min": [
+          -16.0557,
+          -0.0003,
+          159.968
+        ],
+        "max": [
+          -12.3264,
+          0.384,
+          172.307
+        ]
+      },
+      "visualSource": "manifest-listed",
+      "triangles": 16415,
+      "faces": 9490,
+      "bytes": 1094588,
+      "gameplayPlacement": "not-calibrated-to-undercover",
+      "drivingFloor": "not-certified",
+      "collisions": "not-certified",
+      "water": "not-certified",
+      "trafficSigns": "not-certified",
+      "trafficAI": "not-certified",
+      "pedestrians": "not-certified",
+      "missions": "not-certified",
+      "humanPlaytestE4": "not-run",
+      "physicalDeviceE5": "not-run"
+    }
+  ]
+}
