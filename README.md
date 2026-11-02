@@ -6,7 +6,7 @@ Recriação experimental de Driver 2 para navegador, baseada em Three.js. O proj
 
 ## R70 — Chicago: pontes levadiças e alturas das estradas (02/11/2026)
 
-Corrigi a navegação da segunda ponte levadiça, na parte leste de Chicago. Agora **as pontes central e leste fecham suas rotas de IA quando são levantadas**, inclusive em trechos curtos, e voltam a conectar quando baixam. A ponte fixa do canal oeste não é afetada. Também acrescentei uma verificação do nível físico das faixas e rampas, impedindo ligações do trânsito entre pisos separados por degraus ou viadutos sem acesso. O teste usa a altura física dos veículos, não a plataforma pedonal elevada do trem. Mantém missões, saves, trânsito GLB, policiamento e as outras cidades.
+Corrigi a navegação da segunda ponte levadiça, na parte leste de Chicago. Agora **as pontes central e leste fecham suas rotas de IA quando são levantadas**, inclusive em trechos curtos, e voltam a conectar **somente quando a animação do tabuleiro chegar a menos de 8°**. A ponte fixa do canal oeste não é afetada. Também acrescentei uma verificação do nível físico das faixas e rampas, impedindo ligações do trânsito entre pisos separados por degraus ou viadutos sem acesso. O teste usa a altura física dos veículos, não a plataforma pedonal elevada do trem. Mantém missões, saves, trânsito GLB, policiamento e as outras cidades.
 
 Testes automatizados Node e Chromium: execução exigida antes de certificar a sprint. A Chicago ainda é uma reconstrução adaptada; MAP-05/MAP-08, oito missões humanas e FPS no Android continuam em aberto.
 
