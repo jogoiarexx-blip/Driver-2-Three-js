@@ -133,9 +133,19 @@ const fs=require('node:fs');fs.mkdirSync('qa-artifacts',{recursive:true});
   assert.equal(report.wholePS1MapCertified,false);
   assert.equal(report.missionsMigrated,false);
   assert.equal(errors.length,0,errors.join('\n'));
-  const canvas=await page.evaluate(()=>document.getElementById(
-   window.DriverGame.radarCanvas.id)?.id||null);
-  if(canvas)await page.locator('#'+canvas).screenshot({
-   path:'qa-artifacts/chicago-r22-radar.png'});
+  // R74 QA reliability: a constantly animated canvas never becomes
+  // "stable" for locator.screenshot() and can time out after a successful drive.
+  // Export actual radar pixels in-page without scrolling or waiting for CSS.
+  const radarPng=await page.evaluate(()=>{
+   const canvas=window.DriverGame?.radarCanvas;
+   return canvas instanceof HTMLCanvasElement?
+    canvas.toDataURL('image/png'):null;
+  });
+  assert(radarPng?.startsWith('data:image/png;base64,'),
+   'radar canvas image must be captured');
+  const png=Buffer.from(radarPng.slice('data:image/png;base64,'.length),'base64');
+  assert.equal(png.subarray(0,8).toString('hex'),
+   '89504e470d0a1a0a','radar screenshot should be PNG');
+  fs.writeFileSync('qa-artifacts/chicago-r22-radar.png',png);
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
