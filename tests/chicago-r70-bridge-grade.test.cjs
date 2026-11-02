@@ -34,6 +34,25 @@ test('R70: opening Chicago bridge closes BOTH raised bascules, not only downtown
     assert.equal(Nav.bridgeClosed(c,{x:160,z:0},{x:160,z:80}),false,
         'unrelated corridor may be checked by water/physics, not falsely closed');
 });
+test('R70: lowering command waits for real deck angle before AI can reopen',()=>{
+    const c=city({bridgeRaised:true,bridgeAngle:38*Math.PI/180});
+    const raised=Nav.compile(c);
+    assert.equal(raised.stamp,true);
+    assert.equal(Nav.bridgeAccessClosed(c),true);
+    c.bridgeRaised=false; // operator requested closing, leaves still high
+    c.bridgeAngle=25*Math.PI/180;
+    const rotating=Nav.compile(c);
+    assert.equal(rotating,raised,'do not rebuild/cross while bascule still raised');
+    assert.equal(Nav.clear(c,{x:240,z:0},{x:240,z:80}),false);
+    c.bridgeAngle=9*Math.PI/180;
+    assert.equal(Nav.bridgeAccessClosed(c),true);
+    c.bridgeAngle=7*Math.PI/180;
+    const safe=Nav.compile(c);
+    assert.notEqual(safe,raised,'rebuild as soon as physical deck is sufficiently flat');
+    assert.equal(safe.stamp,false);
+    assert(safe.adj.get('240,0').some(e=>e.key==='240,80'));
+    assert.equal(Nav.clear(c,{x:0,z:0},{x:0,z:80}),true);
+});
 test('R70: grade check rejects abrupt overpass cliffs even when XZ is dry',()=>{
     const c=city({getGroundHeightAt:(x,z,_ref,forVehicle)=>{
         assert.equal(forVehicle,true);
