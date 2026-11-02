@@ -11,7 +11,7 @@ O [playtest automatizado P0](docs/QA-PLAYTEST-P0-R60.md) dirige com W/D, sai do 
 ## R66 — Caminhonetes, moto e van circulam no trânsito (02/11/2026)
 
 - As **duas caminhonetes, a van rústica e a moto** do catálogo GLB aparecem como quatro veículos civis que **dirigem sozinhos** nas quatro cidades, em vez de estacionados junto à avenida inicial. O ônibus e os carros civis existentes continuam circulando; nenhum veículo adicional é marcado como secreto.
-- O spawn testa água, edifícios, passagem dirigível nos 18 metros seguintes e distância da frota para escolher faixas iniciais seguras. Se nenhum dos pontos alternativos for válido, o carro não nasce atravessando água ou construções.
+- As três vagas móveis adicionais usam faixas verificadas (água, prédios, 18 metros de passagem e distância dos outros veículos). A van reutiliza a vaga original do caminhão civil, sem aumentar o tamanho da frota nem deslocar os índices usados pelos saves antigos.
 - **Um único carro secreto por cidade carregada:** permanece o veículo especial da garagem. Jones e a van de emboscada ficam parados por `missionParked`, mas **não são carros secretos**. O bônus do estádio Wrigley continua na vaga original, também sem `isSecret`. Assim a missão não perde seus personagens nem é confundida com o desbloqueável.
 - Tanner pode roubar e guardar os veículos normais; a garagem agora reconhece a identidade `cargo-van` para restaurar seu modelo GLB. Colisões, física, polícia e saves continuam independentes dos visuais.
 - Testes: `tests/uploaded-vehicles.test.cjs` e `tests/uploaded-traffic-r66.test.cjs` mais a suíte completa de lógica. Evidências E2/E3/E5 a registrar após a execução; esta descrição não equivale à certificação visual.
