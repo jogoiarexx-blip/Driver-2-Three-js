@@ -62,7 +62,13 @@ const report={date:new Date().toISOString(),status:'STARTED',pageErrors:[],
        {x,z:0},{x,z:80}));
    const partial=[0,240].map(x=>nav.bridgeClosed(city,
        {x,z:40},{x,z:80}));
-   city.bridgeRaised=false;city.bridgeAngle=.08;
+   // The user has asked the bridges to lower, but they still sit at
+   // ~25°. They must remain blocked until their physical animation ends.
+   city.bridgeRaised=false;city.bridgeAngle=25*Math.PI/180;
+   const stillRotating=nav.compile(city);
+   const loweredButUnsafe=stillRotating===raised&&
+       nav.bridgeClosed(city,{x:240,z:0},{x:240,z:80});
+   city.bridgeAngle=.08;
    const reopened=nav.compile(city);
    const eastReopened=!!reopened.adj.get('240,0')?.some(
        e=>e.key==='240,80');
@@ -74,7 +80,8 @@ const report={date:new Date().toISOString(),status:'STARTED',pageErrors:[],
    game.camera.updateProjectionMatrix();
    game.renderer.render(game.scene,game.camera);
    return {crossings,eastOpen,centralOpen,eastClosed,centralClosed,
-       eastReopened,centralReopened,fixed,fixedRaised,mask,partial,
+       eastReopened,centralReopened,loweredButUnsafe,
+       fixed,fixedRaised,mask,partial,
        graphChanged:raised!==open&&reopened!==raised,
        carCount,secretCount,colliderCount,
        sourceCorridors:open.sourceCorridors,graphEdges:open.edges};
@@ -85,6 +92,8 @@ const report={date:new Date().toISOString(),status:'STARTED',pageErrors:[],
    'not driveable when lowered: '+JSON.stringify(checked.crossings));
   assert(checked.eastOpen&&checked.centralOpen,'lowered deck missing from graph');
   assert(checked.eastClosed&&checked.centralClosed,'raised deck still connected');
+  assert(checked.loweredButUnsafe,
+   'traffic reopened before the lowering animation was safe');
   assert(checked.eastReopened&&checked.centralReopened,'bridge not reconnected');
   assert(checked.fixed.passable&&checked.fixed.dryAtDeck&&checked.fixedRaised,
    'fixed west river bridge incorrectly closed or flooded');
