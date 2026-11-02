@@ -11,12 +11,62 @@ class DriverChicagoMixedNavigationR49 {
     static STEP=80;
     static key(p){return Math.round(p.x*2)/2+','+Math.round(p.z*2)/2;}
     static distance(a,b){return Math.hypot(a.x-b.x,a.z-b.z);}
+    // R70: ambos os tabuleiros basculantes da Chicago (x=0 e x=240)
+    // sobem ao mesmo tempo. Antes só o central era removido do grafo e
+    // a IA tentava atravessar a folha leste enquanto estava aberta.
+    // A interseção é geométrica: rejeita inclusive arestas curtas, se
+    // atravessarem parte do tabuleiro; pontes R2 fixas seguem abertas.
+    static segmentTouchesBox(a,b,minX,maxX,minZ,maxZ){
+        if(![a?.x,a?.z,b?.x,b?.z,minX,maxX,minZ,maxZ]
+            .every(Number.isFinite))return false;
+        let low=0,high=1;
+        for(const [from,delta,min,max] of [
+            [a.x,b.x-a.x,minX,maxX],
+            [a.z,b.z-a.z,minZ,maxZ]
+        ]){
+            if(Math.abs(delta)<1e-9){
+                if(from<min||from>max)return false;
+                continue;
+            }
+            let t0=(min-from)/delta,t1=(max-from)/delta;
+            if(t0>t1)[t0,t1]=[t1,t0];
+            low=Math.max(low,t0);high=Math.min(high,t1);
+            if(low>high)return false;
+        }
+        return true;
+    }
     static bridgeClosed(city,a,b){
         if(!city?.bridgeRaised)return false;
-        // Only the original central movable bridge; the fixed eastern
-        // crossing must not be closed by this switch.
-        return Math.max(Math.abs(a.x),Math.abs(b.x))<13 &&
-            Math.min(a.z,b.z)<35 && Math.max(a.z,b.z)>65;
+        return [0,240].some(x=>this.segmentTouchesBox(
+            a,b,x-10.25,x+10.25,34,66));
+    }
+    // R70: a altura do tabuleiro e da rampa deve variar
+    // continuamente para que uma aresta entre no grafo. A verificação
+    // por (x,z) sozinha aceitava saltos verticais e falsos acessos.
+    // Só consulta o piso da SUSPENSÃO; a estação ferroviária pedonal
+    // não deve prender carros na altura da plataforma de 11,3 m.
+    static gradeClear(city,a,b,offsets=true,offsetWidth=4){
+        if(typeof city?.getGroundHeightAt!=='function')return true;
+        const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);
+        if(!Number.isFinite(length)||length<.01)return false;
+        const steps=Math.max(1,Math.ceil(length/2));
+        const nx=-dz/length,nz=dx/length;
+        for(const offset of offsets?[0,-offsetWidth,offsetWidth]:[0]){
+            let prev=null;
+            for(let i=0;i<=steps;i++){
+                const t=i/steps;
+                const x=a.x+dx*t+nx*offset,z=a.z+dz*t+nz*offset;
+                const height=city.getGroundHeightAt(x,z,null,true);
+                if(!Number.isFinite(height))return false;
+                // Subida de até ~55% é permitida; degrau de 2m/3m
+                // em um passo de até 2m é um falso piso, não uma rampa.
+                if(prev!==null &&
+                    Math.abs(height-prev)>.35+(length/steps)*.55)
+                    return false;
+                prev=height;
+            }
+        }
+        return true;
     }
     static clear(city,a,b,offsets=true,offsetWidth=4){
         if(!a||!b||this.bridgeClosed(city,a,b))return false;
@@ -40,7 +90,7 @@ class DriverChicagoMixedNavigationR49 {
                 {x:a.x+nx*offset,z:a.z+nz*offset},
                 {x:b.x+nx*offset,z:b.z+nz*offset}))return false;
         }
-        return true;
+        return this.gradeClear(city,a,b,offsets,offsetWidth);
     }
     static compile(city){
         if(city?.preset?.id!=='chicago')return null;
