@@ -76,15 +76,22 @@
 
             async loadCityPresetProgressive(presetKey, onProgress=()=>{}) {
                 this.resetCityForPreset(presetKey);
+                const generation=this.buildSequence;
                 const total=12; // infraestrutura, canal, nove fileiras, detalhes
                 let done=0;
                 for(const stage of this.buildEnvironmentStages()){
+                    // A cidade pode ser substituída por outra enquanto aguarda
+                    // requestAnimationFrame. Nunca continuar a geração antiga.
+                    if(this.buildSequence!==generation)return false;
                     done++;
                     onProgress(Math.min(1,done/total),stage);
                     await new Promise(resolve=>requestAnimationFrame(resolve));
+                    if(this.buildSequence!==generation)return false;
                 }
+                if(this.buildSequence!==generation)return false;
                 this.ready=true;
                 onProgress(1,'Cidade construída com sucesso');
+                return true;
             }
 
             resetCityForPreset(presetKey) {
@@ -93,27 +100,34 @@
                 if(typeof DriverChicagoSourceWorld!=='undefined')DriverChicagoSourceWorld.apply(this);
                 this.buildSequence++;
 
-                // Libera recursos WebGL da cidade anterior: sem vazar memória ao alternar cidades.
-                const geometries = new Set();
-                const materials = new Set();
-                const textures = new Set();
-                this.cityGroup.traverse(obj => {
-                    // Não destrua geometrias compartilhadas com o cache de modelos CC0.
-                    if (obj.userData && obj.userData.cc0SharedAsset) return;
-                    if (obj.geometry) geometries.add(obj.geometry);
-                    if (obj.material) {
-                        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-                        mats.forEach(mat => materials.add(mat));
-                    }
-                });
-                materials.forEach(mat => {
-                    Object.values(mat).forEach(value => {
-                        if (value && value.isTexture) textures.add(value);
-                    });
-                });
-                textures.forEach(texture => texture.dispose());
-                materials.forEach(material => material.dispose());
-                geometries.forEach(geometry => geometry.dispose());
+                // O root de um GLB (barco, decorações) pode ser compartilhado
+                // mesmo se seus filhos não tiverem a flag. traverse() visita
+                // os filhos após "return" e destruía texturas do cache.
+                // Usar o descarte por subárvore, com herança de propriedade.
+                if(typeof GPUResourceUtils!=='undefined'){
+                    GPUResourceUtils.disposeSubtree(this.cityGroup);
+                }else{
+                    // Fallback para harnesses isolados sem GPUResourceUtils.
+                    const geometries=new Set(),materials=new Set(),textures=new Set();
+                    const visit=(node,sharedParent=false)=>{
+                        const shared=sharedParent||
+                            node.userData?.cc0SharedAsset===true;
+                        if(!shared&&node.geometry)geometries.add(node.geometry);
+                        const mats=node.material?(Array.isArray(node.material)?
+                            node.material:[node.material]):[];
+                        if(!shared)for(const mat of mats){
+                            if(!mat)continue;
+                            materials.add(mat);
+                            for(const value of Object.values(mat))
+                                if(value?.isTexture)textures.add(value);
+                        }
+                        for(const child of node.children||[])visit(child,shared);
+                    };
+                    visit(this.cityGroup);
+                    textures.forEach(t=>t.dispose());
+                    materials.forEach(m=>m.dispose());
+                    geometries.forEach(g=>g.dispose());
+                }
                 this.cityGroup.clear();
                 if(typeof DriverChicagoWaterR50!=='undefined')
                     DriverChicagoWaterR50.reset();
