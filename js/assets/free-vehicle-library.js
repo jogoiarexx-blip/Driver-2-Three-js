@@ -310,7 +310,6 @@ class FreeVehicleAssets {
 
     decorateFleet() {
         if(!this.enabled)return;
-        this.uploaded?.attachBoat();
         for(const vehicle of this.engine.vehicles){
             if(!this.isLive(vehicle) || vehicle._userCustomModel ||
                 vehicle._cc0ModelApplied)continue;
@@ -334,6 +333,9 @@ class FreeVehicleAssets {
                 });
             }else this.decorateStandard(vehicle);
         }
+        // O barco decorativo fica por último na fila de downloads, para
+        // não atrasar os modelos dos veículos que participam da direção.
+        this.uploaded?.attachBoat();
         this.updateStatus();
     }
 
