@@ -1,6 +1,6 @@
 ## Operação atual — R65 (02/11/2026)
 
-A frota automática de Chicago, Havana, Las Vegas e Rio agora utiliza apenas os GLBs locais de `assets/vehicles/`: `carro_driver2_otimizado.glb`, `car police.glb`, `caminhonete-nova-otimizada.glb`, `caminhonete velha.glb`, `onibus escolar.glb` e `moto-otimizada.glb`. Os carros Kenney abaixo permanecem creditados como referência histórica e para importação manual, mas **não são mais baixados automaticamente pelo jogo**.
+A frota automática de Chicago, Havana, Las Vegas e Rio agora utiliza apenas os GLBs locais de `assets/vehicles/`: `carro_driver2_otimizado.glb`, `car police.glb`, `caminhonete-nova-otimizada.glb`, `caminhonete velha.glb`, `Van_Rustica_Otimizada_23MB.glb`, `onibus escolar.glb` e `moto-otimizada.glb`. Os carros Kenney abaixo permanecem creditados como referência histórica e para importação manual, mas **não são mais baixados automaticamente pelo jogo**.
 
 # Assets gratuitos — origens e licenças
 
