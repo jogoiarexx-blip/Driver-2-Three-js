@@ -1,0 +1,57 @@
+name: Chicago R69 - drivable residential service streets
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-city-plan.js'
+      - 'js/traffic/chicago-mixed-navigation-r49.js'
+      - 'tests/chicago-r69*'
+      - '.github/workflows/chicago-r69.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-city-plan.js'
+      - 'js/traffic/chicago-mixed-navigation-r49.js'
+      - 'tests/chicago-r69*'
+permissions:
+  contents: read
+jobs:
+  chicago-street-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate scripts and physical road/AI edge tests
+        run: |
+          node --check js/world/chicago-city-plan.js
+          node --check js/traffic/chicago-mixed-navigation-r49.js
+          node --check tests/chicago-r69-browser.cjs
+          node --test tests/chicago-city-plan.test.cjs tests/chicago-r49-mixed-navigation.test.cjs tests/chicago-r69-courtyard-network.test.cjs
+      - name: Install Chromium browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start static site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/r69-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r69-http.log
+          exit 1
+      - name: Test Chicago streets, road graph and car routes
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r69-browser.cjs
+      - name: Upload screenshot and metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r69-residential-streets
+          path: |
+            qa-artifacts/chicago-r69-*
+          if-no-files-found: ignore

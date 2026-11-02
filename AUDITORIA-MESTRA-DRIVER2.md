@@ -6,6 +6,16 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R69 — Chicago: ruas residenciais efetivamente navegáveis (02/11/2026) — E1 implementado; QA E2/E3 em andamento
+
+**Problema antes:** `DriverChicagoCityPlan.buildCourtyardLinks()` já desenhava os becos entre casas residenciais com pequenas malhas triangulares, porém `DriverChicagoMixedNavigationR49.compile()` consumia somente ligações R48/R50/R52/R53/R57 e corredores da fonte PS1. O carro da IA via um beco desenhado mas nunca conseguia escolhê-lo para circular. A validação antiga verificava apenas a linha central, portanto podia estender o asfalto pela borda de canal/prédio.
+
+**Mudança:** R69 torna `courtyardLinks` a única fonte de verdade para pavimento e conectividade viária. Cada um dos becos é testado na linha central e nas duas bordas internas de sua largura real de 5,6 m, com espaçamento de no máximo 1,25 m, colisão, água e altura do piso real (sem degrau artificial). `buildCourtyardLinks` desenha apenas as faixas aprovadas, seguindo `getGroundHeightAt(...,forVehicle=true)`, e registra comprimento/quantidade no plano. O grafo R49 publica somente essas mesmas faixas e subdivide as avenidas de 80 m quando um beco encosta nelas, permitindo rotas bidirecionais a partir do quarteirão. O cache do grafo agora inclui o número de becos construídos, invalidando a topologia quando a malha muda. **Correção adicional de conectividade:** quatro becos da borda sul terminam fora da grade de navegação antiga (z≈-358), mas junto às avenidas físicas x=80/160/240 que continuam até z=-392. R69 cria, somente após verificação de largura, água, AABB e declividade, as ligações N/S desses pontos ao último cruzamento do grafo em z=-320. Não inventa rua transversal fora do tabuleiro nem mascara bloqueios reais.
+
+**Limites:** sistema aplicado apenas à Chicago Undercover adaptada; as ruas não são alegadas 1:1 do PS1 nem os becos aprovados certificam o mapa inteiro. Preserva objetivos de missão, saves, GLBs dos carros e a navegação das outras três cidades. Não cria colisores adicionais, água fictícia, transições elevadas ou atalhos novos somente no radar.
+
+**Evidências a completar:** `tests/chicago-r69-courtyard-network.test.cjs`, regressões `chicago-city-plan` e `chicago-r49-mixed-navigation`, suíte Node22/24, regressão física Chicago e navegador Chromium `tests/chicago-r69-browser.cjs` com contagem de becos efetivamente conectados, verificações de rotas e captura. MAP-05/MAP-07 seguem ABERTOS para os setores restantes, missões reais e validação E4/E5.
+
 ### R68 — Chicago: largura real dos acessos + telhados por lote (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
 **Objetivo:** avançar MAP-05 (piso e vias não fictícias), MAP-09 (ocupação e silhuetas de bairros) e VIS-09 sem alterar missões, tráfego de outras cidades ou índice de carros no save.

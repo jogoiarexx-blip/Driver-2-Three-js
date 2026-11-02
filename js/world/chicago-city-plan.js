@@ -151,20 +151,58 @@ class DriverChicagoCityPlan {
             report.lots++;
         }
     }
+    // R69: as casas residenciais já deixam um corredor central entre
+    // fachadas. Antes havia asfalto visual, mas a IA não tinha essas ruas
+    // no grafo R49; a largura total do asfalto não era validada.
+    static verifyCourtyard(city,link) {
+        if(!city||(city.preset&&city.preset.id!=='chicago')||
+            !link?.from||!link?.to||
+            !Number.isFinite(link.width)||link.width<3)return false;
+        const {from,to}=link,dx=to.x-from.x,dz=to.z-from.z;
+        const distance=Math.hypot(dx,dz);
+        if(!Number.isFinite(distance)||distance<3||distance>80)return false;
+        const nx=-dz/distance,nz=dx/distance;
+        // Em casas geminadas, as duas bordas têm recuo estreito; testar
+        // com clearance pequeno mas real, dentro dos 5,6 m de pavimento.
+        const half=link.width/2-.35,steps=Math.ceil(distance/1.25);
+        const ground=typeof city.getGroundHeightAt==='function'?
+            (x,z)=>city.getGroundHeightAt(x,z,null,true):null;
+        for(const offset of [0,-half,half]){
+            let lastY=null;
+            for(let i=0;i<=steps;i++){
+                const t=i/steps,x=from.x+dx*t+nx*offset,
+                    z=from.z+dz*t+nz*offset;
+                if(!Number.isFinite(x)||!Number.isFinite(z)||
+                    city.isWaterAt?.(x,z)||
+                    city.isPointBlocked?.(x,z,offset===0?1.55:.25,0))
+                    return false;
+                if(ground){
+                    const y=ground(x,z);
+                    if(!Number.isFinite(y)||
+                        (lastY!==null &&
+                         Math.abs(y-lastY)>.45+distance/steps*.5))
+                        return false;
+                    lastY=y;
+                }
+            }
+        }
+        return true;
+    }
     static courtyardLinks(city){
-        const links=[];
+        if(!city||(city.preset&&city.preset.id!=='chicago'))return [];
+        const links=[],seen=new Set();
         for(const block of city.chicagoCityPlan?.blocks||[]){
             if(block.kind!=='residential')continue;
             for(const sign of [-1,1]){
-                const from={x:block.x,z:block.z+2},to={x:block.x+sign*40,z:block.z+2};
-                let safe=true;
-                for(let step=0;step<=20;step++){
-                    const x=from.x+(to.x-from.x)*step/20,z=from.z;
-                    if(city.isWaterAt?.(x,z)||city.isPointBlocked?.(x,z,1.7,0)){
-                        safe=false;break;
-                    }
-                }
-                if(safe)links.push({from,to,width:5.6,district:block.district});
+                const from={x:block.x,z:block.z+2},
+                    to={x:block.x+sign*40,z:block.z+2};
+                const id='residential-'+block.x+'-'+block.z+'-'+
+                    (sign===1?'east':'west');
+                if(seen.has(id))continue;
+                const link={id,from,to,width:5.6,
+                    district:block.district};
+                if(!this.verifyCourtyard(city,link))continue;
+                seen.add(id);links.push(link);
             }
         }
         return links;
@@ -172,25 +210,47 @@ class DriverChicagoCityPlan {
     static buildCourtyardLinks(city){
         if(city?.preset?.id!=='chicago'||!city.chicagoCityPlan)return;
         const links=this.courtyardLinks(city),vertices=[];
-        // O asfalto segue o mesmo piso elevado consultado pela suspensão.
-        for(const link of links)for(let i=0;i<20;i++){
-            const ax=link.from.x+(link.to.x-link.from.x)*i/20;
-            const bx=link.from.x+(link.to.x-link.from.x)*(i+1)/20;
-            const z=link.from.z,h=link.width/2;
-            for(const [x,zz] of [[ax,z-h],[bx,z-h],[ax,z+h],
-                [bx,z-h],[bx,z+h],[ax,z+h]])
-                vertices.push(x,(city.getSidewalkHeightAt?.(x,zz)||0)+.018,zz);
+        // A superfície segue a mesma função consultada pelas rodas;
+        // o verificador impediu água, muros e degraus em ambas as bordas.
+        const height=(x,z)=>typeof city.getGroundHeightAt==='function'?
+            city.getGroundHeightAt(x,z,null,true):
+            (city.getSidewalkHeightAt?.(x,z)||0);
+        for(const link of links){
+            const {from,to,width}=link;
+            const dist=Math.hypot(to.x-from.x,to.z-from.z);
+            const nx=-(to.z-from.z)/dist*width/2,
+                nz=(to.x-from.x)/dist*width/2;
+            const segments=Math.max(1,Math.ceil(dist/2));
+            const vertex=(x,z)=>vertices.push(x,height(x,z)+.018,z);
+            for(let i=0;i<segments;i++){
+                const t=i/segments,u=(i+1)/segments,
+                    ax=from.x+(to.x-from.x)*t,
+                    az=from.z+(to.z-from.z)*t,
+                    bx=from.x+(to.x-from.x)*u,
+                    bz=from.z+(to.z-from.z)*u;
+                vertex(ax+nx,az+nz);vertex(bx+nx,bz+nz);
+                vertex(ax-nx,az-nz);
+                vertex(ax-nx,az-nz);vertex(bx+nx,bz+nz);
+                vertex(bx-nx,bz-nz);
+            }
         }
         if(vertices.length){
             const geo=new THREE.BufferGeometry();
-            geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+            geo.setAttribute('position',
+                new THREE.Float32BufferAttribute(vertices,3));
             geo.computeVertexNormals();
             const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({
                 color:0x454a4b,side:THREE.DoubleSide}));
-            mesh.name='chicago-r14-residential-service-lanes';
+            mesh.name='chicago-r69-drivable-residential-service-lanes';
+            mesh.userData.chicagoVisualOnly=true;
             city.cityGroup.add(mesh);
         }
+        // R49 lê EXATAMENTE os mesmos links usados para gerar as malhas:
+        // nenhum atalho de radar ou aresta sem superfície dirigível.
         city.chicagoCityPlan.courtyardLinks=links;
+        city.chicagoCityPlan.courtyardStreetSegments=links.length;
+        city.chicagoCityPlan.courtyardStreetMeters=links.reduce(
+            (n,l)=>n+Math.hypot(l.to.x-l.from.x,l.to.z-l.from.z),0);
     }
     // Telhados inclinados reais nas casas de Wrigleyville e Wicker Park e
     // coberturas industriais dente-de-serra em Goose Island. A planta usa
