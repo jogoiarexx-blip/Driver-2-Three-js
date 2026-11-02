@@ -36,7 +36,7 @@ class DriverChicagoMixedNavigationR49 {
         return true;
     }
     static bridgeClosed(city,a,b){
-        if(!city?.bridgeRaised)return false;
+        if(city?.preset?.id!=='chicago'||!city?.bridgeRaised)return false;
         return [0,240].some(x=>this.segmentTouchesBox(
             a,b,x-10.25,x+10.25,34,66));
     }
