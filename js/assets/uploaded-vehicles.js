@@ -3,6 +3,9 @@ class DriverUploadedVehicles {
     static DEFINITIONS={
         'pickup-new':{url:'./assets/vehicles/caminhonete-nova-otimizada.glb',name:'CAMINHONETE NOVA',bodyStyle:'truck',z:-38},
         'pickup-old':{url:'./assets/vehicles/caminhonete%20velha.glb',name:'CAMINHONETE ANTIGA',bodyStyle:'truck',z:-58},
+        // GLB de 23 MB adicionado ao repositório em 02/11. Usado somente nos
+        // furgões de entrega, reutilizando malha/texturas entre os clones.
+        'cargo-van':{url:'./assets/vehicles/Van_Rustica_Otimizada_23MB.glb',name:'FURGÃO DE ENTREGAS',bodyStyle:'truck'},
         motorcycle:{url:'./assets/vehicles/moto-otimizada.glb',name:'MOTO',bodyStyle:'motorcycle',z:-78},
         // Esse ônibus substitui o ônibus civil já existente, não cria outro.
         'school-bus':{url:'./assets/vehicles/onibus%20escolar.glb',
@@ -15,7 +18,7 @@ class DriverUploadedVehicles {
     }
     static spawn(engine){
         for(const [id,d] of Object.entries(this.DEFINITIONS)){
-            if(id==='boat'||id==='school-bus')continue;
+            if(id==='boat'||id==='school-bus'||id==='cargo-van')continue;
             const x=9,z=d.z;
             if(engine.city.isWaterAt(x,z)||engine.city.isPointBlocked(x,z,1.55))continue;
             if(engine.vehicles.some(v=>Math.hypot(v.x-x,v.z-z)<9))continue;
