@@ -662,7 +662,7 @@
                     DriverRoadSurface.buildCurbs(this,sidewalkPositions);
 
                 this.districtLOD=new DriverDistrictLOD({
-                    nearRadius:165,farRadius:230,maxSwitches:2
+                    nearRadius:290,farRadius:370,maxSwitches:8
                 });
                 this.districtBoxGeometry=new THREE.BoxGeometry(38,1,38);
                 this.districtFarMaterial=new THREE.MeshLambertMaterial({
