@@ -12,6 +12,18 @@ O manifesto, atlas e 54 GLBs já estão publicados nesta pasta do GitHub, direta
 
 **Aviso:** esta é uma visualização técnica, não substitui a cidade jogável nem define colisores, ruas e missões do PS1.
 
+## R73 — Sondagem de triângulos e largura transversal (sem criar pista)
+
+Antes de tentar transformar a aresta 3445 em rua dirigível, a R73 cruza triângulos realmente presentes nos GLBs originais `01_02` e `01_03` com a máscara de pavimentação R24. A cada trecho longitudinal de até 0,25 unidade OBJ, avalia cortes laterais com passo 0,1 (±0,8 OBJ), detectando lacunas, grama, água, desníveis e geometrias empilhadas. O arquivo de saída informa **largura simétrica contínua por seção**, não largura de uma pista de veículos homologada. Um corte com largura aparente grande ainda pode pertencer a calçada ou área aberta e não é integrado ao Undercover.
+
+Para reproduzir em checkout com os GLBs:
+```sh
+node --test tests/chicago-r73-triangle-width.test.cjs
+node tools/chicago-r73-triangle-width.cjs qa-artifacts/chicago-r73/triangle-width.json
+```
+
+O workflow [Chicago R73](../.github/workflows/chicago-r73.yml) salva o relatório com o SHA256 dos dois GLBs. Até homologar localização, escala, colisores, faixa, contínuo de rede e direção humana, **nenhuma alteração é feita no trânsito, na física, nas missões ou nos saves do jogo**.
+
 ## R72 — Primeiro corredor rastreável do original (aresta 3445)
 
 O arquivo [corridor-review-r72.json](corridor-review-r72.json) registra a primeira inspeção dirigida de uma conexão da rede original: nós **2560 → 2805**, tiles **01_02 / 01_03**, 16,375 unidades OBJ e evidência R28 sem interpolação de altura R29. No [visualizador original](../chicago-original-preview.html), use **Inspecionar corredor R72** para focar a câmera, exibir a linha dourada e os limites dos dois setores em azul; a classe de pavimento R24 é calculada das máscaras reais de material e mostrada junto dos avisos de não certificação.
