@@ -1,15 +1,14 @@
 
 /**
- * Assets 3D opcionais CC0, provenientes do Kenney Car Kit.
- * Cache único de glTF por tipo, com fallback integral para os carros procedurais.
- * Esta biblioteca não altera o modelo da física nem depende de um build JS.
+ * Frota 3D com arquivos GLB publicados neste repositório.
+ * Física e missões independentes do visual; templates em cache e clones leves.
+ * Nenhum modelo externo/CDN é utilizado para gerar veículos automaticamente.
  */
 class FreeVehicleAssets {
     constructor(engine) {
         this.engine = engine;
         this.enabled = true;
         this.cache = new Map();
-        this.baseUrl = 'https://cdn.jsdelivr.net/gh/Hidencod/tge-assets@7be9b573bc74f32ed766b44b3f46550d02ca83b5/packs/car-kit/';
         this.failed = new Set();
         this.userTemplate=null;
         this.userPromise=null;
@@ -25,38 +24,32 @@ class FreeVehicleAssets {
         this.updateButton();
     }
 
+    // Todas as categorias são mapeadas a modelos realmente hospedados no jogo.
+    // Não há mais download automático do Kenney Car Kit nem alternância PS1.
     getModelName(vehicle) {
-        if (vehicle.isPolice) return 'police.glb';
-        if (vehicle.isSecret) return 'race.glb';
-        if (vehicle === this.engine.playerCar) return 'sedan-sports.glb';
-        if (vehicle.bodyStyle === 'truck') return 'truck.glb';
-        // O ônibus escolar é carregado via DriverUploadedVehicles.
-        // Em ausência do GLB, sua própria malha física continua disponível.
-        if (vehicle.bodyStyle === 'bus' || vehicle.bodyStyle === 'limo') return null;
-        if (vehicle.name.includes('COUPE')) return 'hatchback-sports.glb';
-        return 'sedan.glb';
+        if(vehicle.isPolice)return 'police';
+        if(vehicle.uploadedModel)return vehicle.uploadedModel;
+        if(vehicle.bodyStyle==='bus')return 'school-bus';
+        if(vehicle.bodyStyle==='motorcycle')return 'motorcycle';
+        if(vehicle.bodyStyle==='truck'){
+            if(/FURGÃO|ENTREGAS|VAN/i.test(vehicle.name||''))return 'cargo-van';
+            // Distribuição estável: a mesma missão conserva a mesma caminhonete.
+            const seed=Math.abs(Math.round((vehicle.x||0)*13+
+                (vehicle.z||0)*7+(vehicle.name||'').length*11));
+            return seed%2?'pickup-old':'pickup-new';
+        }
+        // Até que uma limusine específica seja publicada, o carro do próprio
+        // repositório recebe proporções longas sem alterar o colisor físico.
+        return 'driver2';
     }
 
     getScene(filename) {
-        if (!this.cache.has(filename)) {
-            this.cache.set(filename, new Promise(resolve => {
-                if (!THREE.GLTFLoader) {
-                    this.failed.add(filename);
-                    resolve(null);
-                    return;
-                }
-                const loader = new THREE.GLTFLoader();
-                loader.load(this.baseUrl + filename,
-                    gltf => resolve(gltf.scene),
-                    undefined,
-                    () => {
-                        this.failed.add(filename);
-                        resolve(null);
-                    }
-                );
-            }));
-        }
-        return this.cache.get(filename);
+        if(filename==='driver2')return this.getUserTemplate();
+        if(filename==='police')return this.getPoliceTemplate();
+        if(this.uploaded && typeof DriverUploadedVehicles!=='undefined' &&
+            DriverUploadedVehicles.DEFINITIONS[filename])
+            return this.uploaded.getTemplate(filename);
+        return Promise.resolve(null);
     }
 
     getPoliceTemplate(){
@@ -106,8 +99,9 @@ class FreeVehicleAssets {
     }
 
     canUseDriver2Model(vehicle){
-        return vehicle && vehicle.bodyStyle==='muscle' &&
-            !vehicle.isPolice && !vehicle.isSecret && !vehicle.isTarget;
+        return !!vehicle && (vehicle.bodyStyle==='muscle' ||
+            vehicle.bodyStyle==='limo') && !vehicle.isPolice &&
+            !vehicle.uploadedModel;
     }
 
     static openStore(){
@@ -235,7 +229,10 @@ class FreeVehicleAssets {
         // Reimportação substitui inclusive carros que já receberam GLB,
         // sem duplicar a carroceria no chassi.
         for(const car of this.engine.vehicles)
-            if(car._userCustomModel)car._userCustomModel=false;
+            if(car._userCustomModel){
+                car._userCustomModel=false;
+                car._cc0ModelApplied=false;
+            }
         this.updateButton();
         this.decorateFleet();
         this.updateStatus();
@@ -266,101 +263,136 @@ class FreeVehicleAssets {
         return true;
     }
 
-    decorateFleet() {
-        if (!this.enabled) return;
-        this.uploaded?.attachBoat();
-        this.engine.vehicles.forEach(vehicle=>{
-            if(vehicle.uploadedModel&&this.uploaded){
-                this.uploaded.decorate(vehicle);
-            } else if(this.canUseDriver2Model(vehicle)){
-                this.getUserTemplate().then(template=>{
-                    if(template && this.enabled){
-                        if(!vehicle._userCustomModel &&
-                            this.applyDriver2Model(vehicle,template))
-                            this.updateStatus();
-                    }else this.decorateStandard(vehicle);
-                });
-            } else if(vehicle.isPolice){
-                this.getPoliceTemplate().then(template=>{
-                    if(template&&this.enabled &&
-                        this.engine.vehicles.includes(vehicle)&&
-                        !vehicle._policeCustomModel){
-                        this.applyPoliceModel(vehicle,template);
-                    }else if(!template)this.decorateStandard(vehicle);
-                });
-            } else this.decorateStandard(vehicle);
-        });
+    isLive(vehicle) {
+        return !!vehicle?.root?.parent &&
+            this.engine.vehicles.includes(vehicle) && this.enabled;
     }
 
-    decorateStandard(vehicle){
-        if(vehicle._userCustomModel || vehicle._cc0ModelApplied ||
-            vehicle._policeCustomModel || !this.enabled)return;
-        const filename=this.getModelName(vehicle);
-        if(!filename)return;
-        this.getScene(filename).then(template=>{
-            if(!template || !this.enabled || vehicle._userCustomModel ||
-                !this.engine.vehicles.includes(vehicle) || !vehicle.root.parent)return;
-            const scene=template.clone(true);
-            if(vehicle.applyCC0Model(scene)!==false &&
-                typeof DriverVehicleWheelRig!=='undefined')
-                vehicle.wheelRig=DriverVehicleWheelRig.mount(vehicle,scene);
+    // Alternativa LOCAL caso o arquivo específico não carregue. Em falha
+    // total, mantém a direção utilizável e avisa explicitamente na interface.
+    decorateRepositoryFallback(vehicle, failedId) {
+        if(!this.isLive(vehicle) || vehicle._cc0ModelApplied ||
+            vehicle._userCustomModel)return;
+        this.failed.add(failedId);
+        const alternative=failedId==='driver2'?'pickup-new':'driver2';
+        this.getScene(alternative).then(template=>{
+            if(!this.isLive(vehicle) || vehicle._cc0ModelApplied ||
+                vehicle._userCustomModel)return;
+            if(template){
+                if(alternative==='driver2')
+                    this.applyDriver2Model(vehicle,template);
+                else this.applyRepositoryModel(vehicle,template,alternative);
+            }else{
+                vehicle.showProceduralFallback?.();
+                vehicle._modelLoadFailed=true;
+            }
             this.updateStatus();
         });
     }
 
-    toggle() {
-        this.enabled = !this.enabled;
-        if (this.enabled) {
-            this.decorateFleet();
-        } else {
-            this.engine.vehicles.forEach(v => {
-                if (v._cc0ModelApplied){
-                    if(v.isPolice){
-                        if(typeof DriverPoliceDoorRig!=='undefined')
-                            DriverPoliceDoorRig.cancel(v);
-                        v.policeDoorRig=null;
-                        v._policeCustomModel=false;
-                        v._userCustomModel=false;
-                    }
-                    v.buildCarMesh();
-                }
-            });
+    applyRepositoryModel(vehicle,template,id) {
+        if(!template || !this.isLive(vehicle) || vehicle._userCustomModel ||
+            vehicle._cc0ModelApplied)return false;
+        const wrapped=new THREE.Group(),clone=template.clone(true);
+        clone.rotation.y=Math.PI/2;
+        wrapped.add(clone);
+        wrapped.updateMatrixWorld(true);
+        vehicle._repositoryModelPending=id;
+        const applied=vehicle.applyCC0Model(wrapped,true)!==false;
+        vehicle._repositoryModelPending=null;
+        if(!applied)return false;
+        vehicle._uploadedCustomModel=id;
+        vehicle._repositoryModelId=id;
+        vehicle._modelLoadFailed=false;
+        if(typeof DriverVehicleWheelRig!=='undefined')
+            vehicle.wheelRig=DriverVehicleWheelRig.mount(vehicle,wrapped);
+        return true;
+    }
+
+    decorateFleet() {
+        if(!this.enabled)return;
+        for(const vehicle of this.engine.vehicles){
+            if(!this.isLive(vehicle) || vehicle._userCustomModel ||
+                vehicle._cc0ModelApplied)continue;
+            if(vehicle.uploadedModel && this.uploaded){
+                this.uploaded.decorate(vehicle);
+            }else if(vehicle.isPolice){
+                this.getPoliceTemplate().then(template=>{
+                    if(!this.isLive(vehicle) || vehicle._userCustomModel ||
+                        vehicle._cc0ModelApplied)return;
+                    if(template)this.applyPoliceModel(vehicle,template);
+                    else this.decorateRepositoryFallback(vehicle,'police');
+                    this.updateStatus();
+                });
+            }else if(this.canUseDriver2Model(vehicle)){
+                this.getUserTemplate().then(template=>{
+                    if(!this.isLive(vehicle) || vehicle._userCustomModel ||
+                        vehicle._cc0ModelApplied)return;
+                    if(template)this.applyDriver2Model(vehicle,template);
+                    else this.decorateRepositoryFallback(vehicle,'driver2');
+                    this.updateStatus();
+                });
+            }else this.decorateStandard(vehicle);
         }
-        if(this.uploaded?.boat)this.uploaded.boat.visible=this.enabled;
+        // O barco decorativo fica por último na fila de downloads, para
+        // não atrasar os modelos dos veículos que participam da direção.
+        this.uploaded?.attachBoat();
+        this.updateStatus();
+    }
+
+    decorateStandard(vehicle) {
+        if(!this.isLive(vehicle) || vehicle._userCustomModel ||
+            vehicle._cc0ModelApplied)return;
+        const filename=this.getModelName(vehicle);
+        this.getScene(filename).then(template=>{
+            if(!this.isLive(vehicle) || vehicle._userCustomModel ||
+                vehicle._cc0ModelApplied)return;
+            if(template){
+                if(filename==='driver2')this.applyDriver2Model(vehicle,template);
+                else if(filename==='police')this.applyPoliceModel(vehicle,template);
+                else this.applyRepositoryModel(vehicle,template,filename);
+            }else this.decorateRepositoryFallback(vehicle,filename);
+            this.updateStatus();
+        });
+    }
+
+    // Tecla M e botão agora repetem downloads que falharam, sem reativar
+    // carros de caixas e sem apagar GLBs que já carregaram.
+    toggle() {
+        this.enabled=true;
+        this.failed.clear();
+        this.cache.clear();
+        this.engine.vehicles.forEach(vehicle=>{
+            if(vehicle._modelLoadFailed)vehicle._modelLoadFailed=false;
+        });
+        this.decorateFleet();
         this.updateButton();
         this.updateStatus();
     }
 
     updateButton() {
-        const button = document.getElementById('btn-free-assets');
-        if (!button) return;
-        button.textContent = this.enabled ? '🚘 3D GLB' : '🚘 PS1';
-        button.title = this.enabled ?
-            'Modelos GLB do GitHub e alternativas Kenney ativos (M para alternar)' :
-            'Malhas clássicas procedurais ativas (M para alternar)';
-        button.setAttribute('aria-pressed', this.enabled ? 'true' : 'false');
+        const button=document.getElementById('btn-free-assets');
+        if(!button)return;
+        button.textContent='🚘 GLB LOCAL';
+        button.title='Veículos 3D do repositório • clique ou M para tentar novamente modelos ausentes';
+        button.setAttribute('aria-pressed','true');
     }
 
     updateStatus() {
-        const el = document.getElementById('asset-loader-status');
-        if (!el) return;
-        const count = this.engine.vehicles.filter(v => v._cc0ModelApplied).length;
-        const custom=this.engine.vehicles.filter(v=>v._userCustomModel).length;
-        el.textContent = this.enabled ?
-            (custom>0?'Carro Driver 2 GLB ('+this.userModelSource+
-                '): '+custom+' veículos com pintura individual. ':
-                this.userModelSource==='unavailable'?
-                'GLB não disponível; carros alternativos ativos. ':
-                'Preparando carro_driver2_otimizado.glb… ')+
-            'Modelos 3D ativos: '+count+
-            ' • Veículos enviados: '+this.engine.vehicles.filter(v=>v._uploadedCustomModel).length+
-            (this.policeStatus==='github'?
-                ' • Viaturas GLB do usuário'+
-                (this.engine.vehicles.some(v=>v.policeDoorRig)?
-                    ' com portas móveis':'')+'.':
-                this.policeStatus==='missing'?
-                ' • car police.glb ausente: viaturas alternativas.':'')+
-            (this.failed.size?' • Alguns externos indisponíveis.':'') :
-            'Malhas PS1 procedurais ativas. Pressione M para ativar 3D.';
+        const el=document.getElementById('asset-loader-status');
+        if(!el)return;
+        const vehicles=this.engine.vehicles||[];
+        const loaded=vehicles.filter(v=>v._cc0ModelApplied).length;
+        const missing=vehicles.filter(v=>v._modelLoadFailed).length;
+        const waiting=Math.max(0,vehicles.length-loaded-missing);
+        const police=vehicles.filter(v=>v.isPolice && v._policeCustomModel).length;
+        el.textContent='GLB do repositório: '+loaded+'/'+vehicles.length+
+            ' veículos • polícia '+police+
+            ' • carregando '+waiting+
+            (missing?' • '+missing+' com modelo de emergência (falha de download).':'')+
+            (this.failed.size?' • Arquivos indisponíveis: '+[...this.failed].join(', '):'')+
+            ' • M: tentar novamente.';
     }
+
+
 }

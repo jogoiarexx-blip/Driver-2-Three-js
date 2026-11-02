@@ -137,9 +137,12 @@ test('GLB policial publicado no GitHub contém duas dobradiças reais e textura 
     assert.ok(json.nodes.find(n=>n.name==='police_left_door_hinge').children.length>0);
     assert.ok(json.nodes.find(n=>n.name==='police_right_door_hinge').children.length>0);
 });
-test('alternar PS1 e GLB reseta somente o rig policial sem travar restauração',()=>{
+test('R65 não alterna a viatura para caixas e preserva o rig das portas GLB',()=>{
     const lib=read('js/assets/free-vehicle-library.js');
-    assert.match(lib,/DriverPoliceDoorRig\.cancel\(v\)/);
-    assert.match(lib,/v\.policeDoorRig=null/);
-    assert.match(lib,/v\._policeCustomModel=false/);
+    assert.match(lib,/DriverPoliceDoorRig\.mount\(vehicle,wrapped\)/);
+    assert.match(lib,/vehicle\._policeCustomModel=true/);
+    assert.match(lib,/toggle\(\) \{/);
+    assert.match(lib,/this\.enabled=true/);
+    assert.doesNotMatch(lib,/v\.buildCarMesh\(\)/);
+    assert.match(lib,/this\.decorateFleet\(\)/);
 });

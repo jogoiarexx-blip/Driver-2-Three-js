@@ -121,6 +121,7 @@
                 if(this.bodyStyle==='motorcycle'){
                     this.buildMotorcycleMesh();
                     if(realRider)this.chassisTilt.add(realRider);
+                    this.hideProceduralBody();
                     return;
                 }
 
@@ -318,8 +319,23 @@
                 VehicleDamageFX.attach(this);
                 VehicleVisuals.setHeadlights(this, this.headlightsOn);
                 if(realRider)this.chassisTilt.add(realRider);
+                this.hideProceduralBody();
             }
 
+            // Carros procedurais não aparecem enquanto os GLBs locais carregam.
+            // Preservamos a física/colisão independente da carroceria visível.
+            hideProceduralBody(){
+                this.chassisTilt.visible=false;
+                for(const wheel of this.wheels)wheel.visible=false;
+            }
+
+            // Só usado em falha TOTAL dos modelos do repositório: o veículo
+            // nunca fica invisível e continua dirigível até novo download.
+            showProceduralFallback(){
+                if(this._cc0ModelApplied)return;
+                this.chassisTilt.visible=true;
+                for(const wheel of this.wheels)wheel.visible=true;
+            }
 
             buildMotorcycleMesh(){
                 this.chassisTilt.scale.set(1,1,1);this.hubcaps=0;
@@ -428,16 +444,19 @@
                 // Ajuste ao chassi físico, sem criar um segundo carro sobre o original.
                 const bike=this.bodyStyle==='motorcycle';
                 const bus=this.bodyStyle==='bus';
+                const limo=this.bodyStyle==='limo';
                 const width = bike?1.05:bus?2.72:2.45;
-                const length = bike?2.8:bus?8.00:this.bodyStyle === 'truck' ? 6.6 : 5.15;
-                const height = bike?1.5:bus?3.45:this.bodyStyle === 'truck' ? 3.3 : 2.05;
+                const length = bike?2.8:bus?8.00:limo?7.35:
+                    this.bodyStyle === 'truck' ? 6.6 : 5.15;
+                const height = bike?1.5:bus?3.45:
+                    this.bodyStyle === 'truck' ? 3.3 : 2.05;
                 // O GLB do ônibus enviado é mais curto nas proporções
                 // originais: encaixar largura, altura e comprimento no collider
                 // existente evita atravessar paredes ou rodas afundadas.
                 const scale = Math.min(width / size.x, length / size.z, height / size.y);
-                const sx=bus?width/size.x:scale;
+                const sx=bus?width/size.x:limo?Math.min(width/size.x,scale*1.08):scale;
                 const sy=bus?height/size.y:scale;
-                const sz=bus?length/size.z:scale;
+                const sz=(bus||limo)?length/size.z:scale;
                 const preserved = [this.sirenAssembly, this.targetMarker,
                     this.lightsGroup, this.damageGroup,
                     ...this.chassisTilt.children.filter(
@@ -461,10 +480,11 @@
                 this.rearBumperMesh=null;
                 this.chassisTilt.scale.set(1, 1, 1);
                 if(bus)modelScene.scale.set(sx,sy,sz);
+                else if(limo)modelScene.scale.set(sx,sy,sz);
                 else modelScene.scale.setScalar(scale);
                 modelScene.position.set(
                     -(box.min.x + box.max.x) * 0.5 * sx,
-                    (bike||this.uploadedModel?0.03:0.34) - box.min.y * sy,
+                    (bike||this.uploadedModel||this._repositoryModelPending?0.03:0.34) - box.min.y * sy,
                     -(box.min.z + box.max.z) * 0.5 * sz
                 );
                 modelScene.traverse(obj => {
@@ -475,6 +495,7 @@
                     }
                 });
                 this.chassisTilt.add(modelScene);
+                this.chassisTilt.visible=true;
                 this.hoodPivot = null;
                 this.trunkPivot = null;
                 this._cc0ModelApplied = shared;

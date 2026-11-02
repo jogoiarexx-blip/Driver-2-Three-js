@@ -8,6 +8,13 @@ Recriação experimental de Driver 2 para navegador, baseada em Three.js. O proj
 
 O [playtest automatizado P0](docs/QA-PLAYTEST-P0-R60.md) dirige com W/D, sai do veículo com E, caminha com W e valida saves reais após recarregar. Inclui correção da antiga limitação de 32 carros e restauração de Wrigley após carregamento progressivo. Evidência: [8 etapas Chromium aprovadas](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823989), [944/944 Node 22/24](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41261823994). A certificação humana de campanha e Android continua pendente.
 
+## R65 — Frota inteira usando GLBs do repositório (02/11/2026)
+
+- Todos os veículos automáticos das quatro cidades utilizam **modelos .glb locais**, sem downloads automáticos de carros Kenney via CDN. Os carros comuns, secretos, de missão e limusines compartilham o modelo `carro_driver2_otimizado.glb` com pintura por instância; policiais usam `car police.glb`. Caminhões usam as duas caminhonetes locais; furgões de entrega de Chicago usam também o novo `Van_Rustica_Otimizada_23MB.glb` (23 MB, cache compartilhado), ônibus usa `onibus escolar.glb` e motos usam `moto-otimizada.glb`.
+- As carrocerias procedurais não ficam visíveis durante o carregamento. A tecla **M** e o botão **GLB LOCAL** agora tentam novamente arquivos ausentes, em vez de reativar o modo de carros PS1. Em falha total dos GLBs, uma carroceria de emergência permanece possível para não deixar o veículo invisível e sem referência para direção.
+- Física, colisões, IA, missões, garagens e saves mantêm seus contratos. A limusine adapta visualmente o GLB local ao comprimento do colisor existente; será necessário fornecer um GLB próprio para ter geometria exclusiva de limusine.
+- Validação automática: `tests/repository-vehicle-fleet-r65.test.cjs` e suíte em `qa.yml` (resultado a confirmar no GitHub Actions). Inspeção visual em navegador, mobile e uso prolongado **não certificados** neste commit.
+
 ## Executar
 
 Abra a página publicada em **https://jogoiarexx-blip.github.io/Driver-2-Three-js/**.
@@ -44,7 +51,7 @@ O arquivo HTML antigo redireciona para `index.html`. A refatoração preserva a 
 
 - Direção esquerda/direita corrigida para o referencial do mundo, volante com suavização e esterço reduzido em velocidades altas.
 - Colisões entre carros usam velocidade de aproximação real, inclusive nas batidas frontais, com intervalo anti-dano repetitivo.
-- Veículos 3D da **Kenney Car Kit** (CC0), baixados sob demanda do CDN jsDelivr. O modelo procedural original permanece disponível, como fallback automático ou manual pelo botão **3D CC0 / PS1** ou tecla **M**.
+- Histórico: a frota usava Kenney Car Kit via CDN. A revisão R65 troca essa operação automática por GLBs locais; **M** tenta novamente modelos não carregados.
 - Ônibus e limusine continuam com os modelos originais, já que o pack selecionado não possui substitutos equivalentes.
 - A funcionalidade de importação manual de GLB é preservada e tem prioridade sobre o pack automático.
 
