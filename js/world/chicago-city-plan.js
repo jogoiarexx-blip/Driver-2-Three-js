@@ -208,7 +208,7 @@ class DriverChicagoCityPlan {
             const r=this.random(x,z,88);
             const industrial=b.kind==='industrial';
             const strips=industrial&&w>=14?2:1;
-            const rise=industrial?.65+r*.40:1.65+r*1.25;
+            const rise=industrial ? .65+r*.40 : 1.65+r*1.25;
             const palette=industrial?
                 [0x5d6970,0x646d6c,0x777775,0x4a5963]:
                 [0x685553,0x805d56,0x545963,0x7c6256];
