@@ -6,6 +6,16 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R74 — Chicago: investigar a lacuna de triângulos da fonte PS1 e eliminar timeout do QA R22 (02/11/2026) — E1; validação CI
+
+**Problema reproduzido ANTES:** a R73 retornou 67 cortes com largura simétrica zero no corredor 3445; a amostra -0,1 OBJ parecia pavimentada na máscara R24, porém não tinha triângulo elegível pelo filtro UV+inclinação R26. A causa não podia ser inferida como buraco no asfalto, pois a R73 excluía materiais e alturas antes do teste de interseção. Paralelamente, o [smoke das 4 cidades na R73](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41527351437) falhou em `tests/chicago-r22-source-street-browser.cjs:138`: **condução física e radar aprovados**, mas `locator.screenshot()` esperou estabilizar um canvas animado até timeout.
+
+**Correção diagnóstica:** `tools/chicago-r74-source-seam.cjs` lê os mesmos GLBs SHA256 fixados da R73, produz quatro índices separados de triângulos da fonte (todos, filtro geométrico/altura, UV de pavimento e interseção altura+UV), consulta máscara R24 e classifica cada offset em: geometria ausente, rejeição de altura, rejeição por UV, pavimentação R24 ausente, água/grama, alturas empilhadas ou match não certificado. Inspeciona pontos em torno de -0,1 OBJ com deslocamentos ±0,01/0,02 **apenas para diagnóstico**, sem preencher buraco por interpolação ou alterar rua. Cada uma das 67 seções e seu motivo ficam no artefato `qa-artifacts/chicago-r74/seam-diagnostic.json`. **Não habilitar pista, colisores, IA, missões ou saves.**
+
+**Correção QA isolada:** `tests/chicago-r22-source-street-browser.cjs` passa a capturar pixels PNG diretamente de `HTMLCanvasElement.toDataURL` e validar a assinatura PNG, sem o `locator.screenshot` dependente de estabilidade/scroll. Não muda a renderização do jogo nem a lógica dos testes físicos.
+
+**Gates E2/E3:** `node --test tests/chicago-r74-source-seam.test.cjs tests/chicago-r73-triangle-width.test.cjs`, workflow `.github/workflows/chicago-r74.yml` sobre os GLBs reais e smoke das quatro cidades com captura R22. **Pendente:** resultado observado de cada categoria e aprovação do smoke; E4/E5 de direção humana/posição original continuam em aberto.
+
 ### R73 — Chicago: levantamento por triângulos de largura do corredor PS1 3445 (02/11/2026) — E1; QA no CI
 
 **Escopo MAP-06/MAP-08:** a auditoria R72 encontrou asfalto no centro da aresta 3445, mas margem externa sem pavimento e grama significativa. R73 introduz `tools/chicago-r73-triangle-width.cjs` para ler **somente** os GLBs originais `01_02` e `01_03`, preservar contagens e SHA256, procurar os **triângulos de pavimento compatíveis com a geometria R26**, e amostrar cortes da faixa de ±0,8 OBJ a cada 0,1 OBJ ao longo do corredor (passo longitudinal ≤0,25 OBJ). O teste em triângulos usa baricêntricas X/Z, compara máscara R24 e bloqueia descontinuidade de superfície, empilhamento de alturas (>0,045 OBJ), salto transversal (>0,06 OBJ), grama, água e ausência de textura de pavimento.
