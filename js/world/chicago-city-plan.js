@@ -192,6 +192,83 @@ class DriverChicagoCityPlan {
         }
         city.chicagoCityPlan.courtyardLinks=links;
     }
+    // Telhados inclinados reais nas casas de Wrigleyville e Wicker Park e
+    // coberturas industriais dente-de-serra em Goose Island. A planta usa
+    // exatamente as larguras/profundidades dos lotes existentes: não cria
+    // caixas de 38 m sobre as casas geminadas de 11 m nem novos colisores.
+    static roofPlan(buildings) {
+        const result=[];
+        for(const b of buildings||[]){
+            if(!b?.planned ||
+                !['residential','industrial'].includes(b.kind))continue;
+            const {x,z,width:w,depth:d,height:h}=b;
+            const base=b.baseY??.35;
+            if(![x,z,w,d,h,base].every(Number.isFinite) ||
+                w<7||d<7||h<5)continue;
+            const r=this.random(x,z,88);
+            const industrial=b.kind==='industrial';
+            const strips=industrial&&w>=14?2:1;
+            const rise=industrial?.65+r*.40:1.65+r*1.25;
+            const palette=industrial?
+                [0x5d6970,0x646d6c,0x777775,0x4a5963]:
+                [0x685553,0x805d56,0x545963,0x7c6256];
+            for(let i=0;i<strips;i++){
+                const sx=strips===2?w*.48:w*.94;
+                const cx=x+(strips===2?(i===0?-w*.245:w*.245):0);
+                result.push({x:cx,y:base+h+.27,z,
+                    width:sx,height:rise,depth:d*.94,
+                    color:palette[Math.floor(r*palette.length)],
+                    kind:b.kind,lotX:x,lotZ:z});
+            }
+        }
+        return result;
+    }
+    static roofGeometry() {
+        // Seção triangular normalizada: duas águas + dois frontões.
+        // Uma geometria para todas as casas do chunk, sem texturas novas.
+        const p=[],triangle=(a,b,c)=>p.push(...a,...b,...c);
+        const lf=[-.5,0,.5],lb=[-.5,0,-.5],
+            rf=[.5,0,.5],rb=[.5,0,-.5],
+            pf=[0,1,.5],pb=[0,1,-.5];
+        triangle(lf,lb,pb);triangle(lf,pb,pf);
+        triangle(rf,pb,rb);triangle(rf,pf,pb);
+        triangle(lf,rf,pf);triangle(rb,lb,pb);
+        const geometry=new THREE.BufferGeometry();
+        geometry.setAttribute('position',
+            new THREE.Float32BufferAttribute(p,3));
+        geometry.computeVertexNormals();
+        return geometry;
+    }
+    static addRooflines(city,buildings,parent) {
+        if(city?.preset?.id!=='chicago'||!parent)return 0;
+        const pieces=this.roofPlan(buildings);
+        if(!pieces.length)return 0;
+        const mesh=new THREE.InstancedMesh(
+            this.roofGeometry(),
+            new THREE.MeshLambertMaterial({color:0xffffff,
+                side:THREE.DoubleSide}),pieces.length);
+        const dummy=new THREE.Object3D();
+        for(let i=0;i<pieces.length;i++){
+            const p=pieces[i];
+            dummy.position.set(p.x,p.y,p.z);
+            dummy.scale.set(p.width,p.height,p.depth);
+            dummy.rotation.set(0,0,0);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(i,dummy.matrix);
+            mesh.setColorAt(i,new THREE.Color(p.color));
+        }
+        mesh.instanceMatrix.needsUpdate=true;
+        if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+        mesh.frustumCulled=false; // o grupo de bairro já tem LOD/culling
+        mesh.castShadow=false;
+        mesh.receiveShadow=true;
+        mesh.name='chicago-r68-rooflines';
+        mesh.userData.chicagoVisualOnly=true;
+        mesh.userData.rooflineCount=pieces.length;
+        parent.add(mesh);
+        return pieces.length;
+    }
+
     static detailDistrict(city,buildings,parent){
         // Chicago PS1: janelas, cornijas e portas seguem CADA lote.
         // Não usar fachadas fixas de 38 m em prédios subdivididos de 11 m:
@@ -324,6 +401,7 @@ class DriverChicagoCityPlan {
         if(typeof DriverSpecialStructures!=='undefined')
             DriverSpecialStructures.pack(parent,parts,
                 'chicago-r21-ps1-lot-facades');
+        stats.rooflines=this.addRooflines(city,buildings,parent);
         city.chicagoPS1ParcelStyle=stats;
         return stats;
     }
