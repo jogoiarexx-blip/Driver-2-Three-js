@@ -72,3 +72,21 @@ test('R74 UV and height polygons from raw mock accessors are independently count
  assert.equal(out.sets.uv.length,2);
  assert.equal(out.sets.paving.length,1);
 });
+
+
+test('R74 distinguishes a texture-border false negative from non-paving UV at exact point',()=>{
+ const tri=[[-1,0,0],[1,0,0],[1,0,1]];
+ const border=[[64,200],[66,200],[66,202]];
+ const actual=R74.interpolateUV(tri,border,0,.25);
+ assert(actual&&actual[0]>=65&&actual[0]<66);
+ const borderHit=R74.analyzeExactUV([{tri,uvs:border,grade:true,
+  wholeTriangleUV:false}],0,.25);
+ assert.equal(borderHit.verdict,'pavement_uv_border_false_negative');
+ assert.equal(borderHit.borderFalseNegatives,1);
+ const otherHit=R74.analyzeExactUV([{tri,
+  uvs:[[60,200],[62,200],[62,202]],grade:true,
+  wholeTriangleUV:false}],0,.25);
+ assert.equal(otherHit.verdict,'point_uses_other_atlas_material');
+ assert.equal(otherHit.localPavedHits,0);
+ assert.equal(R74.interpolateUV(tri,border,-2,.25),null);
+});
