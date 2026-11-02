@@ -6,6 +6,14 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
+### R73 — Chicago: levantamento por triângulos de largura do corredor PS1 3445 (02/11/2026) — E1; QA no CI
+
+**Escopo MAP-06/MAP-08:** a auditoria R72 encontrou asfalto no centro da aresta 3445, mas margem externa sem pavimento e grama significativa. R73 introduz `tools/chicago-r73-triangle-width.cjs` para ler **somente** os GLBs originais `01_02` e `01_03`, preservar contagens e SHA256, procurar os **triângulos de pavimento compatíveis com a geometria R26**, e amostrar cortes da faixa de ±0,8 OBJ a cada 0,1 OBJ ao longo do corredor (passo longitudinal ≤0,25 OBJ). O teste em triângulos usa baricêntricas X/Z, compara máscara R24 e bloqueia descontinuidade de superfície, empilhamento de alturas (>0,045 OBJ), salto transversal (>0,06 OBJ), grama, água e ausência de textura de pavimento.
+
+**Prova negativa:** uma faixa visualmente contínua não é pista certificada; o atlas R24 tem grade de amostragem própria e os GLBs são apenas malhas visuais. Nem direção de pista, largura de carros, superfície de colisão, ponte, posição urbana nem integração com Undercover são certificadas nesta etapa. Saída detalhada apenas em `qa-artifacts/chicago-r73/triangle-width.json` (artefato do workflow). Não carregar auditor no jogo nem alterar IA, tráfego, missões ou saves.
+
+**Validação:** testes sintéticos `tests/chicago-r73-triangle-width.test.cjs` cobrem superfície exata, ausência de triângulos, sobreposição de alturas, textura/grama e isolamento. O workflow `.github/workflows/chicago-r73.yml` executa testes e análise dos GLBs originais no checkout, publicando medidas reais antes de qualquer migração. **Pendente:** registrar resultado do CI, interpretar seção por seção e calibrar geografia física do Undercover; E4/E5 não aprovados.
+
 ### R72 — Chicago: corredor original PS1 3445 com auditoria de largura, alturas e implantação (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
 **Objetivo MAP-06/MAP-08:** sair do inventário genérico dos 54 setores e examinar um corredor PS1 original identificável antes de substituir qualquer rua adaptada no Undercover. **Seleção reproduzível:** a aresta original **3445**, com nós 2560→2805, cruza os GLBs **01_02 e 01_03** e tem **16,375 unidades OBJ** de polilinha; pertence diretamente ao grafo de candidatos R28 (pavimento e altura observados nos GLBs), **sem recuperação de altura do R29**. O corredor mais longo da R29 (3949/4036/4037, 22,082 OBJ) depende de alturas recuperadas e não foi ativado. O comprimento bruto da aresta de origem (16,582107 OBJ) não deve ser confundido com a distância geométrica simplificada (16,375 OBJ).
