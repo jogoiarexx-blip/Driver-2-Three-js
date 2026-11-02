@@ -6,7 +6,7 @@
 
 > **REGRA DE USO:** A partir de cada revisão, consultar os P0 abertos, escolher uma causa estrutural, reproduzir ANTES, aplicar correção, executar testes DEPOIS, registrar evidência e atualizar este arquivo no mesmo commit. Não trocar [ ] por [x] com base apenas em código presente ou teste simulado. Preservar tarefas concluídas como histórico, não simplesmente apagá-las.
 
-### R68 — Chicago: largura real dos acessos + telhados por lote (02/11/2026) — E1; QA em validação
+### R68 — Chicago: largura real dos acessos + telhados por lote (02/11/2026) — E1/E2/E3 dirigidos aprovados
 
 **Objetivo:** avançar MAP-05 (piso e vias não fictícias), MAP-09 (ocupação e silhuetas de bairros) e VIS-09 sem alterar missões, tráfego de outras cidades ou índice de carros no save.
 
@@ -14,7 +14,7 @@
 
 **Fachadas e prédios:** o plano de lotes de Chicago já tinha cornijas e janelas proporcionais, mas a cobertura de casas e armazéns permanecia uma caixa plana. R68 acrescenta, apenas no LOD próximo, telhados de duas águas às casas residenciais e duas faixas de telhado aos armazéns de Goose Island. O perfil triangular é uma única malha `InstancedMesh` por chunk, com posições, cores e dimensões determinísticas dentro do lote; não há novos volumes físicos nem telhado de 38 m sobre casa de 11 m. Torres e comércios preservam suas coberturas planas, sem mudar colisões ou save.
 
-**Validação necessária:** `tests/chicago-r57-landmark-district.test.cjs`, `tests/chicago-r68-rooflines.test.cjs`, suíte Node 22/24, regressão da física e navegação real até os três pontos, screenshots Chromium em Chicago e Android E5 posterior. Uma checagem de estrutura não é certificação da malha original do PS1. Não marcar MAP-05/MAP-09 como completos antes de percursos reais e setores homologados.
+**E2 aprovado:** [Node 22 e Node 24: 992/992 cada, zero falhas](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41504609192); [regressão física de Chicago aprovada](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41504609268). **E3 dirigido aprovado:** [Chromium com Three.js real, JSON e PNG](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41504609654): Navy Pier/Wrigley/Soldier com 3 abordagens seguras, 14 segmentos ligados ao grafo, 24 vagas, 11 telhados instanciados no chunk residencial observado (18 vértices por geometria), 369 colisores antes/depois. **Integrado ao main:** [PR #44](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/44), commit `8a13ccd`. **Ainda não comprovado:** percorrer cada estrada do mapa com humano, cobertura PS1 original por setor, oito missões completas Chicago e estabilidade/FPS Android E5. MAP-05/MAP-09 seguem abertos; essa sprint apenas confirma os três acessos e a camada visual dos telhados.
 
 ### R67 — Auditoria geral de estabilidade, cache e integração (02/11/2026) — merge realizado; certificação final pendente
 
