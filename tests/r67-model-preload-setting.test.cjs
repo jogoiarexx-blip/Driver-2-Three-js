@@ -45,7 +45,7 @@ test('o menu reabilita biblioteca inativa sem reativar toggle legado',()=>{
 test('sem pré-carregamento o jogo continua decorando a frota com GLBs locais',async()=>{
     const {boot,calls}=ctx(false,true);
     const events=[];
-    await Type.prototype.preloadModels.call(boot,{},(ratio,label)=>
+    await Type.prototype.preloadModels.call(boot,boot.game,(ratio,label)=>
         events.push({ratio,label}));
     assert.equal(calls.decorate,1);
     assert.equal(events.at(-1).ratio,1);
