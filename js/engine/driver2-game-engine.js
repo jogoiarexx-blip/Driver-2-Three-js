@@ -3541,6 +3541,15 @@
                 requestAnimationFrame(() => this.animate());
 
                 const now = performance.now();
+                // O WebGL custa energia mesmo quando o navegador minimiza a
+                // aba. Não simular IA/missões nem renderizar no fundo.
+                // Atualizar lastTime evita um salto ao voltar ao jogo.
+                if(document.hidden){
+                    this.lastTime=now;
+                    this.frames=0;
+                    this.fpsTimer=0;
+                    return;
+                }
                 const rawDt=(now-this.lastTime)/1000;
                 const dt = Math.min(0.05, rawDt);
                 // Vehicle entry/exit is an animation, not a physics step.
