@@ -32,6 +32,7 @@ class FreeVehicleAssets {
         if(vehicle.bodyStyle==='bus')return 'school-bus';
         if(vehicle.bodyStyle==='motorcycle')return 'motorcycle';
         if(vehicle.bodyStyle==='truck'){
+            if(/FURGÃO|ENTREGAS|VAN/i.test(vehicle.name||''))return 'cargo-van';
             // Distribuição estável: a mesma missão conserva a mesma caminhonete.
             const seed=Math.abs(Math.round((vehicle.x||0)*13+
                 (vehicle.z||0)*7+(vehicle.name||'').length*11));
