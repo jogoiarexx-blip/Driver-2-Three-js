@@ -86,8 +86,9 @@ test('modelo principal, policiais e veículos pesados recebem GLB sem modificar 
     assert.ok(cars.slice(4).every(v=>v._cc0ModelApplied));
     assert.equal(cars[3]._policeCustomModel,true);
     assert.ok(cars.slice(0,3).every(v=>v._userCustomModel));
-    assert.equal(l.uploaded.decorated.length,3);
-    assert.ok(cars.every(v=>v.chassisTilt.visible || l.uploaded.decorated.includes(v)));
+    assert.equal(l.uploaded.requested.length,3);
+    assert.ok(cars.every(v=>v.chassisTilt.visible),
+        'cada categoria deve estar visível pelo próprio GLB local');
 });
 test('falha de um modelo tenta outro GLB local antes do fallback de emergência',async()=>{
     const vehicle=car('muscle'),l=library([vehicle]);
