@@ -173,7 +173,7 @@ class DriverChicagoAccessibleInteriorsR83 {
             loadCount:0,unloadCount:0,liveRoomId:null};
         return n;
     }
-    static heightAt(city,x,z){
+    static heightAt(city,x,z,referenceY=null){
         const place=this.nearRoom(city,x,z);
         const b=place?.r83Blueprint;
         if(!b||!b.mezzanine)return 0;
