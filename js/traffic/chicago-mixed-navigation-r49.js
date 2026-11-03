@@ -107,10 +107,12 @@ class DriverChicagoMixedNavigationR49 {
         const count=city.buildingBoxes?.length||0;
         const sourceStamp=city.chicagoPS1StreetNetwork?.radarPaths?.length||0;
         const courtyardStamp=city.chicagoCityPlan?.courtyardLinks?.length||0;
+        const downtownStamp=city.chicagoDowntownR79?.links?.length||0;
         const cached=this.cache.get(city);
         if(cached&&cached.stamp===stamp&&cached.build===build &&
             cached.count===count&&cached.sourceStamp===sourceStamp&&
-            cached.courtyardStamp===courtyardStamp)return cached;
+            cached.courtyardStamp===courtyardStamp&&
+            cached.downtownStamp===downtownStamp)return cached;
         const nodes=new Map(),adj=new Map(),edges=new Set();
         const addNode=p=>{
             const key=this.key(p);
@@ -150,7 +152,8 @@ class DriverChicagoMixedNavigationR49 {
         const courtyards=city.chicagoCityPlan?.courtyardLinks||[];
         const secondary=[...(r48?.edges||[]),...(r50?.edges||[]),
             ...(r52?.edges||[]),...(r53?.edges||[]),...r57,
-            ...courtyards];
+            ...courtyards,
+            ...(city.chicagoDowntownR79?.links||[])];
         const gateways=secondary.flatMap(e=>[e.from,e.to]);
         // Subdivide existing 80-unit arteries where an R48 gateway joins.
         // Without splitting, a local road would end at a disconnected node.
@@ -253,7 +256,11 @@ class DriverChicagoMixedNavigationR49 {
             buckets.get(bucket).push(id);
         }
         const graph={nodes,adj,edges:edges.size,stamp,build,count,
-            sourceStamp,courtyardStamp,buckets,bucketSize,
+            sourceStamp,courtyardStamp,downtownStamp,buckets,bucketSize,
+            downtownR79Segments:city.chicagoDowntownR79?.links?.length||0,
+            downtownR79Connected:(city.chicagoDowntownR79?.links||[])
+                .filter(l=>(adj.get(this.key(l.from))||[]).some(e=>
+                    e.key===this.key(l.to))).length,
             courtyardLinks:courtyards.length,
             courtyardBoundaryFeeders,
             courtyardConnected:courtyards.filter(l=>
