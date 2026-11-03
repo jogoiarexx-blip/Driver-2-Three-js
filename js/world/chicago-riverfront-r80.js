@@ -176,13 +176,34 @@ class DriverChicagoRiverfrontR80 {
             add(x,z,b.maxX-b.minX,8.6,face,'commercial');
             report.r53Buildings++;
         }
-        // Existing R78 warehouse fronts on east Goose Island waterway.
-        const island=(city.districtBuildings||[]).filter(b=>b.pilotR78&&
+        // R53 can be absent when its bridge/road safety gate rejects
+        // construction. Never invent those eight buildings. Instead use
+        // CURRENTLY LIVE R78/R14 parcels adjacent to the actual channels.
+        const lots=city.districtBuildings||[];
+        const eastIsland=lots.filter(b=>b.pilotR78&&
             b.blockX===-200&&b.blockZ===120&&
-            b.x+b.width/2>-185);
-        for(const b of island){
+            b.x+b.width/2>-197); // facing east canal x=-160
+        const westVillage=lots.filter(b=>b.pilotR78&&
+            b.blockX===-280&&b.blockZ===-200&&
+            b.x+b.width/2>-271); // facing west bank x=-240
+        const wicker=lots.filter(b=>b.planned&&!b.pilotR78&&
+            b.kind==='residential'&&b.x>-272&&b.x<-260&&
+            b.z>96&&b.z<146); // existing homes x≈-266.5
+        const southEast=lots.filter(b=>b.planned&&!b.pilotR78&&
+            b.kind==='commercial'&&b.x>-221&&b.x<-207&&
+            b.z>-322&&b.z<-260); // canal shop x≈-214
+        for(const b of eastIsland){
             add(b.x,b.z,b.width,Math.min(11,b.height-1),1,'industrial');
             report.r78CanalBuildings++;
+        }
+        for(const b of westVillage){
+            add(b.x,b.z,b.width,Math.min(11,b.height-1),1,'commercial');
+            report.r78CanalBuildings++;
+        }
+        for(const b of [...wicker,...southEast]){
+            add(b.x,b.z,b.width,Math.min(11,b.height-1),
+                b.x<-240?1:-1,b.kind==='industrial'?'industrial':'commercial');
+            report.r14CanalBuildings++;
         }
         if(pieces.length&&typeof DriverSpecialStructures!=='undefined')
             DriverSpecialStructures.pack(root,pieces,'r80-river-facing-existing-facades');
@@ -200,7 +221,7 @@ class DriverChicagoRiverfrontR80 {
             root,bankRejected:[],colliders:[],railsCreated:0,
             quaySegments:0,railDetailParts:0,fixedBridgeCount:0,
             bridgeDetailParts:0,facades:0,r53Buildings:0,
-            r78CanalBuildings:0,facadeParts:0,ready:false};
+            r78CanalBuildings:0,r14CanalBuildings:0,facadeParts:0,ready:false};
         this.buildBanks(city,report,root);
         this.buildFixedBridgeDetail(city,report,root);
         this.buildFacades(city,report,root);
