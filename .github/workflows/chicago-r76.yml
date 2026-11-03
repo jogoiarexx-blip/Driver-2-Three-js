@@ -29,11 +29,30 @@ jobs:
         run: |
           node --check tools/chicago-r76-surface-orientation.cjs
           node --check tests/chicago-r76-surface-orientation.test.cjs
-          node --test tests/chicago-r76-surface-orientation.test.cjs tests/chicago-r74-source-seam.test.cjs tests/chicago-r73-triangle-width.test.cjs
+          node --test tests/chicago-r76-surface-orientation.test.cjs tests/chicago-r76-viewer.test.cjs tests/chicago-r74-source-seam.test.cjs tests/chicago-r73-triangle-width.test.cjs
       - name: Analyze unmodified original source GLB geometry
         run: |
           node tools/chicago-r76-surface-orientation.cjs qa-artifacts/chicago-r76/orientation.json qa-artifacts/chicago-r76/orientation-compact.json
           node -e "const a=require('./qa-artifacts/chicago-r76/orientation.json');const b=require('./qa-artifacts/chicago-r76/orientation-compact.json');if(a.certifiedRoad||a.runtimeRoadEnabled||a.collidersCreated||a.geometryChanged||a.trafficChanged||a.missionsChanged||a.evidence.sections!==67||b.crossSections.length!==67||a.provenance.sourceTiles.length!==2||a.evidence.focalOffsets['-0.1'].sections!==67)process.exit(1)"
+      - name: Install Chromium for visual inspection of original geometry
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve static original PS1 inspector and WebP without game startup
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/chicago-r76-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/chicago-geometry-r76.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-r76-http.log
+          exit 1
+      - name: Chromium check all 67 sections, source triangle IDs and screenshot
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: |
+          node --check tests/chicago-r76-geometry-browser.cjs
+          node tests/chicago-r76-geometry-browser.cjs
       - name: Archive exact source triangle IDs, normals, UVs and two-level overlaps
         if: always()
         uses: actions/upload-artifact@v4
