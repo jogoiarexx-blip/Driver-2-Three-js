@@ -34,7 +34,7 @@ jobs:
         run: |
           node --check tools/chicago-r74-source-seam.cjs
           node --test tests/chicago-r74-source-seam.test.cjs
-          python -m unittest discover -s tests -p 'chicago-r75-atlas-material.test.py'
+          python tests/chicago-r75-atlas-material.test.py
       - name: Probe SHA-verified UVs against original WebP atlas
         run: |
           mkdir -p qa-artifacts/chicago-r75
