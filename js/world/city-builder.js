@@ -645,6 +645,12 @@
                     // construídos só após os colliders principais da cidade.
                     if(typeof DriverChicagoLandmarkDistrictR57!=='undefined')
                         DriverChicagoLandmarkDistrictR57.build(this);
+                    // R79: build REAL, narrow, graded downtown asphalt
+                    // only if every 3-point-width safety probe is clear.
+                    // This runs after all districts and water/solid geometry
+                    // but before R49's next route graph compilation.
+                    if(typeof DriverChicagoDowntownCorridorsR79!=='undefined')
+                        DriverChicagoDowntownCorridorsR79.build(this);
                 }
                 if(this.preset.id==='rio' &&
                     typeof DriverRioOverhaul!=='undefined')
