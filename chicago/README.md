@@ -25,6 +25,8 @@ node --test tests/chicago-r75-atlas-inspector.test.cjs
 python tests/chicago-r75-atlas-material.test.py
 ```
 
+**Resultado da fonte real:** [R75 aprovada no GitHub Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41551929135): 8 testes Node + 4 Python passaram. As 67 seções produziram 71 amostras de pixels por offset, pois **quatro seções têm dois triângulos UV sobrepostos**. O contato ampliado do WebP apresenta padrões gráficos semelhantes a painéis e janelas, não asfalto homogêneo. Portanto as regiões UV anteriormente chamadas “pavimento” pela R26 são **heurísticas de análise**, e não prova da existência de pista automotiva no corredor. A próxima etapa precisa confirmar visualmente qual superfície 3D usa essas regiões e se há piso de trânsito real; **sem converter o material vizinho em asfalto**.
+
 O [workflow R75](../.github/workflows/chicago-r75.yml) publica uma imagem com recortes autênticos do atlas e o JSON de evidência de cor. O arquivo WebP tem SHA256 verificado contra a pesquisa de textura R24. **A inspeção permanece visual/diagnóstica**: pavimento do atlas não equivale a pista certificada; não se adicionam ruas, colisores, tráfego, missões ou alterações nos saves.
 
 ## R74 — Diagnóstico da costura de pavimento, sem fabricar estrada
