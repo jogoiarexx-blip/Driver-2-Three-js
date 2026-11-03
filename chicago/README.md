@@ -12,6 +12,21 @@ O manifesto, atlas e 54 GLBs já estão publicados nesta pasta do GitHub, direta
 
 **Aviso:** esta é uma visualização técnica, não substitui a cidade jogável nem define colisores, ruas e missões do PS1.
 
+## R76 — Triângulos 3D originais: inclinação e materiais sem criar rua
+
+O [inspetor de geometria R76](../chicago-geometry-r76.html) oferece 67 cortes selecionáveis na aresta 3445, indicando os IDs precisos dos triângulos dos GLBs `01_02`/`01_03`, os ângulos reais das superfícies, cota Y e o grupo UV interpolado. Cores do atlas e triângulos planos **não equivalem a uma rua dirigível**; superfícies verticais edge-on também podem escapar de uma interseção exata X/Z. Os três offsets −0,12, −0,10, −0,08 OBJ são consultáveis diretamente, com o relatório técnico completo de 15 offsets no workflow.
+
+**Medição da fonte original:** a [primeira CI R76 aprovada](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41615227273) inspecionou 8.098 triângulos na região, **1.005 pontos** e **1.097 interseções**: 20 pontos sem geometria, 110 com triângulos sobrepostos e 3 com altura empilhada; dentro dos 67 cortes centrais, os três offsets são quase horizontais em Y=0 e separam dois grupos UV distintos (−0,12 com grupo pavimento R26, −0,10/−0,08 com outro grupo). O inspetor serve para confirmar o problema, **não para transformar a região em pista de trânsito**.
+
+Reprodução num checkout com os GLBs originais:
+
+```sh
+node --test tests/chicago-r76-surface-orientation.test.cjs tests/chicago-r76-viewer.test.cjs
+node tools/chicago-r76-surface-orientation.cjs qa-artifacts/chicago-r76/orientation.json qa-artifacts/chicago-r76/orientation-compact.json
+```
+
+A suíte `.github/workflows/chicago-r76.yml` arquiva o relatório e testa a interface de 67 seções no Chromium. O documento `chicago/corridor-orientation-r76.json` é checado contra as posições e IDs originais; não define física, tráfego, IA ou missões.
+
 ## R75 — Verificação dos pixels reais do atlas original PS1
 
 O [inspetor UV R75](../chicago-seam-r75.html) permite percorrer **67 cortes reais** da aresta 3445 e comparar três posições originais (−0,12, −0,10 e −0,08 unidade OBJ) com os recortes ampliados da mesma textura WebP dos GLBs do PS1. São mostrados os pixels e suas cores RGB sem atribuir nomes de materiais não comprovados. O link também está no visualizador 3D original, separado do jogo principal.
