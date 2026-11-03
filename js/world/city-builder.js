@@ -170,6 +170,7 @@
                 this.chicagoPS1Coastline=null;
                 this.chicagoUndercoverLakefront=null;
                 this.chicagoCityPlan=null;
+                this.chicagoPS1PlayableLandmarksR77=null;
                 this.chicagoAirfield=null;
                 this.chicagoReferenceCurve=null;
                 this.chicagoReferenceExtension=null;
@@ -604,6 +605,10 @@
                         DriverChicagoUndercoverLakefront.build(this);
                     if(typeof DriverChicagoCityPlan!=='undefined')
                         DriverChicagoCityPlan.buildLandmarks(this);
+                    // R77: actual playable city wayfinding, placed after roads
+                    // and landmark parcels. No modifications to mission routes.
+                    if(typeof DriverChicagoPS1PlayableLandmarksR77!=='undefined')
+                        DriverChicagoPS1PlayableLandmarksR77.buildWayfinding(this);
                     if(typeof DriverChicagoCityPlan!=='undefined')
                         DriverChicagoCityPlan.buildCourtyardLinks(this);
                     // R2: rio Norte/Sul e Goose Island: travessias sobre ruas
