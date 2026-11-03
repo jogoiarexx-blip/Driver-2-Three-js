@@ -7,8 +7,9 @@
  * barriers (not invisible walls), and paints pedestrian quays on verified
  * DRY physical floor. No cars may route onto them.
  *
- * R53 (8 existing buildings) and R78 (Goose Island lots) get river-facing
- * facade trim without new buildings/collisions. Fixed bridge detail follows
+ * Existing R78/R14 river-facing buildings receive facade trim, and
+ * optional R53 buildings participate only when R53 was actually built.
+ * No new buildings/collisions are invented for an inactive R53 district. Fixed bridge detail follows
  * the ten decks as pure decoration; drawbridge pivots remain untouched.
  */
 class DriverChicagoRiverfrontR80 {
