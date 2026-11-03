@@ -135,6 +135,29 @@ class DriverChicagoAccessibleInteriorsR83 {
             throw new Error('R83 out-of-bounds collision');
         return blue;
     }
+    static decorateEntries(city){
+        if(city?.preset?.id!=='chicago'||!city.cityGroup||
+            typeof DriverSpecialStructures==='undefined')return 0;
+        const state=city.chicagoAccessibleInteriorsR83;
+        if(state?.entrySignsBuilt)return 0;
+        const parts=[];
+        for(const place of city.interiors||[]){
+            if(!place.r83Blueprint)continue;
+            const b=(city.districtBuildings||[]).find(
+                b=>b.id===place.r83SourceLot);
+            if(!b)continue;
+            // Thin lit-green entrance marker on an EXISTING R78 shell.
+            // Not a new footprint, obstacle or fake enterable building.
+            const face=b.z+b.depth/2+.31;
+            parts.push([b.x,4.45,face,3.1,.48,.12,0x6bb79c,true]);
+            parts.push([b.x,1.95,face,2.05,2.75,.07,0x468777,false]);
+        }
+        if(parts.length)
+            DriverSpecialStructures.pack(city.cityGroup,parts,
+                'r83-two-real-entrance-markers');
+        if(state)state.entrySignsBuilt=true;
+        return parts.length;
+    }
     static prepare(city){
         if(city?.preset?.id!=='chicago')return null;
         let n=0;
