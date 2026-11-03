@@ -1161,6 +1161,14 @@
                 this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
                 document.getElementById('player-state-badge').textContent=
                     'DENTRO: '+(place.name||place.id).toUpperCase();
+                // Home save instructions apply ONLY to Tanner's home.
+                // The screenshot of R82's warehouse revealed the old,
+                // confusing green-save-desk notice inside every building.
+                this.showSaveStatus(place.id==='home'?
+                    'Aproxime-se da mesa verde para salvar.':
+                    place.r82Blueprint?
+                        'Explore as salas laterais. Use E ou SAIR para voltar à rua.':
+                        'Use E ou SAIR para voltar à rua.');
                 return true;
             }
 
