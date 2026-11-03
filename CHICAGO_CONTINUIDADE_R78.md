@@ -3,7 +3,7 @@
 > **Documento vivo de retomada.** Atualize este arquivo **na mesma PR de toda revisão futura**. Assim, quando a conversa acabar, basta enviar este MD à próxima sessão e pedir para continuar a próxima etapa.  
 > Projeto: [Driver-2-Three-js](https://github.com/jogoiarexx-blip/Driver-2-Three-js) · Jogo: [GitHub Pages](https://jogoiarexx-blip.github.io/Driver-2-Three-js/)  
 > Referências técnicas: `AUDITORIA-MESTRA-DRIVER2.md`, `chicago/README.md`.  
-> **Atualizado:** 2026-11-03 — ciclo R80. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
+> **Atualizado:** 2026-11-03 — ciclo R81. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
 
 ## 0. Missão do projeto — não perder o objetivo
 
@@ -27,7 +27,7 @@ A cidade desejada deve conter:
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
 | **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
-| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| R81+ | **Planejadas** | Goose Island industrial, interiores completos e alinhamento fiel ao PS1 |
+| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| **R81** | **Em desenvolvimento** | 2 pátios dirigíveis, 4 links de caminhões, um escritório acessível em prédio R78 |\n| R82+ | **Planejadas** | Interiores modulares e alinhamento certificado ao PS1 |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
 
@@ -193,6 +193,23 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - Preservar a lógica da ponte levadiça e da ponte leste; checar grade de altura (sobre/sob viaduto).
 - Substituir blocos genéricos por fachadas voltadas para o rio, acessos pedonais e docas onde couber.
 - Teste em ambos os lados das pontes e rotas alternativas com a ponte aberta/fechada.
+
+### R81 — Implementação industrial de Goose Island (03/11/2026)
+
+**PR:** (registrar após criação) • **estado:** implementação criada na branch `chicago-r81-goose-island-real-yards-interior`; aguarda QA Chromium, CI e integração.
+
+- **Dois pátios de carga realmente dirigíveis**, `(-218,250)` e `(-182,250)`, com piso físico em plano seco e cotas acompanhadas por `getGroundHeightAt`. Ligados ao eixo industrial existente `x=-200` por **quatro segmentos concretos de navegação**, incluindo o acesso na **ponte fixa da R2 em (-160,240)**. Não há ponte nova nem asfalto fingido sobre os canais.
+- **Verificação fail-safe:** inspecionar todo o retângulo do pátio e três faixas de cada segmento; água, AABB, erro de piso ou mudança brusca de altura cancelam TODOS os pátios e arestas, sem caminhos sem asfalto. Grafo R49 invalida cache quando as rotas R81 mudam.
+- **Galpões existentes R4/R6**: quatro frentes industriais são detalhadas com portões, janelas e perfis agrupados, **sem substituir os edifícios nem suas colisões originais**.
+- **Carga real:** pilhas de mercadorias com caixas AABB correspondentes às geometrias visíveis, mantidas fora das rotas de veículos; não criar paredes invisíveis.
+- **Escritório parcial e visitável** dentro de um galpão R78 em `(-200,120)`: porta física em área seca, espaço `r81-goose-yard-office` (`inside: (1440,0)`) registrado **antes** de `buildInteriorRooms()`, com mobiliário próprio; o sistema existente da tecla de interação / entrada / saída continua sendo usado. O depósito integral R78 continua funcionando.
+- **Cautela:** as ruas, os galpões e o rio continuam aproximações da Chicago jogável; posições originais da ROM **NÃO certificadas**. Missões, spawns, garagens, outros bairros e outras cidades não são alterados.
+
+**Arquivos:** `js/world/chicago-goose-industrial-r81.js`, `js/world/city-builder.js`, `js/traffic/chicago-mixed-navigation-r49.js`, `index.html`, `tests/chicago-r81-industrial-yards.test.cjs`, `tests/chicago-r81-playable-browser.cjs`, `.github/workflows/chicago-r81.yml`.
+
+**Aceite:** 2 pátios com 4 links na IA e nenhuma superfície inundada, pelo menos 4 AABBs de carga visível, quatro frentes industriais R4/R6, uma sala adicional com interação/saída real, R80 (66 barreiras), R79 (16 segmentos), R78 (86 lotes/2 salas) e R77 (4 marcos), CI e Chromium sem erros, PR integrado. Registrar a execução no MD ao concluir.
+
+**Próxima R82:** evolução de interiores modulares (hall, galpões navegáveis, escadas/cômodos) com carregamento sob demanda e colisão interna; em paralelo, seguir trabalhando a geografia PS1 somente com evidências OBJ verificáveis.
 
 ### R81 — Goose Island: área industrial
 - Fazer rede real de pátios, galpões sequenciais, becos de serviço e docas compatíveis com o mapa.
