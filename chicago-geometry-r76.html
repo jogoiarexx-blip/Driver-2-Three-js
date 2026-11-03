@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Driver 2 • Chicago R76 — Geometria 3D original PS1</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b1521;color:#e6edf3;font:15px/1.55 system-ui,Arial,sans-serif}
+a{color:#9bd6f5}main{max-width:1120px;margin:auto;padding:22px 18px 50px}h1{font-size:clamp(24px,4vw,34px);margin:8px 0}h2{font-size:20px;margin:3px 0 12px}
+p{color:#b0c6d3}.panel{background:#132333;border:1px solid #39546a;border-radius:12px;padding:20px;margin:18px 0}
+.critical{border-left:4px solid #e7be64;padding:10px 14px;background:#211f19;color:#f1dcc0}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}button{background:#244f70;border:1px solid #5485a6;border-radius:6px;color:white;padding:9px 14px;cursor:pointer}
+input[type=range]{accent-color:#e7c566;flex:1;min-width:180px}
+#profile{display:block;width:100%;max-height:240px;background:#0d1a27;border:1px solid #405975;border-radius:7px;cursor:crosshair;margin-top:14px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#bad1dd;margin:12px 0}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.card{background:#0e1c2a;border:1px solid #3e586d;border-radius:9px;padding:14px;min-width:0}
+.card h3{font-size:18px;margin:0 0 5px}.card .meta{font:12px/1.75 ui-monospace,Consolas,monospace;color:#acc9d8;overflow-wrap:anywhere}
+.hit{background:#18293a;margin-top:8px;border-radius:7px;padding:9px}
+.hit b{color:#f1d998}.small{font-size:13px;color:#a5c0d1}
+@media(max-width:760px){.cards{grid-template-columns:1fr}}
+</style></head><body><main>
+<a href="./chicago-seam-r75.html">Atlas original R75</a> ·
+<a href="./chicago-original-preview.html">Mapa 3D original</a>
+<h1>Chicago PS1 — Geometria original R76</h1>
+<p>Veja os triângulos 3D que aparecem sob o corredor original <b>3445</b>, entre os setores <b>01_02 e 01_03</b>. O gráfico distingue a inclinação das superfícies e as sobreposições entre malhas, sem presumir que qualquer superfície seja uma rua.</p>
+<section class="panel">
+<h2>Corte <span id="counter">—</span></h2>
+<div class="controls"><button id="back" type="button">Anterior</button><input id="section" type="range" min="0" max="66" value="0" aria-label="Selecionar corte no corredor PS1"><button id="next" type="button">Próximo</button><span id="coord" class="small">Carregando geometria...</span></div>
+<canvas id="profile" width="1050" height="230" aria-label="Classificação dos 67 cortes por inclinação e textura original"></canvas>
+<div class="legend">
+<span><i class="dot" style="background:#60bfae"></i>Horizontal (inclinação até 15°)</span>
+<span><i class="dot" style="background:#e2bf62"></i>Inclinada (15–35°)</span>
+<span><i class="dot" style="background:#d87568"></i>Íngreme / tipo parede</span>
+<span><i class="dot" style="background:#5b6877"></i>Sem triângulo</span>
+<span><i class="dot" style="background:#b594ec"></i>Múltiplas superfícies</span>
+</div>
+<div class="cards">
+<article class="card"><h3>−0,12 OBJ</h3><div id="detail0" class="meta"></div></article>
+<article class="card"><h3>−0,10 OBJ</h3><div id="detail1" class="meta"></div></article>
+<article class="card"><h3>−0,08 OBJ</h3><div id="detail2" class="meta"></div></article>
+</div></section>
+<section class="panel"><h2>Como interpretar</h2>
+<p>Uma superfície quase horizontal pode ser asfalto, calçada, terreno, telhado ou outra parte da cena. O atlas R26 fornece apenas uma categoria <em>heurística</em> de textura. Triângulos sobrepostos não podem ser simplificados em uma pista. A classificação geométrica não substitui um teste de colisão, largura real da pista ou continuidade de trânsito.</p>
+<p class="critical"><b>Trânsito bloqueado para o corredor 3445:</b> esta ferramenta não cria rua, piso, colisões, IA ou missões. A implantação geográfica no Undercover continua sem certificação.</p>
+<p class="small" id="summary">Fonte: GLBs originais PS1; normal do triângulo, UV do atlas e X/Z em unidades OBJ.</p>
+</section>
+</main><script>
+(async()=>{
+'use strict';
+let report=null,selected=0;
+function decodePacked(p){
+ const n=p.packedRows.length;
+ const from=p.sourcePointsOBJ[0],to=p.sourcePointsOBJ[1];
+ const crossSections=p.packedRows.map((raw,index)=>{
+  const t=index/(n-1),atOBJ=from.map((v,i)=>+(v+(to[i]-v)*t).toFixed(4));
+  return {index,atOBJ,cuts:raw.map((encoded,i)=>{
+   const hits=encoded.map(v=>({
+    tile:v[0]===2?'01_02':'01_03',triangleIndex:v[1],
+    sourceYOBJ:v[2],normalTiltDeg:v[3],
+    uvMaterial:v[4]===1?'r26_paving_uv_heuristic':'other_atlas_uv',
+    geometryClass:v[3]<=15?'near_horizontal':v[3]<=35?'inclined':'steep_wall_like'
+   }));
+   const ys=hits.map(x=>x.sourceYOBJ);
+   const spread=ys.length?Math.max(...ys)-Math.min(...ys):null;
+   return {offset:p.offsetsOBJ[i],hits,heightSpreadOBJ:spread,
+    overlappingHeights:spread!==null&&spread>.045,
+    mixedAtlasUV:new Set(hits.map(x=>x.uvMaterial)).size>1};
+  })};
+ });
+ return {...p,crossSections,evidence:p.summary};
+}
+const slider=document.getElementById('section'),
+ cv=document.getElementById('profile'),ctx=cv.getContext('2d');
+const kindColor=k=>k==='near_horizontal'?'#60bfae':k==='inclined'?'#e2bf62':
+ k==='steep_wall_like'||k==='vertical_or_edge_on'?'#d87568':'#5b6877';
+function chosenColor(c){
+ if(c.hits.length>1)return '#b594ec';
+ if(!c.hits.length)return '#5b6877';
+ return kindColor(c.hits[0].geometryClass);
+}
+function paint(){
+ if(!report)return;
+ const canvasWidth=cv.width,canvasHeight=cv.height,pad=38;
+ ctx.clearRect(0,0,canvasWidth,canvasHeight);
+ ctx.fillStyle='#90aabd';ctx.font='13px system-ui';
+ ctx.fillText('UV −0,12',3,55);ctx.fillText('−0,10',3,120);ctx.fillText('−0,08',3,185);
+ const data=report.crossSections;
+ const usable=canvasWidth-pad-12,step=usable/data.length;
+ for(let i=0;i<data.length;i++){
+  for(let j=0;j<3;j++){
+   const left=pad+i*step,top=28+j*64;
+   ctx.fillStyle=chosenColor(data[i].cuts[j]);
+   ctx.fillRect(left,top,Math.max(2,step-1),36);
+  }
+ }
+ ctx.strokeStyle='#ffe08d';ctx.lineWidth=2;
+ ctx.strokeRect(pad+selected*step-2,23,Math.max(3,step+2),174);
+ ctx.fillStyle='#b9cad8';ctx.fillText('0',pad,219);
+ ctx.fillText('66',canvasWidth-34,219);
+}
+function render(){
+ if(!report)return;
+ selected=Math.min(66,Math.max(0,selected));
+ slider.value=selected;
+ const section=report.crossSections[selected];
+ document.getElementById('counter').textContent=(selected+1)+' / 67';
+ document.getElementById('coord').textContent='X '+section.atOBJ[0].toFixed(3)+' • Z '+section.atOBJ[1].toFixed(3)+' OBJ';
+ section.cuts.forEach((cut,i)=>{
+  const place=document.getElementById('detail'+i);
+  const hits=cut.hits.length?cut.hits.map(h=>'<div class="hit"><b>Setor '+h.tile+' · triângulo '+h.triangleIndex+'</b><div>Y '+h.sourceYOBJ.toFixed(5)+' OBJ · inclinação '+h.normalTiltDeg+'°</div><div>'+({
+   near_horizontal:'superfície horizontal',inclined:'superfície inclinada',steep_wall_like:'superfície íngreme',
+   vertical_or_edge_on:'face vertical'}[h.geometryClass]||h.geometryClass)+'</div><div>UV '+(h.uvMaterial==='r26_paving_uv_heuristic'?'região R26 pavimento (não certificada)':'outra região do atlas')+'</div></div>').join(''):'Nenhum triângulo encontrado na amostra exata X/Z.';
+  place.innerHTML='<div>'+cut.hits.length+' triângulo(s)'+(cut.overlappingHeights?' · ALTURAS EMPILHADAS':'')+(cut.mixedAtlasUV?' · MATERIAIS UV DIFERENTES':'')+'</div>'+hits;
+ });
+ paint();
+}
+slider.addEventListener('input',()=>{selected=+slider.value;render()});
+document.getElementById('back').addEventListener('click',()=>{selected--;render()});
+document.getElementById('next').addEventListener('click',()=>{selected++;render()});
+cv.addEventListener('click',ev=>{
+ if(!report)return;
+ const rect=cv.getBoundingClientRect(),x=(ev.clientX-rect.left)*cv.width/rect.width;
+ selected=Math.min(66,Math.max(0,Math.floor((x-38)/(cv.width-50)*67)));render();
+});
+addEventListener('keydown',ev=>{
+ if(document.activeElement===slider)return;
+ if(ev.key==='ArrowRight'){selected++;render()}
+ if(ev.key==='ArrowLeft'){selected--;render()}
+});
+try{
+ const r=await fetch('./chicago/corridor-orientation-r76.json',{cache:'no-store'});
+ if(!r.ok)throw Error('HTTP '+r.status);
+ const packed=await r.json();
+ if(packed.format!=='DriverChicagoR76SurfaceOrientationViewerPackedV1'||
+    packed.packedRows?.length!==67||
+    packed.packedRows.some(row=>!Array.isArray(row)||row.length!==3||
+      row.some(h=>!Array.isArray(h)||!h.length||
+       h.some(t=>t.length!==5||![2,3].includes(t[0])||
+        !Number.isInteger(t[1])||t[1]<0||
+        ![0,1].includes(t[4]))))||
+    packed.sourceSectors?.join(',')!=='01_02,01_03'||
+    packed.offsetsOBJ?.join(',')!=='-0.12,-0.1,-0.08'||
+    packed.certifiedRoad!==false||packed.runtimeRoadEnabled!==false||
+    packed.collidersCreated!==0||packed.edgeId!==3445)
+  throw Error('Formato R76 incompatível; não certificar a via');
+ report=decodePacked(packed);
+ const e=report.evidence;
+ document.getElementById('summary').textContent='Dados reais PS1: '+e.sourceTrianglesInROI+
+ ' triângulos próximos; '+e.pointSamples+' amostras exatas, '+e.multiTriangleSamples+
+ ' pontos com múltiplos triângulos. Nenhuma via criada.';
+ render();
+}catch(error){document.getElementById('coord').textContent='Falha ao carregar R76: '+error.message;}
+})();
+</script></body></html>
