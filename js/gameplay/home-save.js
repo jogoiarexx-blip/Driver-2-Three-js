@@ -135,7 +135,8 @@ class DriverHomeSave {
             Number.isFinite(data.tanner.x) && Number.isFinite(data.tanner.z) &&
             (data.interior==null||['home','warehouse','diner','garage',
                 'r78-loop-shop','r78-goose-warehouse',
-                'r81-goose-yard-office'].includes(data.interior));
+                'r81-goose-yard-office',
+                'r83-loop-mezzanine','r83-ukrainian-house'].includes(data.interior));
     }
     // A chave localStorage é a mesma de 2026: converter V1 preservando
     // integralmente os dados e sem sobrescrever saves futuros/corrompidos.
