@@ -105,12 +105,12 @@ test('R78: two true playable interiors registered through the original door/exit
  assert.equal(city.interiors.length,before);
  const blocked=mockCity();
  blocked.isWaterAt=(x,z)=>z>=-15;
- Plan.addBlock(blocked,40,-40);
+ Plan.addBlock(blocked,-40,-40);
  assert.equal(blocked.interiors.length,0,'do not create a door into water');
 });
 test('R78: decorative frontage detail batches in one PS1-friendly call and never writes collision',()=>{
  const city=mockCity();
- Plan.addBlock(city,40,-40);
+ Plan.addBlock(city,-40,-40);
  const before=city.buildingBoxes.length,parts=[];
  global.DriverSpecialStructures={pack(parent,pieces,name){
   parts.push({pieces,name});return [];}};
