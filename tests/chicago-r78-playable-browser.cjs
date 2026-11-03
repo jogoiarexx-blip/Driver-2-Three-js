@@ -32,7 +32,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
    const sample=lots.find(b=>b.interiorId==='r78-loop-shop');
    const oldMode=game.mode;
    let entered=false,left=false,enteredMatch=false;
-   if(liveRooms.every(r=>r.found&&r.exitFree)){
+   if(interiors.length===2&&liveRooms.every(r=>r.found&&r.exitFree)){
       game.mode='on_foot';
       const p=interiors[0];
       entered=game.enterInterior(p);
@@ -45,6 +45,13 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
      registeredRooms:c.chicagoCityPlan?.r78EnterableRooms,
      actualLots:lots.length,
      oldInteriors:c.interiors.filter(x=>!x.id.startsWith('r78-')).map(x=>x.id),
+     fullCandidates:lots.filter(x=>x.interiorTier==='full').map(b=>({
+      id:b.interiorId,lot:b.id,
+      door:{x:b.x,z:b.z+b.depth/2+2.8},
+      exit:{x:b.x,z:b.z+b.depth/2+6.8},
+      wet:c.isWaterAt(b.x,b.z+b.depth/2+6.8),
+      blocked:c.isPointBlocked(b.x,b.z+b.depth/2+6.8,.3,0)
+     })),
      rooms:liveRooms,entered,enteredMatch,left,
      sample:sample?{id:sample.id,tier:sample.interiorTier}:null,
      safeHouse:!!c.safeHouseZone,
