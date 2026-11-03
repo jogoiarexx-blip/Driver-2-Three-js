@@ -178,8 +178,14 @@ class DriverChicagoModularInteriorsR82 {
         // Exactly one extra geometry group at a time: no background
         // interior meshes or duplicate collision boxes on every entry.
         const stat=city.chicagoModularInteriorsR82;
-        for(const other of city.interiors)
+        for(const other of city.interiors){
             if(other.r82Loaded)this.leave(city,other);
+            // R83 may have been visited just before this R82 room.
+            // Keep precisely ONE detailed interior on the GPU.
+            if(other.r83Loaded&&
+               typeof DriverChicagoAccessibleInteriorsR83!=='undefined')
+                DriverChicagoAccessibleInteriorsR83.leave(city,other);
+        }
         const blue=place.r82Blueprint;
         const group=new THREE.Group();
         group.name='r82-modular-interior-'+place.id;
