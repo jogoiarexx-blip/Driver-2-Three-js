@@ -1157,6 +1157,8 @@
                 this.interiorPlace=place;
                 if(typeof DriverChicagoModularInteriorsR82!=='undefined')
                     DriverChicagoModularInteriorsR82.enter(this.city,place);
+                if(typeof DriverChicagoAccessibleInteriorsR83!=='undefined')
+                    DriverChicagoAccessibleInteriorsR83.enter(this.city,place);
                 this.tanner.setPosition(place.inside.x,0,place.inside.z-6,0);
                 this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
                 document.getElementById('player-state-badge').textContent=
@@ -1168,6 +1170,8 @@
                     'Aproxime-se da mesa verde para salvar.':
                     place.r82Blueprint?
                         'Explore as salas laterais. Use E ou SAIR para voltar à rua.':
+                    place.r83Blueprint?
+                        'Use E nas portas internas e explore as escadas reais.':
                         'Use E ou SAIR para voltar à rua.');
                 return true;
             }
@@ -1177,6 +1181,8 @@
                 if(!place)return false;
                 if(typeof DriverChicagoModularInteriorsR82!=='undefined')
                     DriverChicagoModularInteriorsR82.leave(this.city,place);
+                if(typeof DriverChicagoAccessibleInteriorsR83!=='undefined')
+                    DriverChicagoAccessibleInteriorsR83.leave(this.city,place);
                 this.interiorPlace=null;
                 this.tanner.setPosition(place.door.x,0,place.door.z+4,Math.PI);
                 this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
@@ -1222,6 +1228,14 @@
                             DriverChicagoModularInteriorsR82.leave(this.city,room);
                     if(this.interiorPlace)
                         DriverChicagoModularInteriorsR82.enter(
+                            this.city,this.interiorPlace);
+                }
+                if(ok&&typeof DriverChicagoAccessibleInteriorsR83!=='undefined'){
+                    for(const room of this.city?.interiors||[])
+                        if(room.r83Loaded&&room!==this.interiorPlace)
+                            DriverChicagoAccessibleInteriorsR83.leave(this.city,room);
+                    if(this.interiorPlace)
+                        DriverChicagoAccessibleInteriorsR83.enter(
                             this.city,this.interiorPlace);
                 }
                 this.showSaveStatus(ok?'Partida carregada com sucesso!':
@@ -1428,6 +1442,11 @@
                     if(this.interiorPlace){
                         const pos=this.tanner.group.position;
                         if(this.nearSaveDesk()){this.saveAtHome();return;}
+                        if(typeof DriverChicagoAccessibleInteriorsR83!=='undefined'){
+                            const message=DriverChicagoAccessibleInteriorsR83.interact(
+                                this.city,this.interiorPlace,pos);
+                            if(message){this.showSaveStatus(message);return;}
+                        }
                         if(Math.hypot(pos.x-this.interiorPlace.exit.x,
                             pos.z-this.interiorPlace.exit.z)<4.2)
                             this.leaveInterior();
@@ -2609,8 +2628,14 @@
                     const t=this.tanner.group.position;
                     const exit=this.interiorPlace.exit;
                     const atExit=Math.hypot(t.x-exit.x,t.z-exit.z)<4.2;
+                    const innerDoor=
+                        typeof DriverChicagoAccessibleInteriorsR83!=='undefined'?
+                        DriverChicagoAccessibleInteriorsR83.nearbyDoor(
+                            this.interiorPlace,t):null;
                     prompt.textContent=this.nearSaveDesk()?
                         'MESA VERDE: E ou F para salvar seu jogo':
+                        innerDoor?'E: '+(innerDoor.open?'FECHAR':'ABRIR')+
+                            ' PORTA INTERNA':
                         atExit?'Pressione E para SAIR do prédio':
                         'Explore o prédio. Caminhe até a porta para sair.';
                     prompt.classList.remove('hidden');
