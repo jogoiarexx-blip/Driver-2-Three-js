@@ -27,7 +27,7 @@ A cidade desejada deve conter:
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
 | **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
-| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **Em desenvolvimento** | Guarda-corpos físicos, passeios, pontes fixas e fachadas de canal; preserva rio/pontes móveis |\n| R81+ | **Planejadas** | Goose Island industrial, interiores completos e alinhamento fiel ao PS1 |
+| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| R81+ | **Planejadas** | Goose Island industrial, interiores completos e alinhamento fiel ao PS1 |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
 
@@ -162,7 +162,7 @@ As novas salas são `r78-loop-shop` (interior em X=1300) e `r78-goose-warehouse`
 
 ### R80 — Chicago River: margens físicas, fachadas e pontes (03/11/2026)
 
-**Estado:** implementação criada na branch `chicago-r80-riverfront-bridges-blocks`; **confirmar CI/PR/merge** antes de alterar para concluída.
+**Estado:** **CONCLUÍDA E INTEGRADA** no PR [#56](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/56), commit `a0d82aafc3b2c674d13dcbe1b113662a3e5f7ef9`; testes R80 e QA de lógica aprovados na branch final.
 
 A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da ROM:
 
@@ -175,9 +175,20 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 **Testes exigidos antes do merge:** `tests/chicago-r80-riverfront.test.cjs` e `tests/chicago-r80-riverfront-browser.cjs` + R2/R53/R79/R78/R69/R77. O browser deve detectar margens secas com colisão real, 10 pontes fixas, 8+ fachadas sobre prédios preexistentes, navegação pela ponte oeste, alteração de grafo ao erguer as basculantes e nenhum erro JS. Workflow: `.github/workflows/chicago-r80.yml`.
 
+**Checkpoint de verificação R80 — 03/11/2026**
+- PR [#56](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/56), merge `a0d82aafc3b2c674d13dcbe1b113662a3e5f7ef9`.
+- [CI R80 41671592572](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41671592572): **43 testes Node aprovados**, sem falhas; Chromium iniciou a **Chicago jogável**, verificou os dois estados das pontes móveis, os guarda-corpos, a rota de IA e os quatro marcos urbanos, sem erro JS.
+- [QA de lógica geral 41671592703](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41671592703): aprovada na mesma revisão.
+- **Resultado físico real:** 66 barreiras AABB em locais secos, correspondentes às peças visuais preexistentes da R2; 66 passeios secos; **8 posições reprovadas** por não satisfazerem as condições de segurança; **10 pontes fixas preservadas com 240 detalhes leves**.
+- **Arquitetura:** 11 fachadas **sobre prédios já construídos** (8 pertencentes à R78, 3 à R14). R53 não estava ativa na sessão real, portanto nenhuma de suas oito estruturas foi inventada. 0 novos segmentos de trânsito, 0 novas pontes.
+- **Rotas:** IA fecha travessias nas basculantes x=0 e x=240 quando erguidas; reabre ao abaixar; a ponte fixa oeste usa rota verificada de **3 pontos**, sem colisão; grafo invalida o cache ao mudar estado.
+- **Regressão:** R79 mantém 2 corredores / 16 trechos; R78 mantém 86 imóveis e 2 salas utilizáveis; R77 mantém 4 marcos; casa do Tanner, Wrigley Field e Lower Wacker presentes.
+- **Evidências:** artefato `chicago-r80-live-riverfront-bridges` em GitHub Actions, com `riverfront-game.json` e captura `riverfront-game.png`. **Pages:** conferir workflow de deploy mais recente antes de declarar atualizado no site.
+- **Geografia PS1:** canal e margens R2 são reconstrução procedural. Não afirmar equivalência de coordenadas originais da ROM sem evidência específica. **Próxima R81: Goose Island industrial.**
+
 **Próxima revisão depois de R80 validada:** **R81 — Goose Island industrial**, galpões em sequência, pátios navegáveis, docas e pelo menos um interior industrial; trabalho PS1 fica explicitamente condicionado a IDs e posicionamento geográfico comprovados.
 
-### R80 — Chicago River, pontes e estruturas
+### R80 — escopo planejado original (histórico; entrega final documentada acima)
 - Corrigir margens e acessos com base no rio e pontes da fonte PS1; **não tratar água como asfalto**.
 - Preservar a lógica da ponte levadiça e da ponte leste; checar grade de altura (sobre/sob viaduto).
 - Substituir blocos genéricos por fachadas voltadas para o rio, acessos pedonais e docas onde couber.
