@@ -129,6 +129,12 @@ class DriverChicagoAccessibleInteriorsR83 {
                 0x59656b,true,'platform-rail-east');
             add(7.2,4.35,8.75,5.6,1.5,.22,
                 0x59656b,true,'platform-rail-back');
+            // Front rail leaves only the 2.7m stair landing open.
+            // No invisible cliff along either side of the stairwell.
+            add(5.0,4.35,1.52,1.3,1.5,.23,
+                0x59656b,true,'platform-rail-front-west');
+            add(9.55,4.35,1.52,1.3,1.5,.23,
+                0x59656b,true,'platform-rail-front-east');
             add(8.6,4.15,7.5,1.2,1.1,1.1,
                 0x9b815f,true,'upstairs-box');
         }
