@@ -150,6 +150,13 @@ class DriverChicagoGooseIndustrialR81 {
     static decorateOffice(city){
         const place=city?.interiors?.find(p=>p.id===this.OFFICE.id);
         if(!place||!city.cityGroup)return 0;
+        // R82 now supplies real collidable office props lazily. Do not
+        // permanently install overlapping cosmetic-only R81 furniture.
+        if(typeof DriverChicagoModularInteriorsR82!=='undefined'&&
+           DriverChicagoModularInteriorsR82.manages(place)){
+            place.r81FurnitureCount=0;
+            return 0;
+        }
         const {x,z}=place.inside,parts=[];
         // One partial office with clear player spawn x,z and exit z-8.8.
         // All shelving and paperwork are COSMETIC (no invisible AABB)
