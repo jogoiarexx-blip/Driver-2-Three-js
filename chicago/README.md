@@ -12,6 +12,23 @@ O manifesto, atlas e 54 GLBs já estão publicados nesta pasta do GitHub, direta
 
 **Aviso:** esta é uma visualização técnica, não substitui a cidade jogável nem define colisores, ruas e missões do PS1.
 
+## R75 — Verificação dos pixels reais do atlas original PS1
+
+O [inspetor UV R75](../chicago-seam-r75.html) permite percorrer **67 cortes reais** da aresta 3445 e comparar três posições originais (−0,12, −0,10 e −0,08 unidade OBJ) com os recortes ampliados da mesma textura WebP dos GLBs do PS1. São mostrados os pixels e suas cores RGB sem atribuir nomes de materiais não comprovados. O link também está no visualizador 3D original, separado do jogo principal.
+
+A auditoria de cores pode ser repetida (Node 22, Python 3, Pillow) em um checkout com os GLBs e o atlas originais:
+
+```sh
+node tools/chicago-r74-source-seam.cjs qa-artifacts/chicago-r75/seam-r74.json
+python tools/chicago-r75-atlas-material.py --report qa-artifacts/chicago-r75/seam-r74.json
+node --test tests/chicago-r75-atlas-inspector.test.cjs
+python tests/chicago-r75-atlas-material.test.py
+```
+
+**Resultado da fonte real:** [R75 aprovada no GitHub Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41551929135): 8 testes Node + 4 Python passaram. As 67 seções produziram 71 amostras de pixels por offset, pois **quatro seções têm dois triângulos UV sobrepostos**. O contato ampliado do WebP apresenta padrões gráficos semelhantes a painéis e janelas, não asfalto homogêneo. Portanto as regiões UV anteriormente chamadas “pavimento” pela R26 são **heurísticas de análise**, e não prova da existência de pista automotiva no corredor. A próxima etapa precisa confirmar visualmente qual superfície 3D usa essas regiões e se há piso de trânsito real; **sem converter o material vizinho em asfalto**.
+
+O [workflow R75](../.github/workflows/chicago-r75.yml) publica uma imagem com recortes autênticos do atlas e o JSON de evidência de cor. O arquivo WebP tem SHA256 verificado contra a pesquisa de textura R24. **A inspeção permanece visual/diagnóstica**: pavimento do atlas não equivale a pista certificada; não se adicionam ruas, colisores, tráfego, missões ou alterações nos saves.
+
 ## R74 — Diagnóstico da costura de pavimento, sem fabricar estrada
 
 A R74 compara a faixa -0,1 OBJ do corredor **3445** (setores `01_02` e `01_03`) usando quatro conjuntos independentes de triângulos: malha original sem filtro, geometria elegível pela altura R26, UV de asfalto R26 e a interseção dos filtros. O cruzamento com a textura R24 diferencia **buraco geométrico** de **triângulo presente mas reprovado por altura/UV**. Também verifica pequenas posições vizinhas para diagnosticar costuras; não interpola nem fecha espaços reais.

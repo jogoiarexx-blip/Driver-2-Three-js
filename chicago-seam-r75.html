@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Driver 2 — R75 • Atlas original Chicago PS1</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b1420;color:#e2edf5;font:15px/1.55 system-ui,-apple-system,Arial,sans-serif}
+main{max-width:1110px;margin:auto;padding:24px 18px 50px}h1{font-size:clamp(22px,3.8vw,36px);margin:12px 0 6px}h2{font-size:19px;margin:6px 0}
+p{color:#adc0cd}a{color:#89cdf2}header a{font-size:13px}
+.sub{max-width:940px}.panel{background:#132232;border:1px solid #39516a;border-radius:12px;padding:20px;margin-top:18px}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.controls button{background:#264e70;border:1px solid #527a98;border-radius:7px;padding:9px 15px;color:#fff;cursor:pointer}
+.controls input{accent-color:#dabb60;flex:1;min-width:170px}.controls output{font-variant-numeric:tabular-nums;min-width:70px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+.card{border:1px solid #3b5269;border-radius:10px;padding:16px;background:#101b2a;min-width:0}
+.card b{color:#f3d987}.card canvas{display:block;background:#081019;image-rendering:pixelated;max-width:100%;width:min(100%,240px);height:auto;aspect-ratio:1;margin:14px auto;border:1px solid #57718a}
+.mono{font:12px/1.6 ui-monospace,Consolas,monospace;color:#adcfdd;overflow-wrap:anywhere}.swatch{display:inline-block;height:13px;width:28px;border:1px solid #ffffff77;vertical-align:middle;margin-right:5px}
+.notice{border-left:3px solid #e9bd62;padding-left:14px;color:#dce6ec}.status{color:#9fc3d8;font-size:13px}
+@media(max-width:720px){.cards{grid-template-columns:1fr}.card canvas{width:220px}}
+</style></head><body><main>
+<header><a href="./chicago-original-preview.html">Voltar à Chicago original PS1</a></header>
+<h1>Chicago original — Inspector UV R75</h1>
+<p class="sub">Compare três pontos vizinhos do <strong>corredor 3445</strong> com os pixels reais do atlas compartilhado dos modelos PS1. Use o seletor para percorrer as <strong>67 seções medidas</strong>. Esta página é uma inspeção de materiais — não muda o jogo.</p>
+<section class="panel"><h2>Corte transversal <span id="sectionNum">—</span></h2>
+<div class="controls">
+<button id="prev" type="button" aria-label="Corte anterior">Anterior</button>
+<input id="sectionSlider" type="range" min="0" max="66" value="0" aria-label="Escolher corte original PS1">
+<button id="next" type="button">Próximo</button><output id="progress">—</output>
+</div><div id="position" class="status">Carregando atlas original...</div>
+<div class="cards">
+<article class="card"><h2>-0,12 OBJ</h2><b>Região UV de pavimento R26</b><canvas id="patch0" width="240" height="240"></canvas><div id="coord0" class="mono"></div></article>
+<article class="card"><h2>-0,10 OBJ</h2><b>Outra região UV do atlas</b><canvas id="patch1" width="240" height="240"></canvas><div id="coord1" class="mono"></div></article>
+<article class="card"><h2>-0,08 OBJ</h2><b>Outra região UV do atlas</b><canvas id="patch2" width="240" height="240"></canvas><div id="coord2" class="mono"></div></article>
+</div></section>
+<section class="panel">
+<h2>O que os dados comprovam</h2>
+<p>Na R74, todos os 67 pontos de -0,10 OBJ tinham triângulo e altura compatíveis, mas sua coordenada UV apontava fora das duas regiões pré-classificadas como pavimento. A R75 mostra o material original do atlas correspondente a cada ponto; <strong>cor RGB não prova</strong> se uma superfície é rua, calçada ou área decorativa.</p>
+<p class="notice"><strong>Segurança:</strong> nenhum triângulo foi movido ou preenchido. Não são criados piso, tráfego, colisores ou rotas de IA. A localização da via no Undercover ainda não é homologada.</p>
+<p class="status">Fonte: GLBs PS1 01_02/01_03, relatório R74 de interpolação UV, atlas original 2048×2048. O marcador amarelo indica a coordenada consultada, não o centro físico de uma faixa de trânsito. Em quatro seções os triângulos originais se sobrepõem, e o relatório QA R75 preserva as duas UVs.</p>
+</section>
+</main><script>
+(async function(){
+'use strict';
+const msg=document.getElementById('position'),range=document.getElementById('sectionSlider');
+let r=null,atlas=null;
+const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
+function pixel(uv,im){
+ const px=Math.floor(uv[0]),py=im.height-1-Math.floor(uv[1]);
+ return [clamp(px,0,im.width-1),clamp(py,0,im.height-1)];
+}
+function draw(index){
+ if(!r||!atlas)return;
+ index=clamp(Number(index)||0,0,r.atlasV.length-1);
+ range.value=index;
+ document.getElementById('sectionNum').textContent=String(index+1);
+ document.getElementById('progress').textContent=(index+1)+' / '+r.atlasV.length;
+ const t=index/(r.atlasV.length-1);
+ const x=r.firstXZ[0]+(r.lastXZ[0]-r.firstXZ[0])*t;
+ const z=r.firstXZ[1]+(r.lastXZ[1]-r.firstXZ[1])*t;
+ msg.textContent='Ponto original X='+x.toFixed(3)+' · Z='+z.toFixed(3)+' OBJ · aresta '+r.edgeId+
+ (r.overlapCutIndexes?.includes(index)?' · Atenção: 2 triângulos originais sobrepostos; mostrando a primeira UV (segunda no relatório QA).':'');
+ for(let i=0;i<3;i++){
+  const u=r.uvX[i],v=r.atlasV[index][i];
+  const [px,py]=pixel([u,v],atlas);
+  const canvas=document.getElementById('patch'+i),ctx=canvas.getContext('2d');
+  const radius=14,src=2*radius+1,size=canvas.width;
+  ctx.clearRect(0,0,size,size);ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(atlas,px-radius,py-radius,src,src,0,0,size,size);
+  ctx.strokeStyle='#ffe45d';ctx.lineWidth=2;ctx.strokeRect(size/2-4,size/2-4,8,8);
+  const picker=document.createElement('canvas');picker.width=1;picker.height=1;
+  const p=picker.getContext('2d',{willReadFrequently:true});p.drawImage(atlas,px,py,1,1,0,0,1,1);
+  const rgb=[...p.getImageData(0,0,1,1).data].slice(0,3);
+  document.getElementById('coord'+i).textContent='UV '+u.toFixed(3)+', '+v.toFixed(3)+' | pixel '+px+','+py+' | RGB '+rgb.join(',');
+ }
+}
+range.addEventListener('input',()=>draw(range.value));
+document.getElementById('prev').addEventListener('click',()=>draw(Number(range.value)-1));
+document.getElementById('next').addEventListener('click',()=>draw(Number(range.value)+1));
+window.addEventListener('keydown',e=>{
+ if(e.target===range)return;
+ if(e.key==='ArrowLeft'){e.preventDefault();draw(Number(range.value)-1)}
+ if(e.key==='ArrowRight'){e.preventDefault();draw(Number(range.value)+1)}
+});
+try{
+ const response=await fetch('./chicago/corridor-seam-r75.json',{cache:'no-store'});
+ if(!response.ok)throw Error('relatório '+response.status);
+ r=await response.json();
+ if(r.edgeId!==3445||r.atlasV?.length!==67||
+    r.offsetsOBJ?.join(',')!=='-0.12,-0.1,-0.08'||
+    r.certifiedRoad!==false||r.trafficEnabled!==false)
+  throw Error('dados R75 incompatíveis');
+ atlas=new Image();atlas.decoding='async';atlas.src='./chicago/chicago_atlas.webp';
+ await atlas.decode();
+ if(atlas.width!==2048||atlas.height!==2048)throw Error('atlas original com dimensões inesperadas');
+ draw(0);
+}catch(e){msg.textContent='Não foi possível carregar a inspeção R75: '+e.message;}
+})();
+</script></body></html>
