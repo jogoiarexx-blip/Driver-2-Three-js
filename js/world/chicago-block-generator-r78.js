@@ -10,15 +10,17 @@
 class DriverChicagoBlockGeneratorR78 {
     static VERSION='r78-pilot-1';
     static PILOTS=[
-        {x:-280,z:-120,style:'rowhouses',district:'ukrainian-village'},
-        {x:-280,z:-40,style:'rowhouses',district:'ukrainian-village'},
-        {x:40,z:-40,style:'downtown',district:'loop',interior:'r78-loop-shop'},
-        {x:120,z:-40,style:'downtown',district:'loop'},
+        // Only cells actually constructed by CityBuilder, not R15/R35/R48
+        // reserved road cells or R77/protected landmark parcels.
+        {x:-280,z:-200,style:'rowhouses',district:'ukrainian-village'},
+        {x:120,z:-200,style:'rowhouses',district:'prairie-ave'},
+        {x:-40,z:-40,style:'downtown',district:'loop',interior:'r78-loop-shop'},
+        {x:-120,z:-40,style:'downtown',district:'greektown'},
         {x:-40,z:-200,style:'downtown',district:'loop'},
         {x:40,z:-200,style:'downtown',district:'loop'},
+        {x:-120,z:-200,style:'downtown',district:'greektown'},
         {x:-40,z:120,style:'riverside',district:'river-north'},
-        {x:120,z:200,style:'riverside',district:'river-north'},
-        {x:-120,z:280,style:'industrial',district:'goose-island-edge',
+        {x:-200,z:120,style:'industrial',district:'goose-island',
             interior:'r78-goose-warehouse'}
     ];
     static INTERIOR_OFFSETS={
