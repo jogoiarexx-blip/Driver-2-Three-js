@@ -29,14 +29,21 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
     const spawnClear=!c.isPointBlocked(b.x,b.z-6,.55,0),
      exteriorClear=!c.isWaterAt(p.door.x,p.door.z+4),
      beforeLoaded=p.r83Loaded;
-    const entered=game.enterInterior(p);
+    // Use the actual E action for exterior -> interior, not a direct
+    // internal engine call that could mask broken gameplay controls.
+    game.tanner.setPosition(p.door.x,0,p.door.z,0);
+    game.toggleVehicleEnterExit();
+    const entered=game.interiorPlace===p&&p.r83Loaded;
     maxLoaded=Math.max(maxLoaded,c.interiors.filter(i=>i.r83Loaded).length);
     const pos={x:b.x+door.x+1.2,z:b.z+door.z,y:0};
     const closed=c.isPointBlocked(b.x+door.x,b.z+door.z,.55,0);
-    const message=mod.interact(c,p,pos);
+    game.tanner.setPosition(pos.x,0,pos.z,0);
+    game.toggleVehicleEnterExit(); // Actual E interaction
+    const message=document.getElementById('home-save-status')?.textContent;
     const opened=!c.isPointBlocked(b.x+door.x,b.z+door.z,.55,0);
     const moved=door.mesh?.position.z>b.z+door.z+3.9;
-    const closedAgain=mod.interact(c,p,pos)==='PORTA FECHADA';
+    game.toggleVehicleEnterExit(); // Close with E again
+    const closedAgain=!door.open;
     const reblocked=c.isPointBlocked(b.x+door.x,b.z+door.z,.55,0);
     let stairResult=null;
     if(b.mezzanine){
@@ -57,7 +64,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
        teleportForbidden:!mod.safeStep(c,b.x+4.8,b.z+5,0,
         b.x+4.9,b.z+5,3.6)};
     }
-    const unloaded=game.leaveInterior()&&!p.r83Loaded&&
+    game.tanner.setPosition(p.exit.x,0,p.exit.z,0);
+    game.toggleVehicleEnterExit(); // Exit with E at the internal door
+    const unloaded=game.interiorPlace===null&&!p.r83Loaded&&
       !c.cityGroup.children.some(ch=>
        ch.name==='r83-accessible-interior-'+id);
     observation.push({id,source:p.r83SourceLot,
