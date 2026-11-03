@@ -107,6 +107,9 @@ test('R77 addresses streets by actual compass-area landmarks without adding road
  const code=fs.readFileSync('js/world/chicago-ps1-playable-landmarks-r77.js','utf8');
  assert(!/createRoad\(|registerRoad\(|addTraffic\(|mission[A-Za-z]+\s*=/.test(code));
  const html=fs.readFileSync('index.html','utf8');
+ const radar=fs.readFileSync('js/ui/chicago-landmark-navigation-r56.js','utf8');
+ assert(radar.includes('DriverChicagoPS1PlayableLandmarksR77.SITES'));
+ assert(radar.includes('landmarkState.ids.has(site.id)'));
  const build=fs.readFileSync('js/world/city-builder.js','utf8');
  const plan=fs.readFileSync('js/world/chicago-city-plan.js','utf8');
  assert(html.includes('./js/world/chicago-ps1-playable-landmarks-r77.js'));
