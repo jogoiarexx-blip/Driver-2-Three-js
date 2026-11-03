@@ -3,7 +3,7 @@
 > **Documento vivo de retomada.** Atualize este arquivo **na mesma PR de toda revisão futura**. Assim, quando a conversa acabar, basta enviar este MD à próxima sessão e pedir para continuar a próxima etapa.  
 > Projeto: [Driver-2-Three-js](https://github.com/jogoiarexx-blip/Driver-2-Three-js) · Jogo: [GitHub Pages](https://jogoiarexx-blip.github.io/Driver-2-Three-js/)  
 > Referências técnicas: `AUDITORIA-MESTRA-DRIVER2.md`, `chicago/README.md`.  
-> **Atualizado:** 2026-11-03 — R81 integrada, próxima R82. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
+> **Atualizado:** 2026-11-03 — R82 em desenvolvimento, PR #58. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
 
 ## 0. Missão do projeto — não perder o objetivo
 
@@ -27,7 +27,7 @@ A cidade desejada deve conter:
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
 | **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
-| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| **R81** | **CONCLUÍDA em `main`** — PR #57, merge `0fc10af8` | 2 pátios dirigíveis, 4 rotas para caminhões, 4 colisores de carga, 4 galpões detalhados e um escritório jogável |\n| R82+ | **Planejadas** | Interiores modulares e alinhamento certificado ao PS1 |
+| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| **R81** | **CONCLUÍDA em `main`** — PR #57, merge `0fc10af8` | 2 pátios dirigíveis, 4 rotas para caminhões, 4 colisores de carga, 4 galpões detalhados e um escritório jogável |\n| **R82** | **Em desenvolvimento — PR #58** | 3 salas conectadas com colisão física e renderização sob demanda (um andar) |\n| R83+ | **Planejadas** | Portas interativas, escadas reais e geografia PS1 verificada |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
 
@@ -225,6 +225,37 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - Fazer rede real de pátios, galpões sequenciais, becos de serviço e docas compatíveis com o mapa.
 - Construir alguns galpões com **interior parcial** e pelo menos um com interior completo, com acesso físico legítimo.
 - Testar veículos grandes e perseguições: larguras de curva, acesso à ilha, colisão em canal e caminhão.
+
+### R82 — Chicago: interiores modulares reais (03/11/2026)
+
+**PR:** [#58](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/58) · **Branch:** `chicago-r82-modular-interiors-live-collision-lazy`. Estado deste checkpoint: código e testes criados, **confirmar CI e merge** antes de marcar concluído.
+
+**Objetivo:** substituir salas genéricas com móveis atravessáveis por interiores arquitetônicos realmente navegáveis com a mesma geometria para render e colisão.
+
+**Três interiores preexistentes melhorados (não criar entradas/teleportes novos):**
+1. `r78-loop-shop` — loja, estoque lateral, balcão de atendimento e corredor.
+2. `r78-goose-warehouse` — armazém, depósito, oficina e corredor com paletes colidíveis.
+3. `r81-goose-yard-office` — escritório industrial parcial com arquivo, estação de trabalho e corredor.
+
+**Planta e física:**
+- Cada ambiente usa o mesmo recinto original de **24×22 unidades** e divide o piso em **três áreas**: sala oeste, corredor central e sala leste. Duas divisórias em x=±3,8 possuem **aberturas reais de 4,0 unidades** em z≈0. O jogador pode atravessar; portas não são desenhos sobre parede maciça.
+- AABB é calculada diretamente da **mesma peça** que compõe a malha visível: paredes divididas e itens sólidos como armários, balcões, paletes, arquivo, prateleiras. Uma parede sem AABB ou uma AABB invisível é proibida.
+- `CityBuilder.isPointBlocked` consulta as colisões R82 **somente quando a posição pertence ao ambiente modular**; a casa do Tanner conserva `DriverTannerHomeInterior.blocked` com seus móveis e mesa de save.
+- Área de spawn (centro, z=-6), área da saída (centro, z=-8,8) e as duas portas laterais permanecem livres em todas as salas.
+- **Render sob demanda**: `DriverChicagoModularInteriorsR82.prepare(city)` registra apenas pequenas plantas em memória ao construir a cidade; `enter(city,place)` cria o grupo visual batched do único interior ativo; `leave(city,place)` remove e descarrega as instâncias/material/geometry. O player usa o mesmo `GameEngine.enterInterior/leaveInterior`, portanto a tecla de interação original é preservada.
+- O velho mobiliário apenas decorativo do escritório R81 é evitado quando R82 está disponível, para não sobrepor o mobiliário colidível da R82. O teste histórico R81 aceita tanto o fallback antigo quanto a versão modular.
+- **Atenção:** são interiores **modulares de um pavimento**; não alegar múltiplos pisos, escadas físicas, sistemas de porta animada ou coordenadas ROM certificadas. Esses itens são **pendências futuras**.
+
+**Arquivos desta etapa:** `js/world/chicago-modular-interiors-r82.js`, `js/world/city-builder.js`, `js/engine/driver2-game-engine.js`, `js/world/chicago-goose-industrial-r81.js`, `index.html`, `tests/chicago-r82-modular-interiors.test.cjs`, `tests/chicago-r82-playable-browser.cjs`, `tests/chicago-r81-playable-browser.cjs`, `.github/workflows/chicago-r82.yml`.
+
+**Aceite antes do merge:**
+- [ ] Três blueprints (três áreas cada), com divisórias AABB reais e duas passagens acessíveis a pé, sem erro de script.
+- [ ] Entrada/saída `E` funcionando nos três ambientes, e os grupos de malha aparecem somente **durante** a visita e desaparecem ao sair.
+- [ ] `isPointBlocked` impede atravessar paredes/móveis mas permite portas laterais, spawn e saída.
+- [ ] Casa do Tanner preservada (inclui mesa save); R81 escritório, R80 66 guarda-corpos, R79 16 segmentos, R78 86 construções/2 interiores, R77 4 marcos preservados.
+- [ ] Testes Node, regressões e Chromium aprovado com captura **dentro de um ambiente**, PR mesclado e publicação GitHub Pages separadamente verificada.
+
+**Próxima etapa R83:** estender o sistema para mais interiores com **portas interativas**, fases distintas, escadas e alturas físicas apenas onde houver navegação/colisão segura; seguir aproximando geografia PS1 por malhas verificadas, sem confundir aproximação com a ROM.
 
 ### R82 — interiores modulares completos
 - Converter `shell-planned` escolhidos em **interiores parciais reais**: hall, balcão e 1–2 salas.
