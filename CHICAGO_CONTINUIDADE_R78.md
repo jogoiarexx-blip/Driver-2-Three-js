@@ -26,10 +26,19 @@ A cidade desejada deve conter:
 | R69 | Integrada anteriormente | Becos residenciais com pavimento e ligações de IA verificadas |
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
-| **R78** | **Implementação desta etapa — confirmar CI/merge do PR #54** | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores conectados ao sistema de portas |
+| **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
 | R79+ | **Não implementadas** | Migração validada do traçado PS1, expansão por bairros e acabamento dos interiores |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
+
+### Checkpoint R78 — 03/11/2026: teste real aprovado e integração concluída
+
+- **PR mesclada:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54), commit de merge `19ce23e2a6db71828e65765996f4a0b40a20d038`.
+- **CI R78 aprovada:** [workflow 41636459274](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41636459274): **26 testes Node aprovados**, sem falhas, e Chromium iniciando o **jogo real**.
+- **QA de lógica:** [workflow 41636459123](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41636459123) aprovado.
+- Evidência do navegador: `city.chicagoCityPlan.r78PilotBlocks=9`, `r78Frontages=86`, `r78EnterableRooms=2`; as duas entradas respondem a `interiorAt` e o motor confirma `enterInterior`/`leaveInterior`. Os quatro interiores existentes e os marcos R77 continuam presentes.
+- **GitHub Pages:** deploy pós-merge deve ser conferido em [Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/workflows/pages/pages-build-deployment) antes de declarar publicado em produção.
+- A próxima revisão de conteúdo é **R79 — ruas e quadras PS1 de Downtown**. Não iniciar outra auditoria isolada sem conexão com o jogo jogável.
 
 ## 2. Arquivos fundamentais e responsabilidades
 
@@ -161,17 +170,17 @@ Teste completo de navegador: `.github/workflows/chicago-r78.yml` inicia um servi
 
 Checklist de aceite:
 
-- [ ] 9 quadras e 86 lotes reais no jogo.
+- [x] 9 quadras e 86 lotes reais no jogo.
 - [ ] Casas/prédios sem intervalos enormes; duas frentes contínuas e beco livre.
-- [ ] 2 interiores R78 com entrada e saída verificadas pelo motor.
+- [x] 2 interiores R78 com entrada e saída verificadas pelo motor.
 - [ ] Fachadas sem portas falsas que prometam acesso.
 - [ ] Nenhum prédio/paredão dentro de asfalto, ponte ou água.
 - [ ] Quatro marcos R77 preservados; Tanner, missões, Wrigley e Soldier preservados.
 - [ ] Radar, IA e rota de pedestres continuam sem falso atalho.
 - [ ] Rio, Havana, Las Vegas continuam funcionando.
-- [ ] CI de lógica e CI R78 verdes.
+- [x] CI de lógica e CI R78 verdes.
 - [ ] GitHub Pages concluiu deploy da revisão.
-- [ ] Foto real do jogo e relatório QA associados à PR.
+- [x] Foto real do jogo e relatório QA associados à PR.
 
 **Regra de publicação:** não marcar como concluído se um teste falhar ou ficar apenas na branch. Se houver falha, registrar a causa exata aqui e corrigir antes do merge.
 
