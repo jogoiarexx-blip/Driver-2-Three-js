@@ -19,7 +19,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
   const report=await page.evaluate(()=>{
    const game=window.DriverGame,city=game.city,
     r=city.chicagoDowntownR79,
-    graph=window.DriverChicagoMixedNavigationR49.compile(city);
+    graph=DriverChicagoMixedNavigationR49.compile(city);
    const roadBodies=(r?.links||[]).map(s=>{
     const mx=(s.from.x+s.to.x)/2,mz=(s.from.z+s.to.z)/2;
     return {id:s.id,
@@ -29,10 +29,10 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
    });
    const routes=(r?.corridors||[]).map(c=>{
     const start=c.sourcePoints[0],end=c.sourcePoints.at(-1);
-    const path=window.DriverChicagoMixedNavigationR49.plan(city,start,end);
+    const path=DriverChicagoMixedNavigationR49.plan(city,start,end);
     return {id:c.id,pathPoints:path?.length||0,drivable:
       !!path&&path.every((p,i)=>!i||
-        window.DriverChicagoMixedNavigationR49.clear(city,path[i-1],p,false))};
+        DriverChicagoMixedNavigationR49.clear(city,path[i-1],p,false))};
    });
    // Load a camera view over a real R79 street rather than an empty,
    // unrelated area of Chicago.
