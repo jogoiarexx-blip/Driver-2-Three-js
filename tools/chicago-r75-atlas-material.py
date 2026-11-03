@@ -56,12 +56,23 @@ def analyze(report, survey, image):
         for offset, data in zip(OFFSETS, section["offsets"]):
             if abs(data["offset"] - offset) > 1e-7:
                 raise ValueError("R74 offset order changed")
-            if data["gradeHits"] != 1 or len(data["examples"]) != 1:
-                raise ValueError("ambiguous source triangles at UV probe")
-            uv = data["examples"][0]["atlasPixel"]
-            rgb = rgb_at(image, uv)
-            counts[str(offset)][tuple(rgb)] += 1
-            coords.append({"offsetOBJ": offset, "atlasUVPixel": uv, "sourceRGB": rgb,
+            if data["gradeHits"] < 1 or len(data["examples"]) != data["gradeHits"]:
+                raise ValueError("source triangle hits missing or inconsistent")
+            # Some PS1 triangles overlap at sector seams. Preserve *every*
+            # original UV/material hit; the first hit only drives the preview.
+            source_hits = []
+            for example in data["examples"]:
+                uv = example["atlasPixel"]
+                rgb = rgb_at(image, uv)
+                counts[str(offset)][tuple(rgb)] += 1
+                source_hits.append({"atlasUVPixel": uv, "sourceRGB": rgb,
+                                    "pointUVPavement": example["pointUVPavement"]})
+            first = source_hits[0]
+            coords.append({"offsetOBJ": offset,
+                           "atlasUVPixel": first["atlasUVPixel"],
+                           "sourceRGB": first["sourceRGB"],
+                           "triangleHits": len(source_hits),
+                           "alternates": source_hits[1:],
                            "r74Verdict": data["verdict"]})
         samples.append({"sourceXZOBJ": section["atOBJ"], "materials": coords})
     def summary(k):
@@ -76,6 +87,9 @@ def analyze(report, survey, image):
         "uvOrigin": "bottom-left glTF; mapped to PIL top-left with vertical inversion",
         "offsetsOBJ": list(OFFSETS),
         "evidence": {"totalCrossSections": len(samples),
+                     "sectionsWithMultipleSourceTriangles": sum(
+                         any(material["triangleHits"] > 1 for material in section["materials"])
+                         for section in samples),
                      "byOffset": {str(k): summary(k) for k in OFFSETS}},
         "certifiedDriveableRoad": False, "runtimeRoadEnabled": False,
         "sourceAssetsModified": False,
