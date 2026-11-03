@@ -189,6 +189,26 @@ class DriverChicagoLandmarkNavigationR56 {
             ctx.fillText(place.code,0,3);
             ctx.restore();
         }
+        // R77: real skyline landmarks visible on the live Chicago radar,
+        // only after their actual in-game parcels have been constructed.
+        // These passive markers are NOT fictional navigation routes.
+        const landmarkState=game.city?.chicagoPS1PlayableLandmarksR77;
+        if(landmarkState?.root?.parent===game.city.cityGroup &&
+           typeof DriverChicagoPS1PlayableLandmarksR77!=='undefined'){
+            const glyphs={'sears-tower':'T','marina-city':'C',
+                'merchandise-mart':'M','water-tower':'H'};
+            ctx.font='bold 8px sans-serif';
+            for(const site of DriverChicagoPS1PlayableLandmarksR77.SITES){
+                if(!landmarkState.ids.has(site.id))continue;
+                const x=(site.x-pos.x)*scale,z=-(site.z-pos.z)*scale;
+                ctx.beginPath();ctx.arc(x,z,4.2,0,Math.PI*2);
+                ctx.fillStyle='#182c36';ctx.fill();
+                ctx.strokeStyle='#d1b878';ctx.lineWidth=1.1;ctx.stroke();
+                ctx.save();ctx.translate(x,z);ctx.scale(-1,1);
+                ctx.fillStyle='#f6e4b5';
+                ctx.fillText(glyphs[site.id]||'?',0,2.8);ctx.restore();
+            }
+        }
         ctx.restore();
     }
     static audit(game) {
