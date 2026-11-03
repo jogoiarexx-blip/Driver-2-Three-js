@@ -42,8 +42,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
   console.log('CHICAGO_R77_GAMEPLAY',JSON.stringify(report));
   assert.equal(report.city,'chicago');
   assert(report.root,'landmarks missing from actual city Group');
-  assert.deepEqual(report.landmarkIds,
-   ['sears-tower','marina-city','merchandise-mart','water-tower']);
+  assert.deepEqual([...report.landmarkIds].sort(),
+   ['sears-tower','marina-city','merchandise-mart','water-tower'].sort(),
+   'four landmarks must exist irrespective of city grid build order');
   assert.equal(report.signs,6);
   assert(report.crosswalks>=100,'zebra crossings absent in real Chicago junctions');
   assert.equal(report.collisionBoxes,6);
