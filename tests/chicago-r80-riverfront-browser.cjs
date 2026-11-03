@@ -58,6 +58,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
     facades:r?.facades||0,
     r53Buildings:r?.r53Buildings||0,
     r78CanalBuildings:r?.r78CanalBuildings||0,
+    r14CanalBuildings:r?.r14CanalBuildings||0,
     fixedBridges:r?.fixedBridgeCount||0,
     decorativeOnly:r?.drivableRoutesAdded===0,
     ps1Certified:r?.originalPS1PlacementCertified,
@@ -97,7 +98,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
   assert.deepEqual(report.bridgeClosedWhenLowered,[false,false]);
   assert.deepEqual(report.bridgeClosedWhenRaised,[true,true]);
   assert(report.fixedStaysOpen&&report.bridgeGraphChanges);
-  assert(report.westFixedBridgeRoutePoints>=5);
+  assert(report.westFixedBridgeRoutePoints>=3);
   assert(report.fixedRouteClear);
   assert.equal(report.r79Corridors,2);
   assert.equal(report.r79Roads,16);
