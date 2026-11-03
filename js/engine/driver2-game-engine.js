@@ -1206,6 +1206,16 @@
                     return false;
                 }
                 const ok=this.homeSave.restore(this,save);
+                // R82: reconcile lazy-loaded geometry after checkpoint
+                // restore, while keeping all existing save data untouched.
+                if(ok&&typeof DriverChicagoModularInteriorsR82!=='undefined'){
+                    for(const room of this.city?.interiors||[])
+                        if(room.r82Loaded&&room!==this.interiorPlace)
+                            DriverChicagoModularInteriorsR82.leave(this.city,room);
+                    if(this.interiorPlace)
+                        DriverChicagoModularInteriorsR82.enter(
+                            this.city,this.interiorPlace);
+                }
                 this.showSaveStatus(ok?'Partida carregada com sucesso!':
                     'Não foi possível restaurar a partida.');
                 if(ok)document.getElementById('player-state-badge').textContent=
