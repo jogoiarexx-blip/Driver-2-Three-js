@@ -42,8 +42,8 @@ test('R77 four landmark blocks are uniquely anchored in playable Chicago map gri
  assert.equal(new Set(Landmarks.SITES.map(s=>s.id)).size,4);
  for(const s of Landmarks.SITES){
   assert.equal(Landmarks.isReservedBlock(s.x,s.z),true);
-  assert.equal(s.x%80,40%80);
-  assert.equal(s.z%80,40%80);
+  assert.equal((s.x+40)%80,0);
+  assert.equal((s.z+40)%80,0);
  }
  assert.equal(Landmarks.isReservedBlock(-280,200),false);
  assert.equal(Landmarks.isReservedBlock(-120,-120),false);
