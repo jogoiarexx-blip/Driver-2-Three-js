@@ -244,9 +244,10 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - Área de spawn (centro, z=-6), área da saída (centro, z=-8,8) e as duas portas laterais permanecem livres em todas as salas.
 - **Render sob demanda**: `DriverChicagoModularInteriorsR82.prepare(city)` registra apenas pequenas plantas em memória ao construir a cidade; `enter(city,place)` cria o grupo visual batched do único interior ativo; `leave(city,place)` remove e descarrega as instâncias/material/geometry. O player usa o mesmo `GameEngine.enterInterior/leaveInterior`, portanto a tecla de interação original é preservada.
 - O velho mobiliário apenas decorativo do escritório R81 é evitado quando R82 está disponível, para não sobrepor o mobiliário colidível da R82. O teste histórico R81 aceita tanto o fallback antigo quanto a versão modular.
+- **Save/load com backward compatibility**: `js/gameplay/home-save.js` aceita os três IDs de interiores novos sem mudar o número da versão, a chave de armazenamento ou o formato anterior. `GameEngine.loadHomeGame` reconstitui a malha visual do interior restaurado e descarta a antiga se o checkpoint aponta para outro cômodo; não deixar sala salva sem render nem malha de sala anterior ocupando GPU.
 - **Atenção:** são interiores **modulares de um pavimento**; não alegar múltiplos pisos, escadas físicas, sistemas de porta animada ou coordenadas ROM certificadas. Esses itens são **pendências futuras**.
 
-**Arquivos desta etapa:** `js/world/chicago-modular-interiors-r82.js`, `js/world/city-builder.js`, `js/engine/driver2-game-engine.js`, `js/world/chicago-goose-industrial-r81.js`, `index.html`, `tests/chicago-r82-modular-interiors.test.cjs`, `tests/chicago-r82-playable-browser.cjs`, `tests/chicago-r81-playable-browser.cjs`, `.github/workflows/chicago-r82.yml`.
+**Arquivos desta etapa:** `js/world/chicago-modular-interiors-r82.js`, `js/world/city-builder.js`, `js/engine/driver2-game-engine.js`, `js/world/chicago-goose-industrial-r81.js`, `js/gameplay/home-save.js`, `index.html`, `tests/chicago-r82-modular-interiors.test.cjs`, `tests/chicago-r82-playable-browser.cjs`, `tests/chicago-r81-playable-browser.cjs`, `.github/workflows/chicago-r82.yml`.
 
 **Aceite antes do merge:**
 - [ ] Três blueprints (três áreas cada), com divisórias AABB reais e duas passagens acessíveis a pé, sem erro de script.
