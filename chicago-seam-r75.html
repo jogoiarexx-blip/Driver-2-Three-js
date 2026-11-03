@@ -33,7 +33,7 @@ p{color:#adc0cd}a{color:#89cdf2}header a{font-size:13px}
 <h2>O que os dados comprovam</h2>
 <p>Na R74, todos os 67 pontos de -0,10 OBJ tinham triângulo e altura compatíveis, mas sua coordenada UV apontava fora das duas regiões pré-classificadas como pavimento. A R75 mostra o material original do atlas correspondente a cada ponto; <strong>cor RGB não prova</strong> se uma superfície é rua, calçada ou área decorativa.</p>
 <p class="notice"><strong>Segurança:</strong> nenhum triângulo foi movido ou preenchido. Não são criados piso, tráfego, colisores ou rotas de IA. A localização da via no Undercover ainda não é homologada.</p>
-<p class="status">Fonte: GLBs PS1 01_02/01_03, relatório R74 de interpolação UV, atlas original 2048×2048. O marcador amarelo indica a coordenada consultada, não o centro físico de uma faixa de trânsito.</p>
+<p class="status">Fonte: GLBs PS1 01_02/01_03, relatório R74 de interpolação UV, atlas original 2048×2048. O marcador amarelo indica a coordenada consultada, não o centro físico de uma faixa de trânsito. Em quatro seções os triângulos originais se sobrepõem, e o relatório QA R75 preserva as duas UVs.</p>
 </section>
 </main><script>
 (async function(){
@@ -54,7 +54,8 @@ function draw(index){
  const t=index/(r.atlasV.length-1);
  const x=r.firstXZ[0]+(r.lastXZ[0]-r.firstXZ[0])*t;
  const z=r.firstXZ[1]+(r.lastXZ[1]-r.firstXZ[1])*t;
- msg.textContent='Ponto original X='+x.toFixed(3)+' · Z='+z.toFixed(3)+' OBJ · aresta '+r.edgeId;
+ msg.textContent='Ponto original X='+x.toFixed(3)+' · Z='+z.toFixed(3)+' OBJ · aresta '+r.edgeId+
+ (r.overlapCutIndexes?.includes(index)?' · Atenção: 2 triângulos originais sobrepostos; mostrando a primeira UV (segunda no relatório QA).':'');
  for(let i=0;i<3;i++){
   const u=r.uvX[i],v=r.atlasV[index][i];
   const [px,py]=pixel([u,v],atlas);
