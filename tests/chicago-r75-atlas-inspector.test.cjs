@@ -39,6 +39,6 @@ test('R75 preview uses only existing original atlas and no gameplay integration'
  assert(preview.includes('href="./chicago-seam-r75.html"'));
  assert(view.includes('./chicago/chicago_atlas.webp'));
  assert(view.includes('./chicago/corridor-seam-r75.json'));
- assert(view.includes("atlas.height-1-Math.floor(uv[1])"));
+ assert(view.includes("im.height-1-Math.floor(uv[1])"));
  assert(!/DriverVehicle|registerRoad|createCollider|addTraffic/.test(view));
 });
