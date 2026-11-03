@@ -71,8 +71,8 @@ test('R78: generated lots replace R14 objects and use identical visual + AABB fo
  assert.equal(city.districtBuildings.length,86);
  for(let i=0;i<city.districtBuildings.length;i++){
   const lot=city.districtBuildings[i],b=city.buildingBoxes[i];
-  assert.equal(b.maxX-b.minX,lot.width);
-  assert.equal(b.maxZ-b.minZ,lot.depth);
+  assert(Math.abs((b.maxX-b.minX)-lot.width)<1e-9);
+  assert(Math.abs((b.maxZ-b.minZ)-lot.depth)<1e-9);
   assert.equal(b.minX,lot.x-lot.width/2);
   assert.equal(b.maxZ,lot.z+lot.depth/2);
  }
