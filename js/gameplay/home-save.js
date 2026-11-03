@@ -129,7 +129,9 @@ class DriverHomeSave {
             data.vehicles.length<=DriverHomeSave.MAX_VEHICLES && typeof data.tanner?.x==='number' &&
             typeof data.tanner?.z==='number' &&
             Number.isFinite(data.tanner.x) && Number.isFinite(data.tanner.z) &&
-            (data.interior==null||['home','warehouse','diner','garage'].includes(data.interior));
+            (data.interior==null||['home','warehouse','diner','garage',
+                'r78-loop-shop','r78-goose-warehouse',
+                'r81-goose-yard-office'].includes(data.interior));
     }
     // A chave localStorage é a mesma de 2026: converter V1 preservando
     // integralmente os dados e sem sobrescrever saves futuros/corrompidos.

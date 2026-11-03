@@ -593,6 +593,11 @@
                    typeof DriverChicagoGooseIndustrialR81!=='undefined')
                     DriverChicagoGooseIndustrialR81.registerOffice(this);
                 this.buildInteriorRooms();
+                // R82 physical room blueprints exist before player interaction.
+                // Only the ACTIVE room's meshes are built when Tanner enters.
+                if(this.preset.id==='chicago' &&
+                   typeof DriverChicagoModularInteriorsR82!=='undefined')
+                    DriverChicagoModularInteriorsR82.prepare(this);
                 if(this.preset.id==='chicago' &&
                    typeof DriverChicagoGooseIndustrialR81!=='undefined')
                     DriverChicagoGooseIndustrialR81.decorateOffice(this);
@@ -1818,6 +1823,10 @@
                         make(x+4,1.15,z+2,4,0.3,7,0xfacc15);
                         for(const offset of [-3,0,3])
                             make(x-8,2.1,z+offset,1,0.35,1.2,0xf97316);
+                    } else if(typeof DriverChicagoModularInteriorsR82!=='undefined' &&
+                            DriverChicagoModularInteriorsR82.manages(place)){
+                        // R82 furniture/partitions are truly collidable,
+                        // not always-present cosmetic generic crates.
                     } else {
                         for(const dx of [-6,0,6])
                             make(x+dx,1,z+3,3.3,2,3.3,0x78350f);
@@ -2235,8 +2244,12 @@
                     typeof DriverChicagoPS1ReferenceBridge!=='undefined' &&
                     DriverChicagoPS1ReferenceBridge.railBlocked(x,z,radius,y))return true;
                 if (this.interiorArea(x,z,radius)){
-                    // Dentro de casa, testar somente os móveis sólidos.
-                    // As paredes exteriores pertencem ao mundo externo.
+                    if(typeof DriverChicagoModularInteriorsR82!=='undefined'&&
+                       DriverChicagoModularInteriorsR82.managesPoint(this,x,z))
+                        return DriverChicagoModularInteriorsR82.blocked(
+                            this,x,z,radius);
+                    // Other interiors, especially Tanner's saved home,
+                    // retain their existing collider model and missions.
                     return typeof DriverTannerHomeInterior!=='undefined' &&
                         DriverTannerHomeInterior.blocked(this,x,z,radius);
                 }

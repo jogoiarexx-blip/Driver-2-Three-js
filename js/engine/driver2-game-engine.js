@@ -1155,16 +1155,28 @@
             enterInterior(place) {
                 if(!place||this.mode!=='on_foot')return false;
                 this.interiorPlace=place;
+                if(typeof DriverChicagoModularInteriorsR82!=='undefined')
+                    DriverChicagoModularInteriorsR82.enter(this.city,place);
                 this.tanner.setPosition(place.inside.x,0,place.inside.z-6,0);
                 this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
                 document.getElementById('player-state-badge').textContent=
                     'DENTRO: '+(place.name||place.id).toUpperCase();
+                // Home save instructions apply ONLY to Tanner's home.
+                // The screenshot of R82's warehouse revealed the old,
+                // confusing green-save-desk notice inside every building.
+                this.showSaveStatus(place.id==='home'?
+                    'Aproxime-se da mesa verde para salvar.':
+                    place.r82Blueprint?
+                        'Explore as salas laterais. Use E ou SAIR para voltar à rua.':
+                        'Use E ou SAIR para voltar à rua.');
                 return true;
             }
 
             leaveInterior() {
                 const place=this.interiorPlace;
                 if(!place)return false;
+                if(typeof DriverChicagoModularInteriorsR82!=='undefined')
+                    DriverChicagoModularInteriorsR82.leave(this.city,place);
                 this.interiorPlace=null;
                 this.tanner.setPosition(place.door.x,0,place.door.z+4,Math.PI);
                 this.cameraRig.lastMode=-1;this.cameraRig.focus=null;
@@ -1202,6 +1214,16 @@
                     return false;
                 }
                 const ok=this.homeSave.restore(this,save);
+                // R82: reconcile lazy-loaded geometry after checkpoint
+                // restore, while keeping all existing save data untouched.
+                if(ok&&typeof DriverChicagoModularInteriorsR82!=='undefined'){
+                    for(const room of this.city?.interiors||[])
+                        if(room.r82Loaded&&room!==this.interiorPlace)
+                            DriverChicagoModularInteriorsR82.leave(this.city,room);
+                    if(this.interiorPlace)
+                        DriverChicagoModularInteriorsR82.enter(
+                            this.city,this.interiorPlace);
+                }
                 this.showSaveStatus(ok?'Partida carregada com sucesso!':
                     'Não foi possível restaurar a partida.');
                 if(ok)document.getElementById('player-state-badge').textContent=

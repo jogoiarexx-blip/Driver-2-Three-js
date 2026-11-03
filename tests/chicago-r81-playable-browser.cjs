@@ -60,7 +60,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
       inside:office.inside,door:office.door,
       entryFound:door,floor:inside,exitClear:returnClear,
       interiorLevel:office.interiorLevel,
-      furniture:office.r81FurnitureCount}:null,
+      furniture:office.r81FurnitureCount,
+      modularParts:office.r82Blueprint?.parts.length||0}:null,
     entered,enteredMatch,left,
     r80Rails:c.chicagoRiverfrontR80?.railsCreated||0,
     r79Corridors:c.chicagoDowntownR79?.connectedCorridors||0,
@@ -91,7 +92,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
   assert(report.office?.entryFound&&report.office?.floor&&
    report.office?.exitClear);
   assert.equal(report.office?.interiorLevel,'partial');
-  assert(report.office.furniture>=7);
+  assert(report.office.furniture>=7||
+    report.office.modularParts>=16);
   assert(report.entered&&report.enteredMatch&&report.left);
   assert.equal(report.r80Rails,66);
   assert.equal(report.r79Corridors,2);

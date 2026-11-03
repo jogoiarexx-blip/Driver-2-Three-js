@@ -1,0 +1,67 @@
+name: Chicago R82 - modular, truly collidable, lazy-loaded playable rooms
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-modular-interiors-r82.js'
+      - 'js/world/city-builder.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/world/chicago-goose-industrial-r81.js'
+      - 'js/gameplay/home-save.js'
+      - 'index.html'
+      - 'tests/chicago-r82-*.cjs'
+      - 'tests/chicago-r81-playable-browser.cjs'
+      - '.github/workflows/chicago-r82.yml'
+      - 'CHICAGO_CONTINUIDADE_R78.md'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-modular-interiors-r82.js'
+      - 'js/world/city-builder.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/world/chicago-goose-industrial-r81.js'
+      - 'js/gameplay/home-save.js'
+      - 'index.html'
+      - 'tests/chicago-r82-*.cjs'
+permissions:
+  contents: read
+jobs:
+  physical-interiors-and-lazy-gpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and regression of all previous playable-city phases
+        run: |
+          node --check js/world/chicago-modular-interiors-r82.js
+          node --check js/world/city-builder.js
+          node --check js/engine/driver2-game-engine.js
+          node --check js/gameplay/home-save.js
+          node --test tests/chicago-r82-modular-interiors.test.cjs tests/chicago-r81-industrial-yards.test.cjs tests/chicago-r80-riverfront.test.cjs tests/chicago-r79-downtown-streets.test.cjs tests/chicago-r78-sequential-blocks.test.cjs tests/chicago-r77-playable-landmarks.test.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve full playable Driver 2
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/r82-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r82-http.log
+          exit 1
+      - name: Open 3 actual rooms, walk through two doors and ensure GPU unload
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r82-playable-browser.cjs
+      - name: Archive real interior screenshot and gameplay collision audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r82-real-modular-interiors
+          path: qa-artifacts/chicago-r82/
+          if-no-files-found: warn
