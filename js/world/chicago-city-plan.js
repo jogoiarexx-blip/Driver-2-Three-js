@@ -80,9 +80,20 @@ class DriverChicagoCityPlan {
         n=Math.imul(n^(n>>>13),1274126177);
         return ((n^(n>>>16))>>>0)/4294967295;
     }
+    static pilotGenerator(){
+        if(typeof DriverChicagoBlockGeneratorR78!=='undefined')
+            return DriverChicagoBlockGeneratorR78;
+        // Node regression tests load individual CommonJS classes; browser
+        // loads R78 via index.html before the city plan.
+        if(typeof module!=='undefined'&&module.exports)
+            return require('./chicago-block-generator-r78.js');
+        return null;
+    }
     static lots(x,z){
         const district=this.districtAt(x,z),kind=district.kind;
         if(['park','pier','airfield'].includes(kind))return [];
+        const pilot=this.pilotGenerator()?.lots(x,z,kind);
+        if(pilot)return pilot;
         const r=this.random(x,z,9),lots=[];
         // A textura principal segue o bairro: tijolo nos quarteirões
         // residenciais/industriais e pedra/aço nos prédios do Loop.
@@ -143,6 +154,7 @@ class DriverChicagoCityPlan {
         if(!city.districtChunks.has(key))city.districtChunks.set(key,{
             id:key,x:-240+Math.floor((x+320)/160)*160,
             z:-320+Math.floor((z+360)/160)*160,buildings:[]});
+        const createdLots=[];
         for(const building of this.lots(x,z)){
             // A mesma planta define instância visível e volume físico.
             if(typeof DriverChicagoPS1Coastline!=='undefined' &&
@@ -157,6 +169,16 @@ class DriverChicagoCityPlan {
                 maxX:building.x+building.width/2,minZ:building.z-building.depth/2,
                 maxZ:building.z+building.depth/2,chicagoPlanLot:true});
             report.lots++;
+            createdLots.push(building);
+        }
+        if(createdLots.some(b=>b.pilotR78)){
+            // Use the game's existing door/interior/exit flow; only
+            // finished, dry, unblocked parcels may become actual rooms.
+            const generator=this.pilotGenerator();
+            const registered=generator?.registerInteriors(city,createdLots)||0;
+            report.r78PilotBlocks=(report.r78PilotBlocks||0)+1;
+            report.r78Frontages=(report.r78Frontages||0)+createdLots.length;
+            report.r78EnterableRooms=(report.r78EnterableRooms||0)+registered;
         }
     }
     // R69: as casas residenciais já deixam um corredor central entre
