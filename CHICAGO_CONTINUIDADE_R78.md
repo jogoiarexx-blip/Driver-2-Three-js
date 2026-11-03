@@ -3,7 +3,7 @@
 > **Documento vivo de retomada.** Atualize este arquivo **na mesma PR de toda revisão futura**. Assim, quando a conversa acabar, basta enviar este MD à próxima sessão e pedir para continuar a próxima etapa.  
 > Projeto: [Driver-2-Three-js](https://github.com/jogoiarexx-blip/Driver-2-Three-js) · Jogo: [GitHub Pages](https://jogoiarexx-blip.github.io/Driver-2-Three-js/)  
 > Referências técnicas: `AUDITORIA-MESTRA-DRIVER2.md`, `chicago/README.md`.  
-> **Atualizado:** 2026-11-03 — ciclo R81. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
+> **Atualizado:** 2026-11-03 — R81 integrada, próxima R82. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
 
 ## 0. Missão do projeto — não perder o objetivo
 
@@ -27,7 +27,7 @@ A cidade desejada deve conter:
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
 | **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
-| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| **R81** | **Em desenvolvimento** | 2 pátios dirigíveis, 4 links de caminhões, um escritório acessível em prédio R78 |\n| R82+ | **Planejadas** | Interiores modulares e alinhamento certificado ao PS1 |
+| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| **R81** | **CONCLUÍDA em `main`** — PR #57, merge `0fc10af8` | 2 pátios dirigíveis, 4 rotas para caminhões, 4 colisores de carga, 4 galpões detalhados e um escritório jogável |\n| R82+ | **Planejadas** | Interiores modulares e alinhamento certificado ao PS1 |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
 
@@ -186,7 +186,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - **Evidências:** artefato `chicago-r80-live-riverfront-bridges` em GitHub Actions, com `riverfront-game.json` e captura `riverfront-game.png`. **Pages:** conferir workflow de deploy mais recente antes de declarar atualizado no site.
 - **Geografia PS1:** canal e margens R2 são reconstrução procedural. Não afirmar equivalência de coordenadas originais da ROM sem evidência específica. **Próxima R81: Goose Island industrial.**
 
-**Próxima revisão depois de R80 validada:** **R81 — Goose Island industrial**, galpões em sequência, pátios navegáveis, docas e pelo menos um interior industrial; trabalho PS1 fica explicitamente condicionado a IDs e posicionamento geográfico comprovados.
+**R81 foi implementada e integrada no PR #57.** Consulte a seção R81 acima. A revisão seguinte é a **R82 — interiores modulares completos**, mantendo a exigência de coordenadas PS1 comprovadas antes de realocar o cenário.
 
 ### R80 — escopo planejado original (histórico; entrega final documentada acima)
 - Corrigir margens e acessos com base no rio e pontes da fonte PS1; **não tratar água como asfalto**.
@@ -196,7 +196,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 ### R81 — Implementação industrial de Goose Island (03/11/2026)
 
-**PR:** (registrar após criação) • **estado:** implementação criada na branch `chicago-r81-goose-island-real-yards-interior`; aguarda QA Chromium, CI e integração.
+**PR:** [#57](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/57) • **estado:** **CONCLUÍDA E INTEGRADA** na `main` no commit `0fc10af819bc3c17759bafd02a047971956acc4a`.
 
 - **Dois pátios de carga realmente dirigíveis**, `(-218,250)` e `(-182,250)`, com piso físico em plano seco e cotas acompanhadas por `getGroundHeightAt`. Ligados ao eixo industrial existente `x=-200` por **quatro segmentos concretos de navegação**, incluindo o acesso na **ponte fixa da R2 em (-160,240)**. Não há ponte nova nem asfalto fingido sobre os canais.
 - **Verificação fail-safe:** inspecionar todo o retângulo do pátio e três faixas de cada segmento; água, AABB, erro de piso ou mudança brusca de altura cancelam TODOS os pátios e arestas, sem caminhos sem asfalto. Grafo R49 invalida cache quando as rotas R81 mudam.
@@ -208,6 +208,16 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 **Arquivos:** `js/world/chicago-goose-industrial-r81.js`, `js/world/city-builder.js`, `js/traffic/chicago-mixed-navigation-r49.js`, `index.html`, `tests/chicago-r81-industrial-yards.test.cjs`, `tests/chicago-r81-playable-browser.cjs`, `.github/workflows/chicago-r81.yml`.
 
 **Aceite:** 2 pátios com 4 links na IA e nenhuma superfície inundada, pelo menos 4 AABBs de carga visível, quatro frentes industriais R4/R6, uma sala adicional com interação/saída real, R80 (66 barreiras), R79 (16 segmentos), R78 (86 lotes/2 salas) e R77 (4 marcos), CI e Chromium sem erros, PR integrado. Registrar a execução no MD ao concluir.
+
+**Checkpoint de integração R81 — 03/11/2026**
+
+- PR **[#57](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/57)** mesclada no commit `0fc10af819bc3c17759bafd02a047971956acc4a`.
+- [**CI específica 41674936224**](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41674936224) aprovada: **44 testes Node passaram**, além de um teste Chromium no game completo. [**QA lógica 41674936179**](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41674936179) também aprovada na branch integrada.
+- **Jogo real:** `ready=true`; dois pátios em `(-218,250)` e `(-182,250)`; quatro arestas físicas ligadas ao grafo R49 `4/4`; quatro pilhas de carga com AABB e visual; 4 galpões reais decorados com 30 peças leves. A água continua ativa fora da ponte fixa: `(-160,200)` é água; `(-160,240)` é travessia seca.
+- **Interior real adicional:** `r81-goose-yard-office`, porta em `(-214.2467,143.9)`, interior técnico `(1440,0)`, **10 móveis**, entrada e saída `enterInterior`/`leaveInterior` aprovadas. É um **escritório parcial**, NÃO edifício completo de vários andares.
+- **Regressão:** R80 66 barras, R79 2 corredores/16 segmentos, R78 86 lotes/2 interiores, R77 4 marcos, Tanner e estádio preservados.
+- **Evidências:** artefato `chicago-r81-goose-industrial-game` do workflow, arquivos `goose-game.json` e `goose-island-game.png`. Confirmar deploy Pages à parte.
+- **Limites:** novas áreas industriais são procedurais com validação de água, cotas e colisões; não existem coordenadas homologadas PS1 para esses novos pátios.
 
 **Próxima R82:** evolução de interiores modulares (hall, galpões navegáveis, escadas/cômodos) com carregamento sob demanda e colisão interna; em paralelo, seguir trabalhando a geografia PS1 somente com evidências OBJ verificáveis.
 
@@ -259,7 +269,7 @@ Checklist de aceite:
 
 Copie este pedido junto com o arquivo MD:
 
-> **Continue o projeto `jogoiarexx-blip/Driver-2-Three-js` usando `CHICAGO_CONTINUIDADE_R78.md` como plano-mestre. Confira a branch `main`, os PRs e os workflows atuais. Não recomece nem repita auditorias já resolvidas. Faça a próxima revisão pendente indicada na seção 5 (R81: Goose Island, quando a R80 estiver integrada), com mudanças reais no jogo jogável, testes automáticos e Chromium. Preserve missões, água, colisões, tráfego e as outras cidades. Ao terminar, atualize o próprio MD com o que mudou, bugs restantes, links e a etapa seguinte.**
+> **Continue o projeto `jogoiarexx-blip/Driver-2-Three-js` usando `CHICAGO_CONTINUIDADE_R78.md` como plano-mestre. Confira a branch `main`, os PRs e os workflows atuais. Não recomece nem repita auditorias já resolvidas. Faça a próxima revisão pendente indicada na seção 5 (R82: interiores modulares, após a R81 integrada), com mudanças reais no jogo jogável, testes automáticos e Chromium. Preserve missões, água, colisões, tráfego e as outras cidades. Ao terminar, atualize o próprio MD com o que mudou, bugs restantes, links e a etapa seguinte.**
 
 Se você disser apenas **“próxima”**, a referência é a **primeira revisão ainda não concluída na seção 5**.
 
