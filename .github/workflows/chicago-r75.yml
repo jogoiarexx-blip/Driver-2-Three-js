@@ -33,7 +33,7 @@ jobs:
       - name: Check R74 source and R75 original-pixel tests
         run: |
           node --check tools/chicago-r74-source-seam.cjs
-          node --test tests/chicago-r74-source-seam.test.cjs
+          node --test tests/chicago-r74-source-seam.test.cjs tests/chicago-r75-atlas-inspector.test.cjs
           python tests/chicago-r75-atlas-material.test.py
       - name: Probe SHA-verified UVs against original WebP atlas
         run: |
