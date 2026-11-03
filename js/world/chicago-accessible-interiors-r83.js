@@ -184,7 +184,8 @@ class DriverChicagoAccessibleInteriorsR83 {
             return b.stairs[i].top;
         }
         if(dx>=4.35&&dx<=10.2&&dz>=1.4&&dz<=8.8)
-            return b.levelHeight;
+            return Number.isFinite(referenceY)&&referenceY<1.6?
+                0:b.levelHeight;
         return 0;
     }
     static safeStep(city,fromX,fromZ,fromY,x,z,targetY){
