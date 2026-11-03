@@ -161,3 +161,25 @@ test('R82: integrated into real game, no mission edits and no off-world collider
  assert(!mod.includes('city.buildingBoxes.push'));
  assert(!/bridgeRaised\s*=|missionActive\s*=|garageExit\s*=/.test(mod));
 });
+
+test('R82: save validation accepts modular interior ids without breaking old saves',()=>{
+ const vm=require('node:vm'),
+  code=fs.readFileSync('js/gameplay/home-save.js','utf8');
+ const Home=vm.runInNewContext(code+'\nDriverHomeSave',
+  {Math,Number,Date,Set,JSON,Array,Map,Object});
+ const save=new Home(null);
+ const state={version:2,city:'chicago',mission:{type:'freeroam'},
+  vehicles:[{x:0,z:0}],tanner:{x:0,z:0},interior:null};
+ for(const id of [null,'home','warehouse','diner','garage',
+  'r78-loop-shop','r78-goose-warehouse','r81-goose-yard-office']){
+  assert.equal(save.valid({...state,interior:id}),true,
+   'valid interior save unexpectedly rejected: '+id);
+ }
+ assert.equal(save.valid({...state,interior:'fake-offworld-room'}),false);
+ assert.equal(save.valid({...state,city:'havana',
+  interior:'r78-goose-warehouse'}),true,
+  'changing old save format is not allowed, only addition to whitelist');
+ const engine=fs.readFileSync('js/engine/driver2-game-engine.js','utf8');
+ assert(engine.includes('DriverChicagoModularInteriorsR82.enter('));
+ assert(engine.includes('room.r82Loaded&&room!==this.interiorPlace'));
+});
