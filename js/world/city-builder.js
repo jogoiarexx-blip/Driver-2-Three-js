@@ -769,6 +769,10 @@
                     typeof DriverChicagoCityPlan!=='undefined')
                     DriverChicagoCityPlan.detailDistrict(this,chunk.buildings,group);
                 if(this.preset.id==='chicago' &&
+                    typeof DriverChicagoBlockGeneratorR78!=='undefined')
+                    DriverChicagoBlockGeneratorR78.decorateChunk(
+                        this,chunk.buildings,group);
+                if(this.preset.id==='chicago' &&
                     typeof DriverChicagoStreetTextures!=='undefined')
                     DriverChicagoStreetTextures.decorateShops(
                         this,chunk.buildings,group);
