@@ -14,7 +14,7 @@ SPEC.loader.exec_module(mod)
 class AtlasR75Test(unittest.TestCase):
     def test_source_uv_orientation_bottom_left(self):
         self.assertEqual(mod.uv_to_pixel([0,0],2048,2048),(0,2047))
-        self.assertEqual(mod.uv_to_pixel([129.23,141.96],2048,2048),(129,1905))
+        self.assertEqual(mod.uv_to_pixel([129.23,141.96],2048,2048),(129,1906))
         self.assertEqual(mod.uv_to_pixel([138.34,2047.5],2048,2048),(138,0))
 
     def test_reject_outside_uv(self):
@@ -24,7 +24,7 @@ class AtlasR75Test(unittest.TestCase):
 
     def test_pixel_is_taken_from_exact_uv_at_bottom_left(self):
         im=Image.new("RGB",(2048,2048),(7,9,11))
-        im.putpixel((129,1905),(101,102,103))
+        im.putpixel((129,1906),(101,102,103))
         self.assertEqual(mod.rgb_at(im,[129.23,141.96]),[101,102,103])
 
     def test_report_requires_unmodified_original_67_sections_and_no_runtime(self):
