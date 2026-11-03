@@ -1,0 +1,61 @@
+name: Chicago R79 - live Downtown streets from checked corridor topology
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-downtown-corridors-r79.js'
+      - 'js/world/city-builder.js'
+      - 'js/traffic/chicago-mixed-navigation-r49.js'
+      - 'index.html'
+      - 'tests/chicago-r79-*.cjs'
+      - '.github/workflows/chicago-r79.yml'
+      - 'CHICAGO_CONTINUIDADE_R78.md'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-downtown-corridors-r79.js'
+      - 'js/world/city-builder.js'
+      - 'js/traffic/chicago-mixed-navigation-r49.js'
+      - 'index.html'
+      - 'tests/chicago-r79-*.cjs'
+permissions:
+  contents: read
+jobs:
+  downtown-streets-pavement-parcels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax plus R78 and R79 physical/AI nonregression
+        run: |
+          node --check js/world/chicago-downtown-corridors-r79.js
+          node --check js/world/city-builder.js
+          node --check js/traffic/chicago-mixed-navigation-r49.js
+          node --test tests/chicago-r79-downtown-streets.test.cjs tests/chicago-r78-sequential-blocks.test.cjs tests/chicago-r69-courtyard-network.test.cjs tests/chicago-r77-playable-landmarks.test.cjs tests/chicago-city-plan.test.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve full Driver 2 game
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/r79-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r79-http.log
+          exit 1
+      - name: Test real Chicago, grade, AI driving connections and frontages
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r79-downtown-browser.cjs
+      - name: Archive original in-game street screenshot and segment grades
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r79-downtown-playable-streets
+          path: qa-artifacts/chicago-r79/
+          if-no-files-found: warn
