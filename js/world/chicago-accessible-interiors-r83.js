@@ -19,7 +19,10 @@ class DriverChicagoAccessibleInteriorsR83 {
         return !!place&&this.SITES.some(site=>site.id===place.id);
     }
     static nearRoom(city,x,z){
-        if(city?.preset?.id!=='chicago')return null;
+        // Fast coarse reject: regular streets (-410..410) never scan
+        // the interior list on each vehicle/pedestrian collision query.
+        if(city?.preset?.id!=='chicago'||x<817||x>913||
+            z<-12||z>12)return null;
         return (city.interiors||[]).find(p=>this.manages(p)&&
             Math.abs(x-p.inside.x)<12.7&&Math.abs(z-p.inside.z)<11.7)||null;
     }
