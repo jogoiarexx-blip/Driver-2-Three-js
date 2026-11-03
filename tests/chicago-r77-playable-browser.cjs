@@ -20,7 +20,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
   const report=await page.evaluate(()=>{
    const g=window.DriverGame,c=g.city,s=c.chicagoPS1PlayableLandmarksR77;
    return {city:g.currentCityKey,root:s?.root?.parent===c.cityGroup,
-    landmarkIds:s?.sites?.map(p=>p.id)||[],signs:s?.signs||0,
+    landmarkIds:s?.sites?.map(p=>p.id)||[],signs:s?.signs||0,crosswalks:s?.crosswalks||0,
     sourceCertified:s?.originalPS1CoordinatesCertified,
     collisionBoxes:s?.colliders?.length||0,
     parcelSafety:s?.sites?.map(site=>({
@@ -45,6 +45,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
   assert.deepEqual(report.landmarkIds,
    ['sears-tower','marina-city','merchandise-mart','water-tower']);
   assert.equal(report.signs,6);
+  assert(report.crosswalks>=100,'zebra crossings absent in real Chicago junctions');
   assert.equal(report.collisionBoxes,6);
   assert.equal(report.sourceCertified,false);
   assert(report.parcelSafety.every(p=>p.dry&&p.blocked),
