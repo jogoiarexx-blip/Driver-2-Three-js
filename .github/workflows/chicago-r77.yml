@@ -1,0 +1,60 @@
+name: Chicago R77 - Playable PS1-era city skyline and street locations
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-ps1-playable-landmarks-r77.js'
+      - 'js/world/chicago-city-plan.js'
+      - 'js/world/city-builder.js'
+      - 'index.html'
+      - 'tests/chicago-r77-*.cjs'
+      - '.github/workflows/chicago-r77.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-ps1-playable-landmarks-r77.js'
+      - 'js/world/chicago-city-plan.js'
+      - 'js/world/city-builder.js'
+      - 'index.html'
+      - 'tests/chicago-r77-*.cjs'
+permissions:
+  contents: read
+jobs:
+  four-real-landmarks-in-game:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and physical parcel regression
+        run: |
+          node --check js/world/chicago-ps1-playable-landmarks-r77.js
+          node --check js/world/chicago-city-plan.js
+          node --check js/world/city-builder.js
+          node --test tests/chicago-r77-playable-landmarks.test.cjs
+      - name: Install browser and dependencies
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve actual game for Chromium
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/r77-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r77-http.log
+          exit 1
+      - name: Drive game startup and test real landmark placement, collisions and missions
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r77-playable-browser.cjs
+      - name: Archive actual playable Chicago game evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r77-real-playable-landmarks
+          path: qa-artifacts/chicago-r77/
+          if-no-files-found: warn
