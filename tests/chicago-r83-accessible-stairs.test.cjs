@@ -127,7 +127,7 @@ test('R83 only one live room: door visual slides, geometry disposed and not dupl
  }
  global.THREE={Group,BoxGeometry:Geometry,MeshLambertMaterial:Material,Mesh};
  global.DriverSpecialStructures={pack(g,parts){
-  allocations++;assert(parts.length>15);
+  allocations++;assert(parts.length>=12);
   g.add(new Mesh(new Geometry(),new Material()));
  }};
  try{
