@@ -41,6 +41,25 @@ jobs:
           node tools/chicago-r74-source-seam.cjs qa-artifacts/chicago-r75/seam-r74.json
           python tools/chicago-r75-atlas-material.py --report qa-artifacts/chicago-r75/seam-r74.json --output qa-artifacts/chicago-r75/atlas-materials.json --image qa-artifacts/chicago-r75/atlas-contact-sheet.png
           python -c "import json; a=json.load(open('qa-artifacts/chicago-r75/atlas-materials.json'));assert a['evidence']['totalCrossSections']==67 and not a['certifiedDriveableRoad'] and not a['runtimeRoadEnabled'] and not a['sourceAssetsModified']"
+      - name: Install Chromium browser for original atlas inspector
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve original assets without loading the game
+        run: |
+          python -m http.server 4173 --bind 127.0.0.1 >/tmp/chicago-r75-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/chicago-seam-r75.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-r75-http.log
+          exit 1
+      - name: Chromium verify atlas RGB and 67-section navigation
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: |
+          node --check tests/chicago-r75-atlas-browser.cjs
+          node tests/chicago-r75-atlas-browser.cjs
       - name: Save real atlas patches and UV labels
         if: always()
         uses: actions/upload-artifact@v4
