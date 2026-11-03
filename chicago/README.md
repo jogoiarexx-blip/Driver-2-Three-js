@@ -12,6 +12,18 @@ O manifesto, atlas e 54 GLBs já estão publicados nesta pasta do GitHub, direta
 
 **Aviso:** esta é uma visualização técnica, não substitui a cidade jogável nem define colisores, ruas e missões do PS1.
 
+## R77 — Agora a Chicago que você dirige está sendo melhorada
+
+**R77 muda o jogo principal**, não só a visualização técnica. No modo Chicago de `index.html`, quatro quarteirões genéricos foram substituídos por versões leves e reconhecíveis de **Sears Tower, Marina City, Merchandise Mart e Chicago Water Tower**, em posições coerentes com os bairros do PS1, adaptadas à grade existente. Os edifícios possuem colisão correspondente ao volume de base, não bloqueiam o asfalto ao redor e não substituem as missões, garagem do Tanner, Wrigley ou Soldier Field. Placas com seis nomes de ruas de Chicago e novas faixas de pedestres em seis cruzamentos tornam o centro mais identificável durante a direção; os marcos construídos têm pontos passivos no minimapa.
+
+Código: `js/world/chicago-ps1-playable-landmarks-r77.js`. Integração: `chicago-city-plan.js`, `city-builder.js`, `index.html` e minimapa `js/ui/chicago-landmark-navigation-r56.js`.
+
+```sh
+node --test tests/chicago-r77-playable-landmarks.test.cjs
+```
+
+A CI `.github/workflows/chicago-r77.yml` verifica a sessão real e registra imagens. **Não declarar essas coordenadas originais PS1**: preservam o mapa jogável atual como base de transição. O próximo passo estrutural é reconstruir a topologia de ruas por regiões sem romper missões, posições do jogador ou IA.
+
 ## R76 — Triângulos 3D originais: inclinação e materiais sem criar rua
 
 O [inspetor de geometria R76](../chicago-geometry-r76.html) oferece 67 cortes selecionáveis na aresta 3445, indicando os IDs precisos dos triângulos dos GLBs `01_02`/`01_03`, os ângulos reais das superfícies, cota Y e o grupo UV interpolado. Cores do atlas e triângulos planos **não equivalem a uma rua dirigível**; superfícies verticais edge-on também podem escapar de uma interseção exata X/Z. Os três offsets −0,12, −0,10, −0,08 OBJ são consultáveis diretamente, com o relatório técnico completo de 15 offsets no workflow.
