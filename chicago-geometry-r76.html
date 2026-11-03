@@ -47,6 +47,27 @@ input[type=range]{accent-color:#e7c566;flex:1;min-width:180px}
 (async()=>{
 'use strict';
 let report=null,selected=0;
+function decodePacked(p){
+ const n=p.packedRows.length;
+ const from=p.sourcePointsOBJ[0],to=p.sourcePointsOBJ[1];
+ const crossSections=p.packedRows.map((raw,index)=>{
+  const t=index/(n-1),atOBJ=from.map((v,i)=>+(v+(to[i]-v)*t).toFixed(4));
+  return {index,atOBJ,cuts:raw.map((encoded,i)=>{
+   const hits=encoded.map(v=>({
+    tile:v[0]===2?'01_02':'01_03',triangleIndex:v[1],
+    sourceYOBJ:v[2],normalTiltDeg:v[3],
+    uvMaterial:v[4]===1?'r26_paving_uv_heuristic':'other_atlas_uv',
+    geometryClass:v[3]<=15?'near_horizontal':v[3]<=35?'inclined':'steep_wall_like'
+   }));
+   const ys=hits.map(x=>x.sourceYOBJ);
+   const spread=ys.length?Math.max(...ys)-Math.min(...ys):null;
+   return {offset:p.offsetsOBJ[i],hits,heightSpreadOBJ:spread,
+    overlappingHeights:spread!==null&&spread>.045,
+    mixedAtlasUV:new Set(hits.map(x=>x.uvMaterial)).size>1};
+  })};
+ });
+ return {...p,crossSections,evidence:p.summary};
+}
 const slider=document.getElementById('section'),
  cv=document.getElementById('profile'),ctx=cv.getContext('2d');
 const kindColor=k=>k==='near_horizontal'?'#60bfae':k==='inclined'?'#e2bf62':
@@ -108,11 +129,20 @@ addEventListener('keydown',ev=>{
 try{
  const r=await fetch('./chicago/corridor-orientation-r76.json',{cache:'no-store'});
  if(!r.ok)throw Error('HTTP '+r.status);
- report=await r.json();
- if(report.format!=='DriverChicagoR76SurfaceOrientationViewer'||
-    report.crossSections?.length!==67||report.certifiedRoad!==false||
-    report.runtimeRoadEnabled!==false||report.edgeId!==3445)
+ const packed=await r.json();
+ if(packed.format!=='DriverChicagoR76SurfaceOrientationViewerPackedV1'||
+    packed.packedRows?.length!==67||
+    packed.packedRows.some(row=>!Array.isArray(row)||row.length!==3||
+      row.some(h=>!Array.isArray(h)||!h.length||
+       h.some(t=>t.length!==5||![2,3].includes(t[0])||
+        !Number.isInteger(t[1])||t[1]<0||
+        ![0,1].includes(t[4]))))||
+    packed.sourceSectors?.join(',')!=='01_02,01_03'||
+    packed.offsetsOBJ?.join(',')!=='-0.12,-0.1,-0.08'||
+    packed.certifiedRoad!==false||packed.runtimeRoadEnabled!==false||
+    packed.collidersCreated!==0||packed.edgeId!==3445)
   throw Error('Formato R76 incompatível; não certificar a via');
+ report=decodePacked(packed);
  const e=report.evidence;
  document.getElementById('summary').textContent='Dados reais PS1: '+e.sourceTrianglesInROI+
  ' triângulos próximos; '+e.pointSamples+' amostras exatas, '+e.multiTriangleSamples+
