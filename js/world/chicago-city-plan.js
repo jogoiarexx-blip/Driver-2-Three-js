@@ -126,6 +126,14 @@ class DriverChicagoCityPlan {
         const report=city.chicagoCityPlan;
         report.blocks.push({x,z,district:d.id,kind:d.kind});
         report.byDistrict[d.id]=(report.byDistrict[d.id]||0)+1;
+        // R77: original PS1-era city skyline is now part of PLAYABLE Chicago.
+        // Reserve entire matching parcels BEFORE any generic lot or collider,
+        // so a recognizable landmark never shares space with a fake tower.
+        if(typeof DriverChicagoPS1PlayableLandmarksR77!=='undefined' &&
+           DriverChicagoPS1PlayableLandmarksR77.isReservedBlock(x,z)){
+            DriverChicagoPS1PlayableLandmarksR77.buildBlock(city,x,z);
+            return;
+        }
         if(d.kind==='pier')return;
         if(d.kind==='park'){
             city.buildParkBlock(x,z);return;
