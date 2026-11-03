@@ -199,6 +199,7 @@
                 this.chicagoReferenceNorthBranch=null;
                 this.chicagoPS1RiverBranches=null;
                 this.chicagoRiverfrontR80=null;
+                this.chicagoGooseIndustrialR81=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
                 this.chicagoGooseIslandJunctions=null;
@@ -586,7 +587,15 @@
                         this.chicagoReferenceParallelWestR44
                     ].filter(Boolean));
                 this.buildDistrictRepresentations(sidewalkPositions,sidewalkMat);
+                // R81: register a real door BEFORE rooms are generated so
+                // the existing on-foot enter/exit system builds the office.
+                if(this.preset.id==='chicago' &&
+                   typeof DriverChicagoGooseIndustrialR81!=='undefined')
+                    DriverChicagoGooseIndustrialR81.registerOffice(this);
                 this.buildInteriorRooms();
+                if(this.preset.id==='chicago' &&
+                   typeof DriverChicagoGooseIndustrialR81!=='undefined')
+                    DriverChicagoGooseIndustrialR81.decorateOffice(this);
                 this.buildMissionStartMarker();
                 DriverChicagoTrain.buildInfrastructure(this);
                 if(this.preset.id==='chicago'){
@@ -658,6 +667,10 @@
                     // opening/closing drawbridge animation remains untouched.
                     if(typeof DriverChicagoRiverfrontR80!=='undefined')
                         DriverChicagoRiverfrontR80.build(this);
+                    // R81: only add actual cargo collision and R49 truck
+                    // links after existing R4/R6, all riverbanks and bridges.
+                    if(typeof DriverChicagoGooseIndustrialR81!=='undefined')
+                        DriverChicagoGooseIndustrialR81.build(this);
                 }
                 if(this.preset.id==='rio' &&
                     typeof DriverRioOverhaul!=='undefined')
