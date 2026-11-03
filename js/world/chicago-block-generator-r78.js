@@ -161,5 +161,7 @@ class DriverChicagoBlockGeneratorR78 {
         return count;
     }
 }
+if(typeof window!=='undefined')
+    window.DriverChicagoBlockGeneratorR78=DriverChicagoBlockGeneratorR78;
 if(typeof module!=='undefined'&&module.exports)
     module.exports=DriverChicagoBlockGeneratorR78;
