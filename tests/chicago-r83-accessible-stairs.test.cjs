@@ -81,6 +81,10 @@ test('R83 stair mesh matches step-top height and blocks impossible jumps to uppe
  assert(Math.abs(R83.heightAt(c,b.x+7.2,b.z+1.35)-3.6)<1e-8);
  assert.equal(R83.heightAt(c,b.x+7.2,b.z+2.5),3.6);
  assert.equal(R83.heightAt(c,b.x+7.2,b.z+6),3.6);
+ assert.equal(R83.heightAt(c,b.x+7.2,b.z+6,0),0,
+  'ground floor must be walkable beneath the mezzanine');
+ assert.equal(R83.heightAt(c,b.x+7.2,b.z+6,3.6),3.6,
+  'mezzanine floor must remain at the upper height');
  assert.equal(R83.heightAt(c,b.x,b.z+6),0);
  assert(R83.safeStep(c,b.x+7.2,b.z-6.5,0,b.x+7.2,b.z-5.8,.3));
  assert.equal(R83.safeStep(c,b.x+4.8,b.z+4,0,b.x+4.9,b.z+4,3.6),false);
