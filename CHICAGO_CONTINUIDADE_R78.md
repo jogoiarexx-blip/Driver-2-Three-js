@@ -3,7 +3,7 @@
 > **Documento vivo de retomada.** Atualize este arquivo **na mesma PR de toda revisão futura**. Assim, quando a conversa acabar, basta enviar este MD à próxima sessão e pedir para continuar a próxima etapa.  
 > Projeto: [Driver-2-Three-js](https://github.com/jogoiarexx-blip/Driver-2-Three-js) · Jogo: [GitHub Pages](https://jogoiarexx-blip.github.io/Driver-2-Three-js/)  
 > Referências técnicas: `AUDITORIA-MESTRA-DRIVER2.md`, `chicago/README.md`.  
-> **Atualizado:** 2026-11-03 — ciclo R78. **PR:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54).
+> **Atualizado:** 2026-11-03 — ciclo R79. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (verificar CI/merge).
 
 ## 0. Missão do projeto — não perder o objetivo
 
@@ -27,7 +27,7 @@ A cidade desejada deve conter:
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
 | **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
-| R79+ | **Não implementadas** | Migração validada do traçado PS1, expansão por bairros e acabamento dos interiores |
+| **R79** | **Em desenvolvimento no PR #55** | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| R80+ | **Planejadas** | Rio, pontes, Goose Island, interiores completos e alinhamento fiel ao PS1 |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
 
@@ -123,6 +123,24 @@ As novas salas são `r78-loop-shop` (interior em X=1300) e `r78-goose-warehouse`
 ### R78 — quarteirões-piloto e portas
 **Alvo:** completar o primeiro conjunto de quadras sequenciais na Chicago jogável.  
 **Critério de aceite:** 86 lotes em 9 quadras, colisor/visual sincronizados, duas salas com `E`/saída funcionando, corredores centrais livres, sem erro JavaScript, teste das outras cidades, CI e screenshot.
+
+### R79 — Início da substituição da grade: ruas reais no jogo (03/11/2026)
+
+**PR:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55), branch `chicago-r79-downtown-corridors-block-polygons`. **Estado: código criado; CI e merge pendentes neste checkpoint, atualizar após verificar.**
+
+**Entregas implantadas na branch:**
+- Novo `js/world/chicago-downtown-corridors-r79.js` ativa duas travessas reais **fora das linhas de 80 unidades**, uma em `z≈-40` de `x=-160` a `0`, outra em `z≈-200` de `x=-80` a `80`, ambas com leve curvatura; extensão total **320 unidades**, 16 subsegmentos × 20 unidades e faixa de **5,6 unidades**.
+- Cada trecho tem inspeção de **largura completa e cotas** em intervalos de até 1,25 unidade. Água, paredes, falta de piso e degraus perigosos **reprovam o corredor inteiro**. Somente os corredores aprovados geram a malha de pavimento 3D sobre `getGroundHeightAt`, marcas centrais e arestas no grafo `js/traffic/chicago-mixed-navigation-r49.js`.
+- Pontos de entrada em `x=-160,-80,0,80` se ligam às avenidas existentes por gateways, dividindo a malha antiga nos acessos: não criar caminho fantasma que a IA não possa dirigir.
+- Quatro blocos R78 — `(-120,-40)`, `(-40,-40)`, `(-40,-200)` e `(40,-200)` — passam a ter dois **polígonos de frente de rua** cada, totalizando oito polígonos para os **mesmos 40 lotes** construídos. As paredes e AABBs não são movidas nem duplicadas; esses polígonos são a primeira definição explícita de quarteirão a partir da rua.
+- Diagnóstico em `city.chicagoDowntownR79` com `connectedCorridors`, `connectedSegments`, `rejected`, `matchedBuildings`, `polygonCells` e booleans de certificação honesta.
+- Testes `tests/chicago-r79-downtown-streets.test.cjs` e `tests/chicago-r79-downtown-browser.cjs`; workflow `.github/workflows/chicago-r79.yml` captura o jogo real, exercita caminho da IA e deixa relatório/screenshot em artefato.
+
+**Limitação explícita:** esse par de travessas são **ruas novas de transição alinhadas à grade jogável**, não coordenadas identificadas da ROM. O sistema de referências R15–R76 inspeciona a geometria original PS1, mas **não homologou esses segmentos como a posição exata de Downtown no mapa PS1**. Nenhuma área de missão, spawns, pontes, altura original ou bairro completo foi deslocado. A grade 80 **permanece** nos corredores antigos até haver substituição validada.
+
+**Aceite para marcar R79 concluída:** 16/16 segmentos contínuos e acessíveis no R49, oito polígonos válidos com 40 imóveis, asfalto no jogo real, 86 lotes e dois interiores R78 preservados, quatro marcos R77, proteção contra água/colisão/altura, CI geral e Chromium verdes, merge na `main` e conferência do Pages.
+
+**Etapa seguinte (R80):** calibrar a rede do **Chicago River e pontes** com ligações reais, proteção de água, edificações voltadas ao rio e teste de direção/IA com ponte levantada ou abaixada. O alinhamento fiel PS1 exige localizar as fontes originais antes de mover qualquer missão.
 
 ### R79 — Downtown: ruas PS1 e polígonos de quadra
 **Não iniciar sem o aceite R78.**
