@@ -7,6 +7,7 @@ on:
       - 'js/world/city-builder.js'
       - 'js/engine/driver2-game-engine.js'
       - 'js/world/chicago-goose-industrial-r81.js'
+      - 'js/gameplay/home-save.js'
       - 'index.html'
       - 'tests/chicago-r82-*.cjs'
       - 'tests/chicago-r81-playable-browser.cjs'
@@ -19,6 +20,7 @@ on:
       - 'js/world/city-builder.js'
       - 'js/engine/driver2-game-engine.js'
       - 'js/world/chicago-goose-industrial-r81.js'
+      - 'js/gameplay/home-save.js'
       - 'index.html'
       - 'tests/chicago-r82-*.cjs'
 permissions:
@@ -37,6 +39,7 @@ jobs:
           node --check js/world/chicago-modular-interiors-r82.js
           node --check js/world/city-builder.js
           node --check js/engine/driver2-game-engine.js
+          node --check js/gameplay/home-save.js
           node --test tests/chicago-r82-modular-interiors.test.cjs tests/chicago-r81-industrial-yards.test.cjs tests/chicago-r80-riverfront.test.cjs tests/chicago-r79-downtown-streets.test.cjs tests/chicago-r78-sequential-blocks.test.cjs tests/chicago-r77-playable-landmarks.test.cjs
       - name: Install Chromium
         run: |
