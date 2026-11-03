@@ -27,7 +27,7 @@ A cidade desejada deve conter:
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
 | **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
-| **R79** | **Em desenvolvimento no PR #55** | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| R80+ | **Planejadas** | Rio, pontes, Goose Island, interiores completos e alinhamento fiel ao PS1 |
+| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| R80+ | **Planejadas** | Rio, pontes, Goose Island, interiores completos e alinhamento fiel ao PS1 |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
 
@@ -126,7 +126,7 @@ As novas salas são `r78-loop-shop` (interior em X=1300) e `r78-goose-warehouse`
 
 ### R79 — Início da substituição da grade: ruas reais no jogo (03/11/2026)
 
-**PR:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55), branch `chicago-r79-downtown-corridors-block-polygons`. **Estado: código criado; CI e merge pendentes neste checkpoint, atualizar após verificar.**
+**PR:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55), branch `chicago-r79-downtown-corridors-block-polygons`. **CONCLUÍDA E INTEGRADA** em `main` no commit `1c5e8d389c5276f4183c85d22e265fa4213d680a`.
 
 **Entregas implantadas na branch:**
 - Novo `js/world/chicago-downtown-corridors-r79.js` ativa duas travessas reais **fora das linhas de 80 unidades**, uma em `z≈-40` de `x=-160` a `0`, outra em `z≈-200` de `x=-80` a `80`, ambas com leve curvatura; extensão total **320 unidades**, 16 subsegmentos × 20 unidades e faixa de **5,6 unidades**.
@@ -137,6 +137,14 @@ As novas salas são `r78-loop-shop` (interior em X=1300) e `r78-goose-warehouse`
 - Testes `tests/chicago-r79-downtown-streets.test.cjs` e `tests/chicago-r79-downtown-browser.cjs`; workflow `.github/workflows/chicago-r79.yml` captura o jogo real, exercita caminho da IA e deixa relatório/screenshot em artefato.
 
 **Limitação explícita:** esse par de travessas são **ruas novas de transição alinhadas à grade jogável**, não coordenadas identificadas da ROM. O sistema de referências R15–R76 inspeciona a geometria original PS1, mas **não homologou esses segmentos como a posição exata de Downtown no mapa PS1**. Nenhuma área de missão, spawns, pontes, altura original ou bairro completo foi deslocado. A grade 80 **permanece** nos corredores antigos até haver substituição validada.
+
+**Checkpoint de validação R79 (03/11/2026):**
+- **CI do projeto:** [workflow de lógica 41664238806](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41664238806) — concluída com sucesso.
+- **CI específica + navegador:** [workflow 41664238719](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41664238719) — **29 testes Node aprovados**, teste Chromium aprovado, sem exceções JavaScript detectadas.
+- No jogo real: **2 corredores / 16 segmentos aceitos / 0 rejeitados**, pavimento e marcas 3D presentes; **16/16 segmentos conectados ao grafo de navegação**, duas rotas inteiras planejadas e dirigíveis (9 pontos cada); **8 polígonos / 40 fachadas** compatíveis com as construções e colisores existentes.
+- R78 manteve **86 lotes e 2 interiores visitáveis**, R77 **4 marcos**, casa do Tanner, Wrigley Field e ponte preservadas. QA em arquivo `qa-artifacts/chicago-r79/downtown-game.json` e captura `live-downtown.png` no artefato do workflow.
+- As cotas encontradas no centro variam entre **0 e 0,35** na grade de calçadas herdada: piso renderizado acompanha `getGroundHeightAt`. Alisamento de transições e calibração PS1 permanecem pendentes, sem declarar certeza falsa.
+- **GitHub Pages:** verificar deploy pós-merge antes de marcar publicado no site.
 
 **Aceite para marcar R79 concluída:** 16/16 segmentos contínuos e acessíveis no R49, oito polígonos válidos com 40 imóveis, asfalto no jogo real, 86 lotes e dois interiores R78 preservados, quatro marcos R77, proteção contra água/colisão/altura, CI geral e Chromium verdes, merge na `main` e conferência do Pages.
 
