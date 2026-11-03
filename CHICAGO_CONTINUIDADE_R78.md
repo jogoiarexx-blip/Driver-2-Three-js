@@ -61,15 +61,17 @@ São **posições provisórias da cidade procedural**, escolhidas para preservar
 
 | Área de teste | Centro X, Z | Padrão | Interiores |
 |---|---|---|---|
-| Ukrainian Village | `-280, -120` | Casas geminadas em duas frentes | Fachada + preparação |
-| Ukrainian Village | `-280, -40` | Casas em sequência | Fachada + preparação |
-| Downtown / Loop | `40, -40` | Comércio e prédios contínuos | **Loja no Loop (visitável)** |
-| Downtown / Loop | `120, -40` | Prédios e vitrines | Fachada + preparação |
+| Ukrainian Village | `-280, -200` | Casas geminadas em duas frentes | Fachada + preparação |
+| Prairie Avenue | `120, -200` | Casas residenciais em sequência | Fachada + preparação |
+| Downtown / Loop | `-40, -40` | Comércio e prédios contínuos | **Loja no Loop (visitável)** |
+| Greektown / Loop oeste | `-120, -40` | Prédios comerciais em sequência | Fachada + preparação |
 | Downtown / Loop | `-40, -200` | Prédios de miolo de quadra | Fachada + preparação |
 | Downtown / Loop | `40, -200` | Comércio e prédios em sequência | Fachada + preparação |
-| River North | `-40, 120` | Fachadas comerciais próximas ao rio | Fachada + preparação |
-| River North | `120, 200` | Apartamentos e comércio | Fachada + preparação |
-| Borda de Goose Island | `-120, 280` | Galpões e docas | **Depósito de Goose Island (visitável)** |
+| Greektown / Sul | `-120, -200` | Fachadas comerciais contíguas | Fachada + preparação |
+| River North | `-40, 120` | Prédios próximos ao rio | Fachada + preparação |
+| Goose Island | `-200, 120` | Galpões e docas | **Depósito de Goose Island (visitável)** |
+
+**Justificativa da revisão de coordenadas:** um teste real de Chromium comprovou que a malha de ruas do projeto já reserva muitos blocos da grade para R15/R35/R48 e outras passagens; os pilotos anteriores não eram gerados. Esta lista foi escolhida **a partir dos blocos efetivamente construídos pelo `CityBuilder` no jogo**, sem apagar ruas de referência, prédios R77 ou locais protegidos. A CI R78 deve confirmar que todos os nove são construídos, secos e com acesso.
 
 **Resultado planejado:** 8 quadras × 10 construções + 1 quadra industrial × 6 = **86 construções**. Em vez de um prédio genérico no centro, há **duas fileiras de fachadas**, intervalos de aproximadamente 0,18–0,34 unidades entre lotes e uma passagem central **sem colisores**, preservando o espaço necessário para futuros becos.
 
