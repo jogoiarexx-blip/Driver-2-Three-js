@@ -198,6 +198,7 @@
                 this.chicagoReferenceNorthContinuation=null;
                 this.chicagoReferenceNorthBranch=null;
                 this.chicagoPS1RiverBranches=null;
+                this.chicagoRiverfrontR80=null;
                 this.chicagoGooseIslandStreet=null;
                 this.chicagoGooseIslandNorthYard=null;
                 this.chicagoGooseIslandJunctions=null;
@@ -651,6 +652,12 @@
                     // but before R49's next route graph compilation.
                     if(typeof DriverChicagoDowntownCorridorsR79!=='undefined')
                         DriverChicagoDowntownCorridorsR79.build(this);
+                    // R80: physical river-bank rails are created LAST,
+                    // after R53, R78, R79 geometry and all bridge states.
+                    // The river/decks remain owned by R2 and existing
+                    // opening/closing drawbridge animation remains untouched.
+                    if(typeof DriverChicagoRiverfrontR80!=='undefined')
+                        DriverChicagoRiverfrontR80.build(this);
                 }
                 if(this.preset.id==='rio' &&
                     typeof DriverRioOverhaul!=='undefined')

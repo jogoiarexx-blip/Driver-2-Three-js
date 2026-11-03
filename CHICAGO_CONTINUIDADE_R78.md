@@ -3,7 +3,7 @@
 > **Documento vivo de retomada.** Atualize este arquivo **na mesma PR de toda revisão futura**. Assim, quando a conversa acabar, basta enviar este MD à próxima sessão e pedir para continuar a próxima etapa.  
 > Projeto: [Driver-2-Three-js](https://github.com/jogoiarexx-blip/Driver-2-Three-js) · Jogo: [GitHub Pages](https://jogoiarexx-blip.github.io/Driver-2-Three-js/)  
 > Referências técnicas: `AUDITORIA-MESTRA-DRIVER2.md`, `chicago/README.md`.  
-> **Atualizado:** 2026-11-03 — ciclo R79. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (verificar CI/merge).
+> **Atualizado:** 2026-11-03 — ciclo R80. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
 
 ## 0. Missão do projeto — não perder o objetivo
 
@@ -27,7 +27,7 @@ A cidade desejada deve conter:
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
 | **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
-| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| R80+ | **Planejadas** | Rio, pontes, Goose Island, interiores completos e alinhamento fiel ao PS1 |
+| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **Em desenvolvimento** | Guarda-corpos físicos, passeios, pontes fixas e fachadas de canal; preserva rio/pontes móveis |\n| R81+ | **Planejadas** | Goose Island industrial, interiores completos e alinhamento fiel ao PS1 |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
 
@@ -160,6 +160,23 @@ As novas salas são `r78-loop-shop` (interior em X=1300) e `r78-goose-warehouse`
 - Repartir os polígonos em lotes orientados para a via real. Reaproveitar `facadeStyle`/LOD da R78; manter limites de lote fechados sem invadir a faixa de carros.
 - Teste de direção em todos os sentidos, radar, colisão, pedestres, polícia e pelo menos uma missão da região. **Rollback se a rota não existir.**
 
+### R80 — Chicago River: margens físicas, fachadas e pontes (03/11/2026)
+
+**Estado:** implementação criada na branch `chicago-r80-riverfront-bridges-blocks`; **confirmar CI/PR/merge** antes de alterar para concluída.
+
+A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da ROM:
+
+- **Guarda-corpos físicos nas margens**: `js/world/chicago-riverfront-r80.js` reproduz os centros das barras já desenhadas pela R2 nas duas ramificações do Chicago River (`x=-240`, `x=-160`), com caixas AABB alinhadas ao volume VISÍVEL. Abordagens das **10 pontes fixas** são excluídas com folga; a camada é ativada **depois** das pontes, R53, R78, R79 e outros edifícios, e rejeita qualquer segmento que invada rio, prédio ou diferença de piso inválida.
+- **Passeios públicos secos** junto ao guarda-corpo: placas estreitas com cota de `getGroundHeightAt`, somente em regiões verificadas secas e sem AABBs, sem emitir novos segmentos de tráfego para IA e sem fingir ser rua certificada do PS1.
+- **Detalhes de pontes fixas**: perfis e pilaretes agrupados por `DriverSpecialStructures.pack`, em alinhamento com os decks R2 existentes; **nenhuma ponte inventada**, nenhum tabuleiro móvel trocado ou gerador de asfalto sobre água.
+- **Fachadas para o rio**: estruturas **realmente existentes** nas quadras R78 e R14 adjacentes aos canais recebem janelas e molduras voltadas à água. Se os oito edifícios R53 tiverem sido construídos, também recebem ornamentos; **no teste real R53 estava inativa**, portanto o código NÃO inventa aqueles prédios. A execução Chromium identificou **11 fachadas efetivamente adicionadas** (8 em imóveis R78 e 3 em imóveis R14). Não há AABBs adicionais nas fachadas.
+- **Duas pontes levadiças centrais** (`x=0` e `x=240`) mantêm movimento e rampa visual/física existentes; o grafo `js/traffic/chicago-mixed-navigation-r49.js` precisa invalidar rotas quando os tabuleiros estão elevados, enquanto a ponte fixa `x=-240,z=-80` continua utilizável.
+- **NÃO equivale ao traçado PS1 homologado**. Todo o rio R2 é aproximação procedural; a R80 adiciona integridade física e legibilidade da área, não muda coordenadas de missões, pontes ou POIs originais.
+
+**Testes exigidos antes do merge:** `tests/chicago-r80-riverfront.test.cjs` e `tests/chicago-r80-riverfront-browser.cjs` + R2/R53/R79/R78/R69/R77. O browser deve detectar margens secas com colisão real, 10 pontes fixas, 8+ fachadas sobre prédios preexistentes, navegação pela ponte oeste, alteração de grafo ao erguer as basculantes e nenhum erro JS. Workflow: `.github/workflows/chicago-r80.yml`.
+
+**Próxima revisão depois de R80 validada:** **R81 — Goose Island industrial**, galpões em sequência, pátios navegáveis, docas e pelo menos um interior industrial; trabalho PS1 fica explicitamente condicionado a IDs e posicionamento geográfico comprovados.
+
 ### R80 — Chicago River, pontes e estruturas
 - Corrigir margens e acessos com base no rio e pontes da fonte PS1; **não tratar água como asfalto**.
 - Preservar a lógica da ponte levadiça e da ponte leste; checar grade de altura (sobre/sob viaduto).
@@ -214,7 +231,7 @@ Checklist de aceite:
 
 Copie este pedido junto com o arquivo MD:
 
-> **Continue o projeto `jogoiarexx-blip/Driver-2-Three-js` usando `CHICAGO_CONTINUIDADE_R78.md` como plano-mestre. Confira a branch `main`, os PRs e os workflows atuais. Não recomece nem repita auditorias já resolvidas. Faça a próxima revisão pendente (R79: ruas e quarteirões Downtown com base PS1), com mudanças reais no jogo jogável, testes automáticos e Chromium. Preserve missões, água, colisões, tráfego e as outras cidades. Ao terminar, atualize o próprio MD com o que mudou, bugs restantes, links e a etapa seguinte.**
+> **Continue o projeto `jogoiarexx-blip/Driver-2-Three-js` usando `CHICAGO_CONTINUIDADE_R78.md` como plano-mestre. Confira a branch `main`, os PRs e os workflows atuais. Não recomece nem repita auditorias já resolvidas. Faça a próxima revisão pendente indicada na seção 5 (R81: Goose Island, quando a R80 estiver integrada), com mudanças reais no jogo jogável, testes automáticos e Chromium. Preserve missões, água, colisões, tráfego e as outras cidades. Ao terminar, atualize o próprio MD com o que mudou, bugs restantes, links e a etapa seguinte.**
 
 Se você disser apenas **“próxima”**, a referência é a **primeira revisão ainda não concluída na seção 5**.
 
