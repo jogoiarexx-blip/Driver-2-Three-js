@@ -374,7 +374,15 @@
                     const targetY = isWater(nextX,nextZ) ? -0.76 :
                         cityBuilder.getGroundHeightAt(
                             nextX,nextZ,this.group.position.y);
-                    if (!cityBuilder.isPointBlocked(nextX,nextZ,0.55,targetY)) {
+                    // A stair step may rise at most 43 cm per move.
+                    // Disallow walking sideways onto a 3.6m platform.
+                    const validGrade=
+                        typeof DriverChicagoAccessibleInteriorsR83==='undefined'||
+                        DriverChicagoAccessibleInteriorsR83.safeStep(cityBuilder,
+                            this.group.position.x,this.group.position.z,
+                            this.group.position.y,nextX,nextZ,targetY);
+                    if (validGrade &&
+                        !cityBuilder.isPointBlocked(nextX,nextZ,0.55,targetY)) {
                         this.group.position.x = nextX;
                         this.group.position.z = nextZ;
                         this.group.position.y = targetY;
