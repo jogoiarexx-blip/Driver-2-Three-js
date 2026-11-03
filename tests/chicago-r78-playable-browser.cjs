@@ -45,6 +45,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
      registeredRooms:c.chicagoCityPlan?.r78EnterableRooms,
      actualLots:lots.length,
      oldInteriors:c.interiors.filter(x=>!x.id.startsWith('r78-')).map(x=>x.id),
+     availableBlocks:c.chicagoCityPlan?.blocks?.map(b=>[b.x,b.z,b.kind])||[],
+     builtPilots:lots.reduce((a,b)=>(a.some(p=>p[0]===b.blockX&&p[1]===b.blockZ)||
+      a.push([b.blockX,b.blockZ]),a),[]),
      fullCandidates:lots.filter(x=>x.interiorTier==='full').map(b=>({
       id:b.interiorId,lot:b.id,
       door:{x:b.x,z:b.z+b.depth/2+2.8},
