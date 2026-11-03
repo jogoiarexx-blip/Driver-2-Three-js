@@ -2176,7 +2176,8 @@
                 if(!forVehicle &&
                    typeof DriverChicagoAccessibleInteriorsR83!=='undefined' &&
                    DriverChicagoAccessibleInteriorsR83.nearRoom(this,x,z))
-                    return DriverChicagoAccessibleInteriorsR83.heightAt(this,x,z);
+                    return DriverChicagoAccessibleInteriorsR83.heightAt(
+                        this,x,z,referenceY);
                 if(this.interiorFloorAt?.(x,z))return 0;
                 // R54: a superfície física do píer acompanha o deck de
                 // madeira e a nova rampa, sem flutuação das rodas.
