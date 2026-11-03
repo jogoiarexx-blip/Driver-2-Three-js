@@ -3,7 +3,7 @@
 > **Documento vivo de retomada.** Atualize este arquivo **na mesma PR de toda revisão futura**. Assim, quando a conversa acabar, basta enviar este MD à próxima sessão e pedir para continuar a próxima etapa.  
 > Projeto: [Driver-2-Three-js](https://github.com/jogoiarexx-blip/Driver-2-Three-js) · Jogo: [GitHub Pages](https://jogoiarexx-blip.github.io/Driver-2-Three-js/)  
 > Referências técnicas: `AUDITORIA-MESTRA-DRIVER2.md`, `chicago/README.md`.  
-> **Atualizado:** 2026-11-03 — R82 em desenvolvimento, PR #58. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
+> **Atualizado:** 2026-11-03 — R82 integrada (CI final ainda precisa ser conferido), próxima R83. **PR R78:** [#54](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/54) (integrada). **PR R79:** [#55](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/55) (integrada).
 
 ## 0. Missão do projeto — não perder o objetivo
 
@@ -27,7 +27,7 @@ A cidade desejada deve conter:
 | R71–R76 | Integradas anteriormente | Auditorias dos GLBs PS1, UV, materiais, triângulos e separação de superfícies |
 | **R77** | **Integrada à `main`** (commit `6ba99579`, PR #53) | Chicago **jogável**: Sears Tower, Marina City, Merchandise Mart, Water Tower, placas de ruas e faixas; testes Chromium |
 | **R78** | **CONCLUÍDA em `main`** — PR #54, merge `19ce23e2` | 9 quadras-piloto, **86 lotes em sequência**, fachadas diferenciadas, 2 interiores com entrada/saída real testadas |
-| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| **R81** | **CONCLUÍDA em `main`** — PR #57, merge `0fc10af8` | 2 pátios dirigíveis, 4 rotas para caminhões, 4 colisores de carga, 4 galpões detalhados e um escritório jogável |\n| **R82** | **Em desenvolvimento — PR #58** | 3 salas conectadas com colisão física e renderização sob demanda (um andar) |\n| R83+ | **Planejadas** | Portas interativas, escadas reais e geografia PS1 verificada |
+| **R79** | **CONCLUÍDA em `main`** — PR #55, merge `1c5e8d38` | 2 travessas Downtown dirigíveis (320 un.), 8 polígonos orientados às ruas com 40 lotes R78; **não certificado como traçado PS1** |\n| **R80** | **CONCLUÍDA em `main`** — PR #56, merge `a0d82aaf` | 66 guarda-corpos físicos, 66 trechos de passeio, 10 pontes fixas, 11 fachadas; basculantes preservadas |\n| **R81** | **CONCLUÍDA em `main`** — PR #57, merge `0fc10af8` | 2 pátios dirigíveis, 4 rotas para caminhões, 4 colisores de carga, 4 galpões detalhados e um escritório jogável |\n| **R82** | **Integrada à `main`** — PR #58, merge `749545f5` | 3 interiores de um andar com salas, paredes e móveis físicos, carga/descarrega de GPU; saves reconhecem os IDs |\n| R83+ | **Planejadas** | Portas interativas, escadas reais e geografia PS1 verificada |
 
 **Prova de conclusão:** uma revisão só muda para `CONCLUÍDA` quando seu código estiver em `main`, CI verde e, quando afetar a cidade jogável, o teste Chromium comprovar a entrada real no game. GitHub Pages pode demorar depois do merge; verificar o deploy separadamente.
 
@@ -228,7 +228,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 ### R82 — Chicago: interiores modulares reais (03/11/2026)
 
-**PR:** [#58](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/58) · **Branch:** `chicago-r82-modular-interiors-live-collision-lazy`. Estado deste checkpoint: código e testes criados, **confirmar CI e merge** antes de marcar concluído.
+**PR:** [#58](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/58) · **Integrada à `main`** por squash commit `749545f566ac9b1094ebad3c29ae9a26d1828c75`. **Validação:** as primeiras duas execuções R82 passaram; no momento do merge, o workflow do último commit (saves/HUD) ainda estava na fila e precisa ser conferido. Não alegar CI final aprovado sem checar.
 
 **Objetivo:** substituir salas genéricas com móveis atravessáveis por interiores arquitetônicos realmente navegáveis com a mesma geometria para render e colisão.
 
@@ -255,6 +255,17 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - [ ] `isPointBlocked` impede atravessar paredes/móveis mas permite portas laterais, spawn e saída.
 - [ ] Casa do Tanner preservada (inclui mesa save); R81 escritório, R80 66 guarda-corpos, R79 16 segmentos, R78 86 construções/2 interiores, R77 4 marcos preservados.
 - [ ] Testes Node, regressões e Chromium aprovado com captura **dentro de um ambiente**, PR mesclado e publicação GitHub Pages separadamente verificada.
+
+**Checkpoint de integração R82 — 03/11/2026**
+
+- **PR #58:** [código integrado](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/58), SHA de merge `749545f566ac9b1094ebad3c29ae9a26d1828c75`.
+- **Teste principal pré-merge validado:** [workflow 41679524779](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41679524779) — **33 testes Node aprovados** (incluem R77–R81) e Chromium aprovando 3 entradas/saídas. [workflow 41679619884](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41679619884) também aprovou a R82 principal.
+- **Resultados reais do jogo:** 3 blueprints criados, 3 zonas conectadas por recinto, 2 portas abertas por sala, 9–11 caixas físicas por sala, **3 carregamentos e 3 descarregamentos**, no máximo **um ambiente adicional em GPU** de cada vez. 0 erros de página detectados.
+- **Regressões:** Tanner continua com 13 caixas de mobiliário; R81 4 arestas e escritório, R80 66 barreiras, R79 16 trechos/2 corredores, R78 86 imóveis/2 entradas, R77 4 referências.
+- **Hotfix posterior ao teste principal:** `js/gameplay/home-save.js` aceita os IDs dos três cômodos mantendo chave e versão do save. O motor remonta a sala salva ao carregar, limpa a anterior, e mostra uma mensagem de exploração adequada em ambientes não residenciais.
+- **Validação final da versão mesclada:** workflows R82/R81/QA do último commit ainda estavam **na fila** no momento de integração. Checar [Actions](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions) e corrigir qualquer falha antes de declarar R82 totalmente homologada. **GitHub Pages** também precisa concluir o deploy do último SHA.
+- **Captura:** `modular-warehouse-inside.png` no artefato `chicago-r82-real-modular-interiors` de [41679524779](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41679524779); mostra a arquitetura real, antes do ajuste da mensagem de HUD.
+- **Não finalizado:** escadas físicas, andares superiores, portas animadas e posições PS1 da ROM; seguir somente com implementação verificável e segurança do jogador.
 
 **Próxima etapa R83:** estender o sistema para mais interiores com **portas interativas**, fases distintas, escadas e alturas físicas apenas onde houver navegação/colisão segura; seguir aproximando geografia PS1 por malhas verificadas, sem confundir aproximação com a ROM.
 
