@@ -38,10 +38,10 @@ class DriverChicagoBlockGeneratorR78 {
         const pilot=this.pilotAt(blockX,blockZ);
         if(!pilot)return null;
         const rows=2,columns=pilot.style==='industrial'?3:5,
-            totalSpan=42.4,frontDepth=pilot.style==='industrial'?17.0:14.0,
+            totalSpan=42.4,frontDepth=pilot.style==='industrial'?14.2:14.0,
             gap=pilot.style==='industrial'?.34:.18,
             width=(totalSpan-gap*(columns-1))/columns,
-            zOffset=pilot.style==='industrial'?12.8:14.2,lotArray=[];
+            zOffset=pilot.style==='industrial'?14.0:14.2,lotArray=[];
         for(const side of [-1,1]){
             for(let col=0;col<columns;col++){
                 const localX=-totalSpan/2+width/2+col*(width+gap);
