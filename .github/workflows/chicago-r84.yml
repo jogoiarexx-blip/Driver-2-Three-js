@@ -1,0 +1,67 @@
+name: Chicago R84 - extra real buildings, two landings and mobile budgets
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-vertical-interiors-r84.js'
+      - 'js/world/chicago-accessible-interiors-r83.js'
+      - 'js/world/chicago-modular-interiors-r82.js'
+      - 'js/world/city-builder.js'
+      - 'js/entities/tanner-controller.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/gameplay/home-save.js'
+      - 'index.html'
+      - 'tests/chicago-r84-*.cjs'
+      - '.github/workflows/chicago-r84.yml'
+      - 'CHICAGO_CONTINUIDADE_R78.md'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-vertical-interiors-r84.js'
+      - 'js/world/city-builder.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'tests/chicago-r84-*.cjs'
+permissions:
+  contents: read
+jobs:
+  full-city-real-stairs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JS syntax and R77-R84 physical regression
+        run: |
+          node --check js/world/chicago-vertical-interiors-r84.js
+          node --check js/world/chicago-accessible-interiors-r83.js
+          node --check js/world/city-builder.js
+          node --check js/engine/driver2-game-engine.js
+          node --check js/entities/tanner-controller.js
+          node --check js/gameplay/home-save.js
+          node --test tests/chicago-r84-vertical-interiors.test.cjs tests/chicago-r83-accessible-stairs.test.cjs tests/chicago-r82-modular-interiors.test.cjs tests/chicago-r81-industrial-yards.test.cjs tests/chicago-r80-riverfront.test.cjs tests/chicago-r79-downtown-streets.test.cjs tests/chicago-r78-sequential-blocks.test.cjs tests/chicago-r77-playable-landmarks.test.cjs tests/city-home-save.test.cjs
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve the real playable game
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/r84-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r84-http.log
+          exit 1
+      - name: Test real E doors, long stairs, GPU unloading and regressions
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r84-playable-browser.cjs
+      - name: Archive full-game report and high-landing screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r84-vertical-real-game
+          path: qa-artifacts/chicago-r84/
+          if-no-files-found: warn
