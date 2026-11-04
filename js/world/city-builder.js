@@ -592,12 +592,22 @@
                 if(this.preset.id==='chicago' &&
                    typeof DriverChicagoGooseIndustrialR81!=='undefined')
                     DriverChicagoGooseIndustrialR81.registerOffice(this);
+                // R83: make two existing R78 shells genuinely enterable;
+                // register before the common interior-room builder.
+                if(this.preset.id==='chicago' &&
+                   typeof DriverChicagoAccessibleInteriorsR83!=='undefined')
+                    DriverChicagoAccessibleInteriorsR83.register(this);
                 this.buildInteriorRooms();
                 // R82 physical room blueprints exist before player interaction.
                 // Only the ACTIVE room's meshes are built when Tanner enters.
                 if(this.preset.id==='chicago' &&
                    typeof DriverChicagoModularInteriorsR82!=='undefined')
                     DriverChicagoModularInteriorsR82.prepare(this);
+                if(this.preset.id==='chicago' &&
+                   typeof DriverChicagoAccessibleInteriorsR83!=='undefined'){
+                    DriverChicagoAccessibleInteriorsR83.prepare(this);
+                    DriverChicagoAccessibleInteriorsR83.decorateEntries(this);
+                }
                 if(this.preset.id==='chicago' &&
                    typeof DriverChicagoGooseIndustrialR81!=='undefined')
                     DriverChicagoGooseIndustrialR81.decorateOffice(this);
@@ -2161,6 +2171,13 @@
             }
 
             getGroundHeightAt(x,z,referenceY=null,forVehicle=false) {
+                // R83 stairs / mezzanine are physical STEP surfaces, not
+                // invisible floor at y=0 or a teleport to an upper floor.
+                if(!forVehicle &&
+                   typeof DriverChicagoAccessibleInteriorsR83!=='undefined' &&
+                   DriverChicagoAccessibleInteriorsR83.nearRoom(this,x,z))
+                    return DriverChicagoAccessibleInteriorsR83.heightAt(
+                        this,x,z,referenceY);
                 if(this.interiorFloorAt?.(x,z))return 0;
                 // R54: a superfície física do píer acompanha o deck de
                 // madeira e a nova rampa, sem flutuação das rodas.
@@ -2240,6 +2257,10 @@
             }
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
+                if(typeof DriverChicagoAccessibleInteriorsR83!=='undefined' &&
+                   DriverChicagoAccessibleInteriorsR83.nearRoom(this,x,z))
+                    return DriverChicagoAccessibleInteriorsR83.blocked(
+                        this,x,z,radius,y);
                 if(this.preset?.id==='chicago' &&
                     typeof DriverChicagoPS1ReferenceBridge!=='undefined' &&
                     DriverChicagoPS1ReferenceBridge.railBlocked(x,z,radius,y))return true;

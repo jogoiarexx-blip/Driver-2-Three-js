@@ -1,0 +1,67 @@
+name: Chicago R83 - interactive doors, two accessible lots and physical stairs
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-accessible-interiors-r83.js'
+      - 'js/world/city-builder.js'
+      - 'js/entities/tanner-controller.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/gameplay/home-save.js'
+      - 'index.html'
+      - 'tests/chicago-r83-*.cjs'
+      - '.github/workflows/chicago-r83.yml'
+      - 'CHICAGO_CONTINUIDADE_R78.md'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-accessible-interiors-r83.js'
+      - 'js/world/city-builder.js'
+      - 'js/entities/tanner-controller.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/gameplay/home-save.js'
+      - 'index.html'
+      - 'tests/chicago-r83-*.cjs'
+permissions:
+  contents: read
+jobs:
+  physical-doors-and-stairs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 29
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax, stair physics and R77-R82 regressions
+        run: |
+          node --check js/world/chicago-accessible-interiors-r83.js
+          node --check js/world/city-builder.js
+          node --check js/engine/driver2-game-engine.js
+          node --check js/entities/tanner-controller.js
+          node --check js/gameplay/home-save.js
+          node --test tests/chicago-r83-accessible-stairs.test.cjs tests/chicago-r82-modular-interiors.test.cjs tests/chicago-r81-industrial-yards.test.cjs tests/chicago-r80-riverfront.test.cjs tests/chicago-r79-downtown-streets.test.cjs tests/chicago-r78-sequential-blocks.test.cjs tests/chicago-r77-playable-landmarks.test.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve full game locally
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/r83-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/r83-http.log
+          exit 1
+      - name: Verify real doors, collisions, mezzanine and resource cleanup
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r83-playable-browser.cjs
+      - name: Archive stair gameplay screenshot and collision report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r83-doors-stairs-game
+          path: qa-artifacts/chicago-r83/
+          if-no-files-found: warn

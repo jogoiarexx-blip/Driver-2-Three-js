@@ -61,6 +61,10 @@ class DriverHomeSave {
             felony:DriverHomeSave.bounded(game.felony,0,100),
             mode:game.mode==='on_foot'?'on_foot':'driving',
             interior:game.interiorPlace?.id || null,
+            // R83: persist lightweight door state, preserving v2 saves.
+            interiorDoors:Object.fromEntries((game.city?.interiors||[])
+                .filter(p=>p.r83Blueprint).map(p=>[p.id,
+                    p.r83Blueprint.doors.map(d=>d.open)])),
             tanner:{x:t.x,y:t.y,z:t.z,heading:game.tanner.heading},
             vehicles:game.vehicles.map(v=>DriverHomeSave.position(v)),
             playerIndex:Math.max(0,game.vehicles.indexOf(game.playerCar)),
@@ -131,7 +135,8 @@ class DriverHomeSave {
             Number.isFinite(data.tanner.x) && Number.isFinite(data.tanner.z) &&
             (data.interior==null||['home','warehouse','diner','garage',
                 'r78-loop-shop','r78-goose-warehouse',
-                'r81-goose-yard-office'].includes(data.interior));
+                'r81-goose-yard-office',
+                'r83-loop-mezzanine','r83-ukrainian-house'].includes(data.interior));
     }
     // A chave localStorage é a mesma de 2026: converter V1 preservando
     // integralmente os dados e sem sobrescrever saves futuros/corrompidos.
@@ -316,6 +321,16 @@ class DriverHomeSave {
         game.tanner.setVisible(game.mode==='on_foot');
         game.interiorPlace=data.interior && game.mode==='on_foot' ?
             (game.city.interiors.find(p=>p.id===data.interior)||null):null;
+        if(data.interiorDoors&&typeof data.interiorDoors==='object'){
+            for(const place of game.city.interiors||[]){
+                const doors=place.r83Blueprint?.doors;
+                const saved=data.interiorDoors[place.id];
+                if(!doors||!Array.isArray(saved))continue;
+                doors.forEach((door,i)=>{
+                    if(typeof saved[i]==='boolean')door.open=saved[i];
+                });
+            }
+        }
         game.setWeather(data.weather||'day');
         game.cameraRig.lastMode=-1;
         game.cameraRig.focus=null;

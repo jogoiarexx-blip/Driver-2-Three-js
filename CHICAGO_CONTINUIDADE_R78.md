@@ -276,6 +276,23 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - Renderizar interiores **sob demanda**; liberar recursos ao sair sem apagar estado relevante.
 - Testar teclado/controle/celular, save/load, missão ativa e reentrada.
 
+### R83 — Portas internas, dois novos prédios acessíveis e escada física (03/11/2026)
+
+**Estado inicial:** IMPLEMENTADA EM BRANCH, aguardando suíte Node + Chromium e integração. Branch: `feat/chicago-r83-doors-stairs`. **Não declarar publicada** apenas por existir commit na branch.
+
+- **Dois lotes de fachada R78 `shell-planned`** deixam de ser decorativos e passam a ser acessíveis: `r83-loop-mezzanine` (bloco `-40,-200`, interior off-world `830,0`) e `r83-ukrainian-house` (bloco `-280,-200`, interior `900,0`). Os lotes, ruas e footprints externos não mudam. São acessos a pé no mesmo E/SAIR utilizado pelos demais prédios, só registrados se a entrada e a calçada de retorno estiverem secas e desobstruídas.
+- **Portas internas operáveis por E/controles existentes**, duas por interior. A porta fechada possui volume visual de 3,58×3,2 unidades e AABB física correspondente; aberta recolhe visualmente a folha para o lado da divisória e libera exatamente a mesma passagem. Fechamento é bloqueado se Tanner estiver no batente. HUD mostra ABRIR/FECHAR quando Tanner está próximo.
+- **Escada piloto real no escritório**, 12 pisos físicos sequenciais de 0,3 m (extensão de 0,625 m cada) conduzindo a um **mezanino de y=3,6**. `getGroundHeightAt` retorna a altura exata do degrau/plataforma; Tanner só vence cotas compatíveis por atualização (máximo 0,43 m de subida e 0,75 m de descida); saltos laterais para o nível superior e quedas sem saída são proibidos. Guarda-corpos e divisórias são malha sólida + colisões com cotas; os degraus são superfícies físicas de apoio, não barreiras AABB.
+- **Renderização sob demanda**: a planta de colisão fica em memória, mas as geometrias instanciadas de apenas um interior R83 ativo são carregadas ao entrar e descarregadas/dispostas ao sair. R82 e R83 fecham o ambiente anterior ao abrir outro. Apenas marcadores leves de entrada permanecem na fachada. Custo por frame fora da sala limitado ao pequeno desvio de verificação em Chicago; não adicionar renderização permanente a todas as casas.
+- **Save v2 retrocompatível**: whitelist ampliada para IDs R83, campo opcional `interiorDoors` registra estados das portas; saves antigos sem o campo seguem válidos e `loadHomeGame` recupera malhas do interior restaurado.
+- **Limites:** o segundo nível é **um mezanino piloto**, não um prédio completo com múltiplos pavimentos. Nem os dois endereços externos nem a tipologia de seus interiores foram certificados pela geometria original do PS1. Não criar promessas de mapa 1:1. Outras cidades, missões, veículos, pontes e água permanecem nas rotas anteriores.
+
+**Arquivos:** `js/world/chicago-accessible-interiors-r83.js`, `js/world/city-builder.js`, `js/entities/tanner-controller.js`, `js/engine/driver2-game-engine.js`, `js/gameplay/home-save.js`, `index.html`, `tests/chicago-r83-accessible-stairs.test.cjs`, `tests/chicago-r83-playable-browser.cjs`, `.github/workflows/chicago-r83.yml`, este MD.
+
+**Teste antes do merge:** registrar 2/2 salas reais, abrir/fechar ambas as portas com colisão dinâmica, subir 12 degraus a pé com y≈3,6, rejeitar subida lateral de 3,6, 1 sala com GPU ativa, zero geometrias remanescentes depois da saída, 3 salas R82, 86 lotes R78, tráfego R79 (16 trechos), rio R80 (66 barras), R81 (4 conexões), Tanner/save preservados; guardar artefato de screenshot dentro do mezanino. Se falhar, corrigir e repetir.
+
+**Próxima R84 após QA:** ampliar plantas com unidades interiores por quarteirão e transições verticais mais longas, validar FPS/memória em celular real e conferir posições PS1 antes de afirmar fidelidade cartográfica.
+
 ### R83+ — extensão e acabamento
 - Migrar bairros restantes com rede PS1, trânsito, pedestres, bairros e marcos.
 - Depois, trabalhar texturas, iluminação, LOD, áudio e desempenho: **visual sem geografia correta não resolve a Chicago**.
