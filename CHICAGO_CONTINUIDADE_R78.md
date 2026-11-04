@@ -313,7 +313,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 ### R85 — Portas por cômodo, colisão por varredura e QA mobile (04/11/2026)
 
-**Estado:** BRANCH `feat/chicago-r85-indoor-navigation`; testes Node + Chromium pendentes até CI verde, não afirmar publicação.
+**Estado:** CI APROVADA, pronto para integrar pela [PR #61](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/61). [R85 workflow 41843776906](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41843776906) verde: **85 testes Node, falhas 0**, R84 Chromium de regressão e R85 Chromium touch de ponta a ponta. Confirmar merge e Pages separadamente.
 
 - **Nenhum novo lote, rua ou prédio**: as 2 plantas R84 agora possuem **2 portas internas funcionais cada**, com partição e vão reais. O escritório ganhou duas peças de mobília pequenas com geometria + AABB de colisão; no loft a pequena caixa do patamar, antes somente visual, ganha AABB exatamente igual à malha. 45 peças instanciáveis no loft e 15 no escritório.
 - **Física R85 só a pé e dentro de R83/R84**: `DriverChicagoIndoorNavigationR85.move` percorre toda a distância em passos máximos de 0,22 unidade, aplicando as colisões e a altura real em **cada subpasso**. Impede atravessar móveis pequenos, portas fechadas ou divisórias a 12,5 unidades/s ou com queda momentânea de FPS. Se encostar, pode deslizar lateralmente após testar fisicamente cada eixo. O limite de subpassos é 24 por atualização, com distância total limitada a 5,28 unidades; fora de Chicago e fora dos interiores a implementação antiga não sofre alteração.
@@ -324,6 +324,8 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - **Validação obrigatória**: Node R77–R85, navegador R84 completo, navegador R85 mobile; mesmo número de 86 lotes R78, 2 interiores R83, 3 R82; manter save/campanha. A auditoria PS1 original continua sem certificar plantas interiores.
 
 **Arquivos:** `js/world/chicago-indoor-navigation-r85.js`, `js/world/chicago-vertical-interiors-r84.js`, `js/entities/tanner-controller.js`, `js/engine/driver2-game-engine.js`, `index.html`, `tests/chicago-r85-door-sweep.test.cjs`, `tests/chicago-r85-mobile-browser.cjs`, `.github/workflows/chicago-r85.yml`, este MD.
+
+**Evidência R85 no jogo real (04/11/2026):** 2 interiores aprimorados com 2 portas cada, blueprint loft 45 peças/16 AABBs e office 15 peças/11 AABBs; ambas as portas novas abriram por toque `AÇÃO (E)`; ambas as entradas/saídas concluídas e descarregadas; 1 grupo de GPU ativo por vez; subida sem travamento pelo caminho a pé desde a porta até y=7,2, após 24 degraus. Sem erros JS. Emulação Chromium 390×844 DPR2 com SwiftShader: após resolução adaptativa `currentDpr=1`, `r85BudgetMode=reduced`, p50 loft **316,6ms** e office **300ms**, p95 583,3ms e 333,3ms. **Esse software render não fornece FPS de Android/iPhone; não certificar fluidez de 60 FPS ou ganho universal**. Relatório e screenshots em `chicago-r85-rooms-mobile-emulation`.
 
 **R86 sugerida:** melhorar orientação do jogador dentro das salas (placas/iluminação e trilha para a escada), ampliar testes de colisão para interiores R82 e medir FPS real em celulares antes de afirmar um número.
 
