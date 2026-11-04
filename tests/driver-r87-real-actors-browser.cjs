@@ -95,6 +95,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
   const station=await page.evaluate(()=>{
    const g=window.DriverGame;
    const j=g.stationJones;
+   g.isPaused=true; // Hold the test camera for screenshot only.
    g.camera.position.set(j.position.x-9,4.5,j.position.z+12);
    g.camera.lookAt(j.position.x,1.9,j.position.z);
    g.camera.updateProjectionMatrix();
@@ -111,6 +112,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
   const cancelled=await page.evaluate(()=>{
    const g=window.DriverGame,b=g.briefingDirector;
    b.cancel();
+   g.isPaused=false;
    return {fov:g.camera.fov,original:b.shotsR87?.originalFov,
     arms:g.stationJones.userData.r87JonesArms.map(x=>x.rotation.z),
     missionActive:g.missionActive};
