@@ -21,6 +21,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),
     ids=['r83-loop-mezzanine','r83-ukrainian-house'],
     observation=[];
    game.mode='on_foot';
+   game.tanner.setVisible(true); // Ride mode hides Tanner; walking needs visible player.
    let maxLoaded=0;
    for(const id of ids){
     const p=c.interiors.find(p=>p.id===id);
