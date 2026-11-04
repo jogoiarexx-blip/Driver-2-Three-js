@@ -80,6 +80,17 @@ class DriverMissionBriefing {
         }
         return true;
     }
+    // Mild camera dolly only during the actual street establishing shot.
+    // Uses the camera calculated by DriverCameraRig each frame; it never
+    // moves Tanner, a vehicle, or a mission actor.
+    decorateCamera(camera){
+        if(!this.active||!camera?.position||
+            this.seconds<=2.05||this.seconds>=5)return;
+        const t=Math.max(0,Math.min(1,(this.seconds-2.05)/2.95));
+        const ease=t*t*(3-2*t);
+        camera.position.x+=Math.sin(ease*Math.PI)*.5;
+        camera.position.y+=Math.sin(ease*Math.PI)*.16;
+    }
     cancel(){
         this.active=false;this.seconds=0;
         if(this.element){
