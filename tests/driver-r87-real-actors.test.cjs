@@ -135,7 +135,7 @@ test('R87 engine uses existing station NPC and R86 flow; zero new mission timers
  assert(engine.includes('this.spawnLeavingJones();'));
  assert(engine.includes('group.userData.r87JonesArms=[];'));
  assert(engine.includes('this.scene.add(group);this.stationJones=group;'));
- assert(engine.includes('this.briefingDirector?.decorateCamera?.(this.camera)'));
+ assert(engine.includes('this.briefingDirector.decorateCamera?.(this.camera)'));
  assert(briefing.includes('this.shotsR87?.release()'));
  assert(!shots.includes('setInterval('));
  assert(!shots.includes('setTimeout('));
