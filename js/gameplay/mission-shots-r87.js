@@ -78,7 +78,7 @@ class DriverMissionShotsR87 {
         const wave=Math.sin(Math.PI*t)*Math.sin(t*4*Math.PI);
         // Mesh limb rotations only. Jones' world transform never moves.
         arms[0].rotation.z=-.2-.2*Math.sin(t*Math.PI);
-        arms[1].rotation.z=-.18-.75*Math.sin(t*Math.PI)-
+        arms[1].rotation.z=.18+1.1*Math.sin(t*Math.PI)+
             .1*wave;
         this.poseApplied=true;
         return true;
