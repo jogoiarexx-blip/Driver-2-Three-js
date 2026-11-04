@@ -3344,7 +3344,8 @@
                     this.camera.updateProjectionMatrix();
                     const coarse=window.matchMedia?.('(pointer: coarse)').matches;
                     this.renderer.setPixelRatio(Math.min(
-                        Number(window.devicePixelRatio)||1,coarse?1.5:1.85));
+                        Number(window.devicePixelRatio)||1,coarse?
+                        (this._r85MobileRender?.mode==='reduced'?1:1.5):1.85));
                     this.renderer.setSize(window.innerWidth, window.innerHeight);
                 });
 
@@ -3629,7 +3630,12 @@
                 this.lastTime = now;
 
                 this.frames++;
-                this.fpsTimer += dt;
+                // The HUD uses actual frame time: physics dt is
+                // clamped and can falsely report 20 FPS at 3 real FPS.
+                this.fpsTimer += Math.max(0,Math.min(rawDt,1));
+                if(typeof DriverChicagoIndoorNavigationR85!=='undefined')
+                    DriverChicagoIndoorNavigationR85.adaptMobileRender(
+                        this,rawDt);
                 if (this.fpsTimer >= 0.5) {
                     document.getElementById('fps-counter').textContent = Math.round(this.frames / this.fpsTimer);
                     this.frames = 0;
