@@ -165,7 +165,7 @@ test('R86 failure and success cards do not freeze game, change mission or duplic
   assert(el.textContent.includes('NÃO CONCLUÍDA'));
   assert.equal(g.missionType,'story_witness');
   assert.equal(g.missionActive,true);
-  scenes.observe({...g,missionActive:false},5);
+  for(let i=0;i<6;i++)scenes.observe({...g,missionActive:false},1);
   assert.equal(el.style.display,'none');
   scenes.begin(g,'freeroam');
   assert.equal(scenes.activeType,null);
