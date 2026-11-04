@@ -1,0 +1,66 @@
+name: Chicago R85 - indoor door traversal, swept physics and mobile emulation
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/world/chicago-indoor-navigation-r85.js'
+      - 'js/world/chicago-vertical-interiors-r84.js'
+      - 'js/entities/tanner-controller.js'
+      - 'index.html'
+      - 'tests/chicago-r85-*.cjs'
+      - '.github/workflows/chicago-r85.yml'
+      - 'CHICAGO_CONTINUIDADE_R78.md'
+  push:
+    branches: [main]
+    paths:
+      - 'js/world/chicago-indoor-navigation-r85.js'
+      - 'js/world/chicago-vertical-interiors-r84.js'
+      - 'js/entities/tanner-controller.js'
+      - 'tests/chicago-r85-*.cjs'
+permissions:
+  contents: read
+jobs:
+  doors-sweep-touch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Node syntax, physical room routes and R77-R84 regressions
+        run: |
+          node --check js/world/chicago-indoor-navigation-r85.js
+          node --check js/world/chicago-vertical-interiors-r84.js
+          node --check js/entities/tanner-controller.js
+          node --test tests/chicago-r85-door-sweep.test.cjs tests/chicago-r84-vertical-interiors.test.cjs tests/chicago-r83-accessible-stairs.test.cjs tests/chicago-r82-modular-interiors.test.cjs tests/chicago-r81-industrial-yards.test.cjs tests/chicago-r80-riverfront.test.cjs tests/chicago-r79-downtown-streets.test.cjs tests/chicago-r78-sequential-blocks.test.cjs tests/chicago-r77-playable-landmarks.test.cjs tests/city-home-save.test.cjs
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve the actual game
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/chicago-r85-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/chicago-r85-http.log
+          exit 1
+      - name: Desktop legacy 7.2-high R84 gameplay regression
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r84-playable-browser.cjs
+      - name: Mobile emulated touch E, second doors and performance samples
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/chicago-r85-mobile-browser.cjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chicago-r85-rooms-mobile-emulation
+          path: |
+            qa-artifacts/chicago-r85/
+            qa-artifacts/chicago-r84/
+          if-no-files-found: warn
