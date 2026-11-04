@@ -295,7 +295,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 ### R84 — Mais edifícios e dois patamares com física real (04/11/2026)
 
-**Estado:** R84 CI APROVADA e PR [#60](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/60) pronta para integração. [Workflow R84 41828696248](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41828696248) verde: **78 testes Node**, Chromium no jogo completo e screenshot da plataforma superior. Merge e GitHub Pages devem ser confirmados separadamente.
+**Estado:** R84 CONCLUÍDA E INTEGRADA à `main` pela [PR #60](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/60), squash commit `e47340c4518029dc2cc39acb9ac30a6c2bba5328`. [Workflow R84 41828696248](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41828696248) verde: **78 testes Node**, Chromium no jogo completo e screenshot da plataforma superior. Merge e GitHub Pages devem ser confirmados separadamente.
 
 - **2 novas entradas reais em shell já existente** nos 86 lotes R78: `r84-greektown-loft` (bloco -120,-200, interior x=660) e `r84-prairie-office` (bloco 40,-200, interior x=720). Só registra lote `shell-planned` com porta e retorno secos, livres de obstáculos. Continua com entrada E original e sem criar estrada, ponte, quarteirão ou mudar missão.
 - **Planta arquitetônica enxuta**: divisória com vão físico e uma porta que abre/fecha por E e bloqueia de verdade quando fechada; móveis colidíveis em todas as salas. Um interior de um pavimento e um loft vertical experimental.
