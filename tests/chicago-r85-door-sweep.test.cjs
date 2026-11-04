@@ -140,7 +140,7 @@ test('R85 adaptive mobile DPR falls only when needed and recovers on higher FPS'
   assert.equal(game._r85MobileRender.mode,'reduced');
   assert.deepEqual(changes,[1]);
   assert.equal(game._r85MobileRender.changes,1);
-  for(let i=0;i<200;i++)Nav.adaptMobileRender(game,.016);
+  for(let i=0;i<420;i++)Nav.adaptMobileRender(game,.016);
   assert.equal(game._r85MobileRender.mode,'normal');
   assert.deepEqual(changes,[1,1.5]);
   // Returning outdoors must not apply a special low-resolution mode.
