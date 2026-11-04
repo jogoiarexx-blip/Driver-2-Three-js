@@ -106,8 +106,13 @@ const fs=require('node:fs');
       last=now;
     }
     values.sort((a,b)=>a-b);
+    const game=window.DriverGame;
     return {count:values.length,medianMs:values[Math.floor(
-      values.length/2)],p95Ms:values[Math.floor(values.length*.95)]};
+      values.length/2)],p95Ms:values[Math.floor(values.length*.95)],
+     currentDpr:game.renderer.getPixelRatio(),
+     r85BudgetMode:game._r85MobileRender?.mode||'unknown',
+     scaleChanges:game._r85MobileRender?.changes||0,
+     recentRealFps:game._r85MobileRender?.lastFps||null};
    });
    assert(timing.count>=40&&timing.medianMs>0);
    // Back to physical exit, using the actual on-screen E button.
