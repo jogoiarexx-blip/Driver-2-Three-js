@@ -203,11 +203,11 @@ class DriverCampaignScenesR86 {
         }
     }
     begin(game,type){
-        this.activeType=this.script(type)?type:null;
+        this.activeType=DriverCampaignScenesR86.script(type)?type:null;
         this.stageKey=null;
         this.lastResult=null;
         this.hide();
-        return this.script(type);
+        return DriverCampaignScenesR86.script(type);
     }
     observe(game,dt=0){
         const rawDt=Math.max(0,Math.min(1,Number(dt)||0));
@@ -228,10 +228,10 @@ class DriverCampaignScenesR86 {
         }
     }
     finish(game,type,failed,nextChapter){
-        const story=this.script(type);
+        const story=DriverCampaignScenesR86.script(type);
         if(!story)return;
         const follow=nextChapter?
-            'PRÓXIMO ATO: '+this.ACTS[nextChapter]?.chapter:
+            'PRÓXIMO ATO: '+DriverCampaignScenesR86.ACTS[nextChapter]?.chapter:
             failed?'TENTE NOVAMENTE NO MARCADOR DA MISSÃO':
                 'PRÓXIMA MISSÃO LIBERADA NO MARCADOR';
         this.lastResult={type,failed:!!failed};
