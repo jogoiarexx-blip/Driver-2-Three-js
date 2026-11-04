@@ -26,6 +26,9 @@ class DriverMissionBriefing {
     }
     begin(game,type){
         if(!type?.startsWith('story_')||typeof document==='undefined')return;
+        this.shotsR87?.release();
+        this.shotsR87=typeof DriverMissionShotsR87!=='undefined'?
+            new DriverMissionShotsR87(game,type):null;
         this.ensure();
         const title=document.getElementById('mission-title')?.textContent||
             type.replace(/_/g,' ').toUpperCase();
@@ -55,6 +58,7 @@ class DriverMissionBriefing {
             this.seconds+Math.max(0,Math.min(.2,Number(dt)||0));
         if(this.seconds>=5){
             this.active=false;
+            this.shotsR87?.release();
             if(this.element){
                 this.element.style.display='none';
                 this.element.setAttribute('aria-hidden','true');
@@ -90,8 +94,11 @@ class DriverMissionBriefing {
         const ease=t*t*(3-2*t);
         camera.position.x+=Math.sin(ease*Math.PI)*.5;
         camera.position.y+=Math.sin(ease*Math.PI)*.16;
+        this.shotsR87?.decorate(camera,this.seconds);
     }
     cancel(){
+        this.shotsR87?.release();
+        this.shotsR87=null;
         this.active=false;this.seconds=0;
         if(this.element){
             this.element.style.display='none';

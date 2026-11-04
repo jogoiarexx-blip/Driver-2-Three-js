@@ -346,6 +346,20 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 **Próxima R87 sugerida:** cenas roteirizadas com poses de NPCs reais e eventuais zooms por missão, usando os modelos existentes e sem alterar gatilhos; teste visual de cada missão por cidade e ajustes específicos à IA de alvo. **Sem criar vídeos ou prometer 3D cinematic completo sem evidência.**
 
+### R87 — Câmera nos atores reais e gesto de Jones (04/11/2026)
+
+**Estado:** IMPLEMENTADA NA BRANCH `feat/driver-r87-real-actor-cinematics`; testes Node e Chromium obrigatórios antes de integrar ou publicar.
+
+- **Plano de enquadramento para os 15 atos reais R86** em `DriverMissionShotsR87.SHOTS`. Cada abertura de 5 segundos continua na rua real, escolhe um ator já existente (Tanner, o carro do jogador, o carro do alvo ou o Jones da estação, quando disponível). Se o alvo estiver além de **45 unidades** do jogador, a câmera continua com o personagem/veículo presente, **sem teletransportar ninguém para a cena**. Enquadramento `camera.lookAt` apenas para atores a menos de **50 unidades da câmera real**; zoom de **4 a 7 graus** de FOV somente de 2,05 a 5 segundos, suavizado e restaurado no fim/cancelamento.
+- **Pose visível de personagem existente**: Jones da missão `story_leaving`, já renderizado perto da estação em `(-8,0,-240)`, recebe dois braços low-poly articulados presos ao próprio grupo `stationJones`; gesticula durante a vinheta e volta à pose inicial no final. As coordenadas do NPC, a IA, o alvo, as missões, o carro e as animações de Tanner **não são alterados**. São **4 pequenas malhas + 2 pivôs**, somente enquanto o Jones da estação já existe; nenhum GLB duplicado.
+- **Compatibilidade com R86:** narrativa de 15 atos, cards de etapa, intro de 5 segundos e objetivos reais permanecem intactos; apenas decorador opcional na câmera antiga. `cancel()` e final da vinheta restauram FOV e braços, inclusive ao reiniciar missão/trocar cidade. Nenhum temporizador extra, evento de input, teleporte, vídeo, áudio ou novo script de vitória. R85 portas e physics, salvação e transições de cidade preservadas.
+- **QA obrigatório:** Node para as 15 entradas, fallback de ator distante, mesma posição dos atores e mesmo relógio de missão, retorno de FOV, gestos de Jones e integração da intro; regressões R85/R86/Chicago/Havana/Vegas/Rio. Chromium no jogo real: abertura com Tanner e `story_leaving`, pose do Jones na estação, FOV ao entrar/sair, screenshots e relatório sem page errors. Um screenshot de Jones é **foto de QA com câmera manual**, e não deve ser apresentado como plano automático da missão. A participação dos demais 13 atos no plano de câmera é verificada na lógica, **não** afirmamos conclusão jogada nem cinemática 3D elaborada para as 15 missões.
+- **Limites:** a apresentação visual é um piloto pequeno baseado nos atores já presentes; outras cenas ainda precisam de NPCs próprios, caso a história exija. Nada daqui é evidência sobre fidelidade geográfica PS1 ou taxa de FPS em hardware móvel.
+
+**Arquivos:** `js/gameplay/mission-shots-r87.js`, `js/gameplay/mission-briefing.js`, `js/engine/driver2-game-engine.js`, `index.html`, `tests/driver-r87-real-actors.test.cjs`, `tests/driver-r87-real-actors-browser.cjs`, `.github/workflows/driver-r87-real-cinematics.yml`, este MD.
+
+**Próxima R88 após CI/merge/publicação:** ampliar encenação natural de objetivos em cada cidade com atores realmente existentes, otimizar retratos/câmeras em mobile e testar objetivos individuais em Chromium sem simular a conclusão das missões por UI de QA.
+
 ### R83+ — extensão e acabamento
 - Migrar bairros restantes com rede PS1, trânsito, pedestres, bairros e marcos.
 - Depois, trabalhar texturas, iluminação, LOD, áudio e desempenho: **visual sem geografia correta não resolve a Chicago**.
