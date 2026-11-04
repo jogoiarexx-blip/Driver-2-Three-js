@@ -377,10 +377,14 @@
                     // A stair step may rise at most 43 cm per move.
                     // Disallow walking sideways onto a 3.6m platform.
                     const validGrade=
-                        typeof DriverChicagoAccessibleInteriorsR83==='undefined'||
+                        (typeof DriverChicagoAccessibleInteriorsR83==='undefined'||
                         DriverChicagoAccessibleInteriorsR83.safeStep(cityBuilder,
                             this.group.position.x,this.group.position.z,
-                            this.group.position.y,nextX,nextZ,targetY);
+                            this.group.position.y,nextX,nextZ,targetY))&&
+                        (typeof DriverChicagoVerticalInteriorsR84==='undefined'||
+                        DriverChicagoVerticalInteriorsR84.safeStep(cityBuilder,
+                            this.group.position.x,this.group.position.z,
+                            this.group.position.y,nextX,nextZ,targetY));
                     if (validGrade &&
                         !cityBuilder.isPointBlocked(nextX,nextZ,0.55,targetY)) {
                         this.group.position.x = nextX;

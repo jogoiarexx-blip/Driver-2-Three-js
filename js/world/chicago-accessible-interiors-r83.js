@@ -254,6 +254,8 @@ class DriverChicagoAccessibleInteriorsR83 {
             if(p.r83Loaded)this.leave(city,p);
             if(p.r82Loaded&&typeof DriverChicagoModularInteriorsR82!=='undefined')
                 DriverChicagoModularInteriorsR82.leave(city,p);
+            if(p.r84Loaded&&typeof DriverChicagoVerticalInteriorsR84!=='undefined')
+                DriverChicagoVerticalInteriorsR84.leave(city,p);
         }
         const b=place.r83Blueprint,g=new THREE.Group();
         g.name='r83-accessible-interior-'+place.id;
