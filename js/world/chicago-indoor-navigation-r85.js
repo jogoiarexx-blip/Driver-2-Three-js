@@ -85,12 +85,15 @@ class DriverChicagoIndoorNavigationR85 {
         if(!Number.isFinite(from.x)||!Number.isFinite(from.z)||
             !Number.isFinite(from.y)||!Number.isFinite(to.x)||
             !Number.isFinite(to.z))return {...from,blocked:true,steps:0};
-        const dx=to.x-from.x,dz=to.z-from.z;
-        const distance=Math.hypot(dx,dz);
-        // Hard cap also prevents a pathological frame freeze after
-        // browser tab resumes; normal Tanner max move is ~1 m/frame.
-        const steps=Math.max(1,Math.min(24,
-            Math.ceil(distance/this.MAX_SWEEP)));
+        const requestedX=to.x-from.x,requestedZ=to.z-from.z;
+        const distance=Math.hypot(requestedX,requestedZ);
+        // Clamp both the number AND the LENGTH of substeps. A giant
+        // tab-resume delta must never tunnel through a thin collider.
+        const fraction=distance>0?
+            Math.min(1,24*this.MAX_SWEEP/distance):1;
+        const dx=requestedX*fraction,dz=requestedZ*fraction;
+        const steps=Math.max(1,Math.ceil(
+            Math.hypot(dx,dz)/this.MAX_SWEEP));
         const sx=dx/steps,sz=dz/steps;
         let point={x:from.x,y:from.y,z:from.z},blocked=false;
         for(let i=0;i<steps;i++){
