@@ -36,6 +36,8 @@
                 this.audio = new RetroSynthAudio();
                 this.briefingDirector=typeof DriverMissionBriefing!=='undefined'?
                     new DriverMissionBriefing():null;
+                this.campaignScenes=typeof DriverCampaignScenesR86!=='undefined'?
+                    new DriverCampaignScenesR86():null;
                 this.effects = new EffectsManager(this.scene);
                 this.impactFeedback = new DriverImpactFeedback();
                 this.impactFlash = document.getElementById('impact-flash');
@@ -605,6 +607,7 @@
                     this.scene.remove(this.stationJones);this.stationJones=null;
                 }
                 this.briefingDirector?.cancel();
+                this.campaignScenes?.cancel();
                 if(typeof DriverClassicGames!=='undefined')
                     DriverClassicGames.dispose(this);
                 if(typeof DriverRegionalMissions!=='undefined')
@@ -1130,6 +1133,9 @@
                     this.vehicles.push(this.targetCar);
                 }
                 DriverCheckpointRoute.refresh(this.missionType, this.missionMarkers);
+                // R86 uses the REAL mission phase for cinematic cards.
+                // Directors/timers remain untouched by this presentation.
+                this.campaignScenes?.begin(this,type);
                 // Undercover title card + five-second street establishing shot.
                 this.briefingDirector?.begin(this,type);
                 if (this.freeVehicleAssets) this.freeVehicleAssets.decorateFleet();
@@ -2309,6 +2315,8 @@
                         DriverCampaignFlow.chapterTitle(nextChapter)+
                         ' (selecionar no menu de cidades)':
                     notice.next;
+                this.campaignScenes?.finish(
+                    this,finishedType,failed,nextChapter);
                 // Exibe o motivo específico quando a missão falha.
                 // Sem marcar capítulos perdidos como concluídos.
                 const reason=failed&&desc?' • '+String(desc).slice(0,160):'';
@@ -3651,6 +3659,7 @@
                     // Do not advance game physics or mission timer in intro.
                     this.briefingDirector.tick(dt);
                     this.updateCamera(dt);
+                    this.briefingDirector.decorateCamera?.(this.camera);
                     this.renderer.render(this.scene,this.camera);
                     return;
                 }
@@ -3782,6 +3791,7 @@
                 }else if(toast)toast.classList.add('hidden');
                 if(typeof DriverChicagoMissionGuidance!=='undefined')
                     DriverChicagoMissionGuidance.render(this);
+                this.campaignScenes?.observe(this,rawDt);
                 this.updateHUD();
                 this.trafficTelemetry?.sample(this,dt,rawDt);
                 const context=document.getElementById('driver-mission-context');

@@ -1,0 +1,63 @@
+name: Driver R86 - coherent mission scenes, chapters and Tanner locomotion
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'js/gameplay/campaign-scenes-r86.js'
+      - 'js/gameplay/mission-briefing.js'
+      - 'js/engine/driver2-game-engine.js'
+      - 'js/entities/tanner-controller.js'
+      - 'index.html'
+      - 'tests/driver-r86-*.cjs'
+      - '.github/workflows/driver-r86-campaign-scenes.yml'
+      - 'CHICAGO_CONTINUIDADE_R78.md'
+  push:
+    branches: [main]
+    paths:
+      - 'js/gameplay/campaign-scenes-r86.js'
+      - 'js/gameplay/mission-briefing.js'
+      - 'js/entities/tanner-controller.js'
+      - 'tests/driver-r86-*.cjs'
+permissions:
+  contents: read
+jobs:
+  continuity-and-playable-scenes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Full mission sequence and all R58/R85 regression logic
+        run: |
+          node --check js/gameplay/campaign-scenes-r86.js
+          node --check js/gameplay/mission-briefing.js
+          node --check js/engine/driver2-game-engine.js
+          node --check js/entities/tanner-controller.js
+          node --test tests/driver-r86-campaign-scenes.test.cjs tests/driver-natural-campaign-hud.test.cjs tests/chicago-mission-completion.smoke.cjs tests/chicago-mission-guidance.smoke.cjs tests/chicago-mission-guidance-ui.smoke.cjs tests/chicago-chapters.test.cjs tests/chicago-leaving.test.cjs tests/chicago-caine.test.cjs tests/chicago-intruder.test.cjs tests/havana-lead.test.cjs tests/arcade-regional-expansion.test.cjs tests/driver-r58-vehicle-animations.test.cjs tests/chicago-r85-door-sweep.test.cjs tests/chicago-r84-vertical-interiors.test.cjs tests/city-home-save.test.cjs
+          node tests/chicago-mission-ui.smoke.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve real game
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/driver-r86-http.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/driver-r86-http.log
+          exit 1
+      - name: Test actual playable mission flow, cinematic scene and outcome
+        env:
+          DRIVER_QA_URL: http://127.0.0.1:4173/
+        run: node tests/driver-r86-scenes-browser.cjs
+      - name: Archive screenshots and real-game report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-r86-campaign-cinematics
+          path: qa-artifacts/r86-campaign-scenes/
+          if-no-files-found: warn
