@@ -3659,6 +3659,7 @@
                     // Do not advance game physics or mission timer in intro.
                     this.briefingDirector.tick(dt);
                     this.updateCamera(dt);
+                    this.briefingDirector.decorateCamera?.(this.camera);
                     this.renderer.render(this.scene,this.camera);
                     return;
                 }
