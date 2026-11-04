@@ -9,6 +9,47 @@
 class DriverChicagoIndoorNavigationR85 {
     static VERSION='r85-two-room-doors-foot-sweep-mobile';
     static MAX_SWEEP=.22;
+    static adaptMobileRender(game,realDt){
+        // Only real mobile/touch play, and only while inside an interior.
+        // High-end devices keep native quality. A low-end device can
+        // fall back to 1x DPR, with hysteresis to avoid frame-by-frame
+        // WebGL buffer reallocations. Do not use clamped physics dt.
+        if(!game?.renderer||typeof window==='undefined')return;
+        const coarse=window.matchMedia?.('(pointer: coarse)').matches;
+        const active=!!(coarse&&game.mode==='on_foot'&&
+            game.interiorPlace&&!game.isPaused&&!game.loadingActive);
+        const s=game._r85MobileRender||(
+            game._r85MobileRender={mode:'normal',seconds:0,
+                frames:0,changes:0,lastFps:null});
+        if(!active){
+            if(s.mode==='reduced'){
+                game.renderer.setPixelRatio(Math.min(
+                    Number(window.devicePixelRatio)||1,1.5));
+                s.mode='normal';s.changes++;
+            }
+            s.seconds=0;s.frames=0;
+            return;
+        }
+        if(!Number.isFinite(realDt)||realDt<=0)return;
+        s.frames++;
+        s.seconds+=Math.min(realDt,.75);
+        if(s.seconds<3)return;
+        const fps=s.frames/s.seconds;
+        s.lastFps=Math.round(fps*10)/10;
+        // At <=~20 FPS downgrade to 1x physical pixels; recover
+        // only when sustained >=48 FPS. The 24/48 gap prevents
+        // oscillation on slower hardware.
+        if(s.mode==='normal'&&fps<24){
+            game.renderer.setPixelRatio(Math.min(
+                Number(window.devicePixelRatio)||1,1.0));
+            s.mode='reduced';s.changes++;
+        }else if(s.mode==='reduced'&&fps>48){
+            game.renderer.setPixelRatio(Math.min(
+                Number(window.devicePixelRatio)||1,1.5));
+            s.mode='normal';s.changes++;
+        }
+        s.seconds=0;s.frames=0;
+    }
     static enhance(architecture,place){
         const b=place?.r84Blueprint;
         if(!b||b.r85Enhanced)return false;
