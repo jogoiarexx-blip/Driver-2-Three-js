@@ -6,6 +6,7 @@ on:
       - 'js/world/chicago-indoor-navigation-r85.js'
       - 'js/world/chicago-vertical-interiors-r84.js'
       - 'js/entities/tanner-controller.js'
+      - 'js/engine/driver2-game-engine.js'
       - 'index.html'
       - 'tests/chicago-r85-*.cjs'
       - '.github/workflows/chicago-r85.yml'
@@ -16,6 +17,7 @@ on:
       - 'js/world/chicago-indoor-navigation-r85.js'
       - 'js/world/chicago-vertical-interiors-r84.js'
       - 'js/entities/tanner-controller.js'
+      - 'js/engine/driver2-game-engine.js'
       - 'tests/chicago-r85-*.cjs'
 permissions:
   contents: read
