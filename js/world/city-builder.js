@@ -592,6 +592,11 @@
                 if(this.preset.id==='chicago' &&
                    typeof DriverChicagoGooseIndustrialR81!=='undefined')
                     DriverChicagoGooseIndustrialR81.registerOffice(this);
+                // R84: two further existing R78 shells receive on-foot
+                // entries only when the exterior footpath is truly safe.
+                if(this.preset.id==='chicago' &&
+                   typeof DriverChicagoVerticalInteriorsR84!=='undefined')
+                    DriverChicagoVerticalInteriorsR84.register(this);
                 // R83: make two existing R78 shells genuinely enterable;
                 // register before the common interior-room builder.
                 if(this.preset.id==='chicago' &&
@@ -607,6 +612,11 @@
                    typeof DriverChicagoAccessibleInteriorsR83!=='undefined'){
                     DriverChicagoAccessibleInteriorsR83.prepare(this);
                     DriverChicagoAccessibleInteriorsR83.decorateEntries(this);
+                }
+                if(this.preset.id==='chicago' &&
+                   typeof DriverChicagoVerticalInteriorsR84!=='undefined'){
+                    DriverChicagoVerticalInteriorsR84.prepare(this);
+                    DriverChicagoVerticalInteriorsR84.decorateEntries(this);
                 }
                 if(this.preset.id==='chicago' &&
                    typeof DriverChicagoGooseIndustrialR81!=='undefined')
@@ -1805,13 +1815,24 @@
                 for (const place of this.interiors) {
                     const x=place.inside.x,z=place.inside.z;
                     const home=place.id==='home';
+                    // The long R84 stair rises to 7.2m. Raise its
+                    // existing visual shell, or the old 6.4m roof
+                    // would clip through the 24th step.
+                    const tall=place.id==='r84-greektown-loft';
+                    const wallHeight=tall?10.4:6.6;
                     make(x,-0.14,z,24,0.28,22,home?0x665243:0x334155);
-                    make(x,3.3,z+10.8,24,6.6,0.6,home?0xd6c5a5:0x64748b);
-                    make(x-11.8,3.3,z,0.6,6.6,22,home?0xb5a48d:0x475569);
-                    make(x+11.8,3.3,z,0.6,6.6,22,home?0xb5a48d:0x475569);
-                    make(x-6.7,3.3,z-10.8,10,6.6,0.6,home?0xd6c5a5:0x64748b);
-                    make(x+6.7,3.3,z-10.8,10,6.6,0.6,home?0xd6c5a5:0x64748b);
-                    make(x,6.4,z,24,0.35,22,home?0x9a8667:0x1e293b);
+                    make(x,wallHeight/2,z+10.8,24,wallHeight,0.6,
+                        home?0xd6c5a5:0x64748b);
+                    make(x-11.8,wallHeight/2,z,0.6,wallHeight,22,
+                        home?0xb5a48d:0x475569);
+                    make(x+11.8,wallHeight/2,z,0.6,wallHeight,22,
+                        home?0xb5a48d:0x475569);
+                    make(x-6.7,wallHeight/2,z-10.8,10,wallHeight,0.6,
+                        home?0xd6c5a5:0x64748b);
+                    make(x+6.7,wallHeight/2,z-10.8,10,wallHeight,0.6,
+                        home?0xd6c5a5:0x64748b);
+                    make(x,tall?10.35:6.4,z,24,0.35,22,
+                        home?0x9a8667:0x1e293b);
                     if (home) {
                         // Mesa de save mantida no local original, sem
                         // móveis antigos sobrepondo os cômodos aprimorados.
@@ -1833,8 +1854,14 @@
                         make(x+4,1.15,z+2,4,0.3,7,0xfacc15);
                         for(const offset of [-3,0,3])
                             make(x-8,2.1,z+offset,1,0.35,1.2,0xf97316);
-                    } else if(typeof DriverChicagoModularInteriorsR82!=='undefined' &&
-                            DriverChicagoModularInteriorsR82.manages(place)){
+                    } else if(
+                        (typeof DriverChicagoModularInteriorsR82!=='undefined' &&
+                            DriverChicagoModularInteriorsR82.manages(place))||
+                        (typeof DriverChicagoAccessibleInteriorsR83!=='undefined' &&
+                            DriverChicagoAccessibleInteriorsR83.manages(place))||
+                        (typeof DriverChicagoVerticalInteriorsR84!=='undefined' &&
+                            DriverChicagoVerticalInteriorsR84.manages(place))){
+                        // R82-R84 furniture is collidable and lazy-loaded.
                         // R82 furniture/partitions are truly collidable,
                         // not always-present cosmetic generic crates.
                     } else {
@@ -1842,7 +1869,9 @@
                             make(x+dx,1,z+3,3.3,2,3.3,0x78350f);
                     }
                     place.exit={x,z:z-8.8};
-                    if(typeof DriverSpecialStructures!=='undefined')
+                    if(typeof DriverSpecialStructures!=='undefined'&&!tall&&
+                       !(typeof DriverChicagoVerticalInteriorsR84!=='undefined' &&
+                          DriverChicagoVerticalInteriorsR84.manages(place)))
                         DriverSpecialStructures.interior(this,place);
                     if(home&&typeof DriverTannerHomeInterior!=='undefined')
                         DriverTannerHomeInterior.build(this,place);
@@ -2171,6 +2200,11 @@
             }
 
             getGroundHeightAt(x,z,referenceY=null,forVehicle=false) {
+                if(!forVehicle &&
+                   typeof DriverChicagoVerticalInteriorsR84!=='undefined' &&
+                   DriverChicagoVerticalInteriorsR84.nearRoom(this,x,z))
+                    return DriverChicagoVerticalInteriorsR84.heightAt(
+                        this,x,z,referenceY);
                 // R83 stairs / mezzanine are physical STEP surfaces, not
                 // invisible floor at y=0 or a teleport to an upper floor.
                 if(!forVehicle &&
@@ -2257,6 +2291,10 @@
             }
 
             isPointBlocked(x, z, radius = 1.2, y = 0) {
+                if(typeof DriverChicagoVerticalInteriorsR84!=='undefined' &&
+                   DriverChicagoVerticalInteriorsR84.nearRoom(this,x,z))
+                    return DriverChicagoVerticalInteriorsR84.blocked(
+                        this,x,z,radius,y);
                 if(typeof DriverChicagoAccessibleInteriorsR83!=='undefined' &&
                    DriverChicagoAccessibleInteriorsR83.nearRoom(this,x,z))
                     return DriverChicagoAccessibleInteriorsR83.blocked(
