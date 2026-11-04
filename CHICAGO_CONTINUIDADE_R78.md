@@ -329,6 +329,21 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 **R86 sugerida:** melhorar orientação do jogador dentro das salas (placas/iluminação e trilha para a escada), ampliar testes de colisão para interiores R82 e medir FPS real em celulares antes de afirmar um número.
 
+### R86 — Coerência da campanha, vinhetas das fases e animação real do Tanner (04/11/2026)
+
+**Estado:** EM BRANCH (`feat/driver2-r86-campaign-scenes-animation`) até passar QA e merge. Não afirmar publicada sem GitHub Pages.
+
+- **Campanha inteira revisada para apresentação coerente:** 8 missões de Chicago, 1 de Havana, 3 de Las Vegas, 3 do Rio (**15 entradas**, mesma sequência `DriverCampaignFlow` preservada). `DriverCampaignScenesR86` define uma ligação contextual curta entre pistas, objetivo atual e próximo ato em português, com títulos de capítulo. Não reescreve história como se fosse a ROM PS1; é adaptação do jogo atual.
+- **Cenas de abertura melhoradas, sem vídeo fictício:** a vinheta original de **5 segundos** continua pausando simulação/missões durante a abertura. 0–2s: título do ato; 2–3,15s: contexto da cena com **travelling leve da câmera real na rua**; 3,15–5s: objetivo da missão vindo do diretor/guia. O jogo não teleporta atores nem cria cópias de carros para a cena.
+- **Transições entre objetivos verdadeiros:** cartões curtos e não bloqueantes observam `DriverChicagoMissionGuidance.snapshot` (Chicago) e `DriverHavanaLead` / `DriverRegionalMissions` (outras cidades). Mudam somente quando a **etapa real** muda (ex.: fugir após plantar C4, entregar o segundo veículo, encontro nos cais), não piscam a cada variação de distância ou cronômetro. Resultado de falha/vitória é apresentado separadamente, sem alterar `missionActive`, checkpoints, pontuação ou save.
+- **Tanner ganha animação coerente com movimento físico:** `playModelAnimation('run')` escolhe o clip de corrida existente no GLB, caso haja. Sem clip de corrida, o clip de caminhada acelera suavemente a taxa de reprodução até 1,45×; ao caminhar, volta a 1×, com a transição já existente. Quando colide e não sai do lugar, o personagem usa *idle*, em vez de correr contra parede sem deslocamento. Nado e transições de veículo mantidos.
+- **Física, IA e modos livres preservados:** nada modifica condições de vitória, temporizadores, scripts de inimigos, ROM/ruas, trafego, portas R85 ou veículo. Camada visual pequena e sob demanda: um elemento DOM reutilizado para as transições, sem GLB ou textura nova, sem loops de timer paralelos.
+- **QA obrigatório:** teste unitário de continuidade dos 15 atos, progressão real de fase regional e Chicago, animação GLB com e sem `run`, bloqueio do personagem, intro de 5 segundos, integração engine, regressões narrativas/veículos/R85, browser Chromium do jogo real com screenshot da cena de rua e do resultado. Só integrar e publicar após verde.
+
+**Arquivos:** `js/gameplay/campaign-scenes-r86.js`, `js/gameplay/mission-briefing.js`, `js/engine/driver2-game-engine.js`, `js/entities/tanner-controller.js`, `index.html`, `tests/driver-r86-campaign-scenes.test.cjs`, `tests/driver-r86-scenes-browser.cjs`, `.github/workflows/driver-r86-campaign-scenes.yml`, este documento.
+
+**Próxima R87 sugerida:** cenas roteirizadas com poses de NPCs reais e eventuais zooms por missão, usando os modelos existentes e sem alterar gatilhos; teste visual de cada missão por cidade e ajustes específicos à IA de alvo. **Sem criar vídeos ou prometer 3D cinematic completo sem evidência.**
+
 ### R83+ — extensão e acabamento
 - Migrar bairros restantes com rede PS1, trânsito, pedestres, bairros e marcos.
 - Depois, trabalhar texturas, iluminação, LOD, áudio e desempenho: **visual sem geografia correta não resolve a Chicago**.
