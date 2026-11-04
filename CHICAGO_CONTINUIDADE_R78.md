@@ -331,7 +331,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 ### R86 — Coerência da campanha, vinhetas das fases e animação real do Tanner (04/11/2026)
 
-**Estado:** CI R86 APROVADA, [PR #62](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/62) pronta para integração. [Workflow 41875587293](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41875587293): **192 testes Node aprovados**, navegador Chromium sem erros JS, screenshots da abertura/etapa/desfecho. Merge e GitHub Pages verificados separadamente.
+**Estado:** R86 INTEGRADA à `main` pela [PR #62](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/62), squash SHA `8c46040e9201bf013d8a832b464a1e0fc821fefc`. [Workflow 41875587293](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41875587293): **192 testes Node aprovados**, navegador Chromium sem erros JS, screenshots da abertura/etapa/desfecho. Merge e GitHub Pages verificados separadamente.
 
 - **Campanha inteira revisada para apresentação coerente:** 8 missões de Chicago, 1 de Havana, 3 de Las Vegas, 3 do Rio (**15 entradas**, mesma sequência `DriverCampaignFlow` preservada). `DriverCampaignScenesR86` define uma ligação contextual curta entre pistas, objetivo atual e próximo ato em português, com títulos de capítulo. Não reescreve história como se fosse a ROM PS1; é adaptação do jogo atual.
 - **Cenas de abertura melhoradas, sem vídeo fictício:** a vinheta original de **5 segundos** continua pausando simulação/missões durante a abertura. 0–2s: título do ato; 2–3,15s: contexto da cena com **travelling leve da câmera real na rua**; 3,15–5s: objetivo da missão vindo do diretor/guia. O jogo não teleporta atores nem cria cópias de carros para a cena.
