@@ -139,7 +139,7 @@ test('R85 changes only internal foot physics, R84 GPU, save and loading continue
  assert(tanner.includes('DriverChicagoIndoorNavigationR85.move('));
  assert(tanner.includes('this.group.position.x=indoor.x;'));
  assert(engine.includes('DriverChicagoVerticalInteriorsR84.interact('));
- assert(save.includes('(place.r83Blueprint||place.r84Blueprint).doors.map(d=>d.open)'));
+ assert(save.includes('(p.r83Blueprint||p.r84Blueprint).doors.map(d=>d.open)'));
  assert(!read('js/world/chicago-indoor-navigation-r85.js')
   .includes('buildingBoxes.push'));
 });
