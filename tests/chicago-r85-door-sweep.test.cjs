@@ -127,6 +127,36 @@ test('R85 wall slide never crosses physical barrier and preserves outdoor fast p
  assert(res.z>from.z,'slide along wall still navigable');
  assert.equal(Nav.move(c,{x:NaN,z:0,y:0},{x:0,z:0}),null);
 });
+test('R85 adaptive mobile DPR falls only when needed and recovers on higher FPS',()=>{
+ const oldWindow=global.window;
+ global.window={matchMedia:()=>({matches:true}),
+  devicePixelRatio:2};
+ const changes=[];
+ const game={renderer:{setPixelRatio(r){changes.push(r)}},
+  mode:'on_foot',interiorPlace:{id:'r84-greektown-loft'},
+  isPaused:false,loadingActive:false};
+ try{
+  for(let i=0;i<12;i++)Nav.adaptMobileRender(game,.4);
+  assert.equal(game._r85MobileRender.mode,'reduced');
+  assert.deepEqual(changes,[1]);
+  assert.equal(game._r85MobileRender.changes,1);
+  for(let i=0;i<200;i++)Nav.adaptMobileRender(game,.016);
+  assert.equal(game._r85MobileRender.mode,'normal');
+  assert.deepEqual(changes,[1,1.5]);
+  // Returning outdoors must not apply a special low-resolution mode.
+  game.interiorPlace=null;
+  Nav.adaptMobileRender(game,.5);
+  assert.equal(game._r85MobileRender.mode,'normal');
+  assert.deepEqual(changes,[1,1.5]);
+  global.window.matchMedia=()=>({matches:false});
+  game.interiorPlace={id:'r84-greektown-loft'};
+  for(let i=0;i<12;i++)Nav.adaptMobileRender(game,.4);
+  assert.deepEqual(changes,[1,1.5]);
+ }finally{
+  if(oldWindow===undefined)delete global.window;
+  else global.window=oldWindow;
+ }
+});
 test('R85 changes only internal foot physics, R84 GPU, save and loading continue',()=>{
  const read=p=>fs.readFileSync(p,'utf8');
  const html=read('index.html'),arch=read('js/world/chicago-vertical-interiors-r84.js'),
@@ -138,6 +168,8 @@ test('R85 changes only internal foot physics, R84 GPU, save and loading continue
  assert(arch.includes('DriverChicagoIndoorNavigationR85.enhance(this,place)'));
  assert(tanner.includes('DriverChicagoIndoorNavigationR85.move('));
  assert(tanner.includes('this.group.position.x=indoor.x;'));
+ assert(engine.includes('DriverChicagoIndoorNavigationR85.adaptMobileRender('));
+ assert(engine.includes('this.fpsTimer += Math.max(0,Math.min(rawDt,1));'));
  assert(engine.includes('DriverChicagoVerticalInteriorsR84.interact('));
  assert(save.includes('(p.r83Blueprint||p.r84Blueprint).doors.map(d=>d.open)'));
  assert(!read('js/world/chicago-indoor-navigation-r85.js')
