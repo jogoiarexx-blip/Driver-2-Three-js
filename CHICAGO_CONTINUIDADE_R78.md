@@ -311,6 +311,21 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 **Próxima R85 após R84 integrada:** navegação com obstáculos pequenos e portas por cômodo, testes de framerate/streaming em dispositivos móveis reais, e só depois expansão vertical maior.
 
+### R85 — Portas por cômodo, colisão por varredura e QA mobile (04/11/2026)
+
+**Estado:** BRANCH `feat/chicago-r85-indoor-navigation`; testes Node + Chromium pendentes até CI verde, não afirmar publicação.
+
+- **Nenhum novo lote, rua ou prédio**: as 2 plantas R84 agora possuem **2 portas internas funcionais cada**, com partição e vão reais. O escritório ganhou duas peças de mobília pequenas com geometria + AABB de colisão; no loft a pequena caixa do patamar, antes somente visual, ganha AABB exatamente igual à malha. 45 peças instanciáveis no loft e 15 no escritório.
+- **Física R85 só a pé e dentro de R83/R84**: `DriverChicagoIndoorNavigationR85.move` percorre toda a distância em passos máximos de 0,22 unidade, aplicando as colisões e a altura real em **cada subpasso**. Impede atravessar móveis pequenos, portas fechadas ou divisórias a 12,5 unidades/s ou com queda momentânea de FPS. Se encostar, pode deslizar lateralmente após testar fisicamente cada eixo. O limite de subpassos é 24 por atualização, com distância total limitada a 5,28 unidades; fora de Chicago e fora dos interiores a implementação antiga não sofre alteração.
+- **Portas pelo E e pelo botão toque existente AÇÃO (E)**, mesmo fluxo de entrada/saída e de save v2 da R84 (a lista de estados de portas já aceita comprimento maior sem migrar save antigo). Não alterar missões, IA externa, pontes, água, trânsito ou veículos. Somente 1 sala detalhada R82/R83/R84 ativa em GPU.
+- **Teste navegável verdadeiro**: sair do spawn do loft, abrir a porta à direita, contornar o guarda-corpo, alcançar a base da escada e subir 24 degraus até `y=7.2` sem teletransporte. Verificar não atravessar porta fechada nem obstáculo menor que 1 m ao correr.
+- **Simulação mobile**: Chromium touch em viewport 390×844 e DPR=2 usa o próprio botão HTML `touch-action` para entrar, abrir as portas e sair. Registra capturas e p50/p95 do tempo entre quadros (`requestAnimationFrame`) em `qa-artifacts/chicago-r85`. Medição **não corresponde ao FPS garantido em Android/iPhone físico**.
+- **Validação obrigatória**: Node R77–R85, navegador R84 completo, navegador R85 mobile; mesmo número de 86 lotes R78, 2 interiores R83, 3 R82; manter save/campanha. A auditoria PS1 original continua sem certificar plantas interiores.
+
+**Arquivos:** `js/world/chicago-indoor-navigation-r85.js`, `js/world/chicago-vertical-interiors-r84.js`, `js/entities/tanner-controller.js`, `index.html`, `tests/chicago-r85-door-sweep.test.cjs`, `tests/chicago-r85-mobile-browser.cjs`, `.github/workflows/chicago-r85.yml`, este MD.
+
+**R86 sugerida:** melhorar orientação do jogador dentro das salas (placas/iluminação e trilha para a escada), ampliar testes de colisão para interiores R82 e medir FPS real em celulares antes de afirmar um número.
+
 ### R83+ — extensão e acabamento
 - Migrar bairros restantes com rede PS1, trânsito, pedestres, bairros e marcos.
 - Depois, trabalhar texturas, iluminação, LOD, áudio e desempenho: **visual sem geografia correta não resolve a Chicago**.
