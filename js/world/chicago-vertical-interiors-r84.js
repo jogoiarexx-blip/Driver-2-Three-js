@@ -141,6 +141,10 @@ class DriverChicagoVerticalInteriorsR84 {
         for(const place of city.interiors||[]){
             if(!this.manages(place)||place.r84Blueprint)continue;
             place.r84Blueprint=this.blueprint(place);
+            // R85 adds one genuine doorway to each of these two
+            // preexisting rooms. It never creates a new city lot.
+            if(typeof DriverChicagoIndoorNavigationR85!=='undefined')
+                DriverChicagoIndoorNavigationR85.enhance(this,place);
             place.r84Loaded=false;n++;
         }
         if(!city.chicagoVerticalInteriorsR84)
