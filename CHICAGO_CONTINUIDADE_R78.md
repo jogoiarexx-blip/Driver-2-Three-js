@@ -295,7 +295,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 ### R84 — Mais edifícios e dois patamares com física real (04/11/2026)
 
-**Estado:** BRANCH IMPLEMENTADA, aguardando CI/QA e merge (não chamar de publicada antes). Branch `feat/chicago-r84-vertical-interiors`.
+**Estado:** R84 CI APROVADA e PR [#60](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/60) pronta para integração. [Workflow R84 41828696248](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41828696248) verde: **78 testes Node**, Chromium no jogo completo e screenshot da plataforma superior. Merge e GitHub Pages devem ser confirmados separadamente.
 
 - **2 novas entradas reais em shell já existente** nos 86 lotes R78: `r84-greektown-loft` (bloco -120,-200, interior x=660) e `r84-prairie-office` (bloco 40,-200, interior x=720). Só registra lote `shell-planned` com porta e retorno secos, livres de obstáculos. Continua com entrada E original e sem criar estrada, ponte, quarteirão ou mudar missão.
 - **Planta arquitetônica enxuta**: divisória com vão físico e uma porta que abre/fecha por E e bloqueia de verdade quando fechada; móveis colidíveis em todas as salas. Um interior de um pavimento e um loft vertical experimental.
@@ -306,6 +306,8 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - **Limite factual**: esses lotes não têm coordenadas interiores certificadas pela ROM do PS1; a plataforma superior é piloto de navegação vertical, **não** um prédio completo de 3 andares.
 
 **Arquivos:** `js/world/chicago-vertical-interiors-r84.js`, `js/world/city-builder.js`, `js/entities/tanner-controller.js`, `js/engine/driver2-game-engine.js`, `js/world/chicago-modular-interiors-r82.js`, `js/world/chicago-accessible-interiors-r83.js`, `js/gameplay/home-save.js`, `index.html`, `tests/chicago-r84-vertical-interiors.test.cjs`, `tests/chicago-r84-playable-browser.cjs`, `.github/workflows/chicago-r84.yml`.
+
+**Evidência real R84 — 04/11/2026:** dois blueprints e duas entradas E válidas em lotes R78 reais (`r78--120--200-1-1`, `r78-40--200-1-1`); um layout visual por vez; 2 carregamentos e 2 descarregamentos. Loft com 42 peças/13 AABBs, segundo escritório com 10 peças/7 AABBs. Subida automática do Tanner: `maxY=7.2`, `finalY=7.2`, `finalZ=8.12`, `stalled=0`. Patamar intermediário 3,6; entrada no pavimento inferior continua y=0; salto lateral impossível. R83=2, R82=3, R81=4 links, R80=66 grades, R79=16 vias, R78=86 lotes. Screenshot e JSON no artefato `chicago-r84-vertical-real-game`. **Isso não é benchmark de FPS em celular físico.**
 
 **Próxima R85 após R84 integrada:** navegação com obstáculos pequenos e portas por cômodo, testes de framerate/streaming em dispositivos móveis reais, e só depois expansão vertical maior.
 
