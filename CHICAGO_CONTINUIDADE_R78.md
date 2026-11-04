@@ -331,7 +331,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 ### R86 — Coerência da campanha, vinhetas das fases e animação real do Tanner (04/11/2026)
 
-**Estado:** EM BRANCH (`feat/driver2-r86-campaign-scenes-animation`) até passar QA e merge. Não afirmar publicada sem GitHub Pages.
+**Estado:** CI R86 APROVADA, [PR #62](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/62) pronta para integração. [Workflow 41875587293](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41875587293): **192 testes Node aprovados**, navegador Chromium sem erros JS, screenshots da abertura/etapa/desfecho. Merge e GitHub Pages verificados separadamente.
 
 - **Campanha inteira revisada para apresentação coerente:** 8 missões de Chicago, 1 de Havana, 3 de Las Vegas, 3 do Rio (**15 entradas**, mesma sequência `DriverCampaignFlow` preservada). `DriverCampaignScenesR86` define uma ligação contextual curta entre pistas, objetivo atual e próximo ato em português, com títulos de capítulo. Não reescreve história como se fosse a ROM PS1; é adaptação do jogo atual.
 - **Cenas de abertura melhoradas, sem vídeo fictício:** a vinheta original de **5 segundos** continua pausando simulação/missões durante a abertura. 0–2s: título do ato; 2–3,15s: contexto da cena com **travelling leve da câmera real na rua**; 3,15–5s: objetivo da missão vindo do diretor/guia. O jogo não teleporta atores nem cria cópias de carros para a cena.
@@ -341,6 +341,8 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 - **QA obrigatório:** teste unitário de continuidade dos 15 atos, progressão real de fase regional e Chicago, animação GLB com e sem `run`, bloqueio do personagem, intro de 5 segundos, integração engine, regressões narrativas/veículos/R85, browser Chromium do jogo real com screenshot da cena de rua e do resultado. Só integrar e publicar após verde.
 
 **Arquivos:** `js/gameplay/campaign-scenes-r86.js`, `js/gameplay/mission-briefing.js`, `js/engine/driver2-game-engine.js`, `js/entities/tanner-controller.js`, `index.html`, `tests/driver-r86-campaign-scenes.test.cjs`, `tests/driver-r86-scenes-browser.cjs`, `.github/workflows/driver-r86-campaign-scenes.yml`, este documento.
+
+**Evidência concreta de jogo (04/11/2026):** Na sessão Chromium de Chicago o jogo carregou 15 roteiros R86, iniciou `story_tipoff` com a vinheta `ATO I • CHICAGO / 01 • VIGILÂNCIA` e travelling da câmera real (`panDx=0,142`, `panDy=0,045`); objetivo atual `story_tipoff:enter` exibiu `ENTRE NO SEU CARRO`. Falha manual da interface de QA manteve `story_tipoff` desbloqueada para repetição sem marcá-la concluída; vitória manual da mesma interface marcou `story_tipoff` e apontou `story_witness` como próxima. Nenhum erro `pageerror`. A validação de desfechos exercita o endpoint de missão, **não afirma ter dirigido manualmente as 15 missões**. Screenshot e JSON no artefato `driver-r86-campaign-cinematics`. Os efeitos são cards e câmera do game real, **não animação de personagens NPC em vídeo**.
 
 **Próxima R87 sugerida:** cenas roteirizadas com poses de NPCs reais e eventuais zooms por missão, usando os modelos existentes e sem alterar gatilhos; teste visual de cada missão por cidade e ajustes específicos à IA de alvo. **Sem criar vídeos ou prometer 3D cinematic completo sem evidência.**
 
