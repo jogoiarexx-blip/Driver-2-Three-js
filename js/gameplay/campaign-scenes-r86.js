@@ -103,7 +103,8 @@ class DriverCampaignScenesR86 {
         let phase='start',label=story.goal,hint=story.setup;
         if(story.city==='chicago' &&
             typeof DriverChicagoMissionGuidance!=='undefined'){
-            const shot=DriverChicagoMissionGuidance.snapshot(game);
+            const shot=game.chicagoGuidance||
+                DriverChicagoMissionGuidance.snapshot(game);
             if(shot){
                 phase=shot.id||'start';
                 label=shot.label||label;
