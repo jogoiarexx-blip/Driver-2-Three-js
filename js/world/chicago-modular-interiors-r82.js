@@ -185,6 +185,9 @@ class DriverChicagoModularInteriorsR82 {
             if(other.r83Loaded&&
                typeof DriverChicagoAccessibleInteriorsR83!=='undefined')
                 DriverChicagoAccessibleInteriorsR83.leave(city,other);
+            if(other.r84Loaded&&
+               typeof DriverChicagoVerticalInteriorsR84!=='undefined')
+                DriverChicagoVerticalInteriorsR84.leave(city,other);
         }
         const blue=place.r82Blueprint;
         const group=new THREE.Group();
