@@ -143,8 +143,11 @@
                     ? clips.find(a => /^(idle|stand|breathing)/i.test(a.name))
                     : name === 'swim_idle' || name === 'swim_forward'
                     ? clips.find(a => a.name === name)
+                    : name === 'run'
+                    ? clips.find(a => /^(run|sprint|jog)/i.test(a.name)) ||
+                      clips.find(a => /^walk/i.test(a.name))
                     : clips.find(a => /^walk/i.test(a.name)) ||
-                      clips.find(a => /^run/i.test(a.name));
+                      clips.find(a => /^(run|sprint|jog)/i.test(a.name));
                 if (!clip) {
                     if (this.activeAction) {
                         this.activeAction.fadeOut(.15);
@@ -160,6 +163,28 @@
                 this.activeAction = this.animationMixer.clipAction(clip);
                 this.activeAction.reset().fadeIn(fade).play();
                 this.activeClip = clip;
+            }
+
+            // Match the animation to real movement, not only W pressed.
+            // Run GLBs play when available; older GLBs with only walk
+            // use a smoothly accelerated walk rather than frozen legs.
+            setFootPlayback(moving,sprinting,dt=0) {
+                this.playModelAnimation(moving?
+                    (sprinting?'run':'walk'):'idle');
+                if(!this.activeAction||!this.activeClip)return;
+                const runClip=/^(run|sprint|jog)/i.test(
+                    this.activeClip.name||'');
+                const desired=moving?
+                    (sprinting?(runClip?1:1.45):(runClip?.8:1)):1;
+                const action=this.activeAction;
+                const current=Number(
+                    action.getEffectiveTimeScale?.()??action.timeScale??1);
+                const fraction=Math.min(1,Math.max(0,dt)*9);
+                const rate=(Number.isFinite(current)?current:1)+
+                    (desired-(Number.isFinite(current)?current:1))*fraction;
+                if(typeof action.setEffectiveTimeScale==='function')
+                    action.setEffectiveTimeScale(rate);
+                else action.timeScale=rate;
             }
 
             // Pose temporizada, também disponível quando o GLB não contém
@@ -363,6 +388,8 @@
                     (input.sprint ? 5.2 : 3.9) :
                     (input.sprint ? 12.5 : 8.5);
                 const velocity = speed * moveDir;
+                const beforeX=this.group.position.x;
+                const beforeZ=this.group.position.z;
 
                 if (Math.abs(moveDir) > 0) {
                     const nextX = this.group.position.x +
@@ -406,6 +433,9 @@
                     }
                 }
 
+                const actuallyMoved=Math.hypot(
+                    this.group.position.x-beforeX,
+                    this.group.position.z-beforeZ)>.004;
                 this.isSwimming = isWater(this.group.position.x,
                     this.group.position.z);
                 if (this.isSwimming) {
@@ -414,7 +444,7 @@
                         Math.sin(this.swimClock*2)*0.045;
                     if (this.contactShadow)this.contactShadow.visible=false;
                     if (this.playerModel)this.playModelAnimation(
-                        Math.abs(moveDir)>0.01?'swim_forward':'swim_idle');
+                        actuallyMoved?'swim_forward':'swim_idle');
                     // Procedural fallback is visible only while GLB loads.
                     const kick=Math.sin(this.swimClock*2)*0.4;
                     this.leftLeg.rotation.x=kick;
@@ -430,9 +460,10 @@
                             this.group.position.y);
                     if(this.contactShadow&&!this.motorcycleVehicle)
                         this.contactShadow.visible=true;
-                    if(this.playerModel)this.playModelAnimation(
-                        Math.abs(moveDir)>0.01?'walk':'idle');
-                    if(Math.abs(moveDir)>0){
+                    if(this.playerModel)
+                        this.setFootPlayback(actuallyMoved,
+                            !!input.sprint&&moveDir>0,dt);
+                    if(actuallyMoved){
                         this.walkCycle+=dt*(input.sprint?16:11);
                         const swing=Math.sin(this.walkCycle)*0.65;
                         this.leftLeg.rotation.x=swing;
