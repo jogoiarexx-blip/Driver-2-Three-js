@@ -18,7 +18,8 @@ class DriverMissionBriefing {
             'align-items:center;justify-content:center;'+
             'transition:background .5s ease;color:#f1f1ed;'+
             'font:600 clamp(14px,2.8vw,30px) Georgia,serif;'+
-            'letter-spacing:.36em;text-align:center;padding:24px';
+            'letter-spacing:.24em;text-align:center;padding:24px;'+
+            'white-space:pre-line;text-shadow:0 3px 12px #000';
         overlay.setAttribute('aria-hidden','true');
         document.body.appendChild(overlay);
         this.element=overlay;
@@ -28,13 +29,19 @@ class DriverMissionBriefing {
         this.ensure();
         const title=document.getElementById('mission-title')?.textContent||
             type.replace(/_/g,' ').toUpperCase();
+        const story=typeof DriverCampaignScenesR86!=='undefined'?
+            DriverCampaignScenesR86.script(type):null;
+        this.introTitle=story?story.chapter+'\n'+story.title:title;
+        this.introSetup=story?.setup||'';
+        this.introGoal=story?.goal||'';
         this.seconds=0;this.active=true;
         // A vinheta usa a primeira etapa REAL, sem reescrever diretores.
         // A cena e os controles permanecem pausados durante a abertura.
         this.stageIntro=typeof DriverChicagoMissionGuidance!=='undefined'?
             (DriverChicagoMissionGuidance.snapshot(game)?.label||''):'';
         this.startedAt=typeof performance!=='undefined'?performance.now():null;
-        this.element.textContent=title;
+        this.element.textContent=this.introTitle;
+        this.element.dataset.originalTitle=this.introTitle;
         this.element.style.display='flex';
         this.element.style.opacity='1';
         this.element.style.background='#000';
@@ -59,16 +66,16 @@ class DriverMissionBriefing {
                 this.element.style.background='rgba(0,0,0,0)';
                 this.element.style.opacity=String(Math.min(.82,
                     Math.max(0,(5-this.seconds)/2)));
-                // Keep the title briefly, then show street scene.
-                // Mostra o primeiro objetivo por menos de 1 segundo
-                // antes de liberar a cena, mantendo os 5s originais.
-                this.element.textContent=this.seconds<3?
-                    (this.stageIntro||this.element.dataset.originalTitle||
-                        this.element.textContent):'';
+                // Same 5-second real-world establishing shot, now
+                // visually linked to the actual goal of this mission.
+                // No fake pre-rendered cutscene or gameplay teleport.
+                this.element.textContent=this.seconds<3.15?
+                    (this.introSetup||this.stageIntro||this.introTitle):
+                    (this.stageIntro||this.introGoal||'');
             }else{
                 this.element.style.background='#000';
                 this.element.style.opacity='1';
-                this.element.dataset.originalTitle=this.element.textContent;
+                this.element.textContent=this.introTitle;
             }
         }
         return true;
