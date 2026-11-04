@@ -278,7 +278,7 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 
 ### R83 — Portas internas, dois novos prédios acessíveis e escada física (03/11/2026)
 
-**Estado inicial:** IMPLEMENTADA EM BRANCH, aguardando suíte Node + Chromium e integração. Branch: `feat/chicago-r83-doors-stairs`. **Não declarar publicada** apenas por existir commit na branch.
+**Estado final:** R83 INTEGRADA à `main` pela [PR #59](https://github.com/jogoiarexx-blip/Driver-2-Three-js/pull/59), squash commit `8c9ac35515fc3873cc5e2034df8e415ce6999cf4`. [CI R83 41827174305](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41827174305) verde: testes Node e Chromium do jogo real, correção de Tanner invisível no teste e compatibilidade de `showSaveStatus` em mock antigo. QA de lógica [41827174238](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41827174238) verde; saves P1 [41827174245](https://github.com/jogoiarexx-blip/Driver-2-Three-js/actions/runs/41827174245) verdes. GitHub Pages deve ser conferido separadamente.
 
 - **Dois lotes de fachada R78 `shell-planned`** deixam de ser decorativos e passam a ser acessíveis: `r83-loop-mezzanine` (bloco `-40,-200`, interior off-world `830,0`) e `r83-ukrainian-house` (bloco `-280,-200`, interior `900,0`). Os lotes, ruas e footprints externos não mudam. São acessos a pé no mesmo E/SAIR utilizado pelos demais prédios, só registrados se a entrada e a calçada de retorno estiverem secas e desobstruídas.
 - **Portas internas operáveis por E/controles existentes**, duas por interior. A porta fechada possui volume visual de 3,58×3,2 unidades e AABB física correspondente; aberta recolhe visualmente a folha para o lado da divisória e libera exatamente a mesma passagem. Fechamento é bloqueado se Tanner estiver no batente. HUD mostra ABRIR/FECHAR quando Tanner está próximo.
@@ -292,6 +292,22 @@ A R80 altera a **Chicago jogável** de fato, e não somente o visualizador da RO
 **Teste antes do merge:** registrar 2/2 salas reais, abrir/fechar ambas as portas com colisão dinâmica, subir 12 degraus a pé com y≈3,6, rejeitar subida lateral de 3,6, 1 sala com GPU ativa, zero geometrias remanescentes depois da saída, 3 salas R82, 86 lotes R78, tráfego R79 (16 trechos), rio R80 (66 barras), R81 (4 conexões), Tanner/save preservados; guardar artefato de screenshot dentro do mezanino. Se falhar, corrigir e repetir.
 
 **Próxima R84 após QA:** ampliar plantas com unidades interiores por quarteirão e transições verticais mais longas, validar FPS/memória em celular real e conferir posições PS1 antes de afirmar fidelidade cartográfica.
+
+### R84 — Mais edifícios e dois patamares com física real (04/11/2026)
+
+**Estado:** BRANCH IMPLEMENTADA, aguardando CI/QA e merge (não chamar de publicada antes). Branch `feat/chicago-r84-vertical-interiors`.
+
+- **2 novas entradas reais em shell já existente** nos 86 lotes R78: `r84-greektown-loft` (bloco -120,-200, interior x=660) e `r84-prairie-office` (bloco 40,-200, interior x=720). Só registra lote `shell-planned` com porta e retorno secos, livres de obstáculos. Continua com entrada E original e sem criar estrada, ponte, quarteirão ou mudar missão.
+- **Planta arquitetônica enxuta**: divisória com vão físico e uma porta que abre/fecha por E e bloqueia de verdade quando fechada; móveis colidíveis em todas as salas. Um interior de um pavimento e um loft vertical experimental.
+- **Escada longa** com **24 degraus de 0,30**, até 7,2 unidades, com patamar lateral intermediário a 3,6 e plataforma superior a 7,2. Altura de cada degrau vem da própria malha; `getGroundHeightAt` e `TannerController.update` respeitam o limite físico de +0,43/-0,75 de cota por movimento. Proíbe subir por fora, atravessar guarda-corpo, teleportar entre pisos ou ficar sobre piso invisível. O shell visual da sala é elevado para 10,4, sem teto cruzando a escada.
+- **Custo móvel controlado**: 42 peças de blueprint no loft piloto (sem GLB/texturas enormes), até 45 por recinto; geometria detalhada instanciada somente durante a visita, descartada ao sair. R82, R83 e R84 descarregam a sala anterior e mantêm no máximo um ambiente detalhado em GPU. Área externa usa rejeição espacial rápida para ignorar cálculos interiores.
+- **Save v2 preservado**: mesmos `localStorage` e formato base; ID R84 na whitelist, `interiorDoors` opcional também para R84 e reconciliação do layout carregado. Casa do Tanner preservada.
+- **QA exigido**: 2/2 entradas físicas na cidade real, porta E aberta/fechada com AABB correspondente, subida a pé de 24 degraus até y=7,2 sem travar, patamar y=3,6, 0 geometrias R84 persistentes após saída, status R83 2/R82 3/R81 4 links/R80 66 grades/R79 16 rotas/R78 86 lotes, screenshot na plataforma, sem erros JS. Testes de celular real/FPS preciso permanecem **pendentes**; o CI controla orçamento geométrico, não inventa medição de 60 FPS.
+- **Limite factual**: esses lotes não têm coordenadas interiores certificadas pela ROM do PS1; a plataforma superior é piloto de navegação vertical, **não** um prédio completo de 3 andares.
+
+**Arquivos:** `js/world/chicago-vertical-interiors-r84.js`, `js/world/city-builder.js`, `js/entities/tanner-controller.js`, `js/engine/driver2-game-engine.js`, `js/world/chicago-modular-interiors-r82.js`, `js/world/chicago-accessible-interiors-r83.js`, `js/gameplay/home-save.js`, `index.html`, `tests/chicago-r84-vertical-interiors.test.cjs`, `tests/chicago-r84-playable-browser.cjs`, `.github/workflows/chicago-r84.yml`.
+
+**Próxima R85 após R84 integrada:** navegação com obstáculos pequenos e portas por cômodo, testes de framerate/streaming em dispositivos móveis reais, e só depois expansão vertical maior.
 
 ### R83+ — extensão e acabamento
 - Migrar bairros restantes com rede PS1, trânsito, pedestres, bairros e marcos.
