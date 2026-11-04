@@ -1297,9 +1297,24 @@
                 body.position.y=1.68;
                 const head=new THREE.Mesh(new THREE.BoxGeometry(.52,.62,.5),skin);
                 head.position.y=2.76;group.add(body,head);
+                group.userData.r87JonesArms=[];
                 for(const sign of [-1,1]){
                     const leg=new THREE.Mesh(new THREE.BoxGeometry(.32,.82,.42),coat);
                     leg.position.set(sign*.28,.55,0);group.add(leg);
+                    // R87: actual arms on the existing station Jones
+                    // (not a cloned cutscene actor). Pivot at shoulder.
+                    const shoulder=new THREE.Group();
+                    shoulder.name=sign<0?'r87-jones-arm-left':
+                        'r87-jones-arm-right';
+                    shoulder.position.set(sign*.56,2.32,0);
+                    const sleeve=new THREE.Mesh(
+                        new THREE.BoxGeometry(.24,.68,.35),coat);
+                    sleeve.position.y=-.35;
+                    const hand=new THREE.Mesh(
+                        new THREE.BoxGeometry(.21,.22,.28),skin);
+                    hand.position.y=-.74;
+                    shoulder.add(sleeve,hand);group.add(shoulder);
+                    group.userData.r87JonesArms.push(shoulder);
                 }
                 const arrow=new THREE.Mesh(new THREE.ConeGeometry(.68,1.25,4),green);
                 arrow.position.y=4.05;arrow.rotation.z=Math.PI;
