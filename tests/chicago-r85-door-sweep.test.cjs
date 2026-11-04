@@ -52,14 +52,18 @@ test('R85 closed doors stop sprint-sized moves; opening E actually enables corri
  for(const place of c.interiors.slice(1)){
   const b=place.r84Blueprint,d=b.doors[1];
   const from={x:b.x+1.3,y:0,z:b.z+d.z};
-  const to={x:b.x+5.8,z:b.z+d.z};
+  // The loft's real guardrail begins at x+4.95 beyond the doorway.
+  // Test the open doorway itself, not walking through the rail.
+  const destination=b.tall?4.05:5.8;
+  const to={x:b.x+destination,z:b.z+d.z};
   assert(c.isPointBlocked(b.x+d.x,b.z+d.z,.55,0));
   const before=Nav.move(c,from,to);
   assert(before.x<b.x+2.7,'closed door cannot be crossed by sprint');
   assert.equal(Arch.interact(c,place,from),'PORTA ABERTA');
   assert.equal(c.isPointBlocked(b.x+d.x,b.z+d.z,.55,0),false);
   const after=Nav.move(c,from,to);
-  assert(after.x>b.x+5.5,'open door should be genuinely traversable');
+  assert(after.x>b.x+destination-.1,
+   'open door should be genuinely traversable');
   assert.equal(Arch.interact(c,place,{x:b.x+d.x,y:0,z:b.z+d.z}),
    'Afaste-se da passagem antes de fechar.');
   assert.equal(Arch.interact(c,place,from),'PORTA FECHADA');
