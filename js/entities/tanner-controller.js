@@ -385,7 +385,20 @@
                         DriverChicagoVerticalInteriorsR84.safeStep(cityBuilder,
                             this.group.position.x,this.group.position.z,
                             this.group.position.y,nextX,nextZ,targetY));
-                    if (validGrade &&
+                    const indoor=
+                        typeof DriverChicagoIndoorNavigationR85!=='undefined'?
+                        DriverChicagoIndoorNavigationR85.move(
+                            cityBuilder,this.group.position,
+                            {x:nextX,z:nextZ},.55):null;
+                    if(indoor){
+                        // Sweep only within R83/R84 interiors: protects
+                        // thin walls and small props even at 12.5m/s
+                        // sprint or 80ms frame time. Normal streets
+                        // retain the original single-query fast path.
+                        this.group.position.x=indoor.x;
+                        this.group.position.z=indoor.z;
+                        this.group.position.y=indoor.y;
+                    }else if (validGrade &&
                         !cityBuilder.isPointBlocked(nextX,nextZ,0.55,targetY)) {
                         this.group.position.x = nextX;
                         this.group.position.z = nextZ;
