@@ -33,7 +33,7 @@ test('R86 roteiro completo liga 8 Chicago, 1 Havana, 3 Vegas, 3 Rio sem pular et
  assert.equal(Scenes.script('freeroam'),null);
  assert.equal(Scenes.script('story_unknown'),null);
  assert.equal(Scenes.city('replay'),null);
- assert.deepEqual(Flow.CHICAGO.slice(0,3),
+ assert.deepEqual(Array.from(Flow.CHICAGO.slice(0,3)),
   ['story_tipoff','story_witness','story_train']);
  assert.equal(Flow.nextChapter('chicago',new Set(Flow.CHICAGO)),'havana');
  assert.equal(Flow.nextChapter('havana',new Set(['story_havana_lead'])),'vegas');
